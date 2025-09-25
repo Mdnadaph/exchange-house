@@ -15,7 +15,9 @@ import UserTransactions from "./pages/portal/UserTransactions";
 import UserDocuments from "./pages/portal/UserDocuments";
 import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
 import ExchangeKYBReview from "./pages/exchange/ExchangeKYBReview";
+import ExchangeKYBConfig from "./pages/exchange/ExchangeKYBConfig";
 import ExchangePayoutConfig from "./pages/exchange/ExchangePayoutConfig";
+import ExchangeComplianceConfig from "./pages/exchange/ExchangeComplianceConfig";
 import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
@@ -46,7 +48,9 @@ const App = () => (
           {/* Exchange House Admin Routes */}
           <Route path="/exchange" element={<ExchangeAdminDashboard />} />
           <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
+          <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
           <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
+          <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
           <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
           
           {/* Branch User Routes */}

@@ -7,7 +7,9 @@ import {
   Settings, 
   Users, 
   LogOut,
-  Landmark
+  Landmark,
+  DollarSign,
+  Shield
 } from "lucide-react";
 
 interface ExchangeLayoutProps {
@@ -20,7 +22,9 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home },
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
-    { name: "Payout Config", href: "/exchange/payout-config", icon: Settings },
+    { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
+    { name: "Payout Config", href: "/exchange/payout-config", icon: DollarSign },
+    { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
     { name: "Staff Management", href: "/exchange/staff", icon: Users },
   ];
 
