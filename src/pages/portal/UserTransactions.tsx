@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SingleTransactionForm from "@/components/transactions/SingleTransactionForm";
 import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
+import PaymentExecutionForm from "@/components/transactions/PaymentExecutionForm";
 import { 
   CreditCard, 
   Plus, 
@@ -19,7 +20,8 @@ import {
   Calendar,
   DollarSign,
   FileText,
-  Users
+  Users,
+  Wallet
 } from "lucide-react";
 
 const UserTransactions = () => {
@@ -49,7 +51,7 @@ const UserTransactions = () => {
       exchangeRate: "3.673",
       localAmount: "31,220.50",
       localCurrency: "AED",
-      status: "pending_approval",
+      status: "pending_payment",
       type: "single",
       purpose: "Service Payment",
       date: "2024-01-16 10:15",
@@ -100,6 +102,8 @@ const UserTransactions = () => {
     const statusMap = {
       completed: { variant: "default" as const, label: "Completed", icon: CheckCircle },
       pending_approval: { variant: "secondary" as const, label: "Pending Approval", icon: Clock },
+      pending_payment: { variant: "destructive" as const, label: "Pending Payment", icon: Wallet },
+      payment_verification: { variant: "secondary" as const, label: "Payment Verification", icon: Clock },
       processing: { variant: "destructive" as const, label: "Processing", icon: Clock },
       failed: { variant: "destructive" as const, label: "Failed", icon: AlertCircle },
       cancelled: { variant: "outline" as const, label: "Cancelled", icon: AlertCircle }
@@ -310,6 +314,19 @@ const UserTransactions = () => {
                                 Retry Payment
                               </Button>
                             )}
+                            {transaction.status === "pending_payment" && (
+                              <PaymentExecutionForm
+                                transaction={{
+                                  id: transaction.id,
+                                  beneficiary: transaction.beneficiary,
+                                  amount: transaction.amount,
+                                  currency: transaction.currency,
+                                  localAmount: transaction.localAmount,
+                                  localCurrency: transaction.localCurrency,
+                                  purpose: transaction.purpose
+                                }}
+                              />
+                            )}
                           </div>
                           
                           {transaction.status === "pending_approval" && (
@@ -317,6 +334,24 @@ const UserTransactions = () => {
                               <div className="flex items-center space-x-1">
                                 <Users className="h-3 w-3" />
                                 <span>Awaiting approval from Treasury Department</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {transaction.status === "pending_payment" && (
+                            <div className="text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-1">
+                                <Wallet className="h-3 w-3" />
+                                <span>Payment execution required to proceed</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {transaction.status === "payment_verification" && (
+                            <div className="text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3 w-3" />
+                                <span>Verifying payment proof - will route to Core system</span>
                               </div>
                             </div>
                           )}
