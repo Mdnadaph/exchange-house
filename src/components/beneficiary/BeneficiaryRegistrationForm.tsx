@@ -5,6 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { 
   Building, 
   User, 
@@ -16,24 +22,88 @@ import {
   Plus, 
   Trash2,
   AlertCircle,
-  Upload
+  Upload,
+  CalendarIcon,
+  Globe,
+  CreditCard,
+  Wallet,
+  Info,
+  DollarSign,
+  TrendingUp
 } from "lucide-react";
 import { useState } from "react";
 
 const BeneficiaryRegistrationForm = () => {
-  const [beneficiaryType, setBeneficiaryType] = useState<"individual" | "corporate">("individual");
-  const [payoutMethods, setPayoutMethods] = useState([
-    { type: "bank_transfer", isDefault: true, details: {} }
-  ]);
+  const [beneficiaryType, setBeneficiaryType] = useState<"individual" | "business">("individual");
+  const [residencyType, setResidencyType] = useState<"uae" | "foreign">("foreign");
+  const [beneficiaryCountry, setBeneficiaryCountry] = useState("");
+  const [payoutMechanism, setPayoutMechanism] = useState<"bank_account" | "wallet">("bank_account");
+  const [selectedBank, setSelectedBank] = useState("");
+  const [requiresApproval, setRequiresApproval] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState<Date>();
+  const [incorporationDate, setIncorporationDate] = useState<Date>();
 
-  const addPayoutMethod = () => {
-    setPayoutMethods([...payoutMethods, { type: "bank_transfer", isDefault: false, details: {} }]);
+  // Mock data - would come from Core API
+  const payoutDestinations = [
+    { country: "India", code: "IN", supported: true, exchangeRate: "22.45", fees: "5.00" },
+    { country: "Philippines", code: "PH", supported: true, exchangeRate: "3.67", fees: "3.50" },
+    { country: "Pakistan", code: "PK", supported: true, exchangeRate: "84.50", fees: "4.00" },
+    { country: "Bangladesh", code: "BD", supported: true, exchangeRate: "29.75", fees: "3.00" },
+    { country: "Sri Lanka", code: "LK", supported: true, exchangeRate: "109.25", fees: "6.00" },
+    { country: "Nepal", code: "NP", supported: true, exchangeRate: "36.15", fees: "4.50" },
+    { country: "United Arab Emirates", code: "AE", supported: true, exchangeRate: "1.00", fees: "2.00" }
+  ];
+
+  const uaeBanks = [
+    { name: "Emirates NBD", code: "EBILAEAD", country: "AE" },
+    { name: "First Abu Dhabi Bank (FAB)", code: "NBADAEAD", country: "AE" },
+    { name: "Abu Dhabi Commercial Bank (ADCB)", code: "ADCBAEAD", country: "AE" },
+    { name: "Dubai Islamic Bank", code: "DUIBAEAD", country: "AE" },
+    { name: "Mashreq Bank", code: "BOMLAEAD", country: "AE" },
+    { name: "HSBC UAE", code: "BBMEAEAD", country: "AE" }
+  ];
+
+  const internationalBanks = [
+    { name: "State Bank of India", code: "SBININBB", country: "IN" },
+    { name: "HDFC Bank", code: "HDFCINBB", country: "IN" },
+    { name: "Bank of the Philippine Islands", code: "BOPIPHMM", country: "PH" },
+    { name: "Metrobank", code: "MBTCPHMM", country: "PH" },
+    { name: "Habib Bank Limited", code: "HABBPKKA", country: "PK" },
+    { name: "MCB Bank", code: "MCBLPKKA", country: "PK" }
+  ];
+
+  const walletProviders = [
+    { name: "Paymi UAE", country: "AE", type: "Digital Wallet" },
+    { name: "Paymi India", country: "IN", type: "Digital Wallet" },
+    { name: "GCash", country: "PH", type: "Mobile Wallet" },
+    { name: "PayMaya", country: "PH", type: "Digital Wallet" },
+    { name: "bKash", country: "BD", type: "Mobile Banking" },
+    { name: "Nagad", country: "BD", type: "Digital Payment" }
+  ];
+
+  const getAvailableBanks = () => {
+    if (!beneficiaryCountry) return [];
+    
+    if (beneficiaryCountry === "AE") {
+      return uaeBanks;
+    }
+    
+    return internationalBanks.filter(bank => 
+      payoutDestinations.find(dest => dest.code === beneficiaryCountry)
+    );
   };
 
-  const removePayoutMethod = (index: number) => {
-    if (payoutMethods.length > 1) {
-      setPayoutMethods(payoutMethods.filter((_, i) => i !== index));
-    }
+  const getAvailableWallets = () => {
+    if (!beneficiaryCountry) return [];
+    return walletProviders.filter(wallet => wallet.country === beneficiaryCountry);
+  };
+
+  const getExchangeInfo = () => {
+    return payoutDestinations.find(dest => dest.code === beneficiaryCountry);
+  };
+
+  const getSelectedBankDetails = () => {
+    return [...uaeBanks, ...internationalBanks].find(bank => bank.name === selectedBank);
   };
 
   return (
@@ -44,44 +114,157 @@ const BeneficiaryRegistrationForm = () => {
         <p className="text-muted-foreground">Complete all required information for beneficiary registration and verification</p>
       </div>
 
-      {/* Beneficiary Type Selection */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            Beneficiary Type
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card 
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                beneficiaryType === "individual" ? "ring-2 ring-primary bg-primary/5" : ""
-              }`}
-              onClick={() => setBeneficiaryType("individual")}
-            >
-              <CardContent className="p-6 text-center">
-                <User className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">Individual</h3>
-                <p className="text-sm text-muted-foreground">Personal recipient for salary, remittance, or personal payments</p>
-              </CardContent>
-            </Card>
-            
-            <Card 
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                beneficiaryType === "corporate" ? "ring-2 ring-primary bg-primary/5" : ""
-              }`}
-              onClick={() => setBeneficiaryType("corporate")}
-            >
-              <CardContent className="p-6 text-center">
-                <Building className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">Corporate</h3>
-                <p className="text-sm text-muted-foreground">Business entity for supplier payments, invoices, or commercial transactions</p>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Beneficiary Type & Residency Selection */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Beneficiary Type */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Beneficiary Type
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  beneficiaryType === "individual" ? "ring-2 ring-primary bg-primary/5" : ""
+                }`}
+                onClick={() => setBeneficiaryType("individual")}
+              >
+                <CardContent className="p-4 flex items-center space-x-3">
+                  <User className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Individual</h3>
+                    <p className="text-sm text-muted-foreground">Personal recipient</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  beneficiaryType === "business" ? "ring-2 ring-primary bg-primary/5" : ""
+                }`}
+                onClick={() => setBeneficiaryType("business")}
+              >
+                <CardContent className="p-4 flex items-center space-x-3">
+                  <Building className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Business</h3>
+                    <p className="text-sm text-muted-foreground">Corporate entity</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Residency Type */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Residency Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  residencyType === "uae" ? "ring-2 ring-primary bg-primary/5" : ""
+                }`}
+                onClick={() => {
+                  setResidencyType("uae");
+                  setBeneficiaryCountry("AE");
+                }}
+              >
+                <CardContent className="p-4 flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary">UAE</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">UAE Resident</h3>
+                    <p className="text-sm text-muted-foreground">Local transfers</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  residencyType === "foreign" ? "ring-2 ring-primary bg-primary/5" : ""
+                }`}
+                onClick={() => {
+                  setResidencyType("foreign");
+                  setBeneficiaryCountry("");
+                }}
+              >
+                <CardContent className="p-4 flex items-center space-x-3">
+                  <Globe className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Foreign Country</h3>
+                    <p className="text-sm text-muted-foreground">International transfers</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Country Selection & Exchange Rate Info */}
+      {residencyType === "foreign" && (
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              Destination Country & Exchange Rates
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-1">
+                <Label htmlFor="country">Beneficiary Country *</Label>
+                <Select value={beneficiaryCountry} onValueChange={setBeneficiaryCountry}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select destination country" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border z-50">
+                    {payoutDestinations.filter(dest => dest.code !== "AE").map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.country}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {beneficiaryCountry && getExchangeInfo() && (
+                <div className="md:col-span-2">
+                  <div className="bg-accent-muted/20 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <TrendingUp className="h-4 w-4 text-accent" />
+                      <span className="font-medium text-foreground">Current Exchange Rate & Fees</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Exchange Rate:</span>
+                        <p className="font-medium">1 AED = {getExchangeInfo()?.exchangeRate} {beneficiaryCountry}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Transfer Fee:</span>
+                        <p className="font-medium">AED {getExchangeInfo()?.fees}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      *Rates are indicative and may vary at the time of transaction
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Basic Information */}
       <Card className="shadow-card">
@@ -104,7 +287,32 @@ const BeneficiaryRegistrationForm = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-                <Input id="dateOfBirth" type="date" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateOfBirth && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateOfBirth}
+                      onSelect={setDateOfBirth}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nationality">Nationality *</Label>
@@ -127,7 +335,32 @@ const BeneficiaryRegistrationForm = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="incorporationDate">Incorporation Date</Label>
-                <Input id="incorporationDate" type="date" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline" 
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !incorporationDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {incorporationDate ? format(incorporationDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={incorporationDate}
+                      onSelect={setIncorporationDate}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           )}
@@ -179,7 +412,12 @@ const BeneficiaryRegistrationForm = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">Country *</Label>
-              <Input id="country" placeholder="Enter country" />
+              <Input 
+                id="country" 
+                value={residencyType === "uae" ? "United Arab Emirates" : beneficiaryCountry ? payoutDestinations.find(d => d.code === beneficiaryCountry)?.country : ""}
+                disabled
+                placeholder="Select country from residency section above"
+              />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,89 +429,160 @@ const BeneficiaryRegistrationForm = () => {
         </CardContent>
       </Card>
 
-      {/* Payout Methods */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      {/* Payout Mechanism Selection */}
+      {beneficiaryCountry && (
+        <Card className="shadow-card">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Banknote className="h-5 w-5 text-primary" />
-              Payout Methods
+              <CreditCard className="h-5 w-5 text-primary" />
+              Payout Mechanism
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={addPayoutMethod}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Method
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {payoutMethods.map((method, index) => (
-            <Card key={index} className="border-l-4 border-l-accent">
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium">Payout Method {index + 1}</h4>
-                    {method.isDefault && (
-                      <Badge variant="default" className="text-xs">Default</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  payoutMechanism === "bank_account" ? "ring-2 ring-primary bg-primary/5" : ""
+                }`}
+                onClick={() => setPayoutMechanism("bank_account")}
+              >
+                <CardContent className="p-4 flex items-center space-x-3">
+                  <Banknote className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Bank Account</h3>
+                    <p className="text-sm text-muted-foreground">Direct bank transfer</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  payoutMechanism === "wallet" ? "ring-2 ring-primary bg-primary/5" : ""
+                } ${getAvailableWallets().length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={() => getAvailableWallets().length > 0 && setPayoutMechanism("wallet")}
+              >
+                <CardContent className="p-4 flex items-center space-x-3">
+                  <Wallet className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Digital Wallet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {getAvailableWallets().length > 0 ? "Mobile/digital wallet" : "Not available"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Bank Account Details */}
+            {payoutMechanism === "bank_account" && (
+              <Card className="border-l-4 border-l-primary">
+                <CardContent className="p-4 space-y-4">
+                  <h4 className="font-medium text-foreground">Bank Account Details</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Select Bank *</Label>
+                      <Select value={selectedBank} onValueChange={setSelectedBank}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose bank" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50">
+                          {getAvailableBanks().map((bank) => (
+                            <SelectItem key={bank.name} value={bank.name}>
+                              {bank.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {selectedBank && getSelectedBankDetails() && (
+                      <div className="space-y-2">
+                        <Label>SWIFT/BIC Code</Label>
+                        <Input 
+                          value={getSelectedBankDetails()?.code || ""} 
+                          disabled 
+                          className="bg-muted"
+                        />
+                      </div>
                     )}
                   </div>
-                  {payoutMethods.length > 1 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => removePayoutMethod(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Account Number *</Label>
+                      <Input 
+                        placeholder={beneficiaryCountry === "AE" ? "AE070331234567890123456" : "Enter account number"} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Account Holder Name *</Label>
+                      <Input placeholder="Enter account holder name" />
+                    </div>
+                  </div>
+
+                  {beneficiaryCountry === "AE" && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>IBAN</Label>
+                        <Input placeholder="AE070331234567890123456" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Branch Code</Label>
+                        <Input placeholder="Enter branch code (if applicable)" />
+                      </div>
+                    </div>
                   )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Bank Name *</Label>
-                    <Input placeholder="Enter bank name" />
+
+                  {selectedBank === "Emirates NBD" && (
+                    <div className="bg-accent-muted/20 rounded-lg p-3">
+                      <div className="flex items-start space-x-2">
+                        <Info className="h-4 w-4 text-accent mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-foreground">Emirates NBD Account Format</p>
+                          <p className="text-muted-foreground">IBAN: AE07 0331 2345 6789 0123 456</p>
+                          <p className="text-muted-foreground">SWIFT: EBILAEAD</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Wallet Details */}
+            {payoutMechanism === "wallet" && (
+              <Card className="border-l-4 border-l-accent">
+                <CardContent className="p-4 space-y-4">
+                  <h4 className="font-medium text-foreground">Digital Wallet Details</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Wallet Provider *</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose wallet provider" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50">
+                          {getAvailableWallets().map((wallet) => (
+                            <SelectItem key={wallet.name} value={wallet.name}>
+                              {wallet.name} ({wallet.type})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Wallet ID/Phone Number *</Label>
+                      <Input placeholder="Enter wallet ID or phone number" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Bank Code/SWIFT</Label>
-                    <Input placeholder="Enter SWIFT/bank code" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Account Number *</Label>
-                    <Input placeholder="Enter account number" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Account Name *</Label>
-                    <Input placeholder="Enter account holder name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Currency *</Label>
-                    <Input placeholder="USD, AED, EUR, etc." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Branch Code</Label>
-                    <Input placeholder="Enter branch code (if applicable)" />
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id={`default-${index}`}
-                    checked={method.isDefault}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setPayoutMethods(payoutMethods.map((m, i) => ({
-                          ...m,
-                          isDefault: i === index
-                        })));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`default-${index}`}>Set as default payout method</Label>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Purpose and Relationship */}
       <Card className="shadow-card">
@@ -283,7 +592,21 @@ const BeneficiaryRegistrationForm = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="relationship">Relationship Type *</Label>
-            <Input id="relationship" placeholder="e.g., Supplier, Employee, Contractor, Vendor" />
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select relationship type" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="supplier">Supplier</SelectItem>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="contractor">Contractor</SelectItem>
+                <SelectItem value="vendor">Vendor</SelectItem>
+                <SelectItem value="family">Family Member</SelectItem>
+                <SelectItem value="client">Client</SelectItem>
+                <SelectItem value="partner">Business Partner</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="purpose">Expected Transaction Purpose</Label>
@@ -296,11 +619,25 @@ const BeneficiaryRegistrationForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="expectedAmount">Expected Monthly Volume</Label>
-              <Input id="expectedAmount" placeholder="USD amount (optional)" />
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="expectedAmount" className="pl-9" placeholder="0.00" />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="frequency">Expected Frequency</Label>
-              <Input id="frequency" placeholder="e.g., Monthly, Weekly, Ad-hoc" />
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="adhoc">Ad-hoc</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -319,9 +656,11 @@ const BeneficiaryRegistrationForm = () => {
             <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
               <CardContent className="p-6 text-center">
                 <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-medium">Identity Document</p>
+                <p className="text-sm font-medium">
+                  {beneficiaryType === "individual" ? "Identity Document" : "Business Registration"}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {beneficiaryType === "individual" ? "Passport/Emirates ID" : "Trade License"}
+                  {beneficiaryType === "individual" ? "Passport/Emirates ID/National ID" : "Trade License/Certificate of Incorporation"}
                 </p>
               </CardContent>
             </Card>
@@ -358,7 +697,7 @@ const BeneficiaryRegistrationForm = () => {
           Save as Draft
         </Button>
         <Button variant="business" size="lg">
-          Submit for Approval
+          {requiresApproval ? "Submit for Approval" : "Register Beneficiary"}
         </Button>
       </div>
     </div>

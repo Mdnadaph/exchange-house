@@ -19,7 +19,10 @@ import {
   MapPin,
   Banknote,
   Eye,
-  Filter
+  Filter,
+  Globe,
+  CreditCard,
+  Wallet
 } from "lucide-react";
 import { useState } from "react";
 
@@ -236,15 +239,98 @@ const UserBeneficiaries = () => {
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Beneficiaries</h1>
-            <p className="text-muted-foreground">Manage your payment recipients and their verification status</p>
-          </div>
-          <Button variant="business" onClick={() => setView("register")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Register Beneficiary
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Beneficiaries</h1>
+          <p className="text-muted-foreground">Manage your payment recipients and their verification status</p>
         </div>
+        <Button variant="business" onClick={() => setView("register")}>
+          <Plus className="h-4 w-4 mr-2" />
+          Register Beneficiary
+        </Button>
+      </div>
+
+      {/* Payout Destinations & Exchange Rates Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Available Payout Destinations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { country: "India", code: "IN", exchangeRate: "22.45", fees: "5.00" },
+                { country: "Philippines", code: "PH", exchangeRate: "3.67", fees: "3.50" },
+                { country: "Pakistan", code: "PK", exchangeRate: "84.50", fees: "4.00" },
+                { country: "Bangladesh", code: "BD", exchangeRate: "29.75", fees: "3.00" },
+                { country: "UAE", code: "AE", exchangeRate: "1.00", fees: "2.00" }
+              ].map((destination) => (
+                <div key={destination.code} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">{destination.code}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{destination.country}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Rate: 1 AED = {destination.exchangeRate}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="default">Available</Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Fee: AED {destination.fees}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Supported Payout Mechanisms
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
+                <Banknote className="h-6 w-6 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">Bank Account Transfer</p>
+                  <p className="text-sm text-muted-foreground">Direct transfer to beneficiary bank account</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
+                <Wallet className="h-6 w-6 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">Digital Wallet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Mobile wallets and digital payment platforms
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-muted/30 rounded-lg p-3">
+                <h4 className="font-medium text-foreground mb-2">Wallet Providers</h4>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• India: Paymi India</p>
+                  <p>• Philippines: GCash, PayMaya</p>
+                  <p>• Bangladesh: bKash, Nagad</p>
+                  <p>• UAE: Paymi UAE</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
