@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
 import { 
   FileCheck, 
   Building, 
@@ -14,7 +15,11 @@ import {
   Eye,
   Download,
   Plus,
-  Search
+  Search,
+  Shield,
+  FileText,
+  User,
+  MapPin
 } from "lucide-react";
 
 const AdminOnboarding = () => {
@@ -24,10 +29,21 @@ const AdminOnboarding = () => {
       businessName: "TechCorp LLC",
       submissionDate: "2024-01-15",
       status: "pending_review",
-      documents: 8,
+      documents: 7,
       completeness: 95,
       assignedTo: "Sarah Wilson",
-      priority: "high"
+      priority: "high",
+      verificationType: "automated",
+      emirate: "Dubai",
+      documentStatus: {
+        tradeLicense: "approved",
+        emiratesId: "approved", 
+        memorandum: "pending",
+        vatCertificate: "approved",
+        proofOfAddress: "approved",
+        sourceOfFunds: "pending",
+        bankStatement: "approved"
+      }
     },
     {
       id: "KYB-002", 
@@ -37,7 +53,18 @@ const AdminOnboarding = () => {
       documents: 6,
       completeness: 100,
       assignedTo: "Mike Johnson",
-      priority: "medium"
+      priority: "medium",
+      verificationType: "manual",
+      emirate: "Abu Dhabi",
+      documentStatus: {
+        tradeLicense: "approved",
+        emiratesId: "approved", 
+        memorandum: "approved",
+        vatCertificate: "not_applicable",
+        proofOfAddress: "approved",
+        sourceOfFunds: "approved",
+        bankStatement: "approved"
+      }
     },
     {
       id: "KYB-003",
@@ -47,7 +74,18 @@ const AdminOnboarding = () => {
       documents: 7,
       completeness: 100,
       assignedTo: "Sarah Wilson", 
-      priority: "low"
+      priority: "low",
+      verificationType: "automated",
+      emirate: "Sharjah",
+      documentStatus: {
+        tradeLicense: "approved",
+        emiratesId: "approved", 
+        memorandum: "approved",
+        vatCertificate: "approved",
+        proofOfAddress: "approved",
+        sourceOfFunds: "approved",
+        bankStatement: "approved"
+      }
     },
     {
       id: "KYB-004",
@@ -57,7 +95,18 @@ const AdminOnboarding = () => {
       documents: 4,
       completeness: 60,
       assignedTo: "Mike Johnson",
-      priority: "medium"
+      priority: "medium",
+      verificationType: "manual",
+      emirate: "Dubai",
+      documentStatus: {
+        tradeLicense: "approved",
+        emiratesId: "requires_attention", 
+        memorandum: "missing",
+        vatCertificate: "not_applicable",
+        proofOfAddress: "missing",
+        sourceOfFunds: "pending",
+        bankStatement: "missing"
+      }
     }
   ];
 
@@ -89,10 +138,7 @@ const AdminOnboarding = () => {
             <h1 className="text-3xl font-bold text-foreground">KYB Onboarding Management</h1>
             <p className="text-muted-foreground">Review and manage business verification applications</p>
           </div>
-          <Button variant="business">
-            <Plus className="h-4 w-4 mr-2" />
-            Initiate KYB
-          </Button>
+          <KYBInitiationForm />
         </div>
 
         {/* Statistics Cards */}
@@ -166,10 +212,43 @@ const AdminOnboarding = () => {
           </CardContent>
         </Card>
 
+        {/* UAE Compliance Information */}
+        <Card className="shadow-card border-accent/20 bg-accent-muted/10">
+          <CardContent className="p-6">
+            <div className="flex items-start space-x-4">
+              <Shield className="h-6 w-6 text-accent mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground">UAE Central Bank Compliance</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  All KYB applications must comply with UAE Central Bank regulations and CBUAE guidelines for money exchange businesses.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-accent" />
+                    <span>Trade License Verification</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <User className="h-4 w-4 text-accent" />
+                    <span>Identity Verification</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-accent" />
+                    <span>Address Verification</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-accent" />
+                    <span>AML/CFT Compliance</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* KYB Applications Table */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>KYB Applications</CardTitle>
+            <CardTitle>KYB Applications - UAE Regulatory Compliance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -199,22 +278,63 @@ const AdminOnboarding = () => {
                             </Badge>
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Submitted:</span>
                               <p className="font-medium">{application.submissionDate}</p>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Documents:</span>
-                              <p className="font-medium">{application.documents} uploaded</p>
+                              <p className="font-medium">{application.documents}/7 uploaded</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Completeness:</span>
-                              <p className="font-medium">{application.completeness}%</p>
+                              <span className="text-muted-foreground">Emirate:</span>
+                              <p className="font-medium">{application.emirate}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Verification:</span>
+                              <Badge variant="outline" className="text-xs">
+                                {application.verificationType === "automated" ? "Auto" : "Manual"}
+                              </Badge>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Assigned to:</span>
                               <p className="font-medium">{application.assignedTo}</p>
+                            </div>
+                          </div>
+                          
+                          {/* UAE-specific document status */}
+                          <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                            <h4 className="text-xs font-medium text-muted-foreground mb-2">UAE Regulatory Documents Status</h4>
+                            <div className="grid grid-cols-3 md:grid-cols-7 gap-2 text-xs">
+                              {Object.entries(application.documentStatus).map(([docType, status]) => {
+                                const docNames = {
+                                  tradeLicense: "Trade License",
+                                  emiratesId: "Emirates ID",
+                                  memorandum: "MOA",
+                                  vatCertificate: "VAT Cert",
+                                  proofOfAddress: "Address",
+                                  sourceOfFunds: "Funds Decl",
+                                  bankStatement: "Bank Stmt"
+                                };
+                                const getStatusColor = (status: string) => {
+                                  switch (status) {
+                                    case "approved": return "bg-success/20 text-success";
+                                    case "pending": return "bg-warning/20 text-warning";
+                                    case "requires_attention": return "bg-destructive/20 text-destructive";
+                                    case "missing": return "bg-muted text-muted-foreground";
+                                    case "not_applicable": return "bg-muted/50 text-muted-foreground";
+                                    default: return "bg-muted text-muted-foreground";
+                                  }
+                                };
+                                
+                                return (
+                                  <div key={docType} className={`px-2 py-1 rounded text-center ${getStatusColor(status)}`}>
+                                    <div className="font-medium">{docNames[docType as keyof typeof docNames]}</div>
+                                    <div className="text-xs opacity-75">{status.replace("_", " ")}</div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>

@@ -38,9 +38,11 @@ const BranchKYBQueue = () => {
       phone: "+971 4 123 4567",
       documents: [
         { name: "Trade License", status: "approved", reviewDate: "2024-01-16" },
-        { name: "Bank Statement", status: "pending", reviewDate: null },
-        { name: "Memorandum", status: "requires_attention", reviewDate: "2024-01-16" },
-        { name: "Passport Copy", status: "approved", reviewDate: "2024-01-16" }
+        { name: "Emirates ID Copy", status: "pending", reviewDate: null },
+        { name: "Memorandum of Association", status: "requires_attention", reviewDate: "2024-01-16" },
+        { name: "Passport Copy", status: "approved", reviewDate: "2024-01-16" },
+        { name: "Proof of Address", status: "pending", reviewDate: null },
+        { name: "Source of Funds Declaration", status: "pending", reviewDate: null }
       ],
       notes: "Memorandum requires updated signatures from all directors. Bank statement needs to be more recent (within 3 months)."
     },
@@ -59,9 +61,11 @@ const BranchKYBQueue = () => {
       phone: "+971 4 567 8901",
       documents: [
         { name: "Trade License", status: "approved", reviewDate: "2024-01-15" },
-        { name: "Bank Statement", status: "missing", reviewDate: null },
+        { name: "Emirates ID Copy", status: "missing", reviewDate: null },
         { name: "Insurance Certificate", status: "pending", reviewDate: null },
-        { name: "Passport Copy", status: "approved", reviewDate: "2024-01-15" }
+        { name: "Passport Copy", status: "approved", reviewDate: "2024-01-15" },
+        { name: "Proof of Address", status: "missing", reviewDate: null },
+        { name: "Source of Funds Declaration", status: "pending", reviewDate: null }
       ],
       notes: "Waiting for bank statement and insurance certificate. Client confirmed documents will be submitted by EOD tomorrow."
     },
@@ -80,9 +84,12 @@ const BranchKYBQueue = () => {
       phone: "+971 2 234 5678",
       documents: [
         { name: "Trade License", status: "approved", reviewDate: "2024-01-14" },
-        { name: "Bank Statement", status: "approved", reviewDate: "2024-01-14" },
+        { name: "Emirates ID Copy", status: "approved", reviewDate: "2024-01-14" },
         { name: "Import/Export License", status: "approved", reviewDate: "2024-01-14" },
-        { name: "Passport Copy", status: "approved", reviewDate: "2024-01-14" }
+        { name: "Passport Copy", status: "approved", reviewDate: "2024-01-14" },
+        { name: "Memorandum of Association", status: "approved", reviewDate: "2024-01-14" },
+        { name: "Proof of Address", status: "approved", reviewDate: "2024-01-14" },
+        { name: "Source of Funds Declaration", status: "approved", reviewDate: "2024-01-14" }
       ],
       notes: "All documents verified and approved. Application ready for final approval decision."
     }

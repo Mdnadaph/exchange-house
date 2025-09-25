@@ -40,9 +40,12 @@ const ExchangeKYBReview = () => {
       address: "DIFC, Level 15, Building 3, Dubai, UAE",
       documents: [
         { name: "Trade License", status: "approved", uploadDate: "2024-01-16" },
-        { name: "Bank Statement", status: "pending", uploadDate: "2024-01-16" },
+        { name: "Emirates ID Copy", status: "pending", uploadDate: "2024-01-16" },
         { name: "Passport Copy", status: "approved", uploadDate: "2024-01-16" },
-        { name: "Memorandum", status: "requires_attention", uploadDate: "2024-01-16" }
+        { name: "Memorandum of Association", status: "requires_attention", uploadDate: "2024-01-16" },
+        { name: "Proof of Address", status: "approved", uploadDate: "2024-01-16" },
+        { name: "Source of Funds Declaration", status: "pending", uploadDate: "2024-01-16" },
+        { name: "Bank Statement", status: "approved", uploadDate: "2024-01-16" }
       ],
       transactionProfile: {
         expectedVolume: "50,000 USD/month",
@@ -68,9 +71,12 @@ const ExchangeKYBReview = () => {
       address: "ADGM Square, Abu Dhabi Global Market, Abu Dhabi, UAE",
       documents: [
         { name: "Trade License", status: "approved", uploadDate: "2024-01-15" },
-        { name: "Bank Statement", status: "approved", uploadDate: "2024-01-15" },
+        { name: "Emirates ID Copy", status: "approved", uploadDate: "2024-01-15" },
         { name: "Passport Copy", status: "approved", uploadDate: "2024-01-15" },
-        { name: "Memorandum", status: "approved", uploadDate: "2024-01-15" }
+        { name: "Memorandum of Association", status: "approved", uploadDate: "2024-01-15" },
+        { name: "VAT Certificate", status: "approved", uploadDate: "2024-01-15" },
+        { name: "Proof of Address", status: "approved", uploadDate: "2024-01-15" },
+        { name: "Source of Funds Declaration", status: "approved", uploadDate: "2024-01-15" }
       ],
       transactionProfile: {
         expectedVolume: "100,000 USD/month",
