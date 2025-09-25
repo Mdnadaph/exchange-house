@@ -13,6 +13,12 @@ import UserDashboard from "./pages/portal/UserDashboard";
 import UserBeneficiaries from "./pages/portal/UserBeneficiaries";
 import UserTransactions from "./pages/portal/UserTransactions";
 import UserDocuments from "./pages/portal/UserDocuments";
+import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
+import ExchangeKYBReview from "./pages/exchange/ExchangeKYBReview";
+import ExchangePayoutConfig from "./pages/exchange/ExchangePayoutConfig";
+import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
+import BranchDashboard from "./pages/branch/BranchDashboard";
+import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +42,16 @@ const App = () => (
           <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
           <Route path="/portal/transactions" element={<UserTransactions />} />
           <Route path="/portal/documents" element={<UserDocuments />} />
+          
+          {/* Exchange House Admin Routes */}
+          <Route path="/exchange" element={<ExchangeAdminDashboard />} />
+          <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
+          <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
+          <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
+          
+          {/* Branch User Routes */}
+          <Route path="/branch" element={<BranchDashboard />} />
+          <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
