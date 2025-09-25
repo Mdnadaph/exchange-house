@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import SingleTransactionForm from "@/components/transactions/SingleTransactionForm";
+import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
 import { 
   CreditCard, 
   Plus, 
@@ -16,7 +18,8 @@ import {
   TrendingUp,
   Calendar,
   DollarSign,
-  FileText
+  FileText,
+  Users
 } from "lucide-react";
 
 const UserTransactions = () => {
@@ -126,14 +129,8 @@ const UserTransactions = () => {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button variant="outline">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Bulk Payment
-            </Button>
-            <Button variant="business">
-              <Plus className="h-4 w-4 mr-2" />
-              Single Payment
-            </Button>
+            <BulkTransactionForm />
+            <SingleTransactionForm />
           </div>
         </div>
 
@@ -317,7 +314,19 @@ const UserTransactions = () => {
                           
                           {transaction.status === "pending_approval" && (
                             <div className="text-xs text-muted-foreground">
-                              Awaiting approval from Treasury Department
+                              <div className="flex items-center space-x-1">
+                                <Users className="h-3 w-3" />
+                                <span>Awaiting approval from Treasury Department</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {transaction.status === "processing" && (
+                            <div className="text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3 w-3" />
+                                <span>Processing through approval workflow</span>
+                              </div>
                             </div>
                           )}
                         </div>
