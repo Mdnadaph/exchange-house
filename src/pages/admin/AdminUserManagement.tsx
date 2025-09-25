@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import UserCreationForm from "@/components/governance/UserCreationForm";
 import { 
   Users, 
   Plus, 
@@ -16,7 +17,9 @@ import {
   Shield,
   Mail,
   Phone,
-  Calendar
+  Calendar,
+  Key,
+  Settings
 } from "lucide-react";
 
 const AdminUserManagement = () => {
@@ -32,7 +35,9 @@ const AdminUserManagement = () => {
       currency: "USD",
       lastLogin: "2024-01-16 14:30",
       joinDate: "2023-08-15",
-      permissions: ["create_transactions", "manage_beneficiaries", "view_reports"]
+      permissions: ["create_transactions", "manage_beneficiaries", "view_reports"],
+      approvalLimit: "25000",
+      canApprove: false
     },
     {
       id: "USR-002", 
@@ -58,7 +63,9 @@ const AdminUserManagement = () => {
       currency: "USD",
       lastLogin: "2024-01-12 16:45",
       joinDate: "2023-11-10",
-      permissions: ["create_transactions", "view_reports"]
+      permissions: ["create_transactions", "view_reports"],
+      approvalLimit: "10000",
+      canApprove: false
     },
     {
       id: "USR-004",
@@ -71,7 +78,9 @@ const AdminUserManagement = () => {
       currency: "USD",
       lastLogin: "Never",
       joinDate: "2024-01-15",
-      permissions: ["create_transactions", "manage_beneficiaries", "approve_transactions"]
+      permissions: ["create_transactions", "manage_beneficiaries", "approve_transactions"],
+      approvalLimit: "75000",
+      canApprove: true
     }
   ];
 
@@ -100,13 +109,10 @@ const AdminUserManagement = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">User Management</h1>
-            <p className="text-muted-foreground">Manage business users, roles, and permissions</p>
+            <h1 className="text-3xl font-bold text-foreground">User Management & Governance</h1>
+            <p className="text-muted-foreground">Manage business users, roles, permissions, and approval hierarchies</p>
           </div>
-          <Button variant="business">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Business User
-          </Button>
+          <UserCreationForm />
         </div>
 
         {/* Statistics Cards */}
@@ -146,12 +152,14 @@ const AdminUserManagement = () => {
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Departments</CardTitle>
-              <Shield className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Approvers</CardTitle>
+              <Key className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">6</div>
-              <p className="text-xs text-muted-foreground">Active departments</p>
+              <div className="text-2xl font-bold text-accent">
+                {businessUsers.filter(user => user.canApprove).length}
+              </div>
+              <p className="text-xs text-muted-foreground">With approval authority</p>
             </CardContent>
           </Card>
         </div>
@@ -239,6 +247,10 @@ const AdminUserManagement = () => {
                               <p className="font-medium">{user.currency} {Number(user.transactionLimit).toLocaleString()}</p>
                             </div>
                             <div className="space-y-1">
+                              <span className="text-muted-foreground">Approval Limit:</span>
+                              <p className="font-medium">{user.currency} {Number(user.approvalLimit).toLocaleString()}</p>
+                            </div>
+                            <div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Calendar className="h-3 w-3 mr-1" />
                                 Last Login:
@@ -247,16 +259,28 @@ const AdminUserManagement = () => {
                             </div>
                           </div>
 
-                          {/* Permissions */}
-                          <div>
-                            <span className="text-sm text-muted-foreground mb-2 block">Permissions:</span>
-                            <div className="flex flex-wrap gap-1">
-                              {user.permissions.map((permission, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                </Badge>
-                              ))}
+                          {/* Permissions and Approval Authority */}
+                          <div className="space-y-3">
+                            <div>
+                              <span className="text-sm text-muted-foreground mb-2 block">Permissions:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {user.permissions.map((permission, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
+
+                            {user.canApprove && (
+                              <div className="flex items-center space-x-2 p-2 bg-accent-muted/20 rounded-lg">
+                                <Key className="h-4 w-4 text-accent" />
+                                <span className="text-sm font-medium text-accent">Approval Authority</span>
+                                <Badge variant="outline" className="text-xs">
+                                  Up to {user.currency} {Number(user.approvalLimit).toLocaleString()}
+                                </Badge>
+                              </div>
+                            )}
                           </div>
                         </div>
                         
