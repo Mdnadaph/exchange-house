@@ -33,7 +33,12 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost">Sign In</Button>
+            <Button variant="ghost" asChild>
+              <a href="/portal">User Portal</a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/admin">Admin Portal</a>
+            </Button>
             <Button variant="business" size="lg">
               Get Started
             </Button>
