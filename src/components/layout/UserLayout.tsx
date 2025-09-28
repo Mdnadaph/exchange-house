@@ -7,7 +7,8 @@ import {
   CreditCard, 
   FileText, 
   LogOut,
-  User
+  User,
+  Shield
 } from "lucide-react";
 
 interface UserLayoutProps {
@@ -21,6 +22,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     { name: "Dashboard", href: "/portal", icon: Home },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
+    { name: "Governance", href: "/portal/governance", icon: Shield },
     { name: "Documents", href: "/portal/documents", icon: FileText },
   ];
 

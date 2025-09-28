@@ -13,6 +13,7 @@ import UserDashboard from "./pages/portal/UserDashboard";
 import UserBeneficiaries from "./pages/portal/UserBeneficiaries";
 import UserTransactions from "./pages/portal/UserTransactions";
 import UserDocuments from "./pages/portal/UserDocuments";
+import UserGovernance from "./pages/portal/UserGovernance";
 import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
 import ExchangeKYBReview from "./pages/exchange/ExchangeKYBReview";
 import ExchangeKYBConfig from "./pages/exchange/ExchangeKYBConfig";
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/portal" element={<UserDashboard />} />
           <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
           <Route path="/portal/transactions" element={<UserTransactions />} />
+          <Route path="/portal/governance" element={<UserGovernance />} />
           <Route path="/portal/documents" element={<UserDocuments />} />
           
           {/* Exchange House Admin Routes */}
