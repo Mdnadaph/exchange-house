@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import BulkTransactionFeeDisplay from "./BulkTransactionFeeDisplay";
 import { 
   Plus, 
   DollarSign, 
@@ -333,7 +334,15 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      <Card>
+          {/* Fee Display */}
+          {bulkData.length > 0 && (
+            <BulkTransactionFeeDisplay
+              bulkData={bulkData}
+              currency={currency}
+            />
+          )}
+
+          <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">

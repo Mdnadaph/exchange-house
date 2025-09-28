@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import FeeCalculator from "@/components/fees/FeeCalculator";
 import { 
   Plus, 
   DollarSign, 
@@ -448,6 +449,16 @@ const SingleTransactionForm = ({ trigger }: SingleTransactionFormProps) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Fee Calculator */}
+          {selectedBeneficiary && amount && (
+            <FeeCalculator
+              amount={parseFloat(amount)}
+              currency={currency}
+              country={beneficiaries.find(b => b.id === selectedBeneficiary)?.country || ""}
+              transactionType="Single Transaction"
+            />
+          )}
 
           {/* Additional Notes */}
           <Card>

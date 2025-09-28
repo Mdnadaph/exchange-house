@@ -20,6 +20,7 @@ import ExchangeKYBConfig from "./pages/exchange/ExchangeKYBConfig";
 import ExchangePayoutConfig from "./pages/exchange/ExchangePayoutConfig";
 import ExchangeComplianceConfig from "./pages/exchange/ExchangeComplianceConfig";
 import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
+import ExchangeFeeManagement from "./pages/exchange/ExchangeFeeManagement";
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
 
@@ -49,11 +50,12 @@ const App = () => (
           
           {/* Exchange House Admin Routes */}
           <Route path="/exchange" element={<ExchangeAdminDashboard />} />
-          <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
-          <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
-          <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
-          <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
-          <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
+        <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
+        <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
+        <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
+        <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
+        <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
+        <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
           
           {/* Branch User Routes */}
           <Route path="/branch" element={<BranchDashboard />} />
