@@ -11,7 +11,7 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
               <Building2 className="h-8 w-8 text-accent" />
-              <span className="text-xl font-bold">BusinessPay</span>
+              <span className="text-xl font-bold">BizPay Axis</span>
             </div>
             <p className="text-background/80 mb-6 text-sm leading-relaxed">
               Transforming cross-border payments for businesses across the UAE and beyond. 
@@ -70,8 +70,8 @@ const Footer = () => {
                 <span className="text-background/80">+971 4 XXX XXXX</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-accent" />
-                <span className="text-background/80">support@businesspay.ae</span>
+              <Mail className="h-4 w-4 text-accent" />
+                <span className="text-background/80">support@bizpayaxis.ae</span>
               </div>
             </div>
             
@@ -93,7 +93,7 @@ const Footer = () => {
         <div className="border-t border-background/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-background/60">
-              <span>© 2024 BusinessPay. All rights reserved.</span>
+              <span>© 2024 BizPay Axis. All rights reserved.</span>
               <div className="flex gap-4">
                 <a href="#" className="hover:text-accent transition-smooth">Privacy Policy</a>
                 <a href="#" className="hover:text-accent transition-smooth">Terms of Service</a>

@@ -36,7 +36,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <div className="flex items-center space-x-4">
               <Link to="/" className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">BusinessPay</span>
+                <span className="text-xl font-bold">BizPay Axis</span>
               </Link>
               <div className="flex items-center space-x-2 text-sm">
                 <Shield className="h-4 w-4 text-primary" />
