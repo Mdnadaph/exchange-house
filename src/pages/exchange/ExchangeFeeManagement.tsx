@@ -29,6 +29,7 @@ const ExchangeFeeManagement = () => {
     maxAmount: "",
     feeType: "",
     feeValue: "",
+    feeResponsibility: "Business",
     isActive: true
   });
 
@@ -42,6 +43,7 @@ const ExchangeFeeManagement = () => {
       maxAmount: 10000,
       feeType: "Flat",
       feeValue: "AED 25",
+      feeResponsibility: "Business",
       status: "Active"
     },
     {
@@ -52,6 +54,7 @@ const ExchangeFeeManagement = () => {
       maxAmount: 50000,
       feeType: "BPS",
       feeValue: "50 BPS (0.5%)",
+      feeResponsibility: "Beneficiary",
       status: "Active"
     },
     {
@@ -62,6 +65,7 @@ const ExchangeFeeManagement = () => {
       maxAmount: 999999,
       feeType: "Flat",
       feeValue: "AED 15 per beneficiary",
+      feeResponsibility: "Business",
       status: "Active"
     },
     {
@@ -72,6 +76,7 @@ const ExchangeFeeManagement = () => {
       maxAmount: 25000,
       feeType: "BPS",
       feeValue: "75 BPS (0.75%)",
+      feeResponsibility: "Beneficiary",
       status: "Active"
     }
   ];
@@ -233,6 +238,24 @@ const ExchangeFeeManagement = () => {
                   </div>
                 </div>
 
+                <div>
+                  <Label htmlFor="fee-responsibility">Fee Responsibility *</Label>
+                  <Select value={newFeeRule.feeResponsibility} onValueChange={(value) => 
+                    setNewFeeRule({...newFeeRule, feeResponsibility: value})
+                  }>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Who pays the fee?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Business">Business Pays</SelectItem>
+                      <SelectItem value="Beneficiary">Beneficiary Pays</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Business Pays: Fee added to transaction cost | Beneficiary Pays: Fee deducted from payout amount
+                  </p>
+                </div>
+
                 <div className="flex justify-end space-x-2 mt-6">
                   <Button variant="outline">Cancel</Button>
                   <Button>Create Fee Rule</Button>
@@ -313,6 +336,7 @@ const ExchangeFeeManagement = () => {
                   <TableHead>Amount Range (AED)</TableHead>
                   <TableHead>Fee Structure</TableHead>
                   <TableHead>Fee Value</TableHead>
+                  <TableHead>Paid By</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -327,6 +351,11 @@ const ExchangeFeeManagement = () => {
                     </TableCell>
                     <TableCell>{rule.feeType}</TableCell>
                     <TableCell className="font-mono">{rule.feeValue}</TableCell>
+                    <TableCell>
+                      <Badge variant={rule.feeResponsibility === "Business" ? "default" : "secondary"}>
+                        {rule.feeResponsibility}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{getStatusBadge(rule.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

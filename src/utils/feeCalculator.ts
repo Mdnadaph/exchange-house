@@ -5,6 +5,7 @@ interface FeeRule {
   maxAmount: number;
   feeType: "Flat" | "BPS";
   feeValue: number; // For Flat: AED amount, For BPS: basis points (e.g., 50 = 0.5%)
+  feeResponsibility: "Business" | "Beneficiary"; // Who pays the fee
 }
 
 // Mock fee rules - in real app, this would come from API/database
@@ -15,7 +16,8 @@ const feeRules: FeeRule[] = [
     minAmount: 0,
     maxAmount: 10000,
     feeType: "Flat",
-    feeValue: 25
+    feeValue: 25,
+    feeResponsibility: "Business"
   },
   {
     transactionType: "Single Transaction", 
@@ -23,7 +25,8 @@ const feeRules: FeeRule[] = [
     minAmount: 10001,
     maxAmount: 50000,
     feeType: "BPS",
-    feeValue: 50 // 0.5%
+    feeValue: 50, // 0.5%
+    feeResponsibility: "Beneficiary"
   },
   {
     transactionType: "Bulk Transaction",
@@ -31,7 +34,8 @@ const feeRules: FeeRule[] = [
     minAmount: 0,
     maxAmount: 999999,
     feeType: "Flat",
-    feeValue: 15 // per beneficiary
+    feeValue: 15, // per beneficiary
+    feeResponsibility: "Business"
   },
   {
     transactionType: "Single Transaction",
@@ -39,7 +43,8 @@ const feeRules: FeeRule[] = [
     minAmount: 0,
     maxAmount: 25000,
     feeType: "Flat",
-    feeValue: 30
+    feeValue: 30,
+    feeResponsibility: "Business"
   },
   {
     transactionType: "Single Transaction",
@@ -47,7 +52,8 @@ const feeRules: FeeRule[] = [
     minAmount: 0,
     maxAmount: 999999,
     feeType: "BPS",
-    feeValue: 75 // 0.75%
+    feeValue: 75, // 0.75%
+    feeResponsibility: "Beneficiary"
   },
   {
     transactionType: "Single Transaction",
@@ -55,7 +61,8 @@ const feeRules: FeeRule[] = [
     minAmount: 0,
     maxAmount: 15000,
     feeType: "Flat",
-    feeValue: 20
+    feeValue: 20,
+    feeResponsibility: "Business"
   },
   {
     transactionType: "Single Transaction",
@@ -63,7 +70,8 @@ const feeRules: FeeRule[] = [
     minAmount: 0,
     maxAmount: 999999,
     feeType: "BPS",
-    feeValue: 60 // 0.6%
+    feeValue: 60, // 0.6%
+    feeResponsibility: "Beneficiary"
   }
 ];
 
@@ -71,6 +79,7 @@ export interface FeeCalculationResult {
   fee: number;
   feeType: string;
   description: string;
+  feeResponsibility: "Business" | "Beneficiary";
 }
 
 export const calculateTransactionFee = (
@@ -92,7 +101,8 @@ export const calculateTransactionFee = (
     return { 
       fee: 0, 
       feeType: "N/A", 
-      description: "No applicable fee rule found" 
+      description: "No applicable fee rule found",
+      feeResponsibility: "Business"
     };
   }
 
@@ -116,7 +126,8 @@ export const calculateTransactionFee = (
   return {
     fee: calculatedFee,
     feeType: applicableRule.feeType,
-    description
+    description,
+    feeResponsibility: applicableRule.feeResponsibility
   };
 };
 
