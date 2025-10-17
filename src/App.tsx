@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import UserProfile from "./pages/portal/UserProfile";
 import UserDashboard from "./pages/portal/UserDashboard";
 import UserBeneficiaries from "./pages/portal/UserBeneficiaries";
 import UserTransactions from "./pages/portal/UserTransactions";
@@ -22,9 +23,11 @@ import ExchangeComplianceConfig from "./pages/exchange/ExchangeComplianceConfig"
 import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
 import ExchangeFeeManagement from "./pages/exchange/ExchangeFeeManagement";
 import ExchangeTransactions from "./pages/exchange/ExchangeTransactions";
+import ExchangeBusinessDocuments from "./pages/exchange/ExchangeBusinessDocuments";
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
 import BranchTransactions from "./pages/branch/BranchTransactions";
+import BranchBusinessDocuments from "./pages/branch/BranchBusinessDocuments";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +47,7 @@ const App = () => (
           
           {/* Business User Routes */}
           <Route path="/portal" element={<UserDashboard />} />
+          <Route path="/portal/profile" element={<UserProfile />} />
           <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
           <Route path="/portal/transactions" element={<UserTransactions />} />
           <Route path="/portal/users" element={<AdminUserManagement />} />
@@ -55,6 +59,7 @@ const App = () => (
         <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
         <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
         <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
+        <Route path="/exchange/documents" element={<ExchangeBusinessDocuments />} />
         <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
         <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
         <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
@@ -64,6 +69,7 @@ const App = () => (
           <Route path="/branch" element={<BranchDashboard />} />
           <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
           <Route path="/branch/transactions" element={<BranchTransactions />} />
+          <Route path="/branch/documents" element={<BranchBusinessDocuments />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

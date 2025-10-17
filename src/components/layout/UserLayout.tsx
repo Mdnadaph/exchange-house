@@ -8,7 +8,8 @@ import {
   FileText, 
   LogOut,
   User,
-  Shield
+  Shield,
+  UserCircle
 } from "lucide-react";
 
 interface UserLayoutProps {
@@ -20,6 +21,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   
   const navigation = [
     { name: "Dashboard", href: "/portal", icon: Home },
+    { name: "Profile", href: "/portal/profile", icon: UserCircle },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
     { name: "User Management", href: "/portal/users", icon: Users },
