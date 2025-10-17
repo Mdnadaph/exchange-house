@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import BulkTransactionFeeDisplay from "./BulkTransactionFeeDisplay";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   DollarSign, 
@@ -33,6 +35,7 @@ interface BulkTransactionFormProps {
 }
 
 const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
+  const { toast } = useToast();
   const [selectedSource, setSelectedSource] = useState("");
   const [transactionPurpose, setTransactionPurpose] = useState("");  
   const [currency, setCurrency] = useState("USD");
@@ -40,6 +43,8 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
   const [bulkData, setBulkData] = useState<any[]>([]);
   const [notes, setNotes] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [open, setOpen] = useState(false);
 
   // Mock data
   const transactionSources = [
@@ -149,6 +154,22 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
   };
 
   const totals = calculateTotalAmount();
+
+  const handleSubmit = () => {
+    toast({
+      title: "Bulk Transaction Submitted",
+      description: `Your bulk transaction with ${bulkData.length} recipients has been submitted for processing.`,
+    });
+    setOpen(false);
+    // Reset form
+    setSelectedSource("");
+    setTransactionPurpose("");
+    setCurrency("USD");
+    setUploadedDocuments([]);
+    setBulkData([]);
+    setNotes("");
+    setCurrentStep(1);
+  };
 
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
@@ -525,7 +546,8 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
   );
 
   return (
-    <Dialog>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline">
@@ -569,6 +591,7 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
                 <Button 
                   variant="business"
                   disabled={uploadedDocuments.length === 0}
+                  onClick={() => setShowConfirmation(true)}
                 >
                   Submit for Processing
                 </Button>
@@ -578,6 +601,16 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
         </div>
       </DialogContent>
     </Dialog>
+
+    <ConfirmationDialog
+      open={showConfirmation}
+      onOpenChange={setShowConfirmation}
+      onConfirm={handleSubmit}
+      title="Confirm Bulk Transaction Submission"
+      description={`Are you sure you want to submit this bulk transaction with ${bulkData.length} recipients for a total of ${currency} ${totals?.originalAmount.toLocaleString()}? This will route through the executive approval workflow.`}
+      confirmText="Submit Transaction"
+    />
+    </>
   );
 };
 

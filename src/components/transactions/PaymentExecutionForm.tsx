@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   CreditCard, 
@@ -38,6 +39,7 @@ interface PaymentExecutionFormProps {
 }
 
 const PaymentExecutionForm = ({ transaction, trigger }: PaymentExecutionFormProps) => {
+  const { toast } = useToast();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -48,7 +50,8 @@ const PaymentExecutionForm = ({ transaction, trigger }: PaymentExecutionFormProp
   const [paymentDescription, setPaymentDescription] = useState("");
   const [uploadedProofs, setUploadedProofs] = useState<string[]>([]);
   const [ziinaConfirmation, setZiinaConfirmation] = useState("");
-  const { toast } = useToast();
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const paymentMethods = [
     {
@@ -97,6 +100,17 @@ const PaymentExecutionForm = ({ transaction, trigger }: PaymentExecutionFormProp
     setUploadedProofs(uploadedProofs.filter((_, i) => i !== index));
   };
 
+  const confirmSubmitPayment = () => {
+    const method = getSelectedPaymentMethod();
+    if (!method) return;
+
+    toast({
+      title: "Payment Submitted",
+      description: `Payment execution initiated via ${method.name}. Transaction status updated to "Payment Verification".`
+    });
+    setOpen(false);
+  };
+
   const handleSubmitPayment = () => {
     const method = getSelectedPaymentMethod();
     if (!method) return;
@@ -110,14 +124,12 @@ const PaymentExecutionForm = ({ transaction, trigger }: PaymentExecutionFormProp
       return;
     }
 
-    toast({
-      title: "Payment Submitted",
-      description: `Payment execution initiated via ${method.name}. Transaction status updated to "Payment Verification".`
-    });
+    setShowConfirmation(true);
   };
 
   return (
-    <Dialog>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="business" size="sm">
@@ -417,7 +429,7 @@ const PaymentExecutionForm = ({ transaction, trigger }: PaymentExecutionFormProp
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button 
@@ -431,6 +443,16 @@ const PaymentExecutionForm = ({ transaction, trigger }: PaymentExecutionFormProp
         </div>
       </DialogContent>
     </Dialog>
+
+    <ConfirmationDialog
+      open={showConfirmation}
+      onOpenChange={setShowConfirmation}
+      onConfirm={confirmSubmitPayment}
+      title="Confirm Payment Execution"
+      description={`Are you sure you want to execute payment of ${transaction.localCurrency} ${transaction.localAmount} via ${getSelectedPaymentMethod()?.name}? This action cannot be undone.`}
+      confirmText="Execute Payment"
+    />
+    </>
   );
 };
 

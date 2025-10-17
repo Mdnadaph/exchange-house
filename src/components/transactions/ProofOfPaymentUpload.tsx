@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, Download, Eye, CheckCircle, Calendar, X } from "lucide-react";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProofDocument {
@@ -36,6 +37,7 @@ const ProofOfPaymentUpload = ({
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<"POD" | "SWIFT_MT103" | "">("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Mock existing proof documents
   const [proofDocuments, setProofDocuments] = useState<ProofDocument[]>([
@@ -65,15 +67,8 @@ const ProofOfPaymentUpload = ({
     }
   };
 
-  const handleUpload = () => {
-    if (!selectedFile || !documentType) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a file and document type",
-        variant: "destructive",
-      });
-      return;
-    }
+  const confirmUpload = () => {
+    if (!selectedFile || !documentType) return;
 
     const newProof: ProofDocument = {
       id: `PROOF-${String(proofDocuments.length + 1).padStart(3, '0')}`,
@@ -102,6 +97,18 @@ const ProofOfPaymentUpload = ({
     });
 
     onUploadComplete?.();
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile || !documentType) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a file and document type",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowConfirmation(true);
   };
 
   const getDocumentTypeLabel = (type: string) => {
@@ -256,6 +263,15 @@ const ProofOfPaymentUpload = ({
           )}
         </div>
       </CardContent>
+
+      <ConfirmationDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={confirmUpload}
+        title="Confirm Proof Upload"
+        description={`Are you sure you want to upload this ${documentType === 'POD' ? 'Proof of Delivery' : 'SWIFT MT103'} document? This will make it available to the business for download.`}
+        confirmText="Upload Document"
+      />
     </Card>
   );
 };

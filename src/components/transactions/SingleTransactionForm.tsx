@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import FeeCalculator from "@/components/fees/FeeCalculator";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   DollarSign, 
@@ -30,6 +32,7 @@ interface SingleTransactionFormProps {
 }
 
 const SingleTransactionForm = ({ trigger }: SingleTransactionFormProps) => {
+  const { toast } = useToast();
   const [selectedBeneficiary, setSelectedBeneficiary] = useState("");
   const [selectedSource, setSelectedSource] = useState("");
   const [transactionPurpose, setTransactionPurpose] = useState("");
@@ -37,6 +40,8 @@ const SingleTransactionForm = ({ trigger }: SingleTransactionFormProps) => {
   const [currency, setCurrency] = useState("USD");
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [open, setOpen] = useState(false);
 
   // Mock data - would come from backend
   const beneficiaries = [
@@ -141,8 +146,25 @@ const SingleTransactionForm = ({ trigger }: SingleTransactionFormProps) => {
 
   const totals = calculateTotalAmount();
 
+  const handleSubmit = () => {
+    toast({
+      title: "Transaction Submitted",
+      description: "Your transaction has been submitted for processing and approval.",
+    });
+    setOpen(false);
+    // Reset form
+    setSelectedBeneficiary("");
+    setSelectedSource("");
+    setTransactionPurpose("");
+    setAmount("");
+    setCurrency("USD");
+    setUploadedDocuments([]);
+    setNotes("");
+  };
+
   return (
-    <Dialog>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="business">
@@ -498,12 +520,13 @@ const SingleTransactionForm = ({ trigger }: SingleTransactionFormProps) => {
           </Card>
 
           <div className="flex justify-between pt-6 border-t">
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <div className="space-x-3">
               <Button variant="outline">Save as Draft</Button>
               <Button 
                 variant="business" 
                 disabled={!selectedBeneficiary || !selectedSource || !amount || !transactionPurpose}
+                onClick={() => setShowConfirmation(true)}
               >
                 Submit for Processing
               </Button>
@@ -512,6 +535,16 @@ const SingleTransactionForm = ({ trigger }: SingleTransactionFormProps) => {
         </div>
       </DialogContent>
     </Dialog>
+
+    <ConfirmationDialog
+      open={showConfirmation}
+      onOpenChange={setShowConfirmation}
+      onConfirm={handleSubmit}
+      title="Confirm Transaction Submission"
+      description={`Are you sure you want to submit this transaction for ${totals?.originalAmount.toLocaleString()} ${currency}? This will route the transaction through the approval workflow.`}
+      confirmText="Submit Transaction"
+    />
+    </>
   );
 };
 

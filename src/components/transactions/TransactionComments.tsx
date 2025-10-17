@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageSquare, Send, Building2, Landmark, MapPin } from "lucide-react";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface Comment {
@@ -31,6 +32,7 @@ const TransactionComments = ({
 }: TransactionCommentsProps) => {
   const { toast } = useToast();
   const [newComment, setNewComment] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   // Mock existing comments
   const [comments, setComments] = useState<Comment[]>([
@@ -77,16 +79,7 @@ const TransactionComments = ({
     }
   };
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) {
-      toast({
-        title: "Error",
-        description: "Comment cannot be empty",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const confirmAddComment = () => {
     const comment: Comment = {
       id: Date.now().toString(),
       author: userName,
@@ -109,6 +102,18 @@ const TransactionComments = ({
       title: "Comment Added",
       description: "Your comment has been added to the transaction.",
     });
+  };
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) {
+      toast({
+        title: "Error",
+        description: "Comment cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowConfirmation(true);
   };
 
   const getInitials = (name: string) => {
@@ -203,6 +208,15 @@ const TransactionComments = ({
           </div>
         </div>
       </CardContent>
+
+      <ConfirmationDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={confirmAddComment}
+        title="Confirm Comment Submission"
+        description="Are you sure you want to add this comment to the transaction? All parties will be able to see this comment."
+        confirmText="Add Comment"
+      />
     </Card>
   );
 };

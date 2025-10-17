@@ -24,12 +24,15 @@ import {
   Save,
   X
 } from "lucide-react";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 const UserProfile = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showUploadConfirmation, setShowUploadConfirmation] = useState(false);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
   
   const [businessProfile, setBusinessProfile] = useState({
     companyName: "Tech Solutions LLC",
@@ -114,15 +117,8 @@ const UserProfile = () => {
     }
   };
 
-  const handleUploadDocument = () => {
-    if (!selectedFile || !documentType) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a file and document type",
-        variant: "destructive",
-      });
-      return;
-    }
+  const confirmUploadDocument = () => {
+    if (!selectedFile || !documentType) return;
 
     const newDocument = {
       id: `DOC-${String(documents.length + 1).padStart(3, '0')}`,
@@ -141,6 +137,26 @@ const UserProfile = () => {
     toast({
       title: "Document Uploaded",
       description: "Your document has been uploaded successfully and is pending review.",
+    });
+  };
+
+  const handleUploadDocument = () => {
+    if (!selectedFile || !documentType) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a file and document type",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowUploadConfirmation(true);
+  };
+
+  const confirmSaveProfile = () => {
+    setIsEditing(false);
+    toast({
+      title: "Profile Updated",
+      description: "Your business profile has been updated successfully.",
     });
   };
 
@@ -190,13 +206,10 @@ const UserProfile = () => {
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button variant="default" onClick={() => {
-                setIsEditing(false);
-                toast({
-                  title: "Profile Updated",
-                  description: "Your business profile has been updated successfully.",
-                });
-              }}>
+              <Button 
+                variant="default" 
+                onClick={() => setShowSaveConfirmation(true)}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>
@@ -453,6 +466,24 @@ const UserProfile = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmationDialog
+        open={showSaveConfirmation}
+        onOpenChange={setShowSaveConfirmation}
+        onConfirm={confirmSaveProfile}
+        title="Confirm Profile Changes"
+        description="Are you sure you want to save these changes to your business profile? This information will be updated in the system."
+        confirmText="Save Changes"
+      />
+
+      <ConfirmationDialog
+        open={showUploadConfirmation}
+        onOpenChange={setShowUploadConfirmation}
+        onConfirm={confirmUploadDocument}
+        title="Confirm Document Upload"
+        description={`Are you sure you want to upload this ${documentType} document? It will be sent for review by the Exchange House.`}
+        confirmText="Upload Document"
+      />
     </UserLayout>
   );
 };
