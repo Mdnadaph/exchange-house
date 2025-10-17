@@ -27,11 +27,13 @@ import ExchangeFeeManagement from "./pages/exchange/ExchangeFeeManagement";
 import ExchangeTransactions from "./pages/exchange/ExchangeTransactions";
 import ExchangeBusinessDocuments from "./pages/exchange/ExchangeBusinessDocuments";
 import ExchangeDealReview from "./pages/exchange/ExchangeDealReview";
+import ExchangeBusinessOnboarding from "./pages/exchange/ExchangeBusinessOnboarding";
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
 import BranchTransactions from "./pages/branch/BranchTransactions";
 import BranchBusinessDocuments from "./pages/branch/BranchBusinessDocuments";
 import BranchDealReview from "./pages/branch/BranchDealReview";
+import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -62,18 +64,20 @@ const App = () => (
           
           {/* Exchange House Admin Routes */}
           <Route path="/exchange" element={<ExchangeAdminDashboard />} />
-        <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
-        <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
-        <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
-        <Route path="/exchange/deals" element={<ExchangeDealReview />} />
-        <Route path="/exchange/documents" element={<ExchangeBusinessDocuments />} />
-        <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
-        <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
-        <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
-        <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
+          <Route path="/exchange/onboard-business" element={<ExchangeBusinessOnboarding />} />
+          <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
+          <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
+          <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
+          <Route path="/exchange/deals" element={<ExchangeDealReview />} />
+          <Route path="/exchange/documents" element={<ExchangeBusinessDocuments />} />
+          <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
+          <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
+          <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
+          <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
           
           {/* Branch User Routes */}
           <Route path="/branch" element={<BranchDashboard />} />
+          <Route path="/branch/onboard-business" element={<BranchBusinessOnboarding />} />
           <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
           <Route path="/branch/transactions" element={<BranchTransactions />} />
           <Route path="/branch/deals" element={<BranchDealReview />} />

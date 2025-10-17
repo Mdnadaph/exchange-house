@@ -25,6 +25,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home },
+    { name: "Onboard Business", href: "/exchange/onboard-business", icon: Building2 },
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
     { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
     { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },

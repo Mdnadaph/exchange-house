@@ -12,10 +12,19 @@ import {
   TrendingUp,
   FileText,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  ShieldCheck,
+  XCircle
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
+  
+  // Mock KYB status - in real implementation this would come from backend
+  const kybStatus = "pending_kyb" as "verified" | "pending_review" | "pending_kyb" | "rejected";
+  const kybSubmitted = false;
+
   const stats = [
     {
       title: "Monthly Transactions",
@@ -120,6 +129,82 @@ const UserDashboard = () => {
   return (
     <UserLayout>
       <div className="space-y-8">
+        {/* KYB Verification Status Banner */}
+        {kybStatus === "verified" && (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-6 w-6 text-green-600" />
+                <div>
+                  <h3 className="font-semibold text-green-900">Business Verified</h3>
+                  <p className="text-sm text-green-800">Your business has been successfully verified and approved.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {kybStatus === "pending_review" && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Clock className="h-6 w-6 text-yellow-600" />
+                <div>
+                  <h3 className="font-semibold text-yellow-900">Verification Pending</h3>
+                  <p className="text-sm text-yellow-800">Your KYB application is under review. This typically takes 1-2 business days.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {kybStatus === "pending_kyb" && !kybSubmitted && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900">KYB Verification Required</h3>
+                  <p className="text-sm text-orange-800 mb-3">
+                    Complete your KYB verification to unlock all platform features and start making transactions.
+                  </p>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => navigate('/portal/profile')}
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Complete Verification Now
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {kybStatus === "rejected" && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <XCircle className="h-6 w-6 text-red-600" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900">Verification Rejected</h3>
+                  <p className="text-sm text-red-800 mb-3">
+                    Your KYB application was not approved. Please review the feedback and resubmit with updated documentation.
+                  </p>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => navigate('/portal/profile')}
+                  >
+                    Review & Resubmit
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

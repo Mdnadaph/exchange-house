@@ -22,10 +22,13 @@ import {
   Users,
   Edit,
   Save,
-  X
+  X,
+  AlertCircle,
+  ShieldCheck
 } from "lucide-react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
+import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
 
 const UserProfile = () => {
   const { toast } = useToast();
@@ -43,7 +46,8 @@ const UserProfile = () => {
     phone: "+971 4 123 4567",
     address: "Office 1234, Business Tower, Dubai, UAE",
     registeredDate: "2023-05-15",
-    kybStatus: "approved",
+    kybStatus: "pending_kyb",
+    kybSubmitted: false,
     branch: "Dubai Mall Branch",
     contactPerson: "Sarah Smith",
     contactEmail: "sarah.smith@techsolutions.ae",
@@ -175,10 +179,12 @@ const UserProfile = () => {
 
   const getKybStatusBadge = (status: string) => {
     switch (status) {
-      case "approved":
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-lg px-3 py-1"><CheckCircle className="h-4 w-4 mr-1" />Approved</Badge>;
-      case "pending":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-lg px-3 py-1"><Clock className="h-4 w-4 mr-1" />Pending</Badge>;
+      case "verified":
+        return <Badge variant="default" className="bg-green-100 text-green-800 text-lg px-3 py-1"><CheckCircle className="h-4 w-4 mr-1" />Verified</Badge>;
+      case "pending_review":
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-lg px-3 py-1"><Clock className="h-4 w-4 mr-1" />Pending Review</Badge>;
+      case "pending_kyb":
+        return <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-lg px-3 py-1"><AlertCircle className="h-4 w-4 mr-1" />KYB Required</Badge>;
       case "rejected":
         return <Badge variant="destructive" className="text-lg px-3 py-1"><X className="h-4 w-4 mr-1" />Rejected</Badge>;
       default:
@@ -186,9 +192,43 @@ const UserProfile = () => {
     }
   };
 
+  const handleKYBSubmit = () => {
+    setBusinessProfile(prev => ({ ...prev, kybStatus: "pending_review", kybSubmitted: true }));
+    toast({
+      title: "KYB Submitted Successfully",
+      description: "Your KYB application has been submitted for review.",
+    });
+  };
+
   return (
     <UserLayout>
       <div className="space-y-8">
+        {/* KYB Status Alert */}
+        {businessProfile.kybStatus === "pending_kyb" && !businessProfile.kybSubmitted && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900">KYB Verification Required</h3>
+                  <p className="text-sm text-orange-800 mt-1">
+                    Please complete your KYB (Know Your Business) verification to start using all platform features.
+                  </p>
+                  <KYBInitiationForm 
+                    trigger={
+                      <Button variant="default" size="sm" className="mt-3">
+                        <ShieldCheck className="h-4 w-4 mr-2" />
+                        Complete KYB Verification
+                      </Button>
+                    }
+                    onSubmit={handleKYBSubmit}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

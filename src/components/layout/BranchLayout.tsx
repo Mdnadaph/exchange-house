@@ -20,6 +20,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
+    { name: "Onboard Business", href: "/branch/onboard-business", icon: Building2 },
     { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
     { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/branch/deals", icon: Handshake },

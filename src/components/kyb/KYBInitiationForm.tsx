@@ -23,9 +23,11 @@ import {
 
 interface KYBInitiationFormProps {
   trigger?: React.ReactNode;
+  onSubmit?: () => void;
 }
 
-const KYBInitiationForm = ({ trigger }: KYBInitiationFormProps) => {
+const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
+  const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Business Information
@@ -473,7 +475,7 @@ const KYBInitiationForm = ({ trigger }: KYBInitiationFormProps) => {
   );
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="business">
@@ -511,7 +513,14 @@ const KYBInitiationForm = ({ trigger }: KYBInitiationFormProps) => {
                 Next
               </Button>
             ) : (
-              <Button variant="business">
+              <Button 
+                variant="business"
+                onClick={() => {
+                  setOpen(false);
+                  setCurrentStep(1);
+                  if (onSubmit) onSubmit();
+                }}
+              >
                 Submit KYB Application
               </Button>
             )}
