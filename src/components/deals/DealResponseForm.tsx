@@ -1,0 +1,181 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { CheckCircle, XCircle, MessageSquare } from "lucide-react";
+
+interface DealResponseFormProps {
+  dealId: string;
+  businessName: string;
+  requestedRate: string;
+  currency: string;
+  onResponse?: () => void;
+}
+
+const DealResponseForm = ({ 
+  dealId, 
+  businessName, 
+  requestedRate, 
+  currency,
+  onResponse 
+}: DealResponseFormProps) => {
+  const { toast } = useToast();
+  const [action, setAction] = useState<"approve" | "reject" | "counter" | null>(null);
+  const [counterRate, setCounterRate] = useState("");
+  const [message, setMessage] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const handleAction = (actionType: "approve" | "reject" | "counter") => {
+    if (actionType === "counter" && !counterRate) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a counter-proposed rate",
+        variant: "destructive",
+      });
+      return;
+    }
+    setAction(actionType);
+    setShowConfirmation(true);
+  };
+
+  const confirmAction = () => {
+    const actionMessages = {
+      approve: "Deal approved and rate locked for the business",
+      reject: "Deal request rejected",
+      counter: "Counter proposal sent to business"
+    };
+
+    if (action) {
+      toast({
+        title: "Response Submitted",
+        description: actionMessages[action],
+      });
+      onResponse?.();
+    }
+  };
+
+  return (
+    <>
+      <Card className="shadow-card">
+        <CardContent className="p-6 space-y-6">
+          <h3 className="font-semibold text-lg">Review & Respond</h3>
+
+          <div className="space-y-4">
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="default"
+                className="bg-success hover:bg-success/90"
+                onClick={() => handleAction("approve")}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Approve Deal
+              </Button>
+              
+              <Button
+                variant="destructive"
+                onClick={() => handleAction("reject")}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Reject Deal
+              </Button>
+            </div>
+
+            {/* Counter Proposal Section */}
+            <div className="pt-4 border-t space-y-4">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <h4 className="font-medium">Counter Proposal</h4>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="counterRate">Your Counter Rate</Label>
+                    <Input
+                      id="counterRate"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter counter rate"
+                      value={counterRate}
+                      onChange={(e) => setCounterRate(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Business requested: {requestedRate} {currency}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Rate Comparison</Label>
+                    <div className="p-3 bg-muted/30 rounded-md">
+                      {counterRate && (
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Requested:</span>
+                            <span className="font-medium">{requestedRate}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Your Counter:</span>
+                            <span className="font-medium">{counterRate}</span>
+                          </div>
+                          <div className="flex justify-between pt-1 border-t">
+                            <span className="text-muted-foreground">Difference:</span>
+                            <span className={`font-medium ${parseFloat(counterRate) > parseFloat(requestedRate) ? 'text-success' : 'text-destructive'}`}>
+                              {(parseFloat(counterRate) - parseFloat(requestedRate)).toFixed(4)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message to Business (Optional)</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Provide reasoning for your decision..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => handleAction("counter")}
+                  disabled={!counterRate}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Send Counter Proposal
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <ConfirmationDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={confirmAction}
+        title={`Confirm ${action === 'approve' ? 'Approval' : action === 'reject' ? 'Rejection' : 'Counter Proposal'}`}
+        description={
+          action === 'approve' 
+            ? `Approve the requested rate of ${requestedRate} ${currency} for ${businessName}? This will lock the rate for the deal validity period.`
+            : action === 'reject'
+            ? `Reject the deal request from ${businessName}? They will be notified of the rejection.`
+            : `Send counter proposal of ${counterRate} ${currency} to ${businessName}? They can accept or decline this rate.`
+        }
+        confirmText={action === 'approve' ? 'Approve Deal' : action === 'reject' ? 'Reject Deal' : 'Send Counter'}
+        variant={action === 'reject' ? 'destructive' : 'default'}
+      />
+    </>
+  );
+};
+
+export default DealResponseForm;

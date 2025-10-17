@@ -1,0 +1,354 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, TrendingUp, Info, DollarSign, MapPin, Calendar } from "lucide-react";
+
+interface DealRequestFormProps {
+  trigger?: React.ReactNode;
+  onSubmitSuccess?: () => void;
+}
+
+const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    sendingCurrency: "AED",
+    sendingAmount: "",
+    payoutCountry: "",
+    payoutCurrency: "",
+    proposedRate: "",
+    currentMarketRate: "",
+    purpose: "",
+    notes: ""
+  });
+
+  const countries = [
+    { code: "IN", name: "India", currency: "INR" },
+    { code: "PK", name: "Pakistan", currency: "PKR" },
+    { code: "BD", name: "Bangladesh", currency: "BDT" },
+    { code: "PH", name: "Philippines", currency: "PHP" },
+    { code: "GB", name: "United Kingdom", currency: "GBP" },
+    { code: "US", name: "United States", currency: "USD" },
+    { code: "EU", name: "European Union", currency: "EUR" }
+  ];
+
+  const sendingCurrencies = ["AED", "USD", "EUR", "GBP"];
+
+  const marketRates = {
+    "AED-INR": "22.50",
+    "AED-PKR": "75.80",
+    "AED-BDT": "29.60",
+    "AED-PHP": "15.20",
+    "AED-GBP": "0.21",
+    "AED-USD": "0.27",
+    "AED-EUR": "0.25",
+    "USD-INR": "83.20",
+    "USD-PKR": "278.50",
+    "USD-BDT": "109.50"
+  };
+
+  const handleCountryChange = (countryCode: string) => {
+    const country = countries.find(c => c.code === countryCode);
+    if (country) {
+      setFormData({
+        ...formData,
+        payoutCountry: countryCode,
+        payoutCurrency: country.currency,
+        currentMarketRate: marketRates[`${formData.sendingCurrency}-${country.currency}` as keyof typeof marketRates] || ""
+      });
+    }
+  };
+
+  const handleSendingCurrencyChange = (currency: string) => {
+    setFormData({
+      ...formData,
+      sendingCurrency: currency,
+      currentMarketRate: formData.payoutCurrency 
+        ? marketRates[`${currency}-${formData.payoutCurrency}` as keyof typeof marketRates] || ""
+        : ""
+    });
+  };
+
+  const calculateSavings = () => {
+    const amount = parseFloat(formData.sendingAmount);
+    const proposedRate = parseFloat(formData.proposedRate);
+    const marketRate = parseFloat(formData.currentMarketRate);
+    
+    if (!amount || !proposedRate || !marketRate) return null;
+
+    const marketPayout = amount * marketRate;
+    const proposedPayout = amount * proposedRate;
+    const difference = proposedPayout - marketPayout;
+    const percentageDiff = ((proposedRate - marketRate) / marketRate) * 100;
+
+    return {
+      marketPayout: marketPayout.toFixed(2),
+      proposedPayout: proposedPayout.toFixed(2),
+      difference: difference.toFixed(2),
+      percentageDiff: percentageDiff.toFixed(2)
+    };
+  };
+
+  const savings = calculateSavings();
+
+  const handleSubmit = () => {
+    toast({
+      title: "Deal Request Submitted",
+      description: "Your exchange rate deal request has been submitted for review.",
+    });
+    setOpen(false);
+    setFormData({
+      sendingCurrency: "AED",
+      sendingAmount: "",
+      payoutCountry: "",
+      payoutCurrency: "",
+      proposedRate: "",
+      currentMarketRate: "",
+      purpose: "",
+      notes: ""
+    });
+    onSubmitSuccess?.();
+  };
+
+  const handleConfirm = () => {
+    if (!formData.sendingAmount || !formData.payoutCountry || !formData.proposedRate || !formData.purpose) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowConfirmation(true);
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="default">
+              <Plus className="h-4 w-4 mr-2" />
+              Request Custom Rate
+            </Button>
+          )}
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Request Custom Exchange Rate Deal</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Negotiate a better exchange rate for your transaction
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-6 mt-6">
+            {/* Info Banner */}
+            <Card className="bg-accent-muted/20 border-accent">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-accent mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">How it works</p>
+                    <p className="text-muted-foreground">
+                      Submit your desired exchange rate. The Exchange House or your Branch will review and either approve, reject, or counter-propose a rate. You can accept or reject their counter-offer.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Transaction Details */}
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                  Transaction Details
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sendingCurrency">Sending Currency *</Label>
+                    <Select value={formData.sendingCurrency} onValueChange={handleSendingCurrencyChange}>
+                      <SelectTrigger id="sendingCurrency">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sendingCurrencies.map(currency => (
+                          <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sendingAmount">Amount to Send *</Label>
+                    <Input
+                      id="sendingAmount"
+                      type="number"
+                      placeholder="Enter amount"
+                      value={formData.sendingAmount}
+                      onChange={(e) => setFormData({...formData, sendingAmount: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="payoutCountry">Payout Country *</Label>
+                    <Select value={formData.payoutCountry} onValueChange={handleCountryChange}>
+                      <SelectTrigger id="payoutCountry">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map(country => (
+                          <SelectItem key={country.code} value={country.code}>
+                            {country.name} ({country.currency})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="payoutCurrency">Payout Currency</Label>
+                    <Input
+                      id="payoutCurrency"
+                      value={formData.payoutCurrency}
+                      disabled
+                      placeholder="Auto-filled"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="purpose">Transaction Purpose *</Label>
+                  <Select value={formData.purpose} onValueChange={(value) => setFormData({...formData, purpose: value})}>
+                    <SelectTrigger id="purpose">
+                      <SelectValue placeholder="Select purpose" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="salary">Salary Payment</SelectItem>
+                      <SelectItem value="supplier">Supplier Payment</SelectItem>
+                      <SelectItem value="invoice">Invoice Payment</SelectItem>
+                      <SelectItem value="remittance">Personal Remittance</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Exchange Rate Details */}
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Exchange Rate Proposal
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentMarketRate">Current Market Rate</Label>
+                    <Input
+                      id="currentMarketRate"
+                      value={formData.currentMarketRate}
+                      disabled
+                      placeholder="Auto-filled"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Standard rate offered by the exchange house
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="proposedRate">Your Proposed Rate *</Label>
+                    <Input
+                      id="proposedRate"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter your desired rate"
+                      value={formData.proposedRate}
+                      onChange={(e) => setFormData({...formData, proposedRate: e.target.value})}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Rate you would like to negotiate
+                    </p>
+                  </div>
+                </div>
+
+                {/* Savings Calculation */}
+                {savings && (
+                  <Card className="bg-muted/30">
+                    <CardContent className="p-4">
+                      <h4 className="font-medium mb-3">Potential Impact</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Market Payout:</span>
+                          <p className="font-semibold">{formData.payoutCurrency} {savings.marketPayout}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Proposed Payout:</span>
+                          <p className="font-semibold">{formData.payoutCurrency} {savings.proposedPayout}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Difference:</span>
+                          <p className={`font-semibold ${parseFloat(savings.difference) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {parseFloat(savings.difference) >= 0 ? '+' : ''}{formData.payoutCurrency} {savings.difference}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Rate Change:</span>
+                          <p className={`font-semibold ${parseFloat(savings.percentageDiff) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {parseFloat(savings.percentageDiff) >= 0 ? '+' : ''}{savings.percentageDiff}%
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Additional Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Additional Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add any additional information to support your request..."
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                rows={3}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between pt-4 border-t">
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button variant="default" onClick={handleConfirm}>
+                Submit Deal Request
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmationDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleSubmit}
+        title="Confirm Deal Request"
+        description={`Submit request for ${formData.sendingCurrency} ${formData.sendingAmount} at rate ${formData.proposedRate} to ${formData.payoutCurrency}? This will be reviewed by the Exchange House.`}
+        confirmText="Submit Request"
+      />
+    </>
+  );
+};
+
+export default DealRequestForm;

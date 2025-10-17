@@ -9,7 +9,8 @@ import {
   LogOut,
   User,
   Shield,
-  UserCircle
+  UserCircle,
+  Handshake
 } from "lucide-react";
 
 interface UserLayoutProps {
@@ -24,6 +25,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     { name: "Profile", href: "/portal/profile", icon: UserCircle },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
+    { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
     { name: "User Management", href: "/portal/users", icon: Users },
     { name: "Governance", href: "/portal/governance", icon: Shield },
     { name: "Documents", href: "/portal/documents", icon: FileText },

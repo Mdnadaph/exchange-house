@@ -7,7 +7,8 @@ import {
   LogOut,
   MapPin,
   CreditCard,
-  Files
+  Files,
+  Handshake
 } from "lucide-react";
 
 interface BranchLayoutProps {
@@ -21,6 +22,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     { name: "Dashboard", href: "/branch", icon: Home },
     { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
     { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
+    { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
     { name: "Documents", href: "/branch/documents", icon: Files },
   ];
 

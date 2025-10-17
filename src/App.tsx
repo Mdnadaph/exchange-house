@@ -9,12 +9,14 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminDealSettings from "./pages/admin/AdminDealSettings";
 import UserProfile from "./pages/portal/UserProfile";
 import UserDashboard from "./pages/portal/UserDashboard";
 import UserBeneficiaries from "./pages/portal/UserBeneficiaries";
 import UserTransactions from "./pages/portal/UserTransactions";
 import UserDocuments from "./pages/portal/UserDocuments";
 import UserGovernance from "./pages/portal/UserGovernance";
+import UserDealRequests from "./pages/portal/UserDealRequests";
 import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
 import ExchangeKYBReview from "./pages/exchange/ExchangeKYBReview";
 import ExchangeKYBConfig from "./pages/exchange/ExchangeKYBConfig";
@@ -24,10 +26,12 @@ import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
 import ExchangeFeeManagement from "./pages/exchange/ExchangeFeeManagement";
 import ExchangeTransactions from "./pages/exchange/ExchangeTransactions";
 import ExchangeBusinessDocuments from "./pages/exchange/ExchangeBusinessDocuments";
+import ExchangeDealReview from "./pages/exchange/ExchangeDealReview";
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
 import BranchTransactions from "./pages/branch/BranchTransactions";
 import BranchBusinessDocuments from "./pages/branch/BranchBusinessDocuments";
+import BranchDealReview from "./pages/branch/BranchDealReview";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +47,7 @@ const App = () => (
           {/* Business Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/onboarding" element={<AdminOnboarding />} />
+          <Route path="/admin/deal-settings" element={<AdminDealSettings />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           
           {/* Business User Routes */}
@@ -50,6 +55,7 @@ const App = () => (
           <Route path="/portal/profile" element={<UserProfile />} />
           <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
           <Route path="/portal/transactions" element={<UserTransactions />} />
+          <Route path="/portal/deals" element={<UserDealRequests />} />
           <Route path="/portal/users" element={<AdminUserManagement />} />
           <Route path="/portal/governance" element={<UserGovernance />} />
           <Route path="/portal/documents" element={<UserDocuments />} />
@@ -59,6 +65,7 @@ const App = () => (
         <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
         <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
         <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
+        <Route path="/exchange/deals" element={<ExchangeDealReview />} />
         <Route path="/exchange/documents" element={<ExchangeBusinessDocuments />} />
         <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
         <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
@@ -69,6 +76,7 @@ const App = () => (
           <Route path="/branch" element={<BranchDashboard />} />
           <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
           <Route path="/branch/transactions" element={<BranchTransactions />} />
+          <Route path="/branch/deals" element={<BranchDealReview />} />
           <Route path="/branch/documents" element={<BranchBusinessDocuments />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
