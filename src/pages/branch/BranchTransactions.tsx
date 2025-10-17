@@ -1,9 +1,11 @@
+import { useState } from "react";
 import BranchLayout from "@/components/layout/BranchLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TransactionComments from "@/components/transactions/TransactionComments";
 import { 
   CreditCard, 
   Search, 
@@ -17,10 +19,15 @@ import {
   FileText,
   Building2,
   Wallet,
-  Info
+  Info,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 const BranchTransactions = () => {
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
+  
   // Mock data - Branch only sees transactions for businesses registered through them
   const transactions = [
     {
@@ -309,8 +316,35 @@ const BranchTransactions = () => {
                               <FileText className="h-4 w-4 mr-1" />
                               Documents
                             </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setExpandedTransaction(
+                                expandedTransaction === transaction.id ? null : transaction.id
+                              )}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-1" />
+                              Comments
+                              {expandedTransaction === transaction.id ? (
+                                <ChevronUp className="h-4 w-4 ml-1" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 ml-1" />
+                              )}
+                            </Button>
                           </div>
                         </div>
+
+                        {/* Comments Section */}
+                        {expandedTransaction === transaction.id && (
+                          <div className="mt-4 pt-4 border-t">
+                            <TransactionComments 
+                              transactionId={transaction.id}
+                              userRole="Branch"
+                              userName="Ahmed Hassan"
+                              branchName="Dubai Mall Branch"
+                            />
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

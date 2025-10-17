@@ -1,9 +1,11 @@
+import { useState } from "react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TransactionComments from "@/components/transactions/TransactionComments";
 import { 
   CreditCard, 
   Search, 
@@ -16,10 +18,15 @@ import {
   DollarSign,
   FileText,
   Building2,
-  Wallet
+  Wallet,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 const ExchangeTransactions = () => {
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
+  
   const transactions = [
     {
       id: "TXN-2024-001",
@@ -317,8 +324,34 @@ const ExchangeTransactions = () => {
                               <FileText className="h-4 w-4 mr-1" />
                               Documents
                             </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setExpandedTransaction(
+                                expandedTransaction === transaction.id ? null : transaction.id
+                              )}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-1" />
+                              Comments
+                              {expandedTransaction === transaction.id ? (
+                                <ChevronUp className="h-4 w-4 ml-1" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 ml-1" />
+                              )}
+                            </Button>
                           </div>
                         </div>
+
+                        {/* Comments Section */}
+                        {expandedTransaction === transaction.id && (
+                          <div className="mt-4 pt-4 border-t">
+                            <TransactionComments 
+                              transactionId={transaction.id}
+                              userRole="Exchange"
+                              userName="Sarah Wilson"
+                            />
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

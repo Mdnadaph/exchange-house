@@ -1,3 +1,4 @@
+import { useState } from "react";
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import SingleTransactionForm from "@/components/transactions/SingleTransactionForm";
 import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
 import PaymentExecutionForm from "@/components/transactions/PaymentExecutionForm";
+import TransactionComments from "@/components/transactions/TransactionComments";
 import { 
   CreditCard, 
   Plus, 
@@ -21,10 +23,15 @@ import {
   DollarSign,
   FileText,
   Users,
-  Wallet
+  Wallet,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 const UserTransactions = () => {
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
+  
   const transactions = [
     {
       id: "TXN-2024-001",
@@ -309,6 +316,21 @@ const UserTransactions = () => {
                               <Download className="h-4 w-4 mr-1" />
                               Receipt
                             </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setExpandedTransaction(
+                                expandedTransaction === transaction.id ? null : transaction.id
+                              )}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-1" />
+                              Comments
+                              {expandedTransaction === transaction.id ? (
+                                <ChevronUp className="h-4 w-4 ml-1" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 ml-1" />
+                              )}
+                            </Button>
                             {transaction.status === "failed" && (
                               <Button variant="business" size="sm">
                                 Retry Payment
@@ -365,6 +387,17 @@ const UserTransactions = () => {
                             </div>
                           )}
                         </div>
+
+                        {/* Comments Section */}
+                        {expandedTransaction === transaction.id && (
+                          <div className="mt-4 pt-4 border-t">
+                            <TransactionComments 
+                              transactionId={transaction.id}
+                              userRole="Business"
+                              userName="Sarah Smith"
+                            />
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
