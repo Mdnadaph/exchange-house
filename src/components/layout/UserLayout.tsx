@@ -22,6 +22,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     { name: "Dashboard", href: "/portal", icon: Home },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
+    { name: "User Management", href: "/portal/users", icon: Users },
     { name: "Governance", href: "/portal/governance", icon: Shield },
     { name: "Documents", href: "/portal/documents", icon: FileText },
   ];

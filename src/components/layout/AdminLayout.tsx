@@ -21,7 +21,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: Home },
     { name: "KYB Onboarding", href: "/admin/onboarding", icon: FileCheck },
-    { name: "User Management", href: "/admin/users", icon: Users },
     { name: "Settings & Rules", href: "/admin/settings", icon: Settings },
   ];
 

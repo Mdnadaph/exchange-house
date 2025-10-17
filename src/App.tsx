@@ -38,13 +38,13 @@ const App = () => (
           {/* Business Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/onboarding" element={<AdminOnboarding />} />
-          <Route path="/admin/users" element={<AdminUserManagement />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           
           {/* Business User Routes */}
           <Route path="/portal" element={<UserDashboard />} />
           <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
           <Route path="/portal/transactions" element={<UserTransactions />} />
+          <Route path="/portal/users" element={<AdminUserManagement />} />
           <Route path="/portal/governance" element={<UserGovernance />} />
           <Route path="/portal/documents" element={<UserDocuments />} />
           
