@@ -9,8 +9,9 @@ import SingleTransactionForm from "@/components/transactions/SingleTransactionFo
 import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
 import PaymentExecutionForm from "@/components/transactions/PaymentExecutionForm";
 import TransactionComments from "@/components/transactions/TransactionComments";
+import ProofOfPaymentUpload from "@/components/transactions/ProofOfPaymentUpload";
 import { 
-  CreditCard, 
+  CreditCard,
   Plus, 
   Search, 
   Download, 
@@ -390,7 +391,12 @@ const UserTransactions = () => {
 
                         {/* Comments Section */}
                         {expandedTransaction === transaction.id && (
-                          <div className="mt-4 pt-4 border-t">
+                          <div className="mt-4 pt-4 border-t space-y-4">
+                            <ProofOfPaymentUpload 
+                              transactionId={transaction.id}
+                              userRole="Business"
+                              userName="Sarah Smith"
+                            />
                             <TransactionComments 
                               transactionId={transaction.id}
                               userRole="Business"

@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TransactionComments from "@/components/transactions/TransactionComments";
+import ProofOfPaymentUpload from "@/components/transactions/ProofOfPaymentUpload";
 import { 
-  CreditCard, 
+  CreditCard,
   Search, 
   Download, 
   Eye, 
@@ -336,7 +337,13 @@ const BranchTransactions = () => {
 
                         {/* Comments Section */}
                         {expandedTransaction === transaction.id && (
-                          <div className="mt-4 pt-4 border-t">
+                          <div className="mt-4 pt-4 border-t space-y-4">
+                            <ProofOfPaymentUpload 
+                              transactionId={transaction.id}
+                              userRole="Branch"
+                              userName="Ahmed Hassan"
+                              branchName="Dubai Mall Branch"
+                            />
                             <TransactionComments 
                               transactionId={transaction.id}
                               userRole="Branch"
