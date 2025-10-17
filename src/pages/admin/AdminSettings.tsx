@@ -5,12 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import ApprovalRuleForm from "@/components/governance/ApprovalRuleForm";
 import { 
   Settings, 
-  Shield, 
   DollarSign, 
-  Users, 
   FileCheck, 
   Bell, 
   Save,
@@ -18,59 +15,10 @@ import {
   Edit,
   Trash2,
   AlertCircle,
-  UserCheck,
-  ArrowRight,
-  Info
+  UserCheck
 } from "lucide-react";
 
 const AdminSettings = () => {
-  const approvalRules = [
-    {
-      id: "RULE-001",
-      name: "High Value USD Transactions",
-      currency: "USD",
-      threshold: 50000,
-      approvers: 2,
-      department: "All",
-      status: "active",
-      lastModified: "2024-01-15",
-      tiers: [
-        { level: 1, minAmount: 10000, maxAmount: 50000, approvers: 1, roles: ["Finance Manager"] },
-        { level: 2, minAmount: 50001, maxAmount: 100000, approvers: 2, roles: ["Finance Manager", "Treasury Officer"] },
-        { level: 3, minAmount: 100001, maxAmount: null, approvers: 3, roles: ["Finance Manager", "Treasury Officer", "CEO"] }
-      ]
-    },
-    {
-      id: "RULE-002", 
-      name: "AED Bulk Payments",
-      currency: "AED",
-      threshold: 100000,
-      approvers: 1,
-      department: "Finance",
-      status: "active",
-      lastModified: "2024-01-10",
-      tiers: [
-        { level: 1, minAmount: 50000, maxAmount: 100000, approvers: 1, roles: ["Operations Manager"] },
-        { level: 2, minAmount: 100001, maxAmount: null, approvers: 2, roles: ["Operations Manager", "CFO"] }
-      ]
-    },
-    {
-      id: "RULE-003",
-      name: "International Wire Transfers",
-      currency: "ANY",
-      threshold: 25000,
-      approvers: 3,
-      department: "Treasury",
-      status: "draft",
-      lastModified: "2024-01-08",
-      tiers: [
-        { level: 1, minAmount: 25000, maxAmount: 75000, approvers: 2, roles: ["Treasury Officer", "Finance Manager"] },
-        { level: 2, minAmount: 75001, maxAmount: 150000, approvers: 3, roles: ["Treasury Officer", "Finance Manager", "CFO"] },
-        { level: 3, minAmount: 150001, maxAmount: null, approvers: 4, roles: ["Treasury Officer", "Finance Manager", "CFO", "CEO"] }
-      ]
-    }
-  ];
-
   const sourceTypes = [
     {
       id: "SRC-001",
@@ -125,105 +73,6 @@ const AdminSettings = () => {
             Save All Changes
           </Button>
         </div>
-
-        {/* Multi-Tier Approval Rules Section */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Multi-Tier Approval Rules
-              </CardTitle>
-              <ApprovalRuleForm />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center space-x-2 p-4 bg-accent-muted/20 rounded-lg">
-                <Info className="h-5 w-5 text-accent" />
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">Governance Framework</p>
-                  <p className="text-muted-foreground">Configure multi-tier approval workflows based on transaction amounts, roles, and departments.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              {approvalRules.map((rule) => (
-                <Card key={rule.id} className="border-l-4 border-l-primary">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <h4 className="font-semibold text-foreground">{rule.name}</h4>
-                          <Badge variant={rule.status === "active" ? "default" : "secondary"}>
-                            {rule.status}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Currency:</span>
-                            <p className="font-medium">{rule.currency}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Min Threshold:</span>
-                            <p className="font-medium">{rule.threshold.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Max Approvers:</span>
-                            <p className="font-medium">{Math.max(...rule.tiers.map(t => t.approvers))} required</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Department:</span>
-                            <p className="font-medium">{rule.department}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <ApprovalRuleForm 
-                          trigger={
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                          }
-                          editRule={rule}
-                        />
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Approval Tiers Visualization */}
-                    <div className="bg-muted/30 rounded-lg p-3">
-                      <h5 className="text-sm font-medium text-foreground mb-2">Approval Tiers</h5>
-                      <div className="flex items-center space-x-2 overflow-x-auto">
-                        {rule.tiers.map((tier, index) => (
-                          <div key={index} className="flex items-center space-x-2">
-                            <div className="bg-background border rounded-lg p-2 min-w-[120px]">
-                              <div className="text-xs font-medium text-primary">Tier {tier.level}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {rule.currency} {tier.minAmount?.toLocaleString()}{tier.maxAmount ? ` - ${tier.maxAmount.toLocaleString()}` : '+'}
-                                </div>
-                              <div className="text-xs font-medium">{tier.approvers} approver{tier.approvers > 1 ? 's' : ''}</div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {tier.roles.join(', ')}
-                              </div>
-                            </div>
-                            {index < rule.tiers.length - 1 && (
-                              <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Source of Transaction Types */}
         <Card className="shadow-card">
