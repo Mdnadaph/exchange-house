@@ -5,7 +5,8 @@ import {
   Home, 
   FileCheck, 
   LogOut,
-  MapPin
+  MapPin,
+  CreditCard
 } from "lucide-react";
 
 interface BranchLayoutProps {
@@ -18,6 +19,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
     { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
+    { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
   ];
 
   const isActive = (path: string) => location.pathname === path;

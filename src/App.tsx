@@ -21,8 +21,10 @@ import ExchangePayoutConfig from "./pages/exchange/ExchangePayoutConfig";
 import ExchangeComplianceConfig from "./pages/exchange/ExchangeComplianceConfig";
 import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
 import ExchangeFeeManagement from "./pages/exchange/ExchangeFeeManagement";
+import ExchangeTransactions from "./pages/exchange/ExchangeTransactions";
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
+import BranchTransactions from "./pages/branch/BranchTransactions";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,7 @@ const App = () => (
           <Route path="/exchange" element={<ExchangeAdminDashboard />} />
         <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
         <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
+        <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
         <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
         <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
         <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
@@ -60,6 +63,7 @@ const App = () => (
           {/* Branch User Routes */}
           <Route path="/branch" element={<BranchDashboard />} />
           <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
+          <Route path="/branch/transactions" element={<BranchTransactions />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

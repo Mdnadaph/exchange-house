@@ -10,7 +10,8 @@ import {
   Landmark,
   DollarSign,
   Shield,
-  Calculator
+  Calculator,
+  CreditCard
 } from "lucide-react";
 
 interface ExchangeLayoutProps {
@@ -24,6 +25,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     { name: "Dashboard", href: "/exchange", icon: Home },
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
     { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
+    { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
     { name: "Fee Management", href: "/exchange/fee-management", icon: Calculator },
     { name: "Payout Config", href: "/exchange/payout-config", icon: DollarSign },
     { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
