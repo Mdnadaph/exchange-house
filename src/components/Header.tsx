@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Building2, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,6 +34,7 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <a href="/portal">User Portal</a>
             </Button>
@@ -45,16 +47,18 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? (
-              <X className="h-6 w-6 text-foreground" />
-            ) : (
-              <Menu className="h-6 w-6 text-foreground" />
-            )}
-          </button>
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6 text-foreground" />
+              ) : (
+                <Menu className="h-6 w-6 text-foreground" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
