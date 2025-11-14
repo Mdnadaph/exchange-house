@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { 
   Building2, 
   Home, 
@@ -45,6 +46,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <span className="text-sm text-muted-foreground">John Doe (Admin)</span>
               <Button variant="ghost" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
