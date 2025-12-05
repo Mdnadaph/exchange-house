@@ -25,6 +25,7 @@ import ExchangeKYBConfig from "./pages/exchange/ExchangeKYBConfig";
 import ExchangePayoutConfig from "./pages/exchange/ExchangePayoutConfig";
 import ExchangeComplianceConfig from "./pages/exchange/ExchangeComplianceConfig";
 import ExchangeStaffManagement from "./pages/exchange/ExchangeStaffManagement";
+import ExchangeBranchManagement from "./pages/exchange/ExchangeBranchManagement";
 import ExchangeFeeManagement from "./pages/exchange/ExchangeFeeManagement";
 import ExchangeTransactions from "./pages/exchange/ExchangeTransactions";
 import ExchangeBusinessDocuments from "./pages/exchange/ExchangeBusinessDocuments";
@@ -77,6 +78,7 @@ const App = () => (
           <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
           <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
           <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
+          <Route path="/exchange/branches" element={<ExchangeBranchManagement />} />
           <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
           
           {/* Branch User Routes */}
