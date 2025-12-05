@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BeneficiaryRegistrationForm from "@/components/beneficiary/BeneficiaryRegistrationForm";
 import BeneficiaryProfile from "@/components/beneficiary/BeneficiaryProfile";
+import BeneficiaryGroupForm from "@/components/beneficiary/BeneficiaryGroupForm";
 import { 
   Users, 
   Plus, 
@@ -22,14 +24,48 @@ import {
   Filter,
   Globe,
   CreditCard,
-  Wallet
+  Wallet,
+  FolderPlus,
+  Layers,
+  User
 } from "lucide-react";
 import { useState } from "react";
+
+export interface BeneficiaryGroup {
+  id: string;
+  name: string;
+  description: string;
+  beneficiaryIds: string[];
+  beneficiaries: any[];
+  createdAt: string;
+  memberCount: number;
+}
 
 const UserBeneficiaries = () => {
   const [view, setView] = useState<"list" | "register" | "profile">("list");
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"beneficiaries" | "groups">("beneficiaries");
+  const [beneficiaryGroups, setBeneficiaryGroups] = useState<BeneficiaryGroup[]>([
+    {
+      id: "GRP-001",
+      name: "Monthly Payroll",
+      description: "Regular monthly salary payments",
+      beneficiaryIds: ["BEN-001", "BEN-003"],
+      beneficiaries: [],
+      createdAt: "2024-01-01",
+      memberCount: 2
+    },
+    {
+      id: "GRP-002",
+      name: "Vendor Payments Q1",
+      description: "Q1 vendor and supplier payments",
+      beneficiaryIds: ["BEN-001", "BEN-002"],
+      beneficiaries: [],
+      createdAt: "2024-01-10",
+      memberCount: 2
+    }
+  ]);
 
   const beneficiaries = [
     {
@@ -234,6 +270,30 @@ const UserBeneficiaries = () => {
     );
   }
 
+  const handleGroupCreated = (group: BeneficiaryGroup) => {
+    // Update group with full beneficiary data
+    const groupWithBeneficiaries = {
+      ...group,
+      beneficiaries: beneficiaries.filter(b => group.beneficiaryIds.includes(b.id))
+    };
+    setBeneficiaryGroups(prev => [...prev, groupWithBeneficiaries]);
+  };
+
+  const handleDeleteGroup = (groupId: string) => {
+    setBeneficiaryGroups(prev => prev.filter(g => g.id !== groupId));
+  };
+
+  // Update existing groups with beneficiary data for export
+  const groupsWithBeneficiaryData = beneficiaryGroups.map(group => ({
+    ...group,
+    beneficiaries: beneficiaries.filter(b => group.beneficiaryIds.includes(b.id))
+  }));
+
+  // Export groups for use in BulkTransactionForm
+  if (typeof window !== 'undefined') {
+    (window as any).__beneficiaryGroups = groupsWithBeneficiaryData;
+  }
+
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -241,12 +301,24 @@ const UserBeneficiaries = () => {
         <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Beneficiaries</h1>
-          <p className="text-muted-foreground">Manage your payment recipients and their verification status</p>
+          <p className="text-muted-foreground">Manage your payment recipients, groups, and verification status</p>
         </div>
-        <Button variant="business" onClick={() => setView("register")}>
-          <Plus className="h-4 w-4 mr-2" />
-          Register Beneficiary
-        </Button>
+        <div className="flex gap-2">
+          <BeneficiaryGroupForm 
+            beneficiaries={beneficiaries}
+            onGroupCreated={handleGroupCreated}
+            trigger={
+              <Button variant="outline">
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Create Group
+              </Button>
+            }
+          />
+          <Button variant="business" onClick={() => setView("register")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Register Beneficiary
+          </Button>
+        </div>
       </div>
 
       {/* Payout Destinations & Exchange Rates Information */}
@@ -333,7 +405,7 @@ const UserBeneficiaries = () => {
       </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Beneficiaries</CardTitle>
@@ -342,6 +414,17 @@ const UserBeneficiaries = () => {
             <CardContent>
               <div className="text-2xl font-bold">{beneficiaries.length}</div>
               <p className="text-xs text-muted-foreground">+3 this month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Groups</CardTitle>
+              <Layers className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{beneficiaryGroups.length}</div>
+              <p className="text-xs text-muted-foreground">For bulk payments</p>
             </CardContent>
           </Card>
 
@@ -397,6 +480,97 @@ const UserBeneficiaries = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Tabs for Beneficiaries and Groups */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "beneficiaries" | "groups")}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="beneficiaries" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Beneficiaries
+            </TabsTrigger>
+            <TabsTrigger value="groups" className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Groups
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="groups" className="mt-6">
+            {/* Groups Section */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Layers className="h-5 w-5" />
+                    Beneficiary Groups
+                  </CardTitle>
+                  <BeneficiaryGroupForm 
+                    beneficiaries={beneficiaries}
+                    onGroupCreated={handleGroupCreated}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {groupsWithBeneficiaryData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Layers className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No groups created yet</p>
+                    <p className="text-sm">Create groups to organize beneficiaries for bulk transactions</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {groupsWithBeneficiaryData.map((group) => (
+                      <Card key={group.id} className="border-l-4 border-l-primary">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="font-semibold text-lg">{group.name}</h3>
+                                <Badge variant="secondary">
+                                  {group.memberCount} members
+                                </Badge>
+                              </div>
+                              {group.description && (
+                                <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2">
+                                {group.beneficiaries.slice(0, 5).map((ben) => (
+                                  <Badge key={ben.id} variant="outline" className="flex items-center gap-1">
+                                    {ben.type === "corporate" ? (
+                                      <Building className="h-3 w-3" />
+                                    ) : (
+                                      <User className="h-3 w-3" />
+                                    )}
+                                    {ben.name}
+                                  </Badge>
+                                ))}
+                                {group.beneficiaries.length > 5 && (
+                                  <Badge variant="outline">+{group.beneficiaries.length - 5} more</Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDeleteGroup(group.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="beneficiaries" className="mt-6 space-y-6">
 
         {/* Search and Filters */}
         <Card className="shadow-card">
@@ -609,6 +783,8 @@ const UserBeneficiaries = () => {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </UserLayout>
   );

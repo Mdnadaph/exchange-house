@@ -34,6 +34,16 @@ interface BulkTransactionFormProps {
   trigger?: React.ReactNode;
 }
 
+interface BeneficiaryGroup {
+  id: string;
+  name: string;
+  description: string;
+  beneficiaryIds: string[];
+  beneficiaries: any[];
+  createdAt: string;
+  memberCount: number;
+}
+
 const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
   const { toast } = useToast();
   const [selectedSource, setSelectedSource] = useState("");
@@ -45,6 +55,63 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [open, setOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
+
+  // Get beneficiary groups from window (set by UserBeneficiaries)
+  const getBeneficiaryGroups = (): BeneficiaryGroup[] => {
+    if (typeof window !== 'undefined' && (window as any).__beneficiaryGroups) {
+      return (window as any).__beneficiaryGroups;
+    }
+    // Fallback mock data
+    return [
+      {
+        id: "GRP-001",
+        name: "Monthly Payroll",
+        description: "Regular monthly salary payments",
+        beneficiaryIds: ["BEN-001", "BEN-003"],
+        beneficiaries: [
+          {
+            id: "BEN-001",
+            name: "Global Suppliers Inc",
+            type: "corporate",
+            bankDetails: [{ bankName: "Emirates NBD", accountNumber: "1234567890", accountName: "Global Suppliers Inc", currency: "USD" }]
+          },
+          {
+            id: "BEN-003",
+            name: "Office Supplies Co",
+            type: "corporate",
+            bankDetails: [{ bankName: "HSBC UAE", accountNumber: "5555666677", accountName: "Office Supplies Co", currency: "USD" }]
+          }
+        ],
+        createdAt: "2024-01-01",
+        memberCount: 2
+      },
+      {
+        id: "GRP-002",
+        name: "Vendor Payments Q1",
+        description: "Q1 vendor and supplier payments",
+        beneficiaryIds: ["BEN-001", "BEN-002"],
+        beneficiaries: [
+          {
+            id: "BEN-001",
+            name: "Global Suppliers Inc",
+            type: "corporate",
+            bankDetails: [{ bankName: "Emirates NBD", accountNumber: "1234567890", accountName: "Global Suppliers Inc", currency: "USD" }]
+          },
+          {
+            id: "BEN-002",
+            name: "Tech Solutions Ltd",
+            type: "corporate",
+            bankDetails: [{ bankName: "ADCB Bank", accountNumber: "9876543210", accountName: "Tech Solutions Ltd", currency: "AED" }]
+          }
+        ],
+        createdAt: "2024-01-10",
+        memberCount: 2
+      }
+    ];
+  };
+
+  const beneficiaryGroups = getBeneficiaryGroups();
 
   // Mock data
   const transactionSources = [
@@ -148,9 +215,49 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
     setCurrentStep(2);
   };
 
+  const getSelectedGroup = () => {
+    return beneficiaryGroups.find(g => g.id === selectedGroup);
+  };
+
   const downloadTemplate = () => {
-    // This would trigger template download
-    console.log("Downloading template for:", getSelectedPurposeDetails()?.template);
+    const group = getSelectedGroup();
+    const purposeDetails = getSelectedPurposeDetails();
+    
+    // Create CSV content with beneficiary data if group is selected
+    let csvContent = "";
+    
+    if (group && group.beneficiaries.length > 0) {
+      // Header row
+      csvContent = "Beneficiary Name,Account Number,Account Holder Name,Bank Name,Amount,Purpose,Reference\n";
+      
+      // Data rows pre-populated from selected group
+      group.beneficiaries.forEach((ben) => {
+        const bankDetails = ben.bankDetails?.[0] || {};
+        csvContent += `"${ben.name}","${bankDetails.accountNumber || ''}","${bankDetails.accountName || ben.name}","${bankDetails.bankName || ''}","","${purposeDetails?.label || ''}",""\n`;
+      });
+    } else {
+      // Empty template
+      csvContent = "Beneficiary Name,Account Number,Account Holder Name,Bank Name,Amount,Purpose,Reference\n";
+      csvContent += '"",,,"","","",""\n';
+    }
+    
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `bulk_transaction_template_${group?.name?.replace(/\s+/g, '_') || 'empty'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Template Downloaded",
+      description: group 
+        ? `Template with ${group.beneficiaries.length} beneficiaries from "${group.name}" has been downloaded.`
+        : "Empty template has been downloaded.",
+    });
   };
 
   const totals = calculateTotalAmount();
@@ -293,6 +400,74 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
         </CardContent>
       </Card>
 
+      {/* Beneficiary Group Selection */}
+      {transactionPurpose && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Select Beneficiary Group
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="group">Beneficiary Group (Optional)</Label>
+              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a beneficiary group for bulk payment" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  <SelectItem value="none">
+                    <span className="text-muted-foreground">No group - Use empty template</span>
+                  </SelectItem>
+                  {beneficiaryGroups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{group.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {group.memberCount} beneficiaries
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedGroup && selectedGroup !== "none" && getSelectedGroup() && (
+              <Card className="border-l-4 border-l-primary bg-primary/5">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {getSelectedGroup()?.name}
+                    </h4>
+                    <Badge variant="secondary">
+                      {getSelectedGroup()?.memberCount} members
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {getSelectedGroup()?.beneficiaries.slice(0, 5).map((ben: any) => (
+                      <Badge key={ben.id} variant="outline" className="flex items-center gap-1">
+                        {ben.type === "corporate" ? (
+                          <Building className="h-3 w-3" />
+                        ) : (
+                          <Users className="h-3 w-3" />
+                        )}
+                        {ben.name}
+                      </Badge>
+                    ))}
+                    {(getSelectedGroup()?.beneficiaries.length || 0) > 5 && (
+                      <Badge variant="outline">+{(getSelectedGroup()?.beneficiaries.length || 0) - 5} more</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Bulk Data Upload */}
       {transactionPurpose && (
         <Card>
@@ -316,7 +491,10 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
                   </Button>
                   <p className="text-sm font-medium">Step 1: Download Template</p>
                   <p className="text-xs text-muted-foreground">
-                    Get the {getSelectedPurposeDetails()?.label} template
+                    {selectedGroup && selectedGroup !== "none" 
+                      ? `Pre-filled with ${getSelectedGroup()?.memberCount || 0} beneficiaries`
+                      : `Get the ${getSelectedPurposeDetails()?.label} template`
+                    }
                   </p>
                 </CardContent>
               </Card>
@@ -337,12 +515,27 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
               <div className="flex items-start space-x-2">
                 <Info className="h-4 w-4 text-accent mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-foreground">Required Information</p>
+                  <p className="font-medium text-foreground">
+                    {selectedGroup && selectedGroup !== "none" 
+                      ? "Template Pre-filled with Group Beneficiaries"
+                      : "Required Information"
+                    }
+                  </p>
                   <ul className="text-muted-foreground mt-1 space-y-1">
-                    <li>• Beneficiary Name and Account Details</li>
-                    <li>• Individual Transaction Amounts</li>
-                    <li>• Purpose/Description for each payment</li>
-                    <li>• Employee ID (for salary payments)</li>
+                    {selectedGroup && selectedGroup !== "none" ? (
+                      <>
+                        <li>• Beneficiary names and account details are pre-filled</li>
+                        <li>• Fill in the Amount column for each beneficiary</li>
+                        <li>• Add purpose/reference as needed</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>• Beneficiary Name and Account Details</li>
+                        <li>• Individual Transaction Amounts</li>
+                        <li>• Purpose/Description for each payment</li>
+                        <li>• Employee ID (for salary payments)</li>
+                      </>
+                    )}
                   </ul>
                 </div>
               </div>
