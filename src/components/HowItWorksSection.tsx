@@ -8,65 +8,68 @@ import {
   ArrowRight,
   CheckCircle2
 } from "lucide-react";
-
-const steps = [
-  {
-    icon: UserPlus,
-    title: "Business Onboarding",
-    description: "Complete UAE Central Bank KYB compliance with our streamlined digital onboarding process.",
-    details: [
-      "Upload business documents",
-      "Automated verification process", 
-      "Source of funds declaration",
-      "Compliance approval within 24-48 hours"
-    ]
-  },
-  {
-    icon: Users,
-    title: "Setup Team & Workflows",
-    description: "Configure your internal user hierarchies and define approval workflows for different transaction thresholds.",
-    details: [
-      "Add team members and roles",
-      "Set transaction limits by user",
-      "Configure approval workflows",
-      "Customize notification preferences"
-    ]
-  },
-  {
-    icon: FileText,
-    title: "Register Beneficiaries",
-    description: "Add and verify beneficiaries worldwide with flexible payout options and comprehensive documentation.",
-    details: [
-      "Add beneficiary information",
-      "Select payout methods",
-      "Upload supporting documents",
-      "Approval workflow validation"
-    ]
-  },
-  {
-    icon: Send,
-    title: "Execute Transactions",
-    description: "Process single payments or bulk transactions with real-time rates, full transparency, and instant confirmations.",
-    details: [
-      "Single or bulk transaction processing",
-      "Real-time exchange rates",
-      "Transaction purpose documentation",
-      "Instant confirmation and tracking"
-    ]
-  }
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HowItWorksSection = () => {
+  const { t, isRTL } = useLanguage();
+
+  const steps = [
+    {
+      icon: UserPlus,
+      titleKey: "businessOnboarding" as const,
+      descKey: "businessOnboardingDesc" as const,
+      details: [
+        "uploadBusinessDocs",
+        "automatedVerification", 
+        "sourceOfFunds",
+        "complianceApproval"
+      ] as const
+    },
+    {
+      icon: Users,
+      titleKey: "setupTeamWorkflows" as const,
+      descKey: "setupTeamWorkflowsDesc" as const,
+      details: [
+        "addTeamMembers",
+        "setTransactionLimits",
+        "configureApprovalWorkflows",
+        "customizeNotifications"
+      ] as const
+    },
+    {
+      icon: FileText,
+      titleKey: "registerBeneficiaries" as const,
+      descKey: "registerBeneficiariesDesc" as const,
+      details: [
+        "addBeneficiaryInfo",
+        "selectPayoutMethods",
+        "uploadSupportingDocs",
+        "approvalWorkflowValidation"
+      ] as const
+    },
+    {
+      icon: Send,
+      titleKey: "executeTransactions" as const,
+      descKey: "executeTransactionsDesc" as const,
+      details: [
+        "singleOrBulk",
+        "realTimeRates",
+        "transactionPurpose",
+        "instantConfirmation"
+      ] as const
+    }
+  ];
+
   return (
     <section id="how-it-works" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            How It Works
+            {t('howItWorksTitle')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Get started in just four simple steps and transform your cross-border payment operations
+            {t('howItWorksSubtitle')}
           </p>
         </div>
 
@@ -79,14 +82,14 @@ const HowItWorksSection = () => {
             return (
               <div key={index} className="relative">
                 {/* Step Card */}
-                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 mb-12">
+                <div className={`flex flex-col lg:flex-row items-start lg:items-center gap-8 mb-12 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
                   {/* Step Number and Icon */}
                   <div className="flex-shrink-0">
                     <div className="relative">
                       <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-button">
                         <Icon className="h-8 w-8 text-primary-foreground" />
                       </div>
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent rounded-full flex items-center justify-center text-accent-foreground text-sm font-bold">
+                      <div className={`absolute -top-2 ${isRTL ? '-left-2' : '-right-2'} w-6 h-6 bg-accent rounded-full flex items-center justify-center text-accent-foreground text-sm font-bold`}>
                         {index + 1}
                       </div>
                     </div>
@@ -97,18 +100,18 @@ const HowItWorksSection = () => {
                     <Card className="shadow-card hover:shadow-lg transition-smooth">
                       <CardContent className="p-6">
                         <h3 className="text-xl font-semibold text-foreground mb-3">
-                          {step.title}
+                          {t(step.titleKey)}
                         </h3>
                         <p className="text-muted-foreground mb-6">
-                          {step.description}
+                          {t(step.descKey)}
                         </p>
                         
                         {/* Step Details */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {step.details.map((detail, detailIndex) => (
-                            <div key={detailIndex} className="flex items-start gap-2">
+                            <div key={detailIndex} className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                               <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                              <span className="text-sm text-muted-foreground">{detail}</span>
+                              <span className="text-sm text-muted-foreground">{t(detail)}</span>
                             </div>
                           ))}
                         </div>
@@ -119,14 +122,14 @@ const HowItWorksSection = () => {
                   {/* Arrow for desktop */}
                   {!isLast && (
                     <div className="hidden lg:block">
-                      <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                      <ArrowRight className={`h-6 w-6 text-muted-foreground ${isRTL ? 'rotate-180' : ''}`} />
                     </div>
                   )}
                 </div>
 
                 {/* Vertical line for mobile */}
                 {!isLast && (
-                  <div className="lg:hidden absolute left-8 top-16 w-0.5 h-12 bg-border" />
+                  <div className={`lg:hidden absolute ${isRTL ? 'right-8' : 'left-8'} top-16 w-0.5 h-12 bg-border`} />
                 )}
               </div>
             );
@@ -137,17 +140,17 @@ const HowItWorksSection = () => {
         <div className="text-center mt-16">
           <div className="bg-gradient-card rounded-2xl p-8 inline-block">
             <h3 className="text-2xl font-bold text-foreground mb-4">
-              Ready to Get Started?
+              {t('readyToGetStarted')}
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Join hundreds of businesses already using our platform for seamless cross-border payments
+              {t('joinHundreds')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="business" size="lg">
-                Start Onboarding
+                {t('startOnboarding')}
               </Button>
               <Button variant="outline" size="lg">
-                Schedule Demo
+                {t('scheduleDemo')}
               </Button>
             </div>
           </div>
