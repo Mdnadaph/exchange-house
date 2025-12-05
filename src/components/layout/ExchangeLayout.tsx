@@ -15,7 +15,8 @@ import {
   Calculator,
   CreditCard,
   Files,
-  Handshake
+  Handshake,
+  GitBranch
 } from "lucide-react";
 
 interface ExchangeLayoutProps {
@@ -36,6 +37,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     { name: "Fee Management", href: "/exchange/fee-management", icon: Calculator },
     { name: "Payout Config", href: "/exchange/payout-config", icon: DollarSign },
     { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
+    { name: "Branch Management", href: "/exchange/branches", icon: GitBranch },
     { name: "Staff Management", href: "/exchange/staff", icon: Users },
   ];
 
