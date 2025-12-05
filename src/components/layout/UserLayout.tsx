@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Building2, 
   Home, 
@@ -51,6 +52,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">Sarah Smith (User)</span>
               <Button variant="ghost" size="sm">
