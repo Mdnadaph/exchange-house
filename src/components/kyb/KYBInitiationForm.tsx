@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import IDDocumentForm, { IDDocument } from "@/components/kyb/IDDocumentForm";
 import { 
   Plus, 
   Upload, 
@@ -18,7 +19,8 @@ import {
   DollarSign,
   AlertCircle,
   CheckCircle,
-  Info
+  Info,
+  CreditCard
 } from "lucide-react";
 
 interface KYBInitiationFormProps {
@@ -29,18 +31,31 @@ interface KYBInitiationFormProps {
 const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [idDocuments, setIdDocuments] = useState<IDDocument[]>([]);
+  
   const [formData, setFormData] = useState({
     // Business Information
     businessName: "",
     businessType: "",
+    legalForm: "",
     tradeLicenseNumber: "",
+    tradeLicenseIssueDate: "",
+    tradeLicenseExpiryDate: "",
+    tradeLicenseIssuingAuthority: "",
     establishmentDate: "",
     registrationEmirate: "",
+    countryOfTrade: "",
     
     // Contact Information
     authorizedSignatory: "",
     position: "",
     emiratesId: "",
+    emiratesIdIssueDate: "",
+    emiratesIdExpiryDate: "",
+    passportNumber: "",
+    passportIssueDate: "",
+    passportExpiryDate: "",
+    passportIssuingCountry: "",
     email: "",
     phone: "",
     address: "",
@@ -62,12 +77,29 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
   const [uploadedDocuments, setUploadedDocuments] = useState<{[key: string]: boolean}>({
     tradeLicense: false,
     emiratesId: false,
+    passport: false,
     memorandum: false,
     vatCertificate: false,
     proofOfAddress: false,
     sourceOfFunds: false,
     bankStatement: false
   });
+  
+  const legalForms = [
+    { value: "llc", label: "Limited Liability Company (LLC)" },
+    { value: "freezone", label: "Free Zone Company" },
+    { value: "sole", label: "Sole Establishment" },
+    { value: "partnership", label: "Partnership" },
+    { value: "branch", label: "Branch of Foreign Company" },
+    { value: "pjsc", label: "Public Joint Stock Company (PJSC)" },
+    { value: "prjsc", label: "Private Joint Stock Company (PrJSC)" }
+  ];
+  
+  const countries = [
+    "United Arab Emirates", "India", "Pakistan", "Philippines", "Bangladesh", 
+    "Sri Lanka", "Nepal", "Egypt", "United Kingdom", "United States", "China",
+    "Saudi Arabia", "Qatar", "Kuwait", "Bahrain", "Oman", "Jordan"
+  ];
 
   const requiredDocuments = [
     {
@@ -179,12 +211,25 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
             />
           </div>
           <div>
+            <Label htmlFor="legalForm">Legal Form *</Label>
+            <Select value={formData.legalForm} onValueChange={(value) => setFormData(prev => ({ ...prev, legalForm: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select legal form" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                {legalForms.map((form) => (
+                  <SelectItem key={form.value} value={form.value}>{form.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label htmlFor="businessType">Business Type *</Label>
             <Select value={formData.businessType} onValueChange={(value) => setFormData(prev => ({ ...prev, businessType: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select business type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-border z-50">
                 {businessTypes.map((type) => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
@@ -192,13 +237,17 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
             </Select>
           </div>
           <div>
-            <Label htmlFor="tradeLicenseNumber">Trade License Number *</Label>
-            <Input
-              id="tradeLicenseNumber"
-              value={formData.tradeLicenseNumber}
-              onChange={(e) => setFormData(prev => ({ ...prev, tradeLicenseNumber: e.target.value }))}
-              placeholder="Enter trade license number"
-            />
+            <Label htmlFor="countryOfTrade">Country of Trade *</Label>
+            <Select value={formData.countryOfTrade} onValueChange={(value) => setFormData(prev => ({ ...prev, countryOfTrade: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                {countries.map((country) => (
+                  <SelectItem key={country} value={country}>{country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="registrationEmirate">Registration Emirate *</Label>
@@ -206,7 +255,7 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
               <SelectTrigger>
                 <SelectValue placeholder="Select emirate" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-border z-50">
                 {emirates.map((emirate) => (
                   <SelectItem key={emirate} value={emirate}>{emirate}</SelectItem>
                 ))}
@@ -221,6 +270,52 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
               value={formData.establishmentDate}
               onChange={(e) => setFormData(prev => ({ ...prev, establishmentDate: e.target.value }))}
             />
+          </div>
+        </div>
+        
+        {/* Trade License Details - Structured as per WorkerAppz API */}
+        <div className="mt-6">
+          <h4 className="text-md font-medium text-foreground mb-3 flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Trade License Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="tradeLicenseNumber">Trade License Number *</Label>
+              <Input
+                id="tradeLicenseNumber"
+                value={formData.tradeLicenseNumber}
+                onChange={(e) => setFormData(prev => ({ ...prev, tradeLicenseNumber: e.target.value }))}
+                placeholder="Enter trade license number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tradeLicenseIssuingAuthority">Issuing Authority *</Label>
+              <Input
+                id="tradeLicenseIssuingAuthority"
+                value={formData.tradeLicenseIssuingAuthority}
+                onChange={(e) => setFormData(prev => ({ ...prev, tradeLicenseIssuingAuthority: e.target.value }))}
+                placeholder="e.g., DED Dubai, DMCC"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tradeLicenseIssueDate">Issue Date *</Label>
+              <Input
+                id="tradeLicenseIssueDate"
+                type="date"
+                value={formData.tradeLicenseIssueDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, tradeLicenseIssueDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="tradeLicenseExpiryDate">Expiry Date *</Label>
+              <Input
+                id="tradeLicenseExpiryDate"
+                type="date"
+                value={formData.tradeLicenseExpiryDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, tradeLicenseExpiryDate: e.target.value }))}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -247,15 +342,6 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
             />
           </div>
           <div>
-            <Label htmlFor="emiratesId">Emirates ID *</Label>
-            <Input
-              id="emiratesId"
-              value={formData.emiratesId}
-              onChange={(e) => setFormData(prev => ({ ...prev, emiratesId: e.target.value }))}
-              placeholder="784-YYYY-XXXXXXX-X"
-            />
-          </div>
-          <div>
             <Label htmlFor="email">Email Address *</Label>
             <Input
               id="email"
@@ -275,6 +361,94 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
             />
           </div>
         </div>
+        
+        {/* Emirates ID Details - Structured as per WorkerAppz API */}
+        <div className="mt-6">
+          <h4 className="text-md font-medium text-foreground mb-3 flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Emirates ID Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="emiratesId">Emirates ID Number *</Label>
+              <Input
+                id="emiratesId"
+                value={formData.emiratesId}
+                onChange={(e) => setFormData(prev => ({ ...prev, emiratesId: e.target.value }))}
+                placeholder="784-YYYY-XXXXXXX-X"
+              />
+            </div>
+            <div>
+              <Label htmlFor="emiratesIdIssueDate">Issue Date *</Label>
+              <Input
+                id="emiratesIdIssueDate"
+                type="date"
+                value={formData.emiratesIdIssueDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, emiratesIdIssueDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="emiratesIdExpiryDate">Expiry Date *</Label>
+              <Input
+                id="emiratesIdExpiryDate"
+                type="date"
+                value={formData.emiratesIdExpiryDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, emiratesIdExpiryDate: e.target.value }))}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Passport Details - Structured as per WorkerAppz API */}
+        <div className="mt-6">
+          <h4 className="text-md font-medium text-foreground mb-3 flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Passport Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="passportNumber">Passport Number *</Label>
+              <Input
+                id="passportNumber"
+                value={formData.passportNumber}
+                onChange={(e) => setFormData(prev => ({ ...prev, passportNumber: e.target.value }))}
+                placeholder="Enter passport number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="passportIssuingCountry">Issuing Country *</Label>
+              <Select value={formData.passportIssuingCountry} onValueChange={(value) => setFormData(prev => ({ ...prev, passportIssuingCountry: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="passportIssueDate">Issue Date *</Label>
+              <Input
+                id="passportIssueDate"
+                type="date"
+                value={formData.passportIssueDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, passportIssueDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="passportExpiryDate">Expiry Date *</Label>
+              <Input
+                id="passportExpiryDate"
+                type="date"
+                value={formData.passportExpiryDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, passportExpiryDate: e.target.value }))}
+              />
+            </div>
+          </div>
+        </div>
+        
         <div className="mt-4">
           <Label htmlFor="address">Business Address *</Label>
           <Textarea
@@ -286,6 +460,23 @@ const KYBInitiationForm = ({ trigger, onSubmit }: KYBInitiationFormProps) => {
           />
         </div>
       </div>
+      
+      {/* Additional ID Documents using IDDocumentForm */}
+      <Card className="border-accent/20">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Additional Identity Documents
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <IDDocumentForm 
+            documents={idDocuments} 
+            onChange={setIdDocuments}
+            showHeader={false}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 

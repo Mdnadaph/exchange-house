@@ -534,6 +534,46 @@ const BeneficiaryRegistrationForm = () => {
                     </div>
                   )}
 
+                  {/* Bank Address - WorkerAppz API Field */}
+                  <div className="space-y-2">
+                    <Label>Bank Address *</Label>
+                    <Input 
+                      placeholder="Enter bank branch address"
+                    />
+                    <p className="text-xs text-muted-foreground">Full address of the bank branch for SWIFT transfers</p>
+                  </div>
+
+                  {/* Correspondent Bank Details - WorkerAppz API Field */}
+                  {residencyType === "foreign" && (
+                    <div className="border-t pt-4 mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building className="h-4 w-4 text-muted-foreground" />
+                        <h5 className="font-medium text-foreground">Correspondent Bank (Optional)</h5>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Required for some international transfers when an intermediary bank is used
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Correspondent Bank Name</Label>
+                          <Input placeholder="Enter correspondent bank name" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Correspondent SWIFT/BIC</Label>
+                          <Input placeholder="e.g., CITIUS33" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Correspondent Account Number</Label>
+                          <Input placeholder="Enter correspondent account number" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Correspondent Bank Address</Label>
+                          <Input placeholder="Enter correspondent bank address" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedBank === "Emirates NBD" && (
                     <div className="bg-accent-muted/20 rounded-lg p-3">
                       <div className="flex items-start space-x-2">

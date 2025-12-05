@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
+import IDDocumentForm, { IDDocument } from "@/components/kyb/IDDocumentForm";
 import { 
   Plus, 
   Building2, 
@@ -17,7 +19,8 @@ import {
   MapPin,
   FileText,
   Key,
-  CheckCircle
+  CheckCircle,
+  Globe
 } from "lucide-react";
 
 interface BusinessOnboardingFormProps {
@@ -29,6 +32,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const [open, setOpen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [idDocuments, setIdDocuments] = useState<IDDocument[]>([]);
+  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>(["AED"]);
+  
   const [formData, setFormData] = useState({
     // Business Information
     companyName: "",
@@ -37,7 +43,14 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     businessEmail: "",
     businessPhone: "",
     businessAddress: "",
+    addressLine2: "",
     registeredBranch: "",
+    
+    // WorkerAppz API Fields
+    legalForm: "",
+    businessType: "",
+    countryOfTrade: "",
+    alternatePhone: "",
     
     // Admin User Details
     adminFirstName: "",
@@ -48,12 +61,50 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     
     // Account Settings
     monthlyLimit: "",
-    currency: "USD",
     dealValidityDays: "7"
   });
 
   const branches = ["Dubai Mall Branch", "Abu Dhabi Branch", "Sharjah Branch", "Al Ain Branch"];
-  const currencies = ["USD", "AED", "EUR", "GBP"];
+  const currencies = ["USD", "AED", "EUR", "GBP", "INR", "PKR", "PHP", "BDT", "LKR", "NPR"];
+  
+  const legalForms = [
+    { value: "llc", label: "Limited Liability Company (LLC)" },
+    { value: "freezone", label: "Free Zone Company" },
+    { value: "sole", label: "Sole Establishment" },
+    { value: "partnership", label: "Partnership" },
+    { value: "branch", label: "Branch of Foreign Company" },
+    { value: "pjsc", label: "Public Joint Stock Company (PJSC)" },
+    { value: "prjsc", label: "Private Joint Stock Company (PrJSC)" }
+  ];
+  
+  const businessTypes = [
+    { value: "trading", label: "Trading" },
+    { value: "manufacturing", label: "Manufacturing" },
+    { value: "services", label: "Services" },
+    { value: "construction", label: "Construction" },
+    { value: "real_estate", label: "Real Estate" },
+    { value: "technology", label: "Technology" },
+    { value: "healthcare", label: "Healthcare" },
+    { value: "hospitality", label: "Hospitality" },
+    { value: "transport", label: "Transport & Logistics" },
+    { value: "retail", label: "Retail" },
+    { value: "wholesale", label: "Wholesale" },
+    { value: "other", label: "Other" }
+  ];
+  
+  const countries = [
+    "United Arab Emirates", "India", "Pakistan", "Philippines", "Bangladesh", 
+    "Sri Lanka", "Nepal", "Egypt", "United Kingdom", "United States", "China",
+    "Saudi Arabia", "Qatar", "Kuwait", "Bahrain", "Oman", "Jordan"
+  ];
+
+  const toggleCurrency = (currency: string) => {
+    setSelectedCurrencies(prev => 
+      prev.includes(currency) 
+        ? prev.filter(c => c !== currency)
+        : [...prev, currency]
+    );
+  };
 
   const handleSubmit = () => {
     setShowConfirmation(true);
@@ -66,6 +117,8 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     });
     setOpen(false);
     setCurrentStep(1);
+    setIdDocuments([]);
+    setSelectedCurrencies(["AED"]);
     setFormData({
       companyName: "",
       tradeLicense: "",
@@ -73,14 +126,18 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       businessEmail: "",
       businessPhone: "",
       businessAddress: "",
+      addressLine2: "",
       registeredBranch: "",
+      legalForm: "",
+      businessType: "",
+      countryOfTrade: "",
+      alternatePhone: "",
       adminFirstName: "",
       adminLastName: "",
       adminEmail: "",
       adminPhone: "",
       adminDesignation: "",
       monthlyLimit: "",
-      currency: "USD",
       dealValidityDays: "7"
     });
   };
@@ -126,6 +183,37 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 placeholder="Enter company name"
               />
             </div>
+            
+            {/* Legal Form - WorkerAppz API Field */}
+            <div>
+              <Label htmlFor="legalForm">Legal Form *</Label>
+              <Select value={formData.legalForm} onValueChange={(value) => setFormData(prev => ({ ...prev, legalForm: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select legal form" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {legalForms.map((form) => (
+                    <SelectItem key={form.value} value={form.value}>{form.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Business Type - WorkerAppz API Field */}
+            <div>
+              <Label htmlFor="businessType">Type of Business *</Label>
+              <Select value={formData.businessType} onValueChange={(value) => setFormData(prev => ({ ...prev, businessType: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select business type" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {businessTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div>
               <Label htmlFor="tradeLicense">Trade License Number *</Label>
               <Input
@@ -144,6 +232,36 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 placeholder="TAX-XXXXXX"
               />
             </div>
+            
+            {/* Country of Trade - WorkerAppz API Field */}
+            <div>
+              <Label htmlFor="countryOfTrade">Country of Trade *</Label>
+              <Select value={formData.countryOfTrade} onValueChange={(value) => setFormData(prev => ({ ...prev, countryOfTrade: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="registeredBranch">Registered Branch *</Label>
+              <Select value={formData.registeredBranch} onValueChange={(value) => setFormData(prev => ({ ...prev, registeredBranch: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select branch" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {branches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>{branch}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div>
               <Label htmlFor="businessEmail">Business Email *</Label>
               <div className="relative">
@@ -171,33 +289,59 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 />
               </div>
             </div>
+            <div>
+              <Label htmlFor="alternatePhone">Alternate Phone</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="alternatePhone"
+                  value={formData.alternatePhone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, alternatePhone: e.target.value }))}
+                  placeholder="+971 5X XXX XXXX"
+                  className="pl-9"
+                />
+              </div>
+            </div>
             <div className="md:col-span-2">
-              <Label htmlFor="businessAddress">Business Address *</Label>
+              <Label htmlFor="businessAddress">Business Address Line 1 *</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="businessAddress"
                   value={formData.businessAddress}
                   onChange={(e) => setFormData(prev => ({ ...prev, businessAddress: e.target.value }))}
-                  placeholder="Office address, Dubai, UAE"
+                  placeholder="Office address, building name, street"
                   className="pl-9"
                 />
               </div>
             </div>
             <div className="md:col-span-2">
-              <Label htmlFor="registeredBranch">Registered Branch *</Label>
-              <Select value={formData.registeredBranch} onValueChange={(value) => setFormData(prev => ({ ...prev, registeredBranch: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select branch" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border border-border z-50">
-                  {branches.map((branch) => (
-                    <SelectItem key={branch} value={branch}>{branch}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="addressLine2">Address Line 2</Label>
+              <Input
+                id="addressLine2"
+                value={formData.addressLine2}
+                onChange={(e) => setFormData(prev => ({ ...prev, addressLine2: e.target.value }))}
+                placeholder="Area, landmark (optional)"
+              />
             </div>
           </div>
+        </CardContent>
+      </Card>
+      
+      {/* ID Documents Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Business Documents
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <IDDocumentForm 
+            documents={idDocuments} 
+            onChange={setIdDocuments}
+            showHeader={false}
+          />
         </CardContent>
       </Card>
     </div>
@@ -305,19 +449,6 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 placeholder="Enter limit amount"
               />
             </div>
-            <div>
-              <Label htmlFor="currency">Currency *</Label>
-              <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border border-border z-50">
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">Deal Validity Period (Days) *</Label>
               <Input
@@ -331,6 +462,43 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 Number of days a negotiated deal remains valid before expiration
               </p>
             </div>
+          </div>
+          
+          {/* Multi-Currency Selection - WorkerAppz API Field */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Supported Currencies *
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Select all currencies this business will transact in
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {currencies.map((currency) => (
+                <div key={currency} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`currency-${currency}`}
+                    checked={selectedCurrencies.includes(currency)}
+                    onCheckedChange={() => toggleCurrency(currency)}
+                  />
+                  <Label 
+                    htmlFor={`currency-${currency}`} 
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {currency}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            {selectedCurrencies.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {selectedCurrencies.map(curr => (
+                  <Badge key={curr} variant="secondary" className="text-xs">
+                    {curr}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -349,12 +517,24 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               <p className="font-medium">{formData.companyName || "-"}</p>
             </div>
             <div>
+              <p className="text-muted-foreground">Legal Form</p>
+              <p className="font-medium">{legalForms.find(f => f.value === formData.legalForm)?.label || "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Business Type</p>
+              <p className="font-medium">{businessTypes.find(t => t.value === formData.businessType)?.label || "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Country of Trade</p>
+              <p className="font-medium">{formData.countryOfTrade || "-"}</p>
+            </div>
+            <div>
               <p className="text-muted-foreground">Branch</p>
               <p className="font-medium">{formData.registeredBranch || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Admin User</p>
-              <p className="font-medium">{`${formData.adminFirstName} ${formData.adminLastName}` || "-"}</p>
+              <p className="font-medium">{`${formData.adminFirstName} ${formData.adminLastName}`.trim() || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Admin Email</p>
@@ -362,7 +542,15 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
             <div>
               <p className="text-muted-foreground">Monthly Limit</p>
-              <p className="font-medium">{formData.monthlyLimit ? `${formData.currency} ${Number(formData.monthlyLimit).toLocaleString()}` : "-"}</p>
+              <p className="font-medium">{formData.monthlyLimit ? `AED ${Number(formData.monthlyLimit).toLocaleString()}` : "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Supported Currencies</p>
+              <p className="font-medium">{selectedCurrencies.length > 0 ? selectedCurrencies.join(", ") : "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">ID Documents</p>
+              <p className="font-medium">{idDocuments.length > 0 ? `${idDocuments.length} document(s)` : "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Deal Validity</p>
