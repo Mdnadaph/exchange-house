@@ -10,79 +10,81 @@ import {
   CreditCard,
   UserCheck
 } from "lucide-react";
-
-const features = [
-  {
-    icon: Users,
-    title: "User Hierarchies & Workflows",
-    description: "Create internal user hierarchies with customizable approval workflows based on transaction thresholds.",
-    color: "text-blue-600"
-  },
-  {
-    icon: Globe2,
-    title: "Global Beneficiary Management", 
-    description: "Register and manage beneficiaries worldwide with flexible payout options and approval processes.",
-    color: "text-green-600"
-  },
-  {
-    icon: FileCheck,
-    title: "Bulk & Single Transactions",
-    description: "Process individual invoice payments or bulk salary disbursements with comprehensive documentation support.",
-    color: "text-purple-600"
-  },
-  {
-    icon: Shield,
-    title: "Regulatory Compliance",
-    description: "Full UAE Central Bank KYB compliance with automated and manual verification options.",
-    color: "text-red-600"
-  },
-  {
-    icon: Layers,
-    title: "Seamless Integration",
-    description: "Real-time access to payout destinations, exchange rates, and fees through secure API integration.",
-    color: "text-indigo-600"
-  },
-  {
-    icon: Clock,
-    title: "Real-Time Processing",
-    description: "Instant transaction processing with live updates on exchange rates and transaction status.",
-    color: "text-orange-600"
-  }
-];
-
-const businessBenefits = [
-  {
-    icon: Building,
-    title: "Enhanced Efficiency",
-    description: "Eliminate branch visits and process transactions from anywhere, anytime.",
-    stat: "90% Faster Processing"
-  },
-  {
-    icon: CreditCard,
-    title: "Cost Optimization", 
-    description: "Competitive exchange rates and transparent fee structure with no hidden costs.",
-    stat: "Up to 50% Cost Savings"
-  },
-  {
-    icon: UserCheck,
-    title: "Complete Control",
-    description: "Full visibility and control over your payment processes with detailed reporting.",
-    stat: "100% Transparency"
-  }
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FeaturesSection = () => {
+  const { t, isRTL } = useLanguage();
+
+  const features = [
+    {
+      icon: Users,
+      titleKey: "userHierarchies" as const,
+      descKey: "userHierarchiesDesc" as const,
+      color: "text-blue-600"
+    },
+    {
+      icon: Globe2,
+      titleKey: "globalBeneficiary" as const,
+      descKey: "globalBeneficiaryDesc" as const,
+      color: "text-green-600"
+    },
+    {
+      icon: FileCheck,
+      titleKey: "bulkSingleTransactions" as const,
+      descKey: "bulkSingleTransactionsDesc" as const,
+      color: "text-purple-600"
+    },
+    {
+      icon: Shield,
+      titleKey: "regulatoryCompliance" as const,
+      descKey: "regulatoryComplianceDesc" as const,
+      color: "text-red-600"
+    },
+    {
+      icon: Layers,
+      titleKey: "seamlessIntegration" as const,
+      descKey: "seamlessIntegrationDesc" as const,
+      color: "text-indigo-600"
+    },
+    {
+      icon: Clock,
+      titleKey: "realTimeProcessing" as const,
+      descKey: "realTimeProcessingDesc" as const,
+      color: "text-orange-600"
+    }
+  ];
+
+  const businessBenefits = [
+    {
+      icon: Building,
+      titleKey: "enhancedEfficiency" as const,
+      descKey: "enhancedEfficiencyDesc" as const,
+      statKey: "fasterProcessing" as const
+    },
+    {
+      icon: CreditCard,
+      titleKey: "costOptimization" as const,
+      descKey: "costOptimizationDesc" as const,
+      statKey: "costSavings" as const
+    },
+    {
+      icon: UserCheck,
+      titleKey: "completeControl" as const,
+      descKey: "completeControlDesc" as const,
+      statKey: "transparency" as const
+    }
+  ];
+
   return (
     <section id="features" className="py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Powerful Features for Modern Businesses
+            {t('featuresTitle')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Everything you need to manage cross-border payments efficiently, 
-            securely, and in full compliance with UAE regulations.
+            {t('featuresSubtitle')}
           </p>
         </div>
 
@@ -100,12 +102,12 @@ const FeaturesSection = () => {
                     <Icon className={`h-6 w-6 ${feature.color}`} />
                   </div>
                   <CardTitle className="text-lg font-semibold text-foreground">
-                    {feature.title}
+                    {t(feature.titleKey)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    {feature.description}
+                    {t(feature.descKey)}
                   </p>
                 </CardContent>
               </Card>
@@ -117,10 +119,10 @@ const FeaturesSection = () => {
         <div className="bg-gradient-card rounded-2xl p-8 md:p-12">
           <div className="text-center mb-12">
             <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Why Businesses Choose Our Platform
+              {t('whyBusinessesChoose')}
             </h3>
             <p className="text-muted-foreground text-lg">
-              Join thousands of businesses that have transformed their payment operations
+              {t('joinThousands')}
             </p>
           </div>
 
@@ -133,13 +135,13 @@ const FeaturesSection = () => {
                     <Icon className="h-8 w-8 text-primary-foreground" />
                   </div>
                   <h4 className="text-xl font-semibold text-foreground mb-3">
-                    {benefit.title}
+                    {t(benefit.titleKey)}
                   </h4>
                   <p className="text-muted-foreground mb-4">
-                    {benefit.description}
+                    {t(benefit.descKey)}
                   </p>
                   <div className="text-2xl font-bold text-primary">
-                    {benefit.stat}
+                    {t(benefit.statKey)}
                   </div>
                 </div>
               );
