@@ -39,6 +39,8 @@ import BranchDealReview from "./pages/branch/BranchDealReview";
 import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 
 import Login from "./components/Login";
+import BranchDetails from "./pages/exchange/Branch/BranchDetails";
+import ExchangeLayout from "./components/layout/ExchangeLayout";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +74,7 @@ const App = () => (
           
           {/* Exchange House Admin Routes */}
           <Route path="/exchange" element={<ExchangeAdminDashboard />} />
+          <Route path="/exchange/Details/:uuid" element={<BranchDetails />} />
           <Route path="/exchange/onboard-business" element={<ExchangeBusinessOnboarding />} />
           <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
           <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
@@ -84,6 +87,7 @@ const App = () => (
           <Route path="/exchange/branches" element={<ExchangeBranchManagement />} />
           <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
           
+
           {/* Branch User Routes */}
           <Route path="/branch" element={<BranchDashboard />} />
           <Route path="/branch/onboard-business" element={<BranchBusinessOnboarding />} />

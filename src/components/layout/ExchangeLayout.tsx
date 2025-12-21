@@ -1,13 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { 
-  Building2, 
-  Home, 
-  FileCheck, 
-  Settings, 
-  Users, 
+import {
+  Building2,
+  Home,
+  FileCheck,
+  Settings,
+  Users,
   LogOut,
   Landmark,
   DollarSign,
@@ -16,7 +16,7 @@ import {
   CreditCard,
   Files,
   Handshake,
-  GitBranch
+  GitBranch,
 } from "lucide-react";
 
 interface ExchangeLayoutProps {
@@ -25,17 +25,29 @@ interface ExchangeLayoutProps {
 
 const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const location = useLocation();
-  
+
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home },
-    { name: "Onboard Business", href: "/exchange/onboard-business", icon: Building2 },
+    {
+      name: "Onboard Business",
+      href: "/exchange/onboard-business",
+      icon: Building2,
+    },
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
     { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
     { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/exchange/deals", icon: Handshake },
     { name: "Documents", href: "/exchange/documents", icon: Files },
-    { name: "Fee Management", href: "/exchange/fee-management", icon: Calculator },
-    { name: "Payout Config", href: "/exchange/payout-config", icon: DollarSign },
+    {
+      name: "Fee Management",
+      href: "/exchange/fee-management",
+      icon: Calculator,
+    },
+    {
+      name: "Payout Config",
+      href: "/exchange/payout-config",
+      icon: DollarSign,
+    },
     { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
     { name: "Branch Management", href: "/exchange/branches", icon: GitBranch },
     { name: "Staff Management", href: "/exchange/staff", icon: Users },
@@ -56,13 +68,17 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
               </Link>
               <div className="flex items-center space-x-2 text-sm">
                 <Landmark className="h-4 w-4 text-primary" />
-                <span className="font-medium text-primary">Exchange House Admin</span>
+                <span className="font-medium text-primary">
+                  Exchange House Admin
+                </span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <ThemeToggle />
-              <span className="text-sm text-muted-foreground">Sarah Wilson (Exchange Admin)</span>
+              <span className="text-sm text-muted-foreground">
+                Sarah Wilson (Exchange Admin)
+              </span>
               <Button variant="ghost" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out

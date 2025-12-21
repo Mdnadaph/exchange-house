@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCookies } from "react-cookie";
+import { useNavigate, useParams } from "react-router-dom";
+
 import {
   Dialog,
   DialogContent,
@@ -47,21 +49,24 @@ const ExchangeBranchManagement = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const uuid = useParams();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
   const [branches, setBranches] = useState<any[]>([]);
-  const [filteredBranches, setFilteredBranches] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
 
-  const [isAddBranchOpen, setIsAddBranchOpen] = useState(false);
-  const [newBranch, setNewBranch] = useState({
+  const [form, setForm] = useState({
     name: "",
+    emirate: "",
     location: "",
     address: "",
     phone: "",
     email: "",
-    manager: "",
-    emirate: "",
   });
 
   const emirates = [
@@ -74,65 +79,10 @@ const ExchangeBranchManagement = () => {
     "UMM_AL_QUWAIN",
   ];
 
-  // Add Branches
-  const handleAddBranch = async () => {
-    if (!newBranch.name || !newBranch.location || !newBranch.emirate) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const payload = {
-        name: newBranch.name,
-        emirate: newBranch.emirate,
-        location: newBranch.location,
-        address: newBranch.address,
-        email: newBranch.email,
-        contactNumber: newBranch.phone,
-      };
-
-      const response = await axios.post(
-        `${BASE_URL}/api/v3/branch/create`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      toast({
-        title: "Branch Created",
-        description: response.data.message,
-      });
-
-      setNewBranch({
-        name: "",
-        location: "",
-        address: "",
-        phone: "",
-        email: "",
-        manager: "",
-        emirate: "",
-      });
-
-      setIsAddBranchOpen(false);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description:
-          error?.response?.data?.message || "Failed to create branch",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Branches details
-  const handleDetails = async () => {
+  /* =========================
+     FETCH BRANCHES
+  ========================= */
+  const fetchBranches = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
         headers: {
@@ -144,6 +94,7 @@ const ExchangeBranchManagement = () => {
 
       const formatted = apiData.map((b: any) => ({
         id: b.branchId,
+        uuid: b.uuid,
         name: b.name,
         location: b.location,
         address: b.address,
@@ -167,18 +118,152 @@ const ExchangeBranchManagement = () => {
       }));
 
       setBranches(formatted);
-      setFilteredBranches(formatted);
     } catch (error: any) {
-      console.error(
-        error?.response?.data?.message || "Failed to fetch branches"
-      );
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message || "Failed to fetch branches",
+        variant: "destructive",
+      });
     }
   };
 
   useEffect(() => {
-    handleDetails();
+    fetchBranches();
   }, []);
 
+  /* =========================
+     OPEN ADD MODAL
+  ========================= */
+  const openAddModal = () => {
+    setIsEditMode(false);
+    setEditingBranchId(null);
+    setForm({
+      name: "",
+      emirate: "",
+      location: "",
+      address: "",
+      phone: "",
+      email: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  /* =========================
+     OPEN EDIT MODAL
+  ========================= */
+  const openEditModal = (branch: any) => {
+    setIsEditMode(true);
+    setEditingBranchId(branch.uuid);
+    setForm({
+      name: branch.name || "",
+      emirate: branch.emirate || "",
+      location: branch.location || "",
+      address: branch.address || "",
+      phone: branch.phone || "",
+      email: branch.email || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  /* =========================
+     CREATE BRANCH
+  ========================= */
+  const createBranch = async () => {
+    try {
+      await axios.post(
+        `${BASE_URL}/api/v3/branch/create`,
+        {
+          name: form.name,
+          emirate: form.emirate,
+          location: form.location,
+          address: form.address,
+          contactNumber: form.phone,
+          email: form.email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        title: "Success",
+        description: "Branch created successfully",
+      });
+
+      setIsModalOpen(false);
+      fetchBranches();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message || "Failed to create branch",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /* =========================
+     UPDATE BRANCH
+  ========================= */
+  const updateBranch = async () => {
+    try {
+      await axios.patch(
+        `${BASE_URL}/api/v3/branch/update/${editingBranchId}`,
+        {
+          name: form.name,
+          emirate: form.emirate,
+          location: form.location,
+          address: form.address,
+          contactNumber: form.phone,
+          email: form.email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        title: "Success",
+        description: "Branch updated successfully",
+      });
+
+      setIsModalOpen(false);
+      setIsEditMode(false);
+      setEditingBranchId(null);
+      fetchBranches();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message || "Failed to update branch",
+        variant: "destructive",
+      });
+    }
+  };
+  /* =========================
+     HANDLE SUBMIT (ADD/EDIT)
+  ========================= */
+  const handleSubmit = async () => {
+    if (!form.name || !form.emirate || !form.location) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isEditMode) {
+      await updateBranch();
+    } else {
+      await createBranch();
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -211,15 +296,15 @@ const ExchangeBranchManagement = () => {
     return "text-destructive";
   };
 
-  // const filteredBranches = branches.filter((branch) => {
-  //   const matchesSearch =
-  //     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     branch.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     branch.manager.toLowerCase().includes(searchQuery.toLowerCase());
-  //   const matchesStatus =
-  //     filterStatus === "all" || branch.status === filterStatus;
-  //   return matchesSearch && matchesStatus;
-  // });
+  const filteredBranches = branches.filter((branch) => {
+    const matchesSearch =
+      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      branch.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      branch.manager.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      filterStatus === "all" || branch.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const totalStats = {
     totalBranches: branches.length,
@@ -242,9 +327,9 @@ const ExchangeBranchManagement = () => {
             </p>
           </div>
 
-          <Dialog open={isAddBranchOpen} onOpenChange={setIsAddBranchOpen}>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="business">
+              <Button variant="business" onClick={openAddModal}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Branch
               </Button>
@@ -254,7 +339,7 @@ const ExchangeBranchManagement = () => {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  Add New Branch
+                  {isEditMode ? "Edit Branch" : "Add New Branch"}
                 </DialogTitle>
               </DialogHeader>
 
@@ -263,10 +348,8 @@ const ExchangeBranchManagement = () => {
                   <Label htmlFor="branchName">Branch Name *</Label>
                   <Input
                     id="branchName"
-                    value={newBranch.name}
-                    onChange={(e) =>
-                      setNewBranch({ ...newBranch, name: e.target.value })
-                    }
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g., Dubai Marina Branch"
                   />
                 </div>
@@ -274,10 +357,8 @@ const ExchangeBranchManagement = () => {
                 <div>
                   <Label htmlFor="emirate">Emirate *</Label>
                   <Select
-                    value={newBranch.emirate}
-                    onValueChange={(v) =>
-                      setNewBranch({ ...newBranch, emirate: v })
-                    }
+                    value={form.emirate}
+                    onValueChange={(v) => setForm({ ...form, emirate: v })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select emirate" />
@@ -296,9 +377,9 @@ const ExchangeBranchManagement = () => {
                   <Label htmlFor="location">Location *</Label>
                   <Input
                     id="location"
-                    value={newBranch.location}
+                    value={form.location}
                     onChange={(e) =>
-                      setNewBranch({ ...newBranch, location: e.target.value })
+                      setForm({ ...form, location: e.target.value })
                     }
                     placeholder="e.g., Dubai Marina Mall"
                   />
@@ -308,9 +389,9 @@ const ExchangeBranchManagement = () => {
                   <Label htmlFor="address">Full Address</Label>
                   <Textarea
                     id="address"
-                    value={newBranch.address}
+                    value={form.address}
                     onChange={(e) =>
-                      setNewBranch({ ...newBranch, address: e.target.value })
+                      setForm({ ...form, address: e.target.value })
                     }
                     placeholder="Complete branch address"
                     rows={2}
@@ -322,9 +403,9 @@ const ExchangeBranchManagement = () => {
                     <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
-                      value={newBranch.phone}
+                      value={form.phone}
                       onChange={(e) =>
-                        setNewBranch({ ...newBranch, phone: e.target.value })
+                        setForm({ ...form, phone: e.target.value })
                       }
                       placeholder="+971 4 XXX XXXX"
                     />
@@ -335,9 +416,9 @@ const ExchangeBranchManagement = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={newBranch.email}
+                      value={form.email}
                       onChange={(e) =>
-                        setNewBranch({ ...newBranch, email: e.target.value })
+                        setForm({ ...form, email: e.target.value })
                       }
                       placeholder="branch@bizpayaxis.ae"
                     />
@@ -347,11 +428,13 @@ const ExchangeBranchManagement = () => {
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <Button
                     variant="outline"
-                    onClick={() => setIsAddBranchOpen(false)}
+                    onClick={() => setIsModalOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleAddBranch}>Create Branch</Button>
+                  <Button onClick={handleSubmit}>
+                    {isEditMode ? "Update Branch" : "Create Branch"}
+                  </Button>
                 </div>
               </div>
             </DialogContent>
@@ -388,7 +471,8 @@ const ExchangeBranchManagement = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 {Math.round(
-                  (totalStats.activeBranches / totalStats.totalBranches) * 100
+                  (totalStats.activeBranches / totalStats.totalBranches) *
+                    100 || 0
                 )}
                 % operational
               </p>
@@ -606,11 +690,22 @@ const ExchangeBranchManagement = () => {
 
                     {/* Actions */}
                     <div className="flex flex-col space-y-2 ml-6">
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/exchange/Details/${branch.uuid}`)
+                        }
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>
-                      <Button variant="outline" size="sm">
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditModal(branch)}
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit Branch
                       </Button>
