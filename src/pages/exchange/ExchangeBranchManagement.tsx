@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,17 +6,32 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCookies } from "react-cookie";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Building2, 
-  Plus, 
-  Search, 
-  Edit, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import BASE_URL from "@/config/config";
+import axios from "axios";
+import {
+  Building2,
+  Plus,
+  Search,
+  Edit,
+  MapPin,
+  Phone,
+  Mail,
   Users,
   CheckCircle,
   Clock,
@@ -25,13 +40,19 @@ import {
   Eye,
   Trash2,
   Globe,
-  Calendar
+  Calendar,
 } from "lucide-react";
 
 const ExchangeBranchManagement = () => {
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  const [branches, setBranches] = useState<any[]>([]);
+  const [filteredBranches, setFilteredBranches] = useState<any[]>([]);
+
   const [isAddBranchOpen, setIsAddBranchOpen] = useState(false);
   const [newBranch, setNewBranch] = useState({
     name: "",
@@ -40,127 +61,145 @@ const ExchangeBranchManagement = () => {
     phone: "",
     email: "",
     manager: "",
-    emirate: ""
+    emirate: "",
   });
 
-  const branches = [
-    {
-      id: "BR-001",
-      name: "Dubai Mall Branch",
-      location: "Dubai Mall, Downtown Dubai",
-      address: "Ground Floor, Dubai Mall, Financial Centre Road, Downtown Dubai",
-      emirate: "Dubai",
-      phone: "+971 4 123 4567",
-      email: "dubaimall@bizpayaxis.ae",
-      manager: "Ahmed Hassan",
-      managerId: "ST-001",
-      status: "active",
-      staffCount: 5,
-      activeKYB: 12,
-      completedKYB: 156,
-      totalTransactions: 1250,
-      monthlyVolume: "2,450,000",
-      openingDate: "2022-03-15",
-      operatingHours: "10:00 AM - 10:00 PM",
-      efficiency: 94
-    },
-    {
-      id: "BR-002",
-      name: "Abu Dhabi ADGM Branch",
-      location: "ADGM Square, Abu Dhabi",
-      address: "Tower 1, Level 2, ADGM Square, Al Maryah Island, Abu Dhabi",
-      emirate: "Abu Dhabi",
-      phone: "+971 2 234 5678",
-      email: "adgm@bizpayaxis.ae",
-      manager: "Fatima Al-Zahra",
-      managerId: "ST-003",
-      status: "active",
-      staffCount: 4,
-      activeKYB: 8,
-      completedKYB: 198,
-      totalTransactions: 1580,
-      monthlyVolume: "3,120,000",
-      openingDate: "2021-11-20",
-      operatingHours: "9:00 AM - 6:00 PM",
-      efficiency: 97
-    },
-    {
-      id: "BR-003",
-      name: "Sharjah City Centre Branch",
-      location: "City Centre Sharjah",
-      address: "Level 1, City Centre Sharjah, Al Wahda Street, Sharjah",
-      emirate: "Sharjah",
-      phone: "+971 6 345 6789",
-      email: "sharjah@bizpayaxis.ae",
-      manager: "Raj Patel",
-      managerId: "ST-005",
-      status: "active",
-      staffCount: 3,
-      activeKYB: 5,
-      completedKYB: 89,
-      totalTransactions: 620,
-      monthlyVolume: "890,000",
-      openingDate: "2023-02-10",
-      operatingHours: "10:00 AM - 10:00 PM",
-      efficiency: 91
-    },
-    {
-      id: "BR-004",
-      name: "Ajman Corniche Branch",
-      location: "Ajman Corniche",
-      address: "Corniche Road, Near Ajman Museum, Ajman",
-      emirate: "Ajman",
-      phone: "+971 6 456 7890",
-      email: "ajman@bizpayaxis.ae",
-      manager: "Mohammed Ali",
-      managerId: "ST-008",
-      status: "inactive",
-      staffCount: 2,
-      activeKYB: 0,
-      completedKYB: 45,
-      totalTransactions: 180,
-      monthlyVolume: "0",
-      openingDate: "2023-06-01",
-      operatingHours: "9:00 AM - 9:00 PM",
-      efficiency: 0
-    },
-    {
-      id: "BR-005",
-      name: "Dubai Marina Branch",
-      location: "Dubai Marina Mall",
-      address: "Ground Floor, Dubai Marina Mall, Sheikh Zayed Road, Dubai",
-      emirate: "Dubai",
-      phone: "+971 4 567 8901",
-      email: "marinamall@bizpayaxis.ae",
-      manager: "Sarah Thompson",
-      managerId: "ST-010",
-      status: "pending",
-      staffCount: 0,
-      activeKYB: 0,
-      completedKYB: 0,
-      totalTransactions: 0,
-      monthlyVolume: "0",
-      openingDate: "2024-02-01",
-      operatingHours: "10:00 AM - 10:00 PM",
-      efficiency: 0
-    }
+  const emirates = [
+    "DUBAI",
+    "ABU_DHABI",
+    "SHARJAH",
+    "AJMAN",
+    "RAS_AL_KHAIMAH",
+    "FUJAIRAH",
+    "UMM_AL_QUWAIN",
   ];
 
-  const emirates = [
-    "Dubai",
-    "Abu Dhabi", 
-    "Sharjah",
-    "Ajman",
-    "Ras Al Khaimah",
-    "Fujairah",
-    "Umm Al Quwain"
-  ];
+  // Add Branches
+  const handleAddBranch = async () => {
+    if (!newBranch.name || !newBranch.location || !newBranch.emirate) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        name: newBranch.name,
+        emirate: newBranch.emirate,
+        location: newBranch.location,
+        address: newBranch.address,
+        email: newBranch.email,
+        contactNumber: newBranch.phone,
+      };
+
+      const response = await axios.post(
+        `${BASE_URL}/api/v3/branch/create`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        title: "Branch Created",
+        description: response.data.message,
+      });
+
+      setNewBranch({
+        name: "",
+        location: "",
+        address: "",
+        phone: "",
+        email: "",
+        manager: "",
+        emirate: "",
+      });
+
+      setIsAddBranchOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message || "Failed to create branch",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Branches details
+  const handleDetails = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const apiData = res.data.data || [];
+
+      const formatted = apiData.map((b: any) => ({
+        id: b.branchId,
+        name: b.name,
+        location: b.location,
+        address: b.address,
+        emirate: b.emirate,
+        email: b.email,
+        phone: b.contactNumber,
+
+        status: b.active ? "active" : "inactive",
+
+        // simple default values (UI will not break)
+        manager: "Not Assigned",
+        managerId: "N/A",
+        staffCount: 0,
+        activeKYB: 0,
+        completedKYB: 0,
+        totalTransactions: 0,
+        monthlyVolume: "0",
+        operatingHours: "N/A",
+        openingDate: b.createdDate,
+        efficiency: 0,
+      }));
+
+      setBranches(formatted);
+      setFilteredBranches(formatted);
+    } catch (error: any) {
+      console.error(
+        error?.response?.data?.message || "Failed to fetch branches"
+      );
+    }
+  };
+
+  useEffect(() => {
+    handleDetails();
+  }, []);
+
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      active: { variant: "default" as const, label: "Active", icon: CheckCircle, color: "text-success" },
-      inactive: { variant: "secondary" as const, label: "Inactive", icon: XCircle, color: "text-muted-foreground" },
-      pending: { variant: "outline" as const, label: "Pending Setup", icon: Clock, color: "text-warning" }
+      active: {
+        variant: "default" as const,
+        label: "Active",
+        icon: CheckCircle,
+        color: "text-success",
+      },
+      inactive: {
+        variant: "secondary" as const,
+        label: "Inactive",
+        icon: XCircle,
+        color: "text-muted-foreground",
+      },
+      pending: {
+        variant: "outline" as const,
+        label: "Pending Setup",
+        icon: Clock,
+        color: "text-warning",
+      },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
@@ -172,46 +211,21 @@ const ExchangeBranchManagement = () => {
     return "text-destructive";
   };
 
-  const filteredBranches = branches.filter(branch => {
-    const matchesSearch = branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         branch.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         branch.manager.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || branch.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleAddBranch = () => {
-    if (!newBranch.name || !newBranch.location || !newBranch.emirate) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Branch Created",
-      description: `"${newBranch.name}" has been created successfully and is pending setup.`
-    });
-
-    setNewBranch({
-      name: "",
-      location: "",
-      address: "",
-      phone: "",
-      email: "",
-      manager: "",
-      emirate: ""
-    });
-    setIsAddBranchOpen(false);
-  };
+  // const filteredBranches = branches.filter((branch) => {
+  //   const matchesSearch =
+  //     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     branch.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     branch.manager.toLowerCase().includes(searchQuery.toLowerCase());
+  //   const matchesStatus =
+  //     filterStatus === "all" || branch.status === filterStatus;
+  //   return matchesSearch && matchesStatus;
+  // });
 
   const totalStats = {
     totalBranches: branches.length,
-    activeBranches: branches.filter(b => b.status === "active").length,
+    activeBranches: branches.filter((b) => b.status === "active").length,
     totalStaff: branches.reduce((sum, b) => sum + b.staffCount, 0),
-    totalKYB: branches.reduce((sum, b) => sum + b.completedKYB, 0)
+    totalKYB: branches.reduce((sum, b) => sum + b.completedKYB, 0),
   };
 
   return (
@@ -220,9 +234,14 @@ const ExchangeBranchManagement = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Branch Management</h1>
-            <p className="text-muted-foreground">Manage exchange house branches across UAE</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Branch Management
+            </h1>
+            <p className="text-muted-foreground">
+              Manage exchange house branches across UAE
+            </p>
           </div>
+
           <Dialog open={isAddBranchOpen} onOpenChange={setIsAddBranchOpen}>
             <DialogTrigger asChild>
               <Button variant="business">
@@ -230,6 +249,7 @@ const ExchangeBranchManagement = () => {
                 Add New Branch
               </Button>
             </DialogTrigger>
+
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
@@ -237,76 +257,101 @@ const ExchangeBranchManagement = () => {
                   Add New Branch
                 </DialogTitle>
               </DialogHeader>
+
               <div className="space-y-4 py-4">
                 <div>
                   <Label htmlFor="branchName">Branch Name *</Label>
                   <Input
                     id="branchName"
                     value={newBranch.name}
-                    onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, name: e.target.value })
+                    }
                     placeholder="e.g., Dubai Marina Branch"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="emirate">Emirate *</Label>
-                  <Select value={newBranch.emirate} onValueChange={(v) => setNewBranch({ ...newBranch, emirate: v })}>
+                  <Select
+                    value={newBranch.emirate}
+                    onValueChange={(v) =>
+                      setNewBranch({ ...newBranch, emirate: v })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select emirate" />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      {emirates.map((emirate) => (
-                        <SelectItem key={emirate} value={emirate}>{emirate}</SelectItem>
+                    <SelectContent>
+                      {emirates.map((e) => (
+                        <SelectItem key={e} value={e}>
+                          {e}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div>
                   <Label htmlFor="location">Location *</Label>
                   <Input
                     id="location"
                     value={newBranch.location}
-                    onChange={(e) => setNewBranch({ ...newBranch, location: e.target.value })}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, location: e.target.value })
+                    }
                     placeholder="e.g., Dubai Marina Mall"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="address">Full Address</Label>
                   <Textarea
                     id="address"
                     value={newBranch.address}
-                    onChange={(e) => setNewBranch({ ...newBranch, address: e.target.value })}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, address: e.target.value })
+                    }
                     placeholder="Complete branch address"
                     rows={2}
                   />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
                       value={newBranch.phone}
-                      onChange={(e) => setNewBranch({ ...newBranch, phone: e.target.value })}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, phone: e.target.value })
+                      }
                       placeholder="+971 4 XXX XXXX"
                     />
                   </div>
+
                   <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       value={newBranch.email}
-                      onChange={(e) => setNewBranch({ ...newBranch, email: e.target.value })}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, email: e.target.value })
+                      }
                       placeholder="branch@bizpayaxis.ae"
                     />
                   </div>
                 </div>
+
                 <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setIsAddBranchOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAddBranchOpen(false)}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleAddBranch}>
-                    Create Branch
-                  </Button>
+                  <Button onClick={handleAddBranch}>Create Branch</Button>
                 </div>
               </div>
             </DialogContent>
@@ -317,40 +362,59 @@ const ExchangeBranchManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Branches</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Branches
+              </CardTitle>
               <Building2 className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalStats.totalBranches}</div>
+              <div className="text-2xl font-bold">
+                {totalStats.totalBranches}
+              </div>
               <p className="text-xs text-muted-foreground">Across UAE</p>
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Branches</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Active Branches
+              </CardTitle>
               <CheckCircle className="h-5 w-5 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">{totalStats.activeBranches}</div>
-              <p className="text-xs text-muted-foreground">{Math.round((totalStats.activeBranches / totalStats.totalBranches) * 100)}% operational</p>
+              <div className="text-2xl font-bold text-success">
+                {totalStats.activeBranches}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {Math.round(
+                  (totalStats.activeBranches / totalStats.totalBranches) * 100
+                )}
+                % operational
+              </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Staff</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Staff
+              </CardTitle>
               <Users className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalStats.totalStaff}</div>
-              <p className="text-xs text-muted-foreground">Across all branches</p>
+              <p className="text-xs text-muted-foreground">
+                Across all branches
+              </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total KYB Completed</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total KYB Completed
+              </CardTitle>
               <TrendingUp className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
@@ -368,7 +432,7 @@ const ExchangeBranchManagement = () => {
                 <Label htmlFor="search">Search Branches</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
+                  <Input
                     id="search"
                     placeholder="Search by name, location, or manager..."
                     className="pl-9"
@@ -378,25 +442,25 @@ const ExchangeBranchManagement = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
+                <Button
                   variant={filterStatus === "all" ? "default" : "outline"}
                   onClick={() => setFilterStatus("all")}
                 >
                   All Branches
                 </Button>
-                <Button 
+                <Button
                   variant={filterStatus === "active" ? "default" : "outline"}
                   onClick={() => setFilterStatus("active")}
                 >
                   Active
                 </Button>
-                <Button 
+                <Button
                   variant={filterStatus === "inactive" ? "default" : "outline"}
                   onClick={() => setFilterStatus("inactive")}
                 >
                   Inactive
                 </Button>
-                <Button 
+                <Button
                   variant={filterStatus === "pending" ? "default" : "outline"}
                   onClick={() => setFilterStatus("pending")}
                 >
@@ -414,7 +478,10 @@ const ExchangeBranchManagement = () => {
             const StatusIcon = status.icon;
 
             return (
-              <Card key={branch.id} className="shadow-card hover:shadow-lg transition-smooth">
+              <Card
+                key={branch.id}
+                className="shadow-card hover:shadow-lg transition-smooth"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="space-y-4 flex-1">
@@ -425,8 +492,13 @@ const ExchangeBranchManagement = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-xl font-semibold text-foreground">{branch.name}</h3>
-                            <Badge variant={status.variant} className="flex items-center gap-1">
+                            <h3 className="text-xl font-semibold text-foreground">
+                              {branch.name}
+                            </h3>
+                            <Badge
+                              variant={status.variant}
+                              className="flex items-center gap-1"
+                            >
                               <StatusIcon className="h-3 w-3" />
                               {status.label}
                             </Badge>
@@ -472,36 +544,62 @@ const ExchangeBranchManagement = () => {
                         </div>
                         <div className="space-y-1">
                           <span className="text-muted-foreground">Staff:</span>
-                          <p className="font-medium">{branch.staffCount} members</p>
-                          <p className="text-xs">{branch.activeKYB} active KYB</p>
+                          <p className="font-medium">
+                            {branch.staffCount} members
+                          </p>
+                          <p className="text-xs">
+                            {branch.activeKYB} active KYB
+                          </p>
                         </div>
                       </div>
 
                       {/* Performance Metrics */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="text-center p-3 bg-primary/10 rounded-lg">
-                          <p className="font-semibold text-primary text-lg">{branch.completedKYB}</p>
-                          <p className="text-xs text-muted-foreground">KYB Completed</p>
+                          <p className="font-semibold text-primary text-lg">
+                            {branch.completedKYB}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            KYB Completed
+                          </p>
                         </div>
                         <div className="text-center p-3 bg-success/10 rounded-lg">
-                          <p className="font-semibold text-success text-lg">{branch.totalTransactions.toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">Transactions</p>
+                          <p className="font-semibold text-success text-lg">
+                            {branch.totalTransactions.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Transactions
+                          </p>
                         </div>
                         <div className="text-center p-3 bg-accent/10 rounded-lg">
-                          <p className="font-semibold text-accent text-lg">AED {branch.monthlyVolume}</p>
-                          <p className="text-xs text-muted-foreground">Monthly Volume</p>
+                          <p className="font-semibold text-accent text-lg">
+                            AED {branch.monthlyVolume}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Monthly Volume
+                          </p>
                         </div>
                         <div className="text-center p-3 bg-muted rounded-lg">
-                          <p className={`font-semibold text-lg ${getEfficiencyColor(branch.efficiency)}`}>
-                            {branch.efficiency > 0 ? `${branch.efficiency}%` : "N/A"}
+                          <p
+                            className={`font-semibold text-lg ${getEfficiencyColor(
+                              branch.efficiency
+                            )}`}
+                          >
+                            {branch.efficiency > 0
+                              ? `${branch.efficiency}%`
+                              : "N/A"}
                           </p>
-                          <p className="text-xs text-muted-foreground">Efficiency</p>
+                          <p className="text-xs text-muted-foreground">
+                            Efficiency
+                          </p>
                         </div>
                       </div>
 
                       {/* Address */}
                       <div className="text-sm text-muted-foreground border-t pt-3">
-                        <span className="font-medium text-foreground">Address: </span>
+                        <span className="font-medium text-foreground">
+                          Address:{" "}
+                        </span>
                         {branch.address}
                       </div>
                     </div>
@@ -549,7 +647,9 @@ const ExchangeBranchManagement = () => {
             <CardContent className="p-12 text-center">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No branches found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
+              <p className="text-muted-foreground">
+                Try adjusting your search or filter criteria
+              </p>
             </CardContent>
           </Card>
         )}

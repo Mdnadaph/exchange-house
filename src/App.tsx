@@ -38,6 +38,8 @@ import BranchBusinessDocuments from "./pages/branch/BranchBusinessDocuments";
 import BranchDealReview from "./pages/branch/BranchDealReview";
 import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 
+import Login from "./components/Login";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -49,7 +51,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          {/* <Route path="/" element={<Index />} /> */}
+          <Route path="/" element={<Login />} />
           
           {/* Business Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
