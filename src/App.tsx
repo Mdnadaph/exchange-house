@@ -41,6 +41,7 @@ import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 import Login from "./components/Login";
 import BranchDetails from "./pages/exchange/Branch/BranchDetails";
 import ExchangeLayout from "./components/layout/ExchangeLayout";
+import PasswordSetup from  "../src/pages/exchange/Staff/PasswordSetup";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,8 @@ const App = () => (
         <Routes>
           {/* <Route path="/" element={<Index />} /> */}
           <Route path="/" element={<Login />} />
+
+           <Route path="/api/v3/staff-auth/set-password" element={<PasswordSetup />} />
           
           {/* Business Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />

@@ -1,102 +1,180 @@
+
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BusinessOnboardingForm from "@/components/governance/BusinessOnboardingForm";
-import { 
-  Building2, 
-  CheckCircle, 
-  Clock,
-  Users,
-  TrendingUp
-} from "lucide-react";
+import { Building2, CheckCircle, Clock, Users, TrendingUp } from "lucide-react";
+
+import BASE_URL from "@/config/config";
+import axios from "axios";
+import { useCookies } from "react-cookie";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useEffect, useState } from "react";
 
 const ExchangeBusinessOnboarding = () => {
-  // Mock data for recently onboarded businesses
-  const recentBusinesses = [
-    {
-      id: "BIZ-005",
-      companyName: "Global Trading LLC",
-      tradeLicense: "TL-567890",
-      registeredBranch: "Dubai Mall Branch",
-      adminName: "Mohammed Ahmed",
-      adminEmail: "mohammed@globaltrading.ae",
-      onboardedDate: "2024-01-20",
-      status: "active",
-      kybStatus: "pending_review"
-    },
-    {
-      id: "BIZ-004",
-      companyName: "Tech Innovations FZ",
-      tradeLicense: "TL-456789",
-      registeredBranch: "Abu Dhabi Branch",
-      adminName: "Sarah Johnson",
-      adminEmail: "sarah@techinnovations.ae",
-      onboardedDate: "2024-01-18",
-      status: "active",
-      kybStatus: "verified"
-    },
-    {
-      id: "BIZ-003",
-      companyName: "Construction Masters",
-      tradeLicense: "TL-345678",
-      registeredBranch: "Sharjah Branch",
-      adminName: "Ali Hassan",
-      adminEmail: "ali@constructionmasters.ae",
-      onboardedDate: "2024-01-15",
-      status: "active",
-      kybStatus: "verified"
-    }
-  ];
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
+  const navigate = useNavigate();
+  const { uuid } = useParams();
+  const [businesses, setBusinesses] = useState([]);
+  const [stats, setStats] = useState({
+    totalBusinesses: 0,
+    pendingKYB: 0,
+    verified: 0,
+    thisMonth: 0,
+    lastMonth: 0,
+  });
+  const [pagination, setPagination] = useState({
+    pageNumber: 0,
+    pageSize: 10,
+    totalPages: 1,
+    totalElements: 0,
+  });
 
-  const stats = [
-    {
-      title: "Total Businesses",
-      value: "127",
-      change: "+8 this month",
-      icon: Building2,
-      color: "text-blue-600"
-    },
-    {
-      title: "Pending KYB",
-      value: "12",
-      change: "Awaiting verification",
-      icon: Clock,
-      color: "text-orange-600"
-    },
-    {
-      title: "Verified",
-      value: "115",
-      change: "Active accounts",
-      icon: CheckCircle,
-      color: "text-green-600"
-    },
-    {
-      title: "This Month",
-      value: "8",
-      change: "+3 from last month",
-      icon: TrendingUp,
-      color: "text-purple-600"
+  const fetchBusinesses = async (page = 0, size = 10) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/v3/business?page=${page}&size=${size}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const responseData = response?.data;
+      if (!responseData?.status || !responseData?.data) {
+        console.warn(
+          "Invalid API response:",
+          responseData?.message || "No data"
+        );
+        setBusinesses([]);
+        setPagination({
+          pageNumber: 0,
+          pageSize: 10,
+          totalPages: 1,
+          totalElements: 0,
+        });
+        return;
+      }
+      const apiData = responseData.data;
+      console.log(apiData);
+      setBusinesses(apiData?.items || []);
+      setPagination({
+        pageNumber: apiData?.pagination?.page || 0,
+        pageSize: apiData?.pagination?.size || 10,
+        totalPages: apiData?.pagination?.totalPages || 1,
+        totalElements: apiData?.pagination?.totalItems || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching businesses:", error);
+      setBusinesses([]);
+      setPagination({
+        pageNumber: 0,
+        pageSize: 10,
+        totalPages: 1,
+        totalElements: 0,
+      });
     }
-  ];
+  };
 
-  const getKYBStatusBadge = (status: string) => {
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/v3/dashboard/business-stats`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const responseData = response?.data;
+      if (!responseData?.status || !responseData?.data) {
+        console.warn(
+          "Invalid API response for stats:",
+          responseData?.message || "No data"
+        );
+        setStats({
+          totalBusinesses: 0,
+          pendingKYB: 0,
+          verified: 0,
+          thisMonth: 0,
+          lastMonth: 0,
+        });
+        return;
+      }
+      const apiData = responseData.data;
+      setStats({
+        totalBusinesses: apiData?.totalBusinesses || 0,
+        pendingKYB: apiData?.pendingKYB || 0,
+        verified: apiData?.verified || 0,
+        thisMonth: apiData?.thisMonth || 0,
+        lastMonth: apiData?.lastMonth || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      setStats({
+        totalBusinesses: 0,
+        pendingKYB: 0,
+        verified: 0,
+        thisMonth: 0,
+        lastMonth: 0,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinesses(pagination.pageNumber, pagination.pageSize);
+    fetchStats();
+  }, []);
+
+  const getKYBStatusBadge = (status) => {
     switch (status) {
-      case "verified":
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>;
-      case "pending_review":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending Review</Badge>;
-      case "pending_kyb":
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800"><Clock className="h-3 w-3 mr-1" />KYB Required</Badge>;
+      case "VERIFIED":
+      case "APPROVED":
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Verified
+          </Badge>
+        );
+      case "PENDING":
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Review
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    return status === "active" 
-      ? <Badge variant="default">Active</Badge>
-      : <Badge variant="secondary">Inactive</Badge>;
+  const getStatusBadge = (status) => {
+    return status === "APPROVED" || status === "ACTIVE" ? (
+      <Badge variant="default">Active</Badge>
+    ) : (
+      <Badge variant="secondary">Pending</Badge>
+    );
   };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < pagination.totalPages) {
+      fetchBusinesses(newPage, pagination.pageSize);
+    }
+  };
+
+  const thisMonthChange = stats.thisMonth - stats.lastMonth;
+  const thisMonthChangeText = `${
+    thisMonthChange >= 0 ? "+" : ""
+  }${thisMonthChange} from last month`;
 
   return (
     <ExchangeLayout>
@@ -104,31 +182,80 @@ const ExchangeBusinessOnboarding = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Business Onboarding</h1>
-            <p className="text-muted-foreground">Register and manage new business accounts</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Business Onboarding
+            </h1>
+            <p className="text-muted-foreground">
+              Register and manage new business accounts
+            </p>
           </div>
           <BusinessOnboardingForm />
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index} className="shadow-card hover:shadow-lg transition-smooth">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className={`h-5 w-5 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">{stat.change}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          <Card className="shadow-card hover:shadow-lg transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Businesses
+              </CardTitle>
+              <Building2 className="h-5 w-5 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {stats.totalBusinesses}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                +{stats.thisMonth} this month
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card hover:shadow-lg transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pending KYB
+              </CardTitle>
+              <Clock className="h-5 w-5 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {stats.pendingKYB}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting verification
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card hover:shadow-lg transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Verified
+              </CardTitle>
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {stats.verified}
+              </div>
+              <p className="text-xs text-muted-foreground">Active accounts</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card hover:shadow-lg transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                This Month
+              </CardTitle>
+              <TrendingUp className="h-5 w-5 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {stats.thisMonth}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {thisMonthChangeText}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Recently Onboarded Businesses */}
@@ -141,8 +268,11 @@ const ExchangeBusinessOnboarding = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentBusinesses.map((business) => (
-                <Card key={business.id} className="hover:shadow-md transition-smooth">
+              {businesses.map((business) => (
+                <Card
+                  key={business.id}
+                  className="hover:shadow-md transition-smooth"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
@@ -151,31 +281,68 @@ const ExchangeBusinessOnboarding = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-foreground">{business.companyName}</h3>
+                            <h3 className="font-semibold text-foreground">
+                              {business.companyName}
+                            </h3>
                             {getStatusBadge(business.status)}
-                            {getKYBStatusBadge(business.kybStatus)}
+                            {getKYBStatusBadge(business.status)}
                           </div>
                           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Business ID:</span>
-                              <span className="ml-2 font-medium">{business.id}</span>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Business ID:
+                                </span>
+                                <span className="ml-2 font-medium">
+                                  {business.id}
+                                </span>
+                              </div>
+
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Onboarded:
+                                </span>
+                                <span className="ml-2 font-medium">
+                                  {business.createdDate}
+                                </span>
+                              </div>
+
+                              <div className="col-span-2">
+                                <span className="text-muted-foreground">
+                                  Contact:
+                                </span>
+                                <span className="ml-2 font-medium">
+                                  {business.businessEmail} (
+                                  {business.businessPhone})
+                                </span>
+                              </div>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Trade License:</span>
-                              <span className="ml-2 font-medium">{business.tradeLicense}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Branch:</span>
-                              <span className="ml-2 font-medium">{business.registeredBranch}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Onboarded:</span>
-                              <span className="ml-2 font-medium">{business.onboardedDate}</span>
-                            </div>
-                            <div className="col-span-2">
-                              <span className="text-muted-foreground">Admin:</span>
-                              <span className="ml-2 font-medium">{business.adminName}</span>
-                              <span className="text-muted-foreground ml-2">({business.adminEmail})</span>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Country of Trade:
+                                </span>
+                                <span className="ml-2 font-medium">
+                                  {business.country}
+                                </span>
+                              </div>
+
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Supported Currencies:
+                                </span>
+                                <span className="ml-2 font-medium">
+                                  {business.supportedCurrencies.join(", ")}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Trade License:
+                                </span>
+                                <span className="ml-2 font-medium">
+                                  {business.tradeLicense}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -185,6 +352,46 @@ const ExchangeBusinessOnboarding = () => {
                 </Card>
               ))}
             </div>
+            {pagination.totalPages > 1 && (
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        handlePageChange(pagination.pageNumber - 1)
+                      }
+                      className={
+                        pagination.pageNumber === 0
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                  {[...Array(pagination.totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(index)}
+                        isActive={pagination.pageNumber === index}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        handlePageChange(pagination.pageNumber + 1)
+                      }
+                      className={
+                        pagination.pageNumber === pagination.totalPages - 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </CardContent>
         </Card>
       </div>
