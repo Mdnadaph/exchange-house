@@ -1,28 +1,33 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { 
-  Building2, 
-  Home, 
-  FileCheck, 
+import {
+  Building2,
+  Home,
+  FileCheck,
   LogOut,
   MapPin,
   CreditCard,
   Files,
-  Handshake
+  Handshake,
 } from "lucide-react";
-
+import { useCookies } from "react-cookie";
 interface BranchLayoutProps {
   children: React.ReactNode;
 }
 
 const BranchLayout = ({ children }: BranchLayoutProps) => {
   const location = useLocation();
-  
+  const navigate = useNavigate();
+  const [cookies, , removeCookie] = useCookies(["accessToken"]);
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
-    { name: "Onboard Business", href: "/branch/onboard-business", icon: Building2 },
+    {
+      name: "Onboard Business",
+      href: "/branch/onboard-business",
+      icon: Building2,
+    },
     { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
     { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
@@ -31,6 +36,11 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleLogout = () => {
+    removeCookie("accessToken");
+
+    navigate("/");
+  };
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -44,14 +54,18 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               </Link>
               <div className="flex items-center space-x-2 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="font-medium text-primary">Branch Portal - Dubai Mall</span>
+                <span className="font-medium text-primary">
+                  Branch Portal - Dubai Mall
+                </span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <ThemeToggle />
-              <span className="text-sm text-muted-foreground">Ahmed Hassan (Branch Staff)</span>
-              <Button variant="ghost" size="sm">
+              <span className="text-sm text-muted-foreground">
+                Ahmed Hassan (Branch Staff)
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
@@ -86,9 +100,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-8">{children}</div>
         </main>
       </div>
     </div>
