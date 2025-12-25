@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -18,13 +18,35 @@ import {
   Handshake,
   GitBranch,
 } from "lucide-react";
+import { useCookies } from "react-cookie";
 
 interface ExchangeLayoutProps {
   children: React.ReactNode;
 }
 
 const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
+  const navigate = useNavigate();
   const location = useLocation();
+  const [cookies, , removeCookie] = useCookies([
+    "tempToken",
+    "token",
+    "twoFactorEnabled",
+    "email",
+    "role",
+    "fullName",
+  ]);
+  const fullName = cookies.fullName;
+
+  const handleLogout = () => {
+    removeCookie("token");
+    removeCookie("role");
+    removeCookie("fullName");
+    removeCookie("email");
+    removeCookie("twoFactorEnabled");
+    removeCookie("tempToken");
+
+    navigate("/");
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home },
@@ -77,9 +99,9 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                Sarah Wilson (Exchange Admin)
+                {fullName} (Exchange Admin)
               </span>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
@@ -114,9 +136,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-8">{children}</div>
         </main>
       </div>
     </div>
