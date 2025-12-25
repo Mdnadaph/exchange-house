@@ -1,172 +1,39 @@
-// import React, { useState } from "react";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import axios from "axios";
-// import { Formik, Form, Field, ErrorMessage } from "formik";
-// import * as Yup from "yup";
-// import { IoMdEye, IoIosEyeOff } from "react-icons/io";
-// import BASE_URL from "@/config/config";
-// import { useCookies } from "react-cookie";
-
-// // Validation schema
-// const PasswordSchema = Yup.object().shape({
-//   password: Yup.string()
-//     .min(6, "Password must be at least 6 characters")
-//     .required("Password is required"),
-//   confirmPassword: Yup.string()
-//     .oneOf([Yup.ref("password"), null], "Passwords must match")
-//     .required("Confirm Password is required"),
-// });
-
-// const SetPassword = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-
-//   const [cookies, setCookie, removeCookie] = useCookies(["tempToken"]);
-
-//   // Extract token from query string ?token=...
-//   const searchParams = new URLSearchParams(location.search);
-//   const token = searchParams.get("token");
-
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-//   const handleSubmit = async (values, { setSubmitting, setStatus }) => {
-//     if (!token) {
-//       setStatus("Invalid or missing token.");
-//       return;
-//     }
-
-//     try {
-//       const response = await axios.post(
-//         `${BASE_URL}/api/v3/staff-auth/set-password`,
-//         {
-//           token, // token from URL
-//           password: values.password,
-//           confirmPassword: values.confirmPassword,
-//         }
-//       );
-
-//        if (response.data.status) {
-//       const tempToken = response.data?.data?.tempToken;
-
-//       // ✅ Store tempToken in cookies (temporary)
-//       if (tempToken) {
-//         setCookie("tempToken", tempToken, {
-//           path: "/",
-//           maxAge: 60 * 60 * 24, // 1 day
-//           secure: true,
-//           sameSite: "strict",
-//         });
-//       }
-
-//       if (response.data.status) {
-//         navigate("/"); // Password updated successfully
-//       } else {
-//         setStatus(response.data.message || "Something went wrong");
-//       }
-//     } catch (error) {
-//       console.error(error);
-//       setStatus(error.response?.data?.message || "Server Error");
-//     } finally {
-//       setSubmitting(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center">
-//       <div className="max-w-md w-full mx-auto mt-10 p-6 border rounded shadow">
-//         <h2 className="text-2xl font-bold mb-4 text-center">
-//           Set New Password
-//         </h2>
-//         <Formik
-//           initialValues={{ password: "", confirmPassword: "" }}
-//           validationSchema={PasswordSchema}
-//           onSubmit={handleSubmit}
-//         >
-//           {({ isSubmitting, status }) => (
-//             <Form>
-//               {/* New Password */}
-//               <div className="mb-4">
-//                 <label className="block mb-1 font-semibold">New Password</label>
-//                 <div className="relative">
-//                   <Field
-//                     type={showPassword ? "text" : "password"}
-//                     name="password"
-//                     className="w-full px-3 py-2 border rounded"
-//                   />
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowPassword(!showPassword)}
-//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-//                   >
-//                     {showPassword ? <IoMdEye /> : <IoIosEyeOff />}
-//                   </button>
-//                 </div>
-//                 <ErrorMessage
-//                   name="password"
-//                   component="div"
-//                   className="text-red-500 text-sm mt-1"
-//                 />
-//               </div>
-
-//               {/* Confirm Password */}
-//               <div className="mb-4">
-//                 <label className="block mb-1 font-semibold">
-//                   Confirm Password
-//                 </label>
-//                 <div className="relative">
-//                   <Field
-//                     type={showConfirmPassword ? "text" : "password"}
-//                     name="confirmPassword"
-//                     className="w-full px-3 py-2 border rounded"
-//                   />
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-//                   >
-//                     {showConfirmPassword ? <IoMdEye /> : <IoIosEyeOff />}
-//                   </button>
-//                 </div>
-//                 <ErrorMessage
-//                   name="confirmPassword"
-//                   component="div"
-//                   className="text-red-500 text-sm mt-1"
-//                 />
-//               </div>
-
-//               {status && <div className="text-red-500 mb-3">{status}</div>}
-
-//               <button
-//                 type="submit"
-//                 disabled={isSubmitting}
-//                 className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-//               >
-//                 {isSubmitting ? "Setting Password..." : "Set Password"}
-//               </button>
-//             </Form>
-//           )}
-//         </Formik>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SetPassword;
-
-
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { IoMdEye, IoIosEyeOff } from "react-icons/io";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
 
-// Validation schema
-const PasswordSchema = Yup.object().shape({
+/* ================= TYPES ================= */
+
+interface FormValues {
+  password: string;
+  confirmPassword: string;
+}
+
+interface Staff {
+  email?: string;
+  twoFactorEnabled?: boolean;
+}
+
+interface ApiResponseData {
+  tempToken?: string;
+  requiresTwoFactor?: boolean;
+  staff?: Staff;
+}
+
+interface ApiResponse {
+  status: boolean;
+  message: string;
+  data: ApiResponseData;
+}
+
+/* ================= VALIDATION ================= */
+
+const PasswordSchema = Yup.object({
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .required("Password is required"),
@@ -175,20 +42,29 @@ const PasswordSchema = Yup.object().shape({
     .required("Confirm Password is required"),
 });
 
-const SetPassword = () => {
+/* ================= COMPONENT ================= */
+
+const PasswordSetup: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [, setCookie] = useCookies(["tempToken", "twoFactorEnabled"]);
+  const [, setCookie] = useCookies([
+    "tempToken",
+    "email",
+    "twoFactorEnabled",
+    "requiresTwoFactor",
+  ]);
 
-  // Extract token from URL (?token=...)
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = async (values, { setSubmitting, setStatus }) => {
+  const handleSubmit = async (
+    values: FormValues,
+    { setSubmitting, setStatus }: FormikHelpers<FormValues>
+  ) => {
     if (!token) {
       setStatus("Invalid or missing token.");
       setSubmitting(false);
@@ -196,7 +72,7 @@ const SetPassword = () => {
     }
 
     try {
-      const { data } = await axios.post(
+      const response = await axios.post<ApiResponse>(
         `${BASE_URL}/api/v3/staff-auth/set-password`,
         {
           token,
@@ -205,36 +81,71 @@ const SetPassword = () => {
         }
       );
 
-      if (!data?.status) {
-        setStatus(data?.message || "Something went wrong");
+      console.log("FULL API RESPONSE:", response.data);
+
+      if (!response.data.status) {
+        setStatus(response.data.message);
         return;
       }
 
-      // Store tempToken in cookie if present
-      const tempToken = data?.data?.tempToken;
+      /* ===== EXTRACT DATA ===== */
+      const tempToken = response.data.data.tempToken;
+      const email = response.data.data.staff?.email;
+      const twoFactorEnabled = response.data.data.staff?.twoFactorEnabled;
+      const requiresTwoFactor = response.data.data.requiresTwoFactor;
+
+      /* ===== STORE COOKIES LIKE LOGIN ===== */
       if (tempToken) {
         setCookie("tempToken", tempToken, {
           path: "/",
-          maxAge: 60 * 60 * 24, // 1 day
           secure: true,
           sameSite: "strict",
         });
       }
 
-      // Store twoFactorEnabled in cookie if present (handles true/false/undefined)
-      const twoFactorEnabled = data?.data?.twoFactorEnabled;
+      if (email) {
+        setCookie("email", email, {
+          path: "/",
+          secure: true,
+          sameSite: "strict",
+        });
+      }
+
       if (twoFactorEnabled !== undefined) {
         setCookie("twoFactorEnabled", twoFactorEnabled, {
           path: "/",
-          maxAge: 60 * 60 * 24, // 1 day
           secure: true,
           sameSite: "strict",
         });
       }
 
-      navigate("/"); // success redirect
-    } catch (error) {
-      console.error(error);
+      if (requiresTwoFactor !== undefined) {
+        setCookie("requiresTwoFactor", requiresTwoFactor, {
+          path: "/",
+          secure: true,
+          sameSite: "strict",
+        });
+      }
+
+      /* ===== CONSOLE LOGS ===== */
+      console.log("Saved Temp Token:", tempToken);
+      console.log("Saved Email:", email);
+      console.log("Saved Two Factor Enabled:", twoFactorEnabled);
+      console.log("Saved Requires Two Factor:", requiresTwoFactor);
+
+      // if(requiresTwoFactor === true){
+      //    navigate("/generateqr");
+      // }
+
+      if (requiresTwoFactor) {
+        navigate("/generateqr");
+      } else {
+        navigate("/"); // redirect to login if 2FA is not required
+      }
+
+      // navigate("/generateqr");
+    } catch (error: any) {
+      console.error("Set Password Error:", error);
       setStatus(error.response?.data?.message || "Server Error");
     } finally {
       setSubmitting(false);
@@ -243,11 +154,12 @@ const SetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto mt-10 p-6 border rounded shadow">
+      <div className="max-w-md w-full p-6 border rounded shadow">
         <h2 className="text-2xl font-bold mb-4 text-center">
           Set New Password
         </h2>
 
+        {/* NO GENERIC: Works with Vite + SWC */}
         <Formik
           initialValues={{ password: "", confirmPassword: "" }}
           validationSchema={PasswordSchema}
@@ -267,7 +179,7 @@ const SetPassword = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
                   >
                     {showPassword ? <IoMdEye /> : <IoIosEyeOff />}
                   </button>
@@ -275,7 +187,7 @@ const SetPassword = () => {
                 <ErrorMessage
                   name="password"
                   component="div"
-                  className="text-red-500 text-sm mt-1"
+                  className="text-red-500 text-sm"
                 />
               </div>
 
@@ -293,7 +205,7 @@ const SetPassword = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
                   >
                     {showConfirmPassword ? <IoMdEye /> : <IoIosEyeOff />}
                   </button>
@@ -301,7 +213,7 @@ const SetPassword = () => {
                 <ErrorMessage
                   name="confirmPassword"
                   component="div"
-                  className="text-red-500 text-sm mt-1"
+                  className="text-red-500 text-sm"
                 />
               </div>
 
@@ -310,7 +222,7 @@ const SetPassword = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+                className="w-full bg-blue-500 text-white py-2 rounded"
               >
                 {isSubmitting ? "Setting Password..." : "Set Password"}
               </button>
@@ -322,4 +234,4 @@ const SetPassword = () => {
   );
 };
 
-export default SetPassword;
+export default PasswordSetup;

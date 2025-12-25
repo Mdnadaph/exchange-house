@@ -41,7 +41,7 @@ import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 import Login from "./components/Login";
 import BranchDetails from "./pages/exchange/Branch/BranchDetails";
 import ExchangeLayout from "./components/layout/ExchangeLayout";
-import PasswordSetup from  "../src/pages/exchange/Staff/PasswordSetup";
+import PasswordSetup from "../src/pages/exchange/Staff/PasswordSetup";
 import InitiateTwoFA from "./pages/exchange/Staff/InitiateTwoFA";
 
 const queryClient = new QueryClient();
@@ -51,60 +51,110 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <LanguageProvider>
         <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-        <Routes>
-          {/* <Route path="/" element={<Index />} /> */}
-          <Route path="/" element={<Login />} />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* <Route path="/" element={<Index />} /> */}
+              
+              <Route path="/" element={<Login />} />
+              <Route path="/set-password" element={<PasswordSetup />} />
+              <Route path="/generateqr" element={<InitiateTwoFA />} />
 
-           <Route path="/api/v3/staff-auth/set-password" element={<PasswordSetup />} />
-           <Route path="/generateqr" element={<InitiateTwoFA />} />
-          
-          {/* Business Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/onboarding" element={<AdminOnboarding />} />
-          <Route path="/admin/deal-settings" element={<AdminDealSettings />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          
-          {/* Business User Routes */}
-          <Route path="/portal" element={<UserDashboard />} />
-          <Route path="/portal/profile" element={<UserProfile />} />
-          <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
-          <Route path="/portal/transactions" element={<UserTransactions />} />
-          <Route path="/portal/deals" element={<UserDealRequests />} />
-          <Route path="/portal/users" element={<AdminUserManagement />} />
-          <Route path="/portal/governance" element={<UserGovernance />} />
-          <Route path="/portal/documents" element={<UserDocuments />} />
-          
-          {/* Exchange House Admin Routes */}
-          <Route path="/exchange" element={<ExchangeAdminDashboard />} />
-          <Route path="/exchange/Details/:uuid" element={<BranchDetails />} />
-          <Route path="/exchange/onboard-business" element={<ExchangeBusinessOnboarding />} />
-          <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
-          <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
-          <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
-          <Route path="/exchange/deals" element={<ExchangeDealReview />} />
-          <Route path="/exchange/documents" element={<ExchangeBusinessDocuments />} />
-          <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
-          <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
-          <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
-          <Route path="/exchange/branches" element={<ExchangeBranchManagement />} />
-          <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
-          
+              {/* Business Admin Routes */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/onboarding" element={<AdminOnboarding />} />
+              <Route
+                path="/admin/deal-settings"
+                element={<AdminDealSettings />}
+              />
+              <Route path="/admin/settings" element={<AdminSettings />} />
 
-          {/* Branch User Routes */}
-          <Route path="/branch" element={<BranchDashboard />} />
-          <Route path="/branch/onboard-business" element={<BranchBusinessOnboarding />} />
-          <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
-          <Route path="/branch/transactions" element={<BranchTransactions />} />
-          <Route path="/branch/deals" element={<BranchDealReview />} />
-          <Route path="/branch/documents" element={<BranchBusinessDocuments />} />
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+              {/* Business User Routes */}
+              <Route path="/portal" element={<UserDashboard />} />
+              <Route path="/portal/profile" element={<UserProfile />} />
+              <Route
+                path="/portal/beneficiaries"
+                element={<UserBeneficiaries />}
+              />
+              <Route
+                path="/portal/transactions"
+                element={<UserTransactions />}
+              />
+              <Route path="/portal/deals" element={<UserDealRequests />} />
+              <Route path="/portal/users" element={<AdminUserManagement />} />
+              <Route path="/portal/governance" element={<UserGovernance />} />
+              <Route path="/portal/documents" element={<UserDocuments />} />
+
+              {/* Exchange House Admin Routes */}
+              <Route path="/exchange" element={<ExchangeAdminDashboard />} />
+              <Route
+                path="/exchange/Details/:uuid"
+                element={<BranchDetails />}
+              />
+              <Route
+                path="/exchange/onboard-business"
+                element={<ExchangeBusinessOnboarding />}
+              />
+              <Route
+                path="/exchange/kyb-review"
+                element={<ExchangeKYBReview />}
+              />
+              <Route
+                path="/exchange/kyb-config"
+                element={<ExchangeKYBConfig />}
+              />
+              <Route
+                path="/exchange/transactions"
+                element={<ExchangeTransactions />}
+              />
+              <Route path="/exchange/deals" element={<ExchangeDealReview />} />
+              <Route
+                path="/exchange/documents"
+                element={<ExchangeBusinessDocuments />}
+              />
+              <Route
+                path="/exchange/fee-management"
+                element={<ExchangeFeeManagement />}
+              />
+              <Route
+                path="/exchange/payout-config"
+                element={<ExchangePayoutConfig />}
+              />
+              <Route
+                path="/exchange/compliance-config"
+                element={<ExchangeComplianceConfig />}
+              />
+              <Route
+                path="/exchange/branches"
+                element={<ExchangeBranchManagement />}
+              />
+              <Route
+                path="/exchange/staff"
+                element={<ExchangeStaffManagement />}
+              />
+
+              {/* Branch User Routes */}
+              <Route path="/branch" element={<BranchDashboard />} />
+              <Route
+                path="/branch/onboard-business"
+                element={<BranchBusinessOnboarding />}
+              />
+              <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
+              <Route
+                path="/branch/transactions"
+                element={<BranchTransactions />}
+              />
+              <Route path="/branch/deals" element={<BranchDealReview />} />
+              <Route
+                path="/branch/documents"
+                element={<BranchBusinessDocuments />}
+              />
+
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </TooltipProvider>
       </LanguageProvider>
     </ThemeProvider>
