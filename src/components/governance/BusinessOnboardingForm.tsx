@@ -790,23 +790,20 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   ]);
 
   const [branchLoading, setBranchLoading] = useState(false);
-  const [branchList, setBranchList] = useState<string[]>([]);
 
   interface Branch {
-  branchId: string;
-  uuid: string;
-  name: string;
-  address: string;
-  emirate: string;
-  location: string;
-  email: string;
-  contactNumber: string;
-  active: boolean;
-}
+    branchId: string;
+    uuid: string;
+    name: string;
+    address: string;
+    emirate: string;
+    location: string;
+    email: string;
+    contactNumber: string;
+    active: boolean;
+  }
 
-// const [branchList, setBranchList] = useState<Branch[]>([]);
-
-
+  const [branchList, setBranchList] = useState<Branch[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -1204,8 +1201,11 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
                   {branchList.map((branch) => (
-                    <SelectItem key={branch} value={branch}>
-                      {branch}
+                    <SelectItem
+                      key={branch.uuid}
+                      value={branch.branchId.toString()}
+                    >
+                      {branch.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1624,7 +1624,10 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           )}
         </DialogTrigger>
 
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
