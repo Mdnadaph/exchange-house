@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Building2, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import BASE_URL from "@/config/config";
+import {
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   FileText,
   Upload,
@@ -24,19 +25,22 @@ import {
   Save,
   X,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const UserProfile = () => {
+  const { id } = useParams();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadConfirmation, setShowUploadConfirmation] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-  
+
   const [businessProfile, setBusinessProfile] = useState({
     companyName: "Tech Solutions LLC",
     businessId: "BIZ-001",
@@ -51,7 +55,7 @@ const UserProfile = () => {
     branch: "Dubai Mall Branch",
     contactPerson: "Sarah Smith",
     contactEmail: "sarah.smith@techsolutions.ae",
-    contactPhone: "+971 50 123 4567"
+    contactPhone: "+971 50 123 4567",
   });
 
   const [documents, setDocuments] = useState([
@@ -62,7 +66,7 @@ const UserProfile = () => {
       uploadDate: "2023-05-15",
       uploadedBy: "Tech Solutions LLC",
       size: "2.4 MB",
-      status: "verified"
+      status: "verified",
     },
     {
       id: "DOC-002",
@@ -71,7 +75,7 @@ const UserProfile = () => {
       uploadDate: "2023-05-15",
       uploadedBy: "Tech Solutions LLC",
       size: "1.8 MB",
-      status: "verified"
+      status: "verified",
     },
     {
       id: "DOC-003",
@@ -80,7 +84,7 @@ const UserProfile = () => {
       uploadDate: "2024-01-10",
       uploadedBy: "Tech Solutions LLC",
       size: "3.2 MB",
-      status: "pending_review"
+      status: "pending_review",
     },
     {
       id: "DOC-004",
@@ -89,8 +93,8 @@ const UserProfile = () => {
       uploadDate: "2023-06-20",
       uploadedBy: "Tech Solutions LLC",
       size: "1.5 MB",
-      status: "verified"
-    }
+      status: "verified",
+    },
   ]);
 
   const documentTypes = [
@@ -101,7 +105,7 @@ const UserProfile = () => {
     "Memorandum of Association",
     "Signatory Authorization",
     "Proof of Address",
-    "Other"
+    "Other",
   ];
 
   const [documentType, setDocumentType] = useState("");
@@ -125,24 +129,58 @@ const UserProfile = () => {
     if (!selectedFile || !documentType) return;
 
     const newDocument = {
-      id: `DOC-${String(documents.length + 1).padStart(3, '0')}`,
+      id: `DOC-${String(documents.length + 1).padStart(3, "0")}`,
       name: selectedFile.name,
       type: documentType,
-      uploadDate: new Date().toISOString().split('T')[0],
+      uploadDate: new Date().toISOString().split("T")[0],
       uploadedBy: businessProfile.companyName,
       size: `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`,
-      status: "pending_review"
+      status: "pending_review",
     };
 
     setDocuments([...documents, newDocument]);
     setSelectedFile(null);
     setDocumentType("");
-    
+
     toast({
       title: "Document Uploaded",
-      description: "Your document has been uploaded successfully and is pending review.",
+      description:
+        "Your document has been uploaded successfully and is pending review.",
     });
   };
+  if (!id) return;
+  useEffect(() => {
+    const businessProfile = async () => {
+      try {
+        const response = await axios.get(
+          `http://192.168.18.10:8082/api/v3/business/${id}`
+        );
+        console.log("business profile", response);
+        setBusinessProfile({
+          companyName: response.data.data.companyName,
+          businessId: `BIZ-${response.data.data.id}`,
+          tradeLicense: response.data.data.tradeLicense,
+          taxNumber: response.data.data.taxNumber,
+          email: response.data.data.businessEmail,
+          phone: response.data.data.businessPhone,
+          address: "Address not provided in API",
+          registeredDate: new Date(response.data.data.createdDate.join("-"))
+            .toISOString()
+            .split("T")[0],
+          kybStatus: response.data.data.status,
+          kybSubmitted: response.data.data.status !== "PENDING",
+          branch: response.data.data.branchName,
+
+          contactPerson: "Not provided",
+          contactEmail: response.data.data.businessEmail,
+          contactPhone: response.data.data.businessPhone,
+        });
+      } catch (error) {
+        console.error("Failed to fetch business profile", error);
+      }
+    };
+    businessProfile();
+  }, []);
 
   const handleUploadDocument = () => {
     if (!selectedFile || !documentType) {
@@ -167,11 +205,26 @@ const UserProfile = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "verified":
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Verified
+          </Badge>
+        );
       case "pending_review":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending Review</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Review
+          </Badge>
+        );
       case "rejected":
-        return <Badge variant="destructive"><X className="h-3 w-3 mr-1" />Rejected</Badge>;
+        return (
+          <Badge variant="destructive">
+            <X className="h-3 w-3 mr-1" />
+            Rejected
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -180,20 +233,53 @@ const UserProfile = () => {
   const getKybStatusBadge = (status: string) => {
     switch (status) {
       case "verified":
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-lg px-3 py-1"><CheckCircle className="h-4 w-4 mr-1" />Verified</Badge>;
+        return (
+          <Badge
+            variant="default"
+            className="bg-green-100 text-green-800 text-lg px-3 py-1"
+          >
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Verified
+          </Badge>
+        );
       case "pending_review":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-lg px-3 py-1"><Clock className="h-4 w-4 mr-1" />Pending Review</Badge>;
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-yellow-100 text-yellow-800 text-lg px-3 py-1"
+          >
+            <Clock className="h-4 w-4 mr-1" />
+            Pending Review
+          </Badge>
+        );
       case "pending_kyb":
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-lg px-3 py-1"><AlertCircle className="h-4 w-4 mr-1" />KYB Required</Badge>;
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-orange-100 text-orange-800 text-lg px-3 py-1"
+          >
+            <AlertCircle className="h-4 w-4 mr-1" />
+            KYB Required
+          </Badge>
+        );
       case "rejected":
-        return <Badge variant="destructive" className="text-lg px-3 py-1"><X className="h-4 w-4 mr-1" />Rejected</Badge>;
+        return (
+          <Badge variant="destructive" className="text-lg px-3 py-1">
+            <X className="h-4 w-4 mr-1" />
+            Rejected
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   const handleKYBSubmit = () => {
-    setBusinessProfile(prev => ({ ...prev, kybStatus: "pending_review", kybSubmitted: true }));
+    setBusinessProfile((prev) => ({
+      ...prev,
+      kybStatus: "pending_review",
+      kybSubmitted: true,
+    }));
     toast({
       title: "KYB Submitted Successfully",
       description: "Your KYB application has been submitted for review.",
@@ -204,36 +290,44 @@ const UserProfile = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* KYB Status Alert */}
-        {businessProfile.kybStatus === "pending_kyb" && !businessProfile.kybSubmitted && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-900">KYB Verification Required</h3>
-                  <p className="text-sm text-orange-800 mt-1">
-                    Please complete your KYB (Know Your Business) verification to start using all platform features.
-                  </p>
-                  <KYBInitiationForm 
-                    trigger={
-                      <Button variant="default" size="sm" className="mt-3">
-                        <ShieldCheck className="h-4 w-4 mr-2" />
-                        Complete KYB Verification
-                      </Button>
-                    }
-                    onSubmit={handleKYBSubmit}
-                  />
+        {businessProfile.kybStatus === "pending_kyb" &&
+          !businessProfile.kybSubmitted && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-orange-900">
+                      KYB Verification Required
+                    </h3>
+                    <p className="text-sm text-orange-800 mt-1">
+                      Please complete your KYB (Know Your Business) verification
+                      to start using all platform features.
+                    </p>
+                    <KYBInitiationForm
+                      trigger={
+                        <Button variant="default" size="sm" className="mt-3">
+                          <ShieldCheck className="h-4 w-4 mr-2" />
+                          Complete KYB Verification
+                        </Button>
+                      }
+                      onSubmit={handleKYBSubmit}
+                    />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Business Profile</h1>
-            <p className="text-muted-foreground">View and manage your business information and documents</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Business Profile
+            </h1>
+            <p className="text-muted-foreground">
+              View and manage your business information and documents
+            </p>
           </div>
           {!isEditing ? (
             <Button variant="default" onClick={() => setIsEditing(true)}>
@@ -246,8 +340,8 @@ const UserProfile = () => {
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button 
-                variant="default" 
+              <Button
+                variant="default"
                 onClick={() => setShowSaveConfirmation(true)}
               >
                 <Save className="h-4 w-4 mr-2" />
@@ -271,60 +365,133 @@ const UserProfile = () => {
                 <div className="space-y-2">
                   <Label>Company Name</Label>
                   {isEditing ? (
-                    <Input value={businessProfile.companyName} onChange={(e) => setBusinessProfile({...businessProfile, companyName: e.target.value})} />
+                    <Input
+                      value={businessProfile.companyName}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          companyName: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="text-foreground font-medium">{businessProfile.companyName}</p>
+                    <p className="text-foreground font-medium">
+                      {businessProfile.companyName}
+                    </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Business ID</Label>
-                  <p className="text-foreground font-medium">{businessProfile.businessId}</p>
+                  <p className="text-foreground font-medium">
+                    {businessProfile.businessId}
+                  </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Trade License Number</Label>
                   {isEditing ? (
-                    <Input value={businessProfile.tradeLicense} onChange={(e) => setBusinessProfile({...businessProfile, tradeLicense: e.target.value})} />
+                    <Input
+                      value={businessProfile.tradeLicense}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          tradeLicense: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="text-foreground font-medium">{businessProfile.tradeLicense}</p>
+                    <p className="text-foreground font-medium">
+                      {businessProfile.tradeLicense}
+                    </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Tax Number</Label>
                   {isEditing ? (
-                    <Input value={businessProfile.taxNumber} onChange={(e) => setBusinessProfile({...businessProfile, taxNumber: e.target.value})} />
+                    <Input
+                      value={businessProfile.taxNumber}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          taxNumber: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="text-foreground font-medium">{businessProfile.taxNumber}</p>
+                    <p className="text-foreground font-medium">
+                      {businessProfile.taxNumber}
+                    </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Mail className="h-3 w-3" />Company Email</Label>
+                  <Label className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    Company Email
+                  </Label>
                   {isEditing ? (
-                    <Input type="email" value={businessProfile.email} onChange={(e) => setBusinessProfile({...businessProfile, email: e.target.value})} />
+                    <Input
+                      type="email"
+                      value={businessProfile.email}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          email: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="text-foreground font-medium">{businessProfile.email}</p>
+                    <p className="text-foreground font-medium">
+                      {businessProfile.email}
+                    </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Phone className="h-3 w-3" />Company Phone</Label>
+                  <Label className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    Company Phone
+                  </Label>
                   {isEditing ? (
-                    <Input value={businessProfile.phone} onChange={(e) => setBusinessProfile({...businessProfile, phone: e.target.value})} />
+                    <Input
+                      value={businessProfile.phone}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          phone: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="text-foreground font-medium">{businessProfile.phone}</p>
+                    <p className="text-foreground font-medium">
+                      {businessProfile.phone}
+                    </p>
                   )}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label className="flex items-center gap-1"><MapPin className="h-3 w-3" />Business Address</Label>
+                <Label className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  Business Address
+                </Label>
                 {isEditing ? (
-                  <Textarea value={businessProfile.address} onChange={(e) => setBusinessProfile({...businessProfile, address: e.target.value})} rows={2} />
+                  <Textarea
+                    value={businessProfile.address}
+                    onChange={(e) =>
+                      setBusinessProfile({
+                        ...businessProfile,
+                        address: e.target.value,
+                      })
+                    }
+                    rows={2}
+                  />
                 ) : (
-                  <p className="text-foreground font-medium">{businessProfile.address}</p>
+                  <p className="text-foreground font-medium">
+                    {businessProfile.address}
+                  </p>
                 )}
               </div>
             </CardContent>
@@ -341,12 +508,20 @@ const UserProfile = () => {
                 </div>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Registered Branch:</span>
-                    <span className="font-medium">{businessProfile.branch}</span>
+                    <span className="text-muted-foreground">
+                      Registered Branch:
+                    </span>
+                    <span className="font-medium">
+                      {businessProfile.branch}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Registration Date:</span>
-                    <span className="font-medium">{businessProfile.registeredDate}</span>
+                    <span className="text-muted-foreground">
+                      Registration Date:
+                    </span>
+                    <span className="font-medium">
+                      {businessProfile.registeredDate}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -363,25 +538,56 @@ const UserProfile = () => {
                 <div className="space-y-2">
                   <Label>Name</Label>
                   {isEditing ? (
-                    <Input value={businessProfile.contactPerson} onChange={(e) => setBusinessProfile({...businessProfile, contactPerson: e.target.value})} />
+                    <Input
+                      value={businessProfile.contactPerson}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          contactPerson: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="font-medium">{businessProfile.contactPerson}</p>
+                    <p className="font-medium">
+                      {businessProfile.contactPerson}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
                   {isEditing ? (
-                    <Input type="email" value={businessProfile.contactEmail} onChange={(e) => setBusinessProfile({...businessProfile, contactEmail: e.target.value})} />
+                    <Input
+                      type="email"
+                      value={businessProfile.contactEmail}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          contactEmail: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="font-medium">{businessProfile.contactEmail}</p>
+                    <p className="font-medium">
+                      {businessProfile.contactEmail}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label>Phone</Label>
                   {isEditing ? (
-                    <Input value={businessProfile.contactPhone} onChange={(e) => setBusinessProfile({...businessProfile, contactPhone: e.target.value})} />
+                    <Input
+                      value={businessProfile.contactPhone}
+                      onChange={(e) =>
+                        setBusinessProfile({
+                          ...businessProfile,
+                          contactPhone: e.target.value,
+                        })
+                      }
+                    />
                   ) : (
-                    <p className="font-medium">{businessProfile.contactPhone}</p>
+                    <p className="font-medium">
+                      {businessProfile.contactPhone}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -409,11 +615,13 @@ const UserProfile = () => {
                 >
                   <option value="">Select document type...</option>
                   {documentTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="fileUpload">Select File</Label>
                 <Input
@@ -424,7 +632,7 @@ const UserProfile = () => {
                 />
               </div>
             </div>
-            
+
             {selectedFile && (
               <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-2">
@@ -442,9 +650,10 @@ const UserProfile = () => {
                 </Button>
               </div>
             )}
-            
+
             <p className="text-xs text-muted-foreground">
-              Accepted formats: PDF, DOC, DOCX, JPG, PNG. Maximum file size: 20MB
+              Accepted formats: PDF, DOC, DOCX, JPG, PNG. Maximum file size:
+              20MB
             </p>
           </CardContent>
         </Card>
@@ -460,14 +669,19 @@ const UserProfile = () => {
           <CardContent>
             <div className="space-y-3">
               {documents.map((doc) => (
-                <Card key={doc.id} className="hover:shadow-md transition-smooth">
+                <Card
+                  key={doc.id}
+                  className="hover:shadow-md transition-smooth"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
                         <FileText className="h-8 w-8 text-primary" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-foreground">{doc.name}</h4>
+                            <h4 className="font-semibold text-foreground">
+                              {doc.name}
+                            </h4>
                             {getStatusBadge(doc.status)}
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
