@@ -44,7 +44,6 @@ import ExchangeLayout from "./components/layout/ExchangeLayout";
 import PasswordSetup from "../src/pages/exchange/Staff/PasswordSetup";
 import StaffTwoFA from "./pages/exchange/Staff/StaffTwoFA";
 
-import Otp from "./pages/exchange/Staff/Otp";
 
 const queryClient = new QueryClient();
 
