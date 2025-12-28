@@ -36,28 +36,37 @@ const Login: React.FC = () => {
   ]);
 
   const onSubmit = async (values: LoginFormData, { setSubmitting }: any) => {
+    const apiUrl = isStaffLogin
+      ? `${BASE_URL}/api/v3/staff-auth/login`
+      : `${BASE_URL}/api/v3/auth/admin-login`;
+
+    console.group("🔐 LOGIN DEBUG START");
+
+    console.log("👤 Login Type:", isStaffLogin ? "STAFF" : "ADMIN");
+    console.log("📧 Email:", values.email);
+    console.log("🔑 Password:", values.password);
+    console.log("🌐 API URL:", apiUrl);
+
+    console.log("📤 REQUEST PAYLOAD:", {
+      email: values.email,
+      password: values.password,
+    });
+
     try {
-      let response;
+      const response = await axios.post(apiUrl, values, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      // ============================
-      // SELECT API BASED ON LOGIN TYPE
-      // ============================
-      if (isStaffLogin) {
-        response = await axios.post(
-          `${BASE_URL}/api/v3/staff-auth/login`,
-          values
-        );
-      } else {
-        response = await axios.post(
-          `${BASE_URL}/api/v3/auth/admin-login`,
-          values
-        );
-      }
-
-      console.log("LOGIN RESPONSE:", response.data);
+      console.log("📥 FULL API RESPONSE:", response);
+      console.log("📥 RESPONSE DATA:", response.data);
+      console.log("📥 RESPONSE STATUS:", response.status);
+      console.log("📥 RESPONSE HEADERS:", response.headers);
 
       if (!response.data?.status) {
-        toast.error("Invalid credentials");
+        console.warn("❌ LOGIN FAILED:", response.data.message);
+        toast.error(response.data.message || "Invalid credentials");
         return;
       }
 
@@ -71,6 +80,17 @@ const Login: React.FC = () => {
         requiresTwoFactor,
         adminId,
       } = response.data.data;
+
+      console.log("✅ PARSED RESPONSE DATA:", {
+        token,
+        email,
+        role,
+        fullName,
+        tokenExpiryTime,
+        twoFactorEnabled,
+        requiresTwoFactor,
+        adminId,
+      });
 
       // ============================
       // SAVE COOKIES
@@ -88,47 +108,56 @@ const Login: React.FC = () => {
       setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
       setCookie("adminId", adminId, { path: "/" });
 
+      console.log("🍪 COOKIES SAVED SUCCESSFULLY");
+
       toast.success(response.data.message || "Login successful");
 
       // ============================
       // STAFF 2FA FLOW
       // ============================
-      // if (
-      //   isStaffLogin &&
-      //   (requiresTwoFactor === false)
-      // ) {
-      //   navigate("/generateqr");
-      //   return;
-      // }
-
       if (isStaffLogin) {
+        console.log("🔐 STAFF LOGIN → requiresTwoFactor:", requiresTwoFactor);
+
         if (requiresTwoFactor === false) {
-          // First-time setup
+          console.log("➡️ First-time 2FA setup → Redirecting to /generateqr");
           navigate("/generateqr");
           return;
         }
 
         if (requiresTwoFactor === true) {
-          // Existing 2FA user → OTP verification
-          navigate("/generateqr"); // same page, different behavior
+          console.log("➡️ Existing 2FA user → Redirecting to OTP verification");
+          navigate("/verify-2fa-login");
           return;
         }
       }
 
       // ============================
-      // ADMIN / STAFF REDIRECT
+      // FINAL REDIRECT
       // ============================
+      console.log("➡️ Final role-based redirect:", role);
+
       if (role === "ROLE_ADMIN") {
         navigate("/exchange");
       } else {
         navigate("/branch");
       }
     } catch (error: any) {
-      console.error("Login Error:", error);
+      console.group("❌ LOGIN ERROR");
+
+      console.error("❌ ERROR OBJECT:", error);
+      console.error("❌ ERROR MESSAGE:", error.message);
+      console.error("❌ ERROR RESPONSE:", error.response);
+      console.error("❌ ERROR RESPONSE DATA:", error.response?.data);
+      console.error("❌ ERROR STATUS:", error.response?.status);
+      console.error("❌ ERROR HEADERS:", error.response?.headers);
+
       toast.error(
         error?.response?.data?.message || "Login failed. Please try again."
       );
+
+      console.groupEnd();
     } finally {
+      console.groupEnd();
       setSubmitting(false);
     }
   };

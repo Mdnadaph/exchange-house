@@ -1232,8 +1232,10 @@ const InitiateTwoFA = () => {
     }
 
     const verifyApi = requiresTwoFactor
-      ? "/api/v3/staff-auth/verify-2fa-login"
-      : "/api/v3/staff-auth/verify-2fa-setup";
+      ? "/api/v3/staff-auth/verify-2fa-setup"
+      : "/api/v3/staff-auth/verify-2fa-login";
+
+      // /api/v3/staff-auth/verify-2fa-setup
 
     try {
       const response = await axios.post(`${BASE_URL}${verifyApi}`, {
