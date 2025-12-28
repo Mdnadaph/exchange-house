@@ -58,7 +58,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* <Route path="/" element={<Index />} /> */}
-              
+
               <Route path="/" element={<Login />} />
               <Route path="/set-password" element={<PasswordSetup />} />
               <Route path="/generateqr" element={<StaffTwoFA />} />
@@ -74,7 +74,7 @@ const App = () => (
 
               {/* Business User Routes */}
               <Route path="/portal" element={<UserDashboard />} />
-              <Route path="/portal/profile" element={<UserProfile />} />
+              <Route path="/portal/profile/:id" element={<UserProfile />} />
               <Route
                 path="/portal/beneficiaries"
                 element={<UserBeneficiaries />}

@@ -40,22 +40,29 @@ const UserProfile = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadConfirmation, setShowUploadConfirmation] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-
+// const BASE_URL=process.env.VITE_BASE_URL;
   const [businessProfile, setBusinessProfile] = useState({
-    companyName: "Tech Solutions LLC",
-    businessId: "BIZ-001",
-    tradeLicense: "TL-123456",
-    taxNumber: "TAX-789012",
-    email: "info@techsolutions.ae",
-    phone: "+971 4 123 4567",
-    address: "Office 1234, Business Tower, Dubai, UAE",
-    registeredDate: "2023-05-15",
+    id: 0,
+    companyName: "",
+    legalForm: "",
+    businessType: "",
+    tradeLicense: "",
+    taxNumber: "",
+    country: "",
+    branchId: 0,
+    branchName: "",
+    email: "",
+    phone: "",
+    status: "PENDING",
+    monthlyLimit: 0,
+    dealValidityDays: 0,
+    supportedCurrencies: [] as string[],
     kybStatus: "pending_kyb",
     kybSubmitted: false,
-    branch: "Dubai Mall Branch",
-    contactPerson: "Sarah Smith",
-    contactEmail: "sarah.smith@techsolutions.ae",
-    contactPhone: "+971 50 123 4567",
+    registeredDate: "",
+    contactEmail: "",
+    contactPhone: "",
+    createdBy: "",
   });
 
   const [documents, setDocuments] = useState([
@@ -148,32 +155,47 @@ const UserProfile = () => {
         "Your document has been uploaded successfully and is pending review.",
     });
   };
-  if (!id) return;
+
   useEffect(() => {
     const businessProfile = async () => {
       try {
         const response = await axios.get(
           `http://192.168.18.10:8082/api/v3/business/${id}`
         );
-        console.log("business profile", response);
-        setBusinessProfile({
-          companyName: response.data.data.companyName,
-          businessId: `BIZ-${response.data.data.id}`,
-          tradeLicense: response.data.data.tradeLicense,
-          taxNumber: response.data.data.taxNumber,
-          email: response.data.data.businessEmail,
-          phone: response.data.data.businessPhone,
-          address: "Address not provided in API",
-          registeredDate: new Date(response.data.data.createdDate.join("-"))
-            .toISOString()
-            .split("T")[0],
-          kybStatus: response.data.data.status,
-          kybSubmitted: response.data.data.status !== "PENDING",
-          branch: response.data.data.branchName,
 
-          contactPerson: "Not provided",
-          contactEmail: response.data.data.businessEmail,
-          contactPhone: response.data.data.businessPhone,
+        const data = response?.data?.data;
+        console.log("business profile", response.data.data);
+
+        // Format date from array [2025, 12, 24, 13, 33, 34]
+        const formatDate = (dateArray: number[]) => {
+          if (!dateArray || dateArray.length < 3) return "";
+          // Note: month is 0-indexed in JavaScript Date
+          return new Date(dateArray[0], dateArray[1] - 1, dateArray[2])
+            .toISOString()
+            .split("T")[0];
+        };
+        setBusinessProfile({
+          id: data?.id || 0,
+          companyName: data?.companyName || "",
+          legalForm: data?.legalForm || "",
+          businessType: data?.businessType || "",
+          tradeLicense: data?.tradeLicense || "",
+          taxNumber: data?.taxNumber || "",
+          country: data?.country || "",
+          branchId: data?.branchId || 0,
+          branchName: data?.branchName || "",
+          email: data?.email || "",
+          phone: data?.phone || "",
+          status: data?.status || "PENDING",
+          monthlyLimit: data?.monthlyLimit || 0,
+          dealValidityDays: data?.dealValidityDays || 0,
+          supportedCurrencies: data?.supportedCurrencies || [],
+          kybStatus: data?.kybStatus || "pending_kyb",
+          kybSubmitted: data?.kybSubmitted || false,
+          registeredDate: data?.registeredDate || "",
+          contactEmail: data?.contactEmail || "",
+          contactPhone: data?.contactPhone || "",
+          createdBy: data?.createdBy || "",
         });
       } catch (error) {
         console.error("Failed to fetch business profile", error);
@@ -384,7 +406,7 @@ const UserProfile = () => {
                 <div className="space-y-2">
                   <Label>Business ID</Label>
                   <p className="text-foreground font-medium">
-                    {businessProfile.businessId}
+                    {businessProfile.id}
                   </p>
                 </div>
 
@@ -479,18 +501,18 @@ const UserProfile = () => {
                 </Label>
                 {isEditing ? (
                   <Textarea
-                    value={businessProfile.address}
+                    value={businessProfile.country}
                     onChange={(e) =>
                       setBusinessProfile({
                         ...businessProfile,
-                        address: e.target.value,
+                        country: e.target.value,
                       })
                     }
                     rows={2}
                   />
                 ) : (
                   <p className="text-foreground font-medium">
-                    {businessProfile.address}
+                    {businessProfile.country}
                   </p>
                 )}
               </div>
@@ -512,7 +534,7 @@ const UserProfile = () => {
                       Registered Branch:
                     </span>
                     <span className="font-medium">
-                      {businessProfile.branch}
+                      {businessProfile.branchName}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -535,7 +557,7 @@ const UserProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <div className="space-y-2">
+                {/*<div className="space-y-2">
                   <Label>Name</Label>
                   {isEditing ? (
                     <Input
@@ -552,7 +574,7 @@ const UserProfile = () => {
                       {businessProfile.contactPerson}
                     </p>
                   )}
-                </div>
+                </div>*/}
                 <div className="space-y-2">
                   <Label>Email</Label>
                   {isEditing ? (
