@@ -41,9 +41,9 @@ import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 import Login from "./components/Login";
 import BranchDetails from "./pages/exchange/Branch/BranchDetails";
 import ExchangeLayout from "./components/layout/ExchangeLayout";
-import PasswordSetup from "../src/pages/exchange/Staff/PasswordSetup";
+import StaffSetupPassword from "./pages/exchange/Staff/StaffSetupPassword";
 import StaffTwoFA from "./pages/exchange/Staff/StaffTwoFA";
-import VerifyTwoFALogin from "./pages/exchange/Staff/VerifyTwoFALogin";
+import StaffVerifyTwoFALogin from "./pages/exchange/Staff/StaffVerifyTwoFALogin";
 
 const queryClient = new QueryClient();
 
@@ -59,9 +59,9 @@ const App = () => (
               {/* <Route path="/" element={<Index />} /> */}
 
               <Route path="/" element={<Login />} />
-              <Route path="/set-password" element={<PasswordSetup />} />
+              <Route path="/set-password" element={<StaffSetupPassword />} />
               <Route path="/generateqr" element={<StaffTwoFA />} />
-              <Route path="/verify-2fa-login" element={<VerifyTwoFALogin />} />
+              <Route path="/verify-2fa-login" element={<StaffVerifyTwoFALogin />} />
 
               {/* Business Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />

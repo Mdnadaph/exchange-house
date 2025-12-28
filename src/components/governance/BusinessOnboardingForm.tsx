@@ -820,7 +820,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     // WorkerAppz API Fields
     legalForm: "",
     businessType: "",
-    countryOfTrade: "",
+    countryName: "",
     alternatePhone: "",
 
     // Admin User Details
@@ -913,7 +913,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         businessType: formData.businessType.toUpperCase(),
         tradeLicense: formData.tradeLicense,
         taxNumber: formData.taxNumber,
-        countryOfTrade: formData.countryOfTrade,
+        countryName: formData.countryName,
         registeredBranch: formData.registeredBranch,
         businessEmail: formData.businessEmail,
         businessPhone: formData.businessPhone,
@@ -977,7 +977,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           registeredBranch: "",
           legalForm: "",
           businessType: "",
-          countryOfTrade: "",
+          countryName: "",
           alternatePhone: "",
           adminFirstName: "",
           adminLastName: "",
@@ -987,6 +987,8 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           monthlyLimit: "",
           dealValidityDays: "7",
         });
+
+
         // Optionally navigate or reload if needed
       } else {
         toast({
@@ -1166,9 +1168,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             <div>
               <Label htmlFor="countryOfTrade">Country of Trade *</Label>
               <Select
-                value={formData.countryOfTrade}
+                value={formData.countryName}
                 onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, countryOfTrade: value }))
+                  setFormData((prev) => ({ ...prev, countryName: value }))
                 }
               >
                 <SelectTrigger>
@@ -1545,7 +1547,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
             <div>
               <p className="text-muted-foreground">Country of Trade</p>
-              <p className="font-medium">{formData.countryOfTrade || "-"}</p>
+              <p className="font-medium">{formData.countryName || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Branch</p>
