@@ -32,16 +32,18 @@ import { useToast } from "@/hooks/use-toast";
 import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { log } from "console";
 
 const UserProfile = () => {
-  const { id } = useParams<{ id?: string }>();
+  const { id } = useParams();
+  console.log(id);
 
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadConfirmation, setShowUploadConfirmation] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-const [businessId,setBusinessId]=useState<string | null>(null)
+
   const [businessProfile, setBusinessProfile] = useState({
     id: 0,
     companyName: "",
@@ -157,53 +159,45 @@ const [businessId,setBusinessId]=useState<string | null>(null)
     });
   };
 
-  useEffect(() => {
-    const businessProfile = async () => {
-      try {
-        const response = await axios.get(
-          `http://192.168.18.10:8082/api/v3/business/${id}`
-        );
+  //useEffect(() => {
+  //  const businessProfile = async () => {
+  //    try {
+  //      const response = await axios.get(
+  //        `http://192.168.18.10:8082/api/v3/business/${id}`
+  //      );
 
-        const data = response?.data?.data;
-        console.log("business profile", response.data.data);
+  //      const data = response?.data?.data;
+  //      console.log("business profile", response.data.data);
 
-        // Format date from array [2025, 12, 24, 13, 33, 34]
-        //const formatDate = (dateArray: number[]) => {
-        //  if (!dateArray || dateArray.length < 3) return "";
-        //  // Note: month is 0-indexed in JavaScript Date
-        //  return new Date(dateArray[0], dateArray[1] - 1, dateArray[2])
-        //    .toISOString()
-        //    .split("T")[0];
-        //};
-        setBusinessProfile({
-          id: data?.id || 0,
-          companyName: data?.companyName || "",
-          legalForm: data?.legalForm || "",
-          businessType: data?.businessType || "",
-          tradeLicense: data?.tradeLicense || "",
-          taxNumber: data?.taxNumber || "",
-          country: data?.country || "",
-          branchId: data?.branchId || 0,
-          branchName: data?.branchName || "",
-          email: data?.email || "",
-          phone: data?.phone || "",
-          status: data?.status || "PENDING",
-          monthlyLimit: data?.monthlyLimit || 0,
-          dealValidityDays: data?.dealValidityDays || 0,
-          supportedCurrencies: data?.supportedCurrencies || [],
-          kybStatus: data?.kybStatus || "pending_kyb",
-          kybSubmitted: data?.kybSubmitted || false,
-          registeredDate: data?.registeredDate || "",
-          contactEmail: data?.contactEmail || "",
-          contactPhone: data?.contactPhone || "",
-          createdBy: data?.createdBy || "",
-        });
-      } catch (error) {
-        console.error("Failed to fetch business profile", error);
-      }
-    };
-    businessProfile();
-  }, []);
+  //      setBusinessProfile({
+  //        id: data?.id || 0,
+  //        companyName: data?.companyName || "",
+  //        legalForm: data?.legalForm || "",
+  //        businessType: data?.businessType || "",
+  //        tradeLicense: data?.tradeLicense || "",
+  //        taxNumber: data?.taxNumber || "",
+  //        country: data?.country || "",
+  //        branchId: data?.branchId || 0,
+  //        branchName: data?.branchName || "",
+  //        email: data?.email || "",
+  //        phone: data?.phone || "",
+  //        status: data?.status || "PENDING",
+  //        monthlyLimit: data?.monthlyLimit || 0,
+  //        dealValidityDays: data?.dealValidityDays || 0,
+  //        supportedCurrencies: data?.supportedCurrencies || [],
+  //        kybStatus: data?.kybStatus || "pending_kyb",
+  //        kybSubmitted: data?.kybSubmitted || false,
+  //        registeredDate: data?.registeredDate || "",
+  //        contactEmail: data?.contactEmail || "",
+  //        contactPhone: data?.contactPhone || "",
+  //        createdBy: data?.createdBy || "",
+  //      });
+  //    } catch (error) {
+  //      console.error("Failed to fetch business profile", error);
+  //    }
+  //  };
+  //  businessProfile();
+  //}, []);
 
   const handleUploadDocument = () => {
     if (!selectedFile || !documentType) {

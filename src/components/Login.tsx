@@ -32,6 +32,7 @@ const Login: React.FC = () => {
     "role",
     "fullName",
     "twoFactorEnabled",
+    "adminId",
   ]);
 
   const onSubmit = async (values: LoginFormData, { setSubmitting }: any) => {
@@ -68,6 +69,7 @@ const Login: React.FC = () => {
         tokenExpiryTime,
         twoFactorEnabled,
         requiresTwoFactor,
+        adminId,
       } = response.data.data;
 
       // ============================
@@ -84,6 +86,7 @@ const Login: React.FC = () => {
       setCookie("role", role, { path: "/" });
       setCookie("fullName", fullName, { path: "/" });
       setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
+      setCookie("adminId", adminId, { path: "/" });
 
       toast.success(response.data.message || "Login successful");
 
