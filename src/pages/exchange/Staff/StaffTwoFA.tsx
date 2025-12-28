@@ -1154,154 +1154,7 @@
 // export default InitiateTwoFA;
 
 
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { toast } from "react-toastify";
-// import { useCookies } from "react-cookie";
-// import { useNavigate } from "react-router-dom";
-// import BASE_URL from "@/config/config";
 
-// const InitiateTwoFA = () => {
-//   const navigate = useNavigate();
-
-//   const [cookies, setCookie] = useCookies([
-//     "email",
-//     "tempToken",
-//     "requiresTwoFactor",
-//     "twoFactorEnabled",
-//     "accessToken",
-//   ]);
-
-//   const email = cookies.email;
-//   const tempToken = cookies.tempToken;
-//   const requiresTwoFactor = cookies.requiresTwoFactor === true; // true → already has 2FA
-
-//   console.log("🍪 All Cookies:", cookies);
-//   console.log("📧 Email:", email);
-//   console.log("🔑 Temp Token:", tempToken);
-//   console.log("🔐 Requires Two Factor:", requiresTwoFactor);
-
-//   const [qrCodeUrl, setQrCodeUrl] = useState("");
-//   const [manualEntryKey, setManualEntryKey] = useState("");
-//   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [otp, setOtp] = useState("");
-
-//   useEffect(() => {
-//     if (!tempToken) {
-//       toast.error("Session expired. Please login again.");
-//       navigate("/");
-//       return;
-//     }
-
-//     const initiateSetup = async () => {
-//       try {
-//         // Show QR for first-time or even if requiresTwoFactor === true
-//         const response = await axios.post(
-//           `${BASE_URL}/api/v3/staff-auth/initiate-2fa-setup?email=${email}`
-//         );
-
-//         if (response.data.status) {
-//           const { qrCodeUrl, manualEntryKey, backupCodes } = response.data.data;
-//           setQrCodeUrl(qrCodeUrl);
-//           setManualEntryKey(manualEntryKey);
-//           setBackupCodes(backupCodes);
-//         } else {
-//           setError(response.data.message || "Failed to initiate 2FA");
-//         }
-//       } catch (err) {
-//         console.error("❌ initiate-2fa-setup error:", err);
-//         setError("Error initiating 2FA setup");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     initiateSetup();
-//   }, [email, tempToken, navigate]);
-
-//   const handleVerify = async () => {
-//     if (!otp || otp.length !== 6) {
-//       toast.error("Please enter complete OTP");
-//       return;
-//     }
-
-//     const verifyApi = requiresTwoFactor
-//       ? "/api/v3/staff-auth/verify-2fa-login"
-//       : "/api/v3/staff-auth/verify-2fa-setup";
-
-//     try {
-//       const response = await axios.post(`${BASE_URL}${verifyApi}`, {
-//         tempToken,
-//         twoFactorCode: otp,
-//       });
-
-//       console.log("📥 verify response:", response.data);
-
-//       if (response.data.status) {
-//         const { accessToken } = response.data.data;
-
-//         setCookie("accessToken", accessToken, { path: "/", maxAge: 60 * 60 * 24, secure: true, sameSite: "strict" });
-//         setCookie("twoFactorEnabled", true, { path: "/" });
-//         setCookie("requiresTwoFactor", true, { path: "/" });
-
-//         toast.success("2FA verified successfully");
-//         navigate("/branch", { replace: true });
-//       } else {
-//         toast.error(response.data.message || "OTP verification failed");
-//       }
-//     } catch (err: any) {
-//       console.error("❌ Verify error:", err);
-//       toast.error(err.response?.data?.message || "Verification failed");
-//     }
-//   };
-
-//   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-//   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="max-w-md w-full p-6 bg-white border rounded shadow">
-//         <h2 className="text-2xl font-bold text-center mb-4">Two-Factor Authentication</h2>
-
-//         {/* Show QR + OTP if requiresTwoFactor === true */}
-//         {requiresTwoFactor && qrCodeUrl && (
-//           <>
-//             <p className="text-center mb-4">Scan this QR code using Google Authenticator</p>
-//             <div className="flex justify-center mb-4">
-//               <img src={qrCodeUrl} alt="2FA QR" className="w-48 h-48" />
-//             </div>
-//             <p className="text-center mb-4">Manual Key: <strong>{manualEntryKey}</strong></p>
-//             <div className="mb-6">
-//               <h3 className="font-semibold mb-2">Backup Codes</h3>
-//               <ul className="list-disc pl-5 text-sm">{backupCodes.map((code, i) => <li key={i}>{code}</li>)}</ul>
-//             </div>
-//           </>
-//         )}
-
-//         {/* Show only OTP if requiresTwoFactor === false */}
-//         <div className="mb-6">
-//           <label className="block mb-3 font-semibold text-center">Enter 6-digit OTP</label>
-//           <input
-//             type="text"
-//             maxLength={6}
-//             value={otp}
-//             onChange={(e) => setOtp(e.target.value)}
-//             className="w-full px-3 py-2 border rounded"
-//             placeholder="123456"
-//           />
-//         </div>
-
-//         <button onClick={handleVerify} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
-//           Verify & Continue
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default InitiateTwoFA;
 
 
 
@@ -1312,7 +1165,7 @@ import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import BASE_URL from "@/config/config";
 
-const InitiateTwoFA: React.FC = () => {
+const InitiateTwoFA = () => {
   const navigate = useNavigate();
 
   const [cookies, setCookie] = useCookies([
@@ -1325,43 +1178,20 @@ const InitiateTwoFA: React.FC = () => {
 
   const email = cookies.email;
   const tempToken = cookies.tempToken;
-  const requiresTwoFactor = cookies.requiresTwoFactor === true; // true = already enabled
+  const requiresTwoFactor = cookies.requiresTwoFactor === true; // true → already has 2FA
+
+  console.log("🍪 All Cookies:", cookies);
+  console.log("📧 Email:", email);
+  console.log("🔑 Temp Token:", tempToken);
+  console.log("🔐 Requires Two Factor:", requiresTwoFactor);
 
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [manualEntryKey, setManualEntryKey] = useState("");
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [otp, setOtp] = useState("");
 
-  /* ============================
-     INIT 2FA SETUP (FIRST TIME)
-  ============================ */
-  const initiateSetup = async () => {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api/v3/staff-auth/initiate-2fa-setup?email=${email}`
-      );
-
-      if (response.data.status) {
-        const { qrCodeUrl, manualEntryKey, backupCodes } = response.data.data;
-        setQrCodeUrl(qrCodeUrl);
-        setManualEntryKey(manualEntryKey);
-        setBackupCodes(backupCodes);
-      } else {
-        setError(response.data.message || "Failed to initiate 2FA");
-      }
-    } catch (err) {
-      console.error("❌ initiate-2fa-setup error:", err);
-      setError("Error initiating 2FA setup");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ============================
-     USE EFFECT
-  ============================ */
   useEffect(() => {
     if (!tempToken) {
       toast.error("Session expired. Please login again.");
@@ -1369,22 +1199,35 @@ const InitiateTwoFA: React.FC = () => {
       return;
     }
 
-    // 🔥 IMPORTANT FIX
-    if (!requiresTwoFactor) {
-      // First time → generate QR
-      initiateSetup();
-    } else {
-      // Already enabled → OTP only
-      setLoading(false);
-    }
-  }, [tempToken, requiresTwoFactor, navigate]);
+    const initiateSetup = async () => {
+      try {
+        // Show QR for first-time or even if requiresTwoFactor === true
+        const response = await axios.post(
+          `${BASE_URL}/api/v3/staff-auth/initiate-2fa-setup?email=${email}`
+        );
 
-  /* ============================
-     VERIFY OTP
-  ============================ */
+        if (response.data.status) {
+          const { qrCodeUrl, manualEntryKey, backupCodes } = response.data.data;
+          setQrCodeUrl(qrCodeUrl);
+          setManualEntryKey(manualEntryKey);
+          setBackupCodes(backupCodes);
+        } else {
+          setError(response.data.message || "Failed to initiate 2FA");
+        }
+      } catch (err) {
+        console.error("❌ initiate-2fa-setup error:", err);
+        setError("Error initiating 2FA setup");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initiateSetup();
+  }, [email, tempToken, navigate]);
+
   const handleVerify = async () => {
-    if (otp.length !== 6) {
-      toast.error("Please enter valid 6-digit OTP");
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter complete OTP");
       return;
     }
 
@@ -1398,86 +1241,52 @@ const InitiateTwoFA: React.FC = () => {
         twoFactorCode: otp,
       });
 
-      if (!response.data.status) {
+      console.log("📥 verify response:", response.data);
+
+      if (response.data.status) {
+        const { accessToken } = response.data.data;
+
+        setCookie("accessToken", accessToken, { path: "/", maxAge: 60 * 60 * 24, secure: true, sameSite: "strict" });
+        setCookie("twoFactorEnabled", true, { path: "/" });
+        setCookie("requiresTwoFactor", true, { path: "/" });
+
+        toast.success("2FA verified successfully");
+        navigate("/branch", { replace: true });
+      } else {
         toast.error(response.data.message || "OTP verification failed");
-        return;
       }
-
-      const { accessToken } = response.data.data;
-
-      setCookie("accessToken", accessToken, {
-        path: "/",
-        secure: true,
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24,
-      });
-
-      setCookie("twoFactorEnabled", true, { path: "/" });
-      setCookie("requiresTwoFactor", true, { path: "/" });
-
-      toast.success("2FA verified successfully");
-      navigate("/branch", { replace: true });
     } catch (err: any) {
       console.error("❌ Verify error:", err);
       toast.error(err.response?.data?.message || "Verification failed");
     }
   };
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
 
-  if (error)
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        {error}
-      </div>
-    );
-
-  /* ============================
-     UI
-  ============================ */
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full p-6 bg-white border rounded shadow">
-        <h2 className="text-2xl font-bold text-center mb-4">
-          Two-Factor Authentication
-        </h2>
+        <h2 className="text-2xl font-bold text-center mb-4">Two-Factor Authentication</h2>
 
-        {/* 🔹 SHOW QR ONLY FOR FIRST-TIME SETUP */}
-        {!requiresTwoFactor && qrCodeUrl && (
+        {/* Show QR + OTP if requiresTwoFactor === true */}
+        {requiresTwoFactor && qrCodeUrl && (
           <>
-            <p className="text-center mb-4">
-              Scan this QR code using Google Authenticator
-            </p>
-
+            <p className="text-center mb-4">Scan this QR code using Google Authenticator</p>
             <div className="flex justify-center mb-4">
               <img src={qrCodeUrl} alt="2FA QR" className="w-48 h-48" />
             </div>
-
-            <p className="text-center mb-4">
-              Manual Key: <strong>{manualEntryKey}</strong>
-            </p>
-
+            <p className="text-center mb-4">Manual Key: <strong>{manualEntryKey}</strong></p>
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Backup Codes</h3>
-              <ul className="list-disc pl-5 text-sm">
-                {backupCodes.map((code, i) => (
-                  <li key={i}>{code}</li>
-                ))}
-              </ul>
+              <ul className="list-disc pl-5 text-sm">{backupCodes.map((code, i) => <li key={i}>{code}</li>)}</ul>
             </div>
           </>
         )}
 
-        {/* 🔹 OTP (BOTH CASES) */}
+        {/* Show only OTP if requiresTwoFactor === false */}
         <div className="mb-6">
-          <label className="block mb-3 font-semibold text-center">
-            Enter 6-digit OTP
-          </label>
+          <label className="block mb-3 font-semibold text-center">Enter 6-digit OTP</label>
           <input
             type="text"
             maxLength={6}
@@ -1488,10 +1297,7 @@ const InitiateTwoFA: React.FC = () => {
           />
         </div>
 
-        <button
-          onClick={handleVerify}
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-        >
+        <button onClick={handleVerify} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
           Verify & Continue
         </button>
       </div>
@@ -1501,178 +1307,3 @@ const InitiateTwoFA: React.FC = () => {
 
 export default InitiateTwoFA;
 
-
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { toast } from "react-toastify";
-// import { useCookies } from "react-cookie";
-// import { useNavigate } from "react-router-dom";
-// import BASE_URL from "@/config/config";
-
-// const StaffTwoFA: React.FC = () => {
-//   const navigate = useNavigate();
-
-//   const [cookies, setCookie] = useCookies([
-//     "tempToken",
-//     "requiresTwoFactor",
-//     "accessToken",
-//   ]);
-
-//   const tempToken = cookies.tempToken;
-//   const requiresTwoFactor = cookies.requiresTwoFactor === true;
-
-//   const [qrCodeUrl, setQrCodeUrl] = useState("");
-//   const [manualEntryKey, setManualEntryKey] = useState("");
-//   const [otp, setOtp] = useState("");
-//   const [loading, setLoading] = useState(true);
-
-//   /* ============================
-//      INIT LOGIC
-//   ============================ */
-//   useEffect(() => {
-//     if (!tempToken) {
-//       toast.error("Session expired. Please login again.");
-//       navigate("/");
-//       return;
-//     }
-
-//     if (!requiresTwoFactor) {
-//       initiateTwoFASetup(); // 🔥 first time only
-//     } else {
-//       setLoading(false); // 🔥 existing user → OTP only
-//     }
-//   }, []);
-
-//   /* ============================
-//      FIRST TIME → GENERATE QR
-//   ============================ */
-//   const initiateTwoFASetup = async () => {
-//     try {
-//       const res = await axios.post(
-//         `${BASE_URL}/api/v3/staff-auth/initiate-2fa-setup`,
-//         { tempToken }
-//       );
-
-//       if (!res.data.status) {
-//         toast.error(res.data.message || "Failed to setup 2FA");
-//         return;
-//       }
-
-//       const { qrCodeUrl, manualEntryKey } = res.data.data;
-//       setQrCodeUrl(qrCodeUrl);
-//       setManualEntryKey(manualEntryKey);
-//     } catch (error) {
-//       console.error("2FA setup error:", error);
-//       toast.error("2FA setup failed");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ============================
-//      VERIFY OTP (BOTH CASES)
-//   ============================ */
-//   const verifyOtp = async () => {
-//     if (otp.length !== 6) {
-//       toast.error("Please enter valid 6‑digit OTP");
-//       return;
-//     }
-
-//     const endpoint = requiresTwoFactor
-//       ? "/api/v3/staff-auth/verify-2fa-login"
-//       : "/api/v3/staff-auth/verify-2fa-setup";
-
-//     try {
-//       const res = await axios.post(`${BASE_URL}${endpoint}`, {
-//         tempToken,
-//         twoFactorCode: otp,
-//       });
-
-//       if (!res.data.status) {
-//         toast.error(res.data.message || "OTP verification failed");
-//         return;
-//       }
-
-//       const { accessToken } = res.data.data;
-
-//       setCookie("accessToken", accessToken, {
-//         path: "/",
-//         secure: true,
-//         sameSite: "strict",
-//         maxAge: 60 * 60 * 24,
-//       });
-
-//       setCookie("requiresTwoFactor", true, { path: "/" });
-
-//       toast.success("Login successful");
-//       navigate("/branch", { replace: true });
-//     } catch (error) {
-//       console.error("OTP verify error:", error);
-//       toast.error("Invalid OTP");
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center">
-//         Loading...
-//       </div>
-//     );
-//   }
-
-//   /* ============================
-//      UI
-//   ============================ */
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="max-w-md w-full p-6 bg-white border rounded shadow">
-//         <h2 className="text-2xl font-bold text-center mb-4">
-//           Two‑Factor Authentication
-//         </h2>
-
-//         {/* 🔥 QR ONLY FOR FIRST‑TIME */}
-//         {!requiresTwoFactor && qrCodeUrl && (
-//           <>
-//             <p className="text-center mb-4">
-//               Scan this QR code using Google Authenticator
-//             </p>
-
-//             <div className="flex justify-center mb-4">
-//               <img src={qrCodeUrl} alt="2FA QR" className="w-48 h-48" />
-//             </div>
-
-//             <p className="text-center mb-4">
-//               Manual Key: <strong>{manualEntryKey}</strong>
-//             </p>
-//           </>
-//         )}
-
-//         {/* 🔹 OTP INPUT (BOTH CASES) */}
-//         <div className="mb-6">
-//           <label className="block mb-3 font-semibold text-center">
-//             Enter 6‑digit OTP
-//           </label>
-//           <input
-//             type="text"
-//             maxLength={6}
-//             value={otp}
-//             onChange={(e) => setOtp(e.target.value)}
-//             className="w-full px-3 py-2 border rounded"
-//             placeholder="123456"
-//           />
-//         </div>
-
-//         <button
-//           onClick={verifyOtp}
-//           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-//         >
-//           Verify & Continue
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default StaffTwoFA;

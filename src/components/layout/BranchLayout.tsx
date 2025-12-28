@@ -25,6 +25,11 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     "tempToken",
     "twoFactorEnabled",
     "requiresTwoFactor",
+    "email",
+    "token",
+    "role",
+    "fullName"
+
   ]);
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
@@ -48,10 +53,18 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   // };
 
   const handleLogout = () => {
-    removeCookie("accessToken", { path: "/" });
-    removeCookie("tempToken", { path: "/" });
-    removeCookie("twoFactorEnabled", { path: "/" });
-    removeCookie("requiresTwoFactor", { path: "/" });
+    // removeCookie("accessToken", { path: "/" });
+    // removeCookie("tempToken", { path: "/" });
+    // removeCookie("twoFactorEnabled", { path: "/" });
+    // removeCookie("requiresTwoFactor", { path: "/" });
+    removeCookie("token");
+    removeCookie("accessToken");
+    removeCookie("tempToken");
+    removeCookie("requiresTwoFactor");
+    removeCookie("twoFactorEnabled");
+    removeCookie("email");
+    removeCookie("role");
+    removeCookie("fullName");
 
     navigate("/");
   };
