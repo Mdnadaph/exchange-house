@@ -5,7 +5,7 @@ import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import BASE_URL from "@/config/config";
 
-const StaffTwoFA = () => {
+const InitiateTwoFA = () => {
   const navigate = useNavigate();
 
   const [cookies, setCookie] = useCookies([
@@ -150,9 +150,6 @@ const StaffTwoFA = () => {
         <h2 className="text-2xl font-bold text-center mb-4">
           Two-Factor Authentication
         </h2>
-        <h2 className="text-2xl font-bold text-center mb-4">
-          Two-Factor Authentication
-        </h2>
 
         {/* QR CODE */}
         {qrCodeUrl && (
@@ -171,11 +168,6 @@ const StaffTwoFA = () => {
 
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Backup Codes</h3>
-              <ul className="list-disc pl-5 text-sm">
-                {backupCodes.map((code, i) => (
-                  <li key={i}>{code}</li>
-                ))}
-              </ul>
               <ul className="list-disc pl-5 text-sm">
                 {backupCodes.map((code, i) => (
                   <li key={i}>{code}</li>
@@ -211,10 +203,6 @@ const StaffTwoFA = () => {
           onClick={handleVerify}
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
         >
-        <button
-          onClick={handleVerify}
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-        >
           Verify & Continue
         </button>
       </div>
@@ -222,4 +210,4 @@ const StaffTwoFA = () => {
   );
 };
 
-export default StaffTwoFA;
+export default InitiateTwoFA;
