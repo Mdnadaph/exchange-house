@@ -1,149 +1,432 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+// import { Formik, Form, Field, ErrorMessage } from "formik";
+// import * as Yup from "yup";
+// import { useNavigate } from "react-router-dom";
+// import { toast } from "react-toastify";
+// import { IoMdEye, IoIosEyeOff } from "react-icons/io";
+// import { useCookies } from "react-cookie";
+// import axios from "axios";
+
+// import sideImage from "../assets/images/station.jpg";
+// import logo from "../assets/images/Envision.webp";
+// import BASE_URL from "@/config/config";
+
+// interface LoginFormData {
+//   email: string;
+//   password: string;
+// }
+
+// const validationSchema = Yup.object({
+//   email: Yup.string().email("Invalid email").required("Email required"),
+//   password: Yup.string().min(6).required("Password required"),
+// });
+
+// const Login: React.FC = () => {
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [isStaffLogin, setIsStaffLogin] = useState(false);
+//   const navigate = useNavigate();
+
+//   const [, setCookie] = useCookies([
+//     "token",
+//     "email",
+//     "role",
+//     "fullName",
+//     "twoFactorEnabled",
+//   ]);
+
+//   const onSubmit = async (
+//     values: LoginFormData,
+//     { setSubmitting }: any
+//   ) => {
+//     try {
+//       let response;
+
+//       // ============================
+//       // SELECT API BASED ON LOGIN TYPE
+//       // ============================
+//       if (isStaffLogin) {
+//         response = await axios.post(
+//           `${BASE_URL}/api/v3/staff-auth/login`,
+//           values
+//         );
+//       } else {
+//         response = await axios.post(
+//           `${BASE_URL}/api/v3/auth/admin-login`,
+//           values
+//         );
+//       }
+
+//       console.log("LOGIN RESPONSE:", response.data);
+
+//       if (!response.data?.status) {
+//         toast.error("Invalid credentials");
+//         return;
+//       }
+
+//       const {
+//         token,
+//         email,
+//         role,
+//         fullName,
+//         tokenExpiryTime,
+//         twoFactorEnabled,
+//         requiresTwoFactor,
+//       } = response.data.data;
+
+//       // ============================
+//       // SAVE COOKIES
+//       // ============================
+//       setCookie("token", token, {
+//         path: "/",
+//         secure: true,
+//         sameSite: "strict",
+//         maxAge: tokenExpiryTime || 1800,
+//       });
+
+//       setCookie("email", email, { path: "/" });
+//       setCookie("role", role, { path: "/" });
+//       setCookie("fullName", fullName, { path: "/" });
+//       setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
+
+//       toast.success(response.data.message || "Login successful");
+
+//       // ============================
+//       // STAFF 2FA FLOW
+//       // ============================
+//       if (
+//         isStaffLogin &&
+//         (requiresTwoFactor === true || twoFactorEnabled === true)
+//       ) {
+//         navigate("/generateqr");
+//         return;
+//       }
+
+//       // ============================
+//       // ADMIN / STAFF REDIRECT
+//       // ============================
+//       if (role === "ROLE_ADMIN") {
+//         navigate("/exchange");
+//       } else {
+//         navigate("/branch");
+//       }
+//     } catch (error: any) {
+//       console.error("Login Error:", error);
+//       toast.error(
+//         error?.response?.data?.message || "Login failed. Please try again."
+//       );
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   return (
+//     <div className="flex h-screen bg-gray-100">
+//       {/* LEFT IMAGE */}
+//       <div
+//         className="hidden md:block w-1/2 bg-cover bg-center"
+//         style={{ backgroundImage: `url(${sideImage})` }}
+//       />
+
+//       {/* LOGIN FORM */}
+//       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8">
+//         <img src={logo} alt="Logo" className="w-32 mb-6" />
+
+//         <h2 className="text-2xl font-bold mb-4">Login</h2>
+
+//         {/* LOGIN TYPE SWITCH */}
+//         <div className="flex gap-4 mb-6">
+//           <button
+//             type="button"
+//             className={`px-4 py-2 rounded ${
+//               !isStaffLogin
+//                 ? "bg-blue-500 text-white"
+//                 : "bg-gray-300 text-black"
+//             }`}
+//             onClick={() => setIsStaffLogin(false)}
+//           >
+//             Admin Login
+//           </button>
+
+//           <button
+//             type="button"
+//             className={`px-4 py-2 rounded ${
+//               isStaffLogin
+//                 ? "bg-blue-500 text-white"
+//                 : "bg-gray-300 text-black"
+//             }`}
+//             onClick={() => setIsStaffLogin(true)}
+//           >
+//             Staff Login
+//           </button>
+//         </div>
+
+//         <Formik
+//           initialValues={{ email: "", password: "" }}
+//           validationSchema={validationSchema}
+//           onSubmit={onSubmit}
+//         >
+//           {({ isSubmitting }) => (
+//             <Form className="w-full max-w-md">
+//               {/* EMAIL */}
+//               <div className="mb-4">
+//                 <label className="block text-sm">Email</label>
+//                 <Field
+//                   name="email"
+//                   type="email"
+//                   className="w-full p-2 border rounded"
+//                 />
+//                 <ErrorMessage
+//                   name="email"
+//                   component="p"
+//                   className="text-red-500 text-sm"
+//                 />
+//               </div>
+
+//               {/* PASSWORD */}
+//               <div className="mb-6 relative">
+//                 <label className="block text-sm">Password</label>
+//                 <Field
+//                   name="password"
+//                   type={showPassword ? "text" : "password"}
+//                   className="w-full p-2 border rounded"
+//                 />
+
+//                 <button
+//                   type="button"
+//                   className="absolute right-3 top-9"
+//                   onClick={() => setShowPassword(!showPassword)}
+//                 >
+//                   {showPassword ? <IoIosEyeOff /> : <IoMdEye />}
+//                 </button>
+
+//                 <ErrorMessage
+//                   name="password"
+//                   component="p"
+//                   className="text-red-500 text-sm"
+//                 />
+//               </div>
+
+//               <button
+//                 type="submit"
+//                 disabled={isSubmitting}
+//                 className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+//               >
+//                 {isSubmitting
+//                   ? "Logging in..."
+//                   : isStaffLogin
+//                   ? "Login as Staff"
+//                   : "Login as Admin"}
+//               </button>
+//             </Form>
+//           )}
+//         </Formik>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Login;
+
+import React, { useState, useRef } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IoMdEye, IoIosEyeOff } from "react-icons/io";
-import sideImage from "../assets/images/station.jpg";
-import logo from "../assets/images/Envision.webp";
 import { useCookies } from "react-cookie";
-import BASE_URL from "@/config/config";
 import axios from "axios";
 
+import sideImage from "../assets/images/station.jpg";
+import logo from "../assets/images/Envision.webp";
+import BASE_URL from "@/config/config";
+
+/* ============================
+   TYPES
+============================ */
 interface LoginFormData {
   email: string;
   password: string;
 }
 
+/* ============================
+   VALIDATION
+============================ */
 const validationSchema = Yup.object({
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required"),
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+  email: Yup.string().required("Email required"),
+  password: Yup.string().min(6).required("Password required"),
 });
 
+/* ============================
+   COMPONENT
+============================ */
 const Login: React.FC = () => {
-  const [cookies, setCookie] = useCookies([
-    "tempToken",
+  const [showPassword, setShowPassword] = useState(false);
+  const [isStaffLogin, setIsStaffLogin] = useState(false);
+
+  // 🔥 FIX: REF FOR LOGIN TYPE (NO STALE STATE)
+  const loginTypeRef = useRef<"ADMIN" | "STAFF">("ADMIN");
+
+  const navigate = useNavigate();
+
+  const [, setCookie] = useCookies([
     "token",
-    "twoFactorEnabled",
     "email",
     "role",
     "fullName",
+    "twoFactorEnabled",
     "requiresTwoFactor",
   ]);
 
-  const { tempToken, twoFactorEnabled, token, requiresTwoFactor } = cookies;
-
-  console.log("Stored Token:", token);
-  console.log("Two Factor Enabled:", twoFactorEnabled);
-  console.log("Temp Token:", tempToken);
-
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-
-  const onSubmit = async (
-    values: LoginFormData,
-    { setSubmitting }: any
-  ) => {
+  /* ============================
+     SUBMIT HANDLER
+  ============================ */
+  const onSubmit = async (values: LoginFormData, { setSubmitting }: any) => {
     try {
-      let response;
+      const loginType = loginTypeRef.current;
 
-      if (requiresTwoFactor === false) {
-        response = await axios.post(
-          `${BASE_URL}/api/v3/staff-auth/login`,
-          values
-        );
-      } else {
-        response = await axios.post(
-          `${BASE_URL}/api/v3/auth/admin-login`,
-          values
-        );
+      console.log("LOGIN TYPE:", loginType);
+      console.log("EMAIL:", values.email);
+      console.log("PASSWORD:", values.password);
+
+      const apiUrl =
+        loginType === "STAFF"
+          ? `${BASE_URL}/api/v3/staff-auth/login`
+          : `${BASE_URL}/api/v3/auth/admin-login`;
+
+      const payload = {
+        email: values.email,
+        password: values.password,
+      };
+
+      console.log("API URL:", apiUrl);
+      console.log("API PAYLOAD:", payload);
+
+      const response = await axios.post(apiUrl, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("API RESPONSE:", response.data);
+
+      if (!response.data?.status) {
+        toast.error(response.data.message || "Invalid credentials");
+        return;
       }
 
-      console.log("FULL API RESPONSE:", response.data);
+      const {
+        token,
+        email,
+        role,
+        fullName,
+        tokenExpiryTime,
+        twoFactorEnabled,
+        requiresTwoFactor,
+      } = response.data.data;
 
-      if (response.data?.data?.token) {
-        const {
-          token,
-          email,
-          role,
-          fullName,
-          tokenExpiryTime,
-        } = response.data.data;
+      /* ============================
+         SAVE COOKIES
+      ============================ */
+      setCookie("token", token, {
+        path: "/",
+        secure: true,
+        sameSite: "strict",
+        maxAge: tokenExpiryTime || 1800,
+      });
 
-        // ===== STORE COOKIES =====
-        setCookie("token", token, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
-          maxAge: tokenExpiryTime || 1800,
-        });
+      setCookie("email", email, { path: "/" });
+      setCookie("role", role, { path: "/" });
+      setCookie("fullName", fullName, { path: "/" });
+      setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
 
-        setCookie("email", email, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
-        });
+      toast.success(response.data.message || "Login successful");
 
-        setCookie("role", role, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
-        });
+      /* ============================
+         STAFF 2FA FLOW
+      ============================ */
+      // if (loginType === "STAFF" && !requiresTwoFactor) {
+      //   navigate("/generateqr");
+      //   return;
+      // }
 
-        setCookie("fullName", fullName, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
-        });
+      // if (loginType === "STAFF") {
+      //   if (requiresTwoFactor || twoFactorEnabled) {
+      //     navigate("/generateqr");
+      //   } else {
+      //     navigate("/branch");
+      //   }
+      //   return;
+      // }
 
-        // ===== PRINT CONSOLE =====
-        console.log("Saved Token:", token);
-        console.log("Saved Email:", email);
-        console.log("Saved Role:", role);
-        console.log("Saved Full Name:", fullName);
-
-        // ===== EXISTING NAVIGATION LOGIC =====
-        if (role === "ROLE_ADMIN") {
-          navigate("/exchange");
-          toast.success(response.data.message || "Login successful!");
-
-        } else if (twoFactorEnabled === false) {
-          navigate("/branch");
-
-        } else {
-          navigate("/exchange");
-          toast.success(response.data.message || "Login successful!");
-        }
-      } else {
-        toast.error("Invalid credentials");
+      if(loginType === "STAFF"){
+        navigate("generateqr");
       }
+
+      /* ============================
+         REDIRECT
+      ============================ */
+      role === "ROLE_ADMIN" ? navigate("/exchange") : navigate("/generateqr");
     } catch (error: any) {
+      console.error("LOGIN ERROR STATUS:", error?.response?.status);
+      console.error("LOGIN ERROR RESPONSE:", error?.response?.data);
+
       toast.error(
-        error.response?.data?.message ||
-          "Error during login. Please try again."
+        error?.response?.data?.message || "Login failed. Please try again."
       );
-      console.error("Login error:", error);
     } finally {
       setSubmitting(false);
     }
   };
 
+  /* ============================
+     UI
+  ============================ */
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Side Image */}
+      {/* LEFT IMAGE */}
       <div
         className="hidden md:block w-1/2 bg-cover bg-center"
         style={{ backgroundImage: `url(${sideImage})` }}
       />
 
-      {/* Form Section */}
+      {/* LOGIN FORM */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8">
-        <img src={logo} alt="Envision Logo" className="w-32 mb-8" />
-        <h2 className="text-2xl font-bold mb-6">Login</h2>
+        <img src={logo} alt="Logo" className="w-32 mb-6" />
+
+        <h2 className="text-2xl font-bold mb-4">Login</h2>
+
+        {/* LOGIN TYPE SWITCH */}
+        <div className="flex gap-4 mb-6">
+          <button
+            type="button"
+            className={`px-4 py-2 rounded ${
+              loginTypeRef.current === "ADMIN"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
+            }`}
+            onClick={() => {
+              setIsStaffLogin(false);
+              loginTypeRef.current = "ADMIN";
+            }}
+          >
+            Admin Login
+          </button>
+
+          <button
+            type="button"
+            className={`px-4 py-2 rounded ${
+              loginTypeRef.current === "STAFF"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
+            }`}
+            onClick={() => {
+              setIsStaffLogin(true);
+              loginTypeRef.current = "STAFF";
+            }}
+          >
+            Staff Login
+          </button>
+        </div>
 
         <Formik
           initialValues={{ email: "", password: "" }}
@@ -152,15 +435,13 @@ const Login: React.FC = () => {
         >
           {({ isSubmitting }) => (
             <Form className="w-full max-w-md">
-              {/* Email */}
+              {/* EMAIL */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
+                <label className="block text-sm">Email</label>
                 <Field
-                  type="email"
                   name="email"
-                  className="mt-1 p-2 w-full border rounded-md"
+                  type="text"
+                  className="w-full p-2 border rounded"
                 />
                 <ErrorMessage
                   name="email"
@@ -169,23 +450,23 @@ const Login: React.FC = () => {
                 />
               </div>
 
-              {/* Password */}
+              {/* PASSWORD */}
               <div className="mb-6 relative">
-                <label className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
+                <label className="block text-sm">Password</label>
                 <Field
-                  type={showPassword ? "text" : "password"}
                   name="password"
-                  className="mt-1 p-2 w-full border rounded-md"
+                  type={showPassword ? "text" : "password"}
+                  className="w-full p-2 border rounded"
                 />
+
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 mt-6"
+                  className="absolute right-3 top-9"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <IoIosEyeOff /> : <IoMdEye />}
                 </button>
+
                 <ErrorMessage
                   name="password"
                   component="p"
@@ -196,9 +477,13 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
+                className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
               >
-                {isSubmitting ? "Logging in..." : "Login"}
+                {isSubmitting
+                  ? "Logging in..."
+                  : isStaffLogin
+                  ? "Login as Staff"
+                  : "Login as Admin"}
               </button>
             </Form>
           )}

@@ -20,7 +20,12 @@ interface BranchLayoutProps {
 const BranchLayout = ({ children }: BranchLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [cookies, , removeCookie] = useCookies(["accessToken"]);
+  const [cookies, , removeCookie] = useCookies([
+    "accessToken",
+    "tempToken",
+    "twoFactorEnabled",
+    "requiresTwoFactor",
+  ]);
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
     {
@@ -36,11 +41,21 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // const handleLogout = () => {
+  //   removeCookie("accessToken");
+
+  //   navigate("/");
+  // };
+
   const handleLogout = () => {
-    removeCookie("accessToken");
+    removeCookie("accessToken", { path: "/" });
+    removeCookie("tempToken", { path: "/" });
+    removeCookie("twoFactorEnabled", { path: "/" });
+    removeCookie("requiresTwoFactor", { path: "/" });
 
     navigate("/");
   };
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
