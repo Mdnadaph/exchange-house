@@ -2,18 +2,19 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { 
-  Building2, 
-  Home, 
-  Users, 
-  CreditCard, 
-  FileText, 
+import {
+  Building2,
+  Home,
+  Users,
+  CreditCard,
+  FileText,
   LogOut,
   User,
   Shield,
   UserCircle,
-  Handshake
+  Handshake,
 } from "lucide-react";
+import { useCookies } from "react-cookie";
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -21,10 +22,14 @@ interface UserLayoutProps {
 
 const UserLayout = ({ children }: UserLayoutProps) => {
   const location = useLocation();
-  
+  const [cookie] = useCookies(["adminId", "fullName"]);
+  const id = cookie.adminId;
+
+  console.log("id", id);
+
   const navigation = [
     { name: "Dashboard", href: "/portal", icon: Home },
-    { name: "Profile", href: `/portal/profile`, icon: UserCircle },
+    { name: "Profile", href: `/portal/profile/${id}`, icon: UserCircle },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
@@ -48,13 +53,17 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               </Link>
               <div className="flex items-center space-x-2 text-sm">
                 <User className="h-4 w-4 text-primary" />
-                <span className="font-medium text-primary">Business Portal</span>
+                <span className="font-medium text-primary">
+                  Business Portal
+                </span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <ThemeToggle />
-              <span className="text-sm text-muted-foreground">Sarah Smith (User)</span>
+              <span className="text-sm text-muted-foreground">
+                Sarah Smith (User)
+              </span>
               <Button variant="ghost" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -90,9 +99,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-8">{children}</div>
         </main>
       </div>
     </div>

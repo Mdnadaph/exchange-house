@@ -32,7 +32,6 @@ import { useToast } from "@/hooks/use-toast";
 import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import { log } from "console";
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -159,45 +158,45 @@ const UserProfile = () => {
     });
   };
 
-  //useEffect(() => {
-  //  const businessProfile = async () => {
-  //    try {
-  //      const response = await axios.get(
-  //        `http://192.168.18.10:8082/api/v3/business/${id}`
-  //      );
+  useEffect(() => {
+    const businessProfile = async () => {
+      try {
+        const response = await axios.get(
+          `http://192.168.18.174:8082/api/v3/business/${id}`
+        );
 
-  //      const data = response?.data?.data;
-  //      console.log("business profile", response.data.data);
+        const data = response?.data?.data;
+        console.log("business profile", response.data.data);
 
-  //      setBusinessProfile({
-  //        id: data?.id || 0,
-  //        companyName: data?.companyName || "",
-  //        legalForm: data?.legalForm || "",
-  //        businessType: data?.businessType || "",
-  //        tradeLicense: data?.tradeLicense || "",
-  //        taxNumber: data?.taxNumber || "",
-  //        country: data?.country || "",
-  //        branchId: data?.branchId || 0,
-  //        branchName: data?.branchName || "",
-  //        email: data?.email || "",
-  //        phone: data?.phone || "",
-  //        status: data?.status || "PENDING",
-  //        monthlyLimit: data?.monthlyLimit || 0,
-  //        dealValidityDays: data?.dealValidityDays || 0,
-  //        supportedCurrencies: data?.supportedCurrencies || [],
-  //        kybStatus: data?.kybStatus || "pending_kyb",
-  //        kybSubmitted: data?.kybSubmitted || false,
-  //        registeredDate: data?.registeredDate || "",
-  //        contactEmail: data?.contactEmail || "",
-  //        contactPhone: data?.contactPhone || "",
-  //        createdBy: data?.createdBy || "",
-  //      });
-  //    } catch (error) {
-  //      console.error("Failed to fetch business profile", error);
-  //    }
-  //  };
-  //  businessProfile();
-  //}, []);
+        setBusinessProfile({
+          id: data?.id || 0,
+          companyName: data?.companyName || "",
+          legalForm: data?.legalForm || "",
+          businessType: data?.businessType || "",
+          tradeLicense: data?.tradeLicense || "",
+          taxNumber: data?.taxNumber || "",
+          country: data?.country || "",
+          branchId: data?.branchId || 0,
+          branchName: data?.branchName || "",
+          email: data?.email || "",
+          phone: data?.phone || "",
+          status: data?.status || "PENDING",
+          monthlyLimit: data?.monthlyLimit || 0,
+          dealValidityDays: data?.dealValidityDays || 0,
+          supportedCurrencies: data?.supportedCurrencies || [],
+          kybStatus: data?.kybStatus || "pending_kyb",
+          kybSubmitted: data?.kybSubmitted || false,
+          registeredDate: data?.registeredDate || "",
+          contactEmail: data?.contactEmail || "",
+          contactPhone: data?.contactPhone || "",
+          createdBy: data?.createdBy || "",
+        });
+      } catch (error) {
+        console.error("Failed to fetch business profile", error);
+      }
+    };
+    businessProfile();
+  }, []);
 
   const handleUploadDocument = () => {
     if (!selectedFile || !documentType) {
