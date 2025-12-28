@@ -275,112 +275,69 @@ const Login: React.FC = () => {
     "fullName",
     "twoFactorEnabled",
     "requiresTwoFactor",
+    "tempToken",
   ]);
 
+
   /* ============================
-     SUBMIT HANDLER
-  ============================ */
+   SUBMIT HANDLER
+============================ */
   const onSubmit = async (values: LoginFormData, { setSubmitting }: any) => {
     try {
       const loginType = loginTypeRef.current;
-
-      console.log("LOGIN TYPE:", loginType);
-      console.log("EMAIL:", values.email);
-      console.log("PASSWORD:", values.password);
 
       const apiUrl =
         loginType === "STAFF"
           ? `${BASE_URL}/api/v3/staff-auth/login`
           : `${BASE_URL}/api/v3/auth/admin-login`;
 
-      const payload = {
-        email: values.email,
-        password: values.password,
-      };
-
-      console.log("API URL:", apiUrl);
-      console.log("API PAYLOAD:", payload);
-
-      const response = await axios.post(apiUrl, payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("API RESPONSE:", response.data);
+      const response = await axios.post(apiUrl, values);
 
       if (!response.data?.status) {
-        toast.error(response.data.message || "Invalid credentials");
+        toast.error(response.data.message);
         return;
       }
 
-      const {
-        token,
-        email,
-        role,
-        fullName,
-        tokenExpiryTime,
-        twoFactorEnabled,
-        requiresTwoFactor,
-      } = response.data.data;
+      /* ================= STAFF ================= */
+      if (loginType === "STAFF") {
+        const { tempToken, requiresTwoFactor, twoFactorEnabled, email } =
+          response.data.data;
 
-      /* ============================
-         SAVE COOKIES
-      ============================ */
+        if (!tempToken) {
+          toast.error("Invalid login response");
+          return;
+        }
+
+        setCookie("tempToken", tempToken, { path: "/" });
+        setCookie("email", email, { path: "/" });
+        setCookie("requiresTwoFactor", requiresTwoFactor, { path: "/" });
+        setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
+
+        navigate("/staff/2fa");
+        return;
+      }
+
+      /* ================= ADMIN ================= */
+      const { token, email, role, fullName, tokenExpiryTime } =
+        response.data.data;
+
       setCookie("token", token, {
         path: "/",
-        secure: true,
-        sameSite: "strict",
         maxAge: tokenExpiryTime || 1800,
       });
 
       setCookie("email", email, { path: "/" });
       setCookie("role", role, { path: "/" });
       setCookie("fullName", fullName, { path: "/" });
-      setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
 
-      toast.success(response.data.message || "Login successful");
-
-      /* ============================
-         STAFF 2FA FLOW
-      ============================ */
-      // if (loginType === "STAFF" && !requiresTwoFactor) {
-      //   navigate("/generateqr");
-      //   return;
-      // }
-
-      // if (loginType === "STAFF") {
-      //   if (requiresTwoFactor || twoFactorEnabled) {
-      //     navigate("/generateqr");
-      //   } else {
-      //     navigate("/branch");
-      //   }
-      //   return;
-      // }
-
-      if(loginType === "STAFF"){
-        navigate("generateqr");
-      }
-
-      /* ============================
-         REDIRECT
-      ============================ */
-      role === "ROLE_ADMIN" ? navigate("/exchange") : navigate("/generateqr");
-    } catch (error: any) {
-      console.error("LOGIN ERROR STATUS:", error?.response?.status);
-      console.error("LOGIN ERROR RESPONSE:", error?.response?.data);
-
-      toast.error(
-        error?.response?.data?.message || "Login failed. Please try again."
-      );
+      navigate("/exchange");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Login failed");
     } finally {
       setSubmitting(false);
     }
   };
 
-  /* ============================
-     UI
-  ============================ */
   return (
     <div className="flex h-screen bg-gray-100">
       {/* LEFT IMAGE */}

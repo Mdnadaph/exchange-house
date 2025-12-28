@@ -42,7 +42,9 @@ import Login from "./components/Login";
 import BranchDetails from "./pages/exchange/Branch/BranchDetails";
 import ExchangeLayout from "./components/layout/ExchangeLayout";
 import PasswordSetup from "../src/pages/exchange/Staff/PasswordSetup";
-import InitiateTwoFA from "./pages/exchange/Staff/InitiateTwoFA";
+import StaffTwoFA from "./pages/exchange/Staff/StaffTwoFA";
+
+import Otp from "./pages/exchange/Staff/Otp";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +61,7 @@ const App = () => (
               
               <Route path="/" element={<Login />} />
               <Route path="/set-password" element={<PasswordSetup />} />
-              <Route path="/generateqr" element={<InitiateTwoFA />} />
+              <Route path="/generateqr" element={<StaffTwoFA />} />
 
               {/* Business Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
