@@ -24,7 +24,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   
   const navigation = [
     { name: "Dashboard", href: "/portal", icon: Home },
-    { name: "Profile", href: "/portal/profile", icon: UserCircle },
+    { name: "Profile", href: `/portal/profile`, icon: UserCircle },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/portal/deals", icon: Handshake },

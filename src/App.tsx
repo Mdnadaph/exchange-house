@@ -44,7 +44,6 @@ import ExchangeLayout from "./components/layout/ExchangeLayout";
 import PasswordSetup from "../src/pages/exchange/Staff/PasswordSetup";
 import StaffTwoFA from "./pages/exchange/Staff/StaffTwoFA";
 
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -73,7 +72,9 @@ const App = () => (
 
               {/* Business User Routes */}
               <Route path="/portal" element={<UserDashboard />} />
+              <Route path="/portal/profile" element={<UserProfile />} />
               <Route path="/portal/profile/:id" element={<UserProfile />} />
+
               <Route
                 path="/portal/beneficiaries"
                 element={<UserBeneficiaries />}

@@ -34,13 +34,14 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 
 const UserProfile = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id?: string }>();
+
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadConfirmation, setShowUploadConfirmation] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-// const BASE_URL=process.env.VITE_BASE_URL;
+const [businessId,setBusinessId]=useState<string | null>(null)
   const [businessProfile, setBusinessProfile] = useState({
     id: 0,
     companyName: "",
@@ -167,13 +168,13 @@ const UserProfile = () => {
         console.log("business profile", response.data.data);
 
         // Format date from array [2025, 12, 24, 13, 33, 34]
-        const formatDate = (dateArray: number[]) => {
-          if (!dateArray || dateArray.length < 3) return "";
-          // Note: month is 0-indexed in JavaScript Date
-          return new Date(dateArray[0], dateArray[1] - 1, dateArray[2])
-            .toISOString()
-            .split("T")[0];
-        };
+        //const formatDate = (dateArray: number[]) => {
+        //  if (!dateArray || dateArray.length < 3) return "";
+        //  // Note: month is 0-indexed in JavaScript Date
+        //  return new Date(dateArray[0], dateArray[1] - 1, dateArray[2])
+        //    .toISOString()
+        //    .split("T")[0];
+        //};
         setBusinessProfile({
           id: data?.id || 0,
           companyName: data?.companyName || "",
