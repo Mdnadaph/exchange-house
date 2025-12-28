@@ -136,6 +136,8 @@ const Login: React.FC = () => {
       // ============================
       console.log("➡️ Final role-based redirect:", role);
 
+      navigate("/exchange");
+
       if (role === "ROLE_ADMIN") {
         navigate("/exchange");
       } else {
