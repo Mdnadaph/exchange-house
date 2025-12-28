@@ -22,10 +22,11 @@ interface UserLayoutProps {
 
 const UserLayout = ({ children }: UserLayoutProps) => {
   const location = useLocation();
-  const [cookie] = useCookies(["adminId", "fullName"]);
-  const id = cookie.adminId;
+  // In UserLayout.tsx, add more debugging:
+  const [cookie] = useCookies(["businessId", "fullName"]);
+  const id = cookie.businessId;
 
-  console.log("id", id);
+  console.log("businessId from cookie:", id);
 
   const navigation = [
     { name: "Dashboard", href: "/portal", icon: Home },

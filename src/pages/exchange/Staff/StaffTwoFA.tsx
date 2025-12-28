@@ -51,7 +51,7 @@
 
 //     initiateSetup();
 //   }, []);
-  
+
 //   const handleVerify = async () => {
 //     if (!otp) {
 //       toast.error("Please enter the OTP");
@@ -176,8 +176,6 @@
 
 // export default InitiateTwoFA;
 
-
-
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
 // import { toast } from "react-toastify";
@@ -201,7 +199,7 @@
 
 //   const email = cookies.email;
 //   const tempToken = cookies.tempToken;
-//   const requiresTwoFactor = cookies.requiresTwoFactor; 
+//   const requiresTwoFactor = cookies.requiresTwoFactor;
 //   // false → first time setup
 //   // true  → OTP login
 
@@ -430,7 +428,6 @@
 // };
 
 // export default InitiateTwoFA;
-
 
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
@@ -687,8 +684,6 @@
 // };
 
 // export default InitiateTwoFA;
-
-
 
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
@@ -950,7 +945,6 @@
 
 // export default InitiateTwoFA;
 
-
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
 // import { toast } from "react-toastify";
@@ -1153,11 +1147,6 @@
 
 // export default InitiateTwoFA;
 
-
-
-
-
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -1174,6 +1163,7 @@ const InitiateTwoFA = () => {
     "requiresTwoFactor",
     "twoFactorEnabled",
     "accessToken",
+    "businessId",
   ]);
 
   const email = cookies.email;
@@ -1235,7 +1225,7 @@ const InitiateTwoFA = () => {
       ? "/api/v3/staff-auth/verify-2fa-setup"
       : "/api/v3/staff-auth/verify-2fa-login";
 
-      // /api/v3/staff-auth/verify-2fa-setup
+    // /api/v3/staff-auth/verify-2fa-setup
 
     try {
       const response = await axios.post(`${BASE_URL}${verifyApi}`, {
@@ -1248,7 +1238,19 @@ const InitiateTwoFA = () => {
       if (response.data.status) {
         const { accessToken } = response.data.data;
 
-        setCookie("accessToken", accessToken, { path: "/", maxAge: 60 * 60 * 24, secure: true, sameSite: "strict" });
+        const businessId = response?.data?.data?.businessAdmin?.businessId;
+
+        setCookie("businessId", businessId, {
+          path: "/",
+          maxAge: 86400,
+        });
+
+        setCookie("accessToken", accessToken, {
+          path: "/",
+          maxAge: 60 * 60 * 24,
+          secure: true,
+          sameSite: "strict",
+        });
         setCookie("twoFactorEnabled", true, { path: "/" });
         setCookie("requiresTwoFactor", true, { path: "/" });
 
@@ -1263,32 +1265,54 @@ const InitiateTwoFA = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full p-6 bg-white border rounded shadow">
-        <h2 className="text-2xl font-bold text-center mb-4">Two-Factor Authentication</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">
+          Two-Factor Authentication
+        </h2>
 
         {/* Show QR + OTP if requiresTwoFactor === true */}
         {requiresTwoFactor && qrCodeUrl && (
           <>
-            <p className="text-center mb-4">Scan this QR code using Google Authenticator</p>
+            <p className="text-center mb-4">
+              Scan this QR code using Google Authenticator
+            </p>
             <div className="flex justify-center mb-4">
               <img src={qrCodeUrl} alt="2FA QR" className="w-48 h-48" />
             </div>
-            <p className="text-center mb-4">Manual Key: <strong>{manualEntryKey}</strong></p>
+            <p className="text-center mb-4">
+              Manual Key: <strong>{manualEntryKey}</strong>
+            </p>
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Backup Codes</h3>
-              <ul className="list-disc pl-5 text-sm">{backupCodes.map((code, i) => <li key={i}>{code}</li>)}</ul>
+              <ul className="list-disc pl-5 text-sm">
+                {backupCodes.map((code, i) => (
+                  <li key={i}>{code}</li>
+                ))}
+              </ul>
             </div>
           </>
         )}
 
         {/* Show only OTP if requiresTwoFactor === false */}
         <div className="mb-6">
-          <label className="block mb-3 font-semibold text-center">Enter 6-digit OTP</label>
+          <label className="block mb-3 font-semibold text-center">
+            Enter 6-digit OTP
+          </label>
           <input
             type="text"
             maxLength={6}
@@ -1299,7 +1323,10 @@ const InitiateTwoFA = () => {
           />
         </div>
 
-        <button onClick={handleVerify} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
+        <button
+          onClick={handleVerify}
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+        >
           Verify & Continue
         </button>
       </div>
@@ -1308,4 +1335,3 @@ const InitiateTwoFA = () => {
 };
 
 export default InitiateTwoFA;
-
