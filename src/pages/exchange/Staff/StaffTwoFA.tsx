@@ -5,7 +5,7 @@ import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import BASE_URL from "@/config/config";
 
-const InitiateTwoFA = () => {
+const StaffTwoFA = () => {
   const navigate = useNavigate();
 
   const [cookies, setCookie] = useCookies([
@@ -210,4 +210,4 @@ const InitiateTwoFA = () => {
   );
 };
 
-export default InitiateTwoFA;
+export default StaffTwoFA;
