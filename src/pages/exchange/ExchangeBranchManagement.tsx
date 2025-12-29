@@ -97,7 +97,7 @@ const ExchangeBranchManagement = () => {
         uuid: b.uuid,
         name: b.name,
         location: b.location,
-        address: b.address,
+        address: b.location,
         emirate: b.emirate,
         email: b.email,
         phone: b.contactNumber,
@@ -105,9 +105,9 @@ const ExchangeBranchManagement = () => {
         status: b.active ? "active" : "inactive",
 
         // simple default values (UI will not break)
-        manager: "Not Assigned",
+        manager: b.managerName,
         managerId: "N/A",
-        staffCount: 0,
+        staffCount: b.staffCount,
         activeKYB: 0,
         completedKYB: 0,
         totalTransactions: 0,
