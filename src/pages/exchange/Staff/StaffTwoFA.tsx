@@ -111,10 +111,11 @@ const StaffTwoFA = () => {
         const { accessToken } = response.data.data;
 
         setCookie("accessToken", accessToken, {
-          path: "/",
-          maxAge: 60 * 60 * 24,
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // maxAge: 60 * 60 * 24,
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", sameSite: "lax"
         });
 
         setCookie("twoFactorEnabled", true, { path: "/" });

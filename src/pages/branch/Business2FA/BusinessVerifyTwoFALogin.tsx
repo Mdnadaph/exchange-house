@@ -75,10 +75,11 @@ const BusinessTwoFALogin: React.FC = () => {
       const { accessToken, tokenExpiryTime } = response.data.data;
 
       setCookie("accessToken", accessToken, {
-        path: "/",
-        secure: true,
-        sameSite: "strict",
-        maxAge: tokenExpiryTime || 86400,
+        // path: "/",
+        // secure: true,
+        // sameSite: "strict",
+        // maxAge: tokenExpiryTime || 86400,
+        path: "/", sameSite: "lax"
       });
 
       toast.success("Login successful");
