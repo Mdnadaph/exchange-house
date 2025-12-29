@@ -27,6 +27,7 @@ interface ExchangeLayoutProps {
 const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [cookies, , removeCookie] = useCookies([
     "tempToken",
     "token",
@@ -34,16 +35,20 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     "email",
     "role",
     "fullName",
+
+    "businessEmail",
+    "tempToken",
+    "accessToken",
+    "businessTwoFactorEnabled",
   ]);
   const fullName = cookies.fullName;
 
   const handleLogout = () => {
-    removeCookie("token");
-    removeCookie("role");
-    removeCookie("fullName");
-    removeCookie("email");
-    removeCookie("twoFactorEnabled");
+    removeCookie("businessEmail");
     removeCookie("tempToken");
+    removeCookie("fullName");
+    removeCookie("accessToken");
+    removeCookie("businessTwoFactorEnabled");
 
     navigate("/");
   };

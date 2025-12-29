@@ -46,7 +46,7 @@ const BusinessTwoFALogin: React.FC = () => {
 
     if (!cookies.tempToken) {
       toast.error("Session expired. Please login again.");
-      navigate("/branch");
+      navigate("/portal");
       return;
     }
 
@@ -82,7 +82,7 @@ const BusinessTwoFALogin: React.FC = () => {
       });
 
       toast.success("Login successful");
-      navigate("/branch", { replace: true });
+      navigate("/portal", { replace: true });
     } catch (error: any) {
       console.error("❌ VERIFY ERROR:", error);
       toast.error(
