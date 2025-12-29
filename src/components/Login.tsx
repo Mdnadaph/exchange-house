@@ -270,8 +270,6 @@
 
 // export default Login;
 
-
-
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -358,9 +356,12 @@ const Login: React.FC = () => {
       // SAVE COOKIES
       // ============================
       setCookie("token", token, {
+        // path: "/",
+        // secure: true,
+        // sameSite: "strict",
+        // maxAge: tokenExpiryTime || 1800,
         path: "/",
-        secure: true,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: tokenExpiryTime || 1800,
       });
       setCookie("email", email, { path: "/" });
@@ -391,16 +392,23 @@ const Login: React.FC = () => {
       }
 
       if (loginType === "BUSINESS") {
-        console.log(`🔐 BUSINESS LOGIN → requiresTwoFactor:`, requiresTwoFactor);
+        console.log(
+          `🔐 BUSINESS LOGIN → requiresTwoFactor:`,
+          requiresTwoFactor
+        );
 
         if (requiresTwoFactor === false) {
-          console.log("➡️ First-time 2FA setup → Redirecting to /business/2fa/qr");
+          console.log(
+            "➡️ First-time 2FA setup → Redirecting to /business/2fa/qr"
+          );
           navigate("/business/2fa/qr");
           return;
         }
 
         if (requiresTwoFactor === true) {
-          console.log("➡️ Existing 2FA user → Redirecting to business OTP verification");
+          console.log(
+            "➡️ Existing 2FA user → Redirecting to business OTP verification"
+          );
           navigate("/business/2fa/login");
           return;
         }
@@ -419,7 +427,9 @@ const Login: React.FC = () => {
     } catch (error: any) {
       console.group("❌ LOGIN ERROR");
       console.error(error);
-      toast.error(error?.response?.data?.message || "Login failed. Please try again.");
+      toast.error(
+        error?.response?.data?.message || "Login failed. Please try again."
+      );
       console.groupEnd();
     } finally {
       console.groupEnd();
@@ -445,7 +455,9 @@ const Login: React.FC = () => {
           <button
             type="button"
             className={`px-4 py-2 rounded ${
-              loginType === "ADMIN" ? "bg-blue-500 text-white" : "bg-gray-300 text-black"
+              loginType === "ADMIN"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
             }`}
             onClick={() => setLoginType("ADMIN")}
           >
@@ -454,7 +466,9 @@ const Login: React.FC = () => {
           <button
             type="button"
             className={`px-4 py-2 rounded ${
-              loginType === "STAFF" ? "bg-blue-500 text-white" : "bg-gray-300 text-black"
+              loginType === "STAFF"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
             }`}
             onClick={() => setLoginType("STAFF")}
           >
@@ -463,7 +477,9 @@ const Login: React.FC = () => {
           <button
             type="button"
             className={`px-4 py-2 rounded ${
-              loginType === "BUSINESS" ? "bg-blue-500 text-white" : "bg-gray-300 text-black"
+              loginType === "BUSINESS"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
             }`}
             onClick={() => setLoginType("BUSINESS")}
           >

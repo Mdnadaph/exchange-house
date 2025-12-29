@@ -43,8 +43,15 @@ import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 
 const ExchangeStaffManagement = () => {
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "email"]);
+
   const token = cookies.token;
+  const email = cookies.email;
+
+  console.log("Admin Email :-", email);
+  console.log("Token :-", token);
+  console.log("Hello Tetsing");
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const uuid = useParams();
@@ -79,48 +86,6 @@ const ExchangeStaffManagement = () => {
       value: "ROLE_KYB_OFFICER",
     },
   ];
-
-  // const createStaff = async () => {
-  //   try {
-  //     await axios.post(
-  //       `${BASE_URL}/api/v3/admin/staff/create`,
-  //       {
-  //         fullName: staffForm.fullName,
-  //         email: staffForm.email,
-  //         contactNumber: staffForm.contactNumber,
-  //         branchId: Number(staffForm.branchId),
-  //         roleId: Number(staffForm.roleId),
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     console.log("Staff Create API Response:", response.data);
-
-  //     toast({
-  //       title: "Success",
-  //       description: "Staff member created successfully",
-  //     });
-
-  //     setIsCreateModalOpen(false);
-  //     setStaffForm({
-  //       fullName: "",
-  //       email: "",
-  //       contactNumber: "",
-  //       branchId: "",
-  //       roleId: "",
-  //     });
-  //   } catch (error: any) {
-  //     toast({
-  //       title: "Error",
-  //       description: error?.response?.data?.message || "Failed to create staff",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
 
   const createStaff = async () => {
     try {
@@ -168,17 +133,47 @@ const ExchangeStaffManagement = () => {
     }
   };
 
+  // const fetchBranches = async () => {
+  //   try {
+  //     setBranchLoading(true);
+  //     const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
+  //       headers: {
+  //         Authorization: `Bearer ${cookies.token}`,
+  //       },
+  //       withCredentials: true,
+  //     });
+
+  //     setBranchList(res.data?.data || []);
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to load branches",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setBranchLoading(false);
+  //   }
+  // };
+
   const fetchBranches = async () => {
+    if (!cookies.token) {
+      console.error("Token not found. Skipping branch fetch.");
+      return;
+    }
+
     try {
       setBranchLoading(true);
+
       const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${cookies.token}`,
         },
       });
 
       setBranchList(res.data?.data || []);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Fetch branches error:", error?.response?.data || error);
+
       toast({
         title: "Error",
         description: "Failed to load branches",
@@ -189,11 +184,17 @@ const ExchangeStaffManagement = () => {
     }
   };
 
+  // useEffect(() => {
+  //   if (isCreateModalOpen) {
+  //     fetchBranches();
+  //   }
+  // }, [isCreateModalOpen]);
+
   useEffect(() => {
-    if (isCreateModalOpen) {
+    if (isCreateModalOpen && cookies.token) {
       fetchBranches();
     }
-  }, [isCreateModalOpen]);
+  }, [isCreateModalOpen, cookies.token]);
 
   const branches = [
     {

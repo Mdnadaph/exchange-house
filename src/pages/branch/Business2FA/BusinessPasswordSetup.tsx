@@ -578,49 +578,56 @@ const BusinessPasswordSetup: React.FC = () => {
 
       if (tempToken) {
         setCookie("tempToken", tempToken, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", sameSite: "lax"
         });
       }
 
       if (requiresTwoFactor !== undefined) {
         setCookie("businessRequiresTwoFactor", requiresTwoFactor, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", sameSite: "lax"
         });
       }
 
       if (businessAdmin?.id !== undefined) {
         setCookie("businessId", businessAdmin.id, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", sameSite: "lax"
         });
       }
 
       if (businessAdmin?.email) {
         setCookie("businessEmail", businessAdmin.email, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", sameSite: "lax"
         });
       }
 
       if (businessAdmin?.firstName) {
         setCookie("businessFirstName", businessAdmin.firstName, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+
+          path: "/", sameSite: "lax"
         });
       }
 
       if (businessAdmin?.lastName) {
         setCookie("businessLastName", businessAdmin.lastName, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", sameSite: "lax"
         });
       }
 

@@ -97,33 +97,42 @@ const PasswordSetup: React.FC = () => {
       /* ===== STORE COOKIES LIKE LOGIN ===== */
       if (tempToken) {
         setCookie("tempToken", tempToken, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", 
+          sameSite: "lax"
         });
       }
 
       if (email) {
         setCookie("email", email, {
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+
           path: "/",
-          secure: true,
-          sameSite: "strict",
+          sameSite: "lax"
         });
       }
 
       if (twoFactorEnabled !== undefined) {
         setCookie("twoFactorEnabled", twoFactorEnabled, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", 
+          sameSite: "lax"
         });
       }
 
       if (requiresTwoFactor !== undefined) {
         setCookie("requiresTwoFactor", requiresTwoFactor, {
-          path: "/",
-          secure: true,
-          sameSite: "strict",
+          // path: "/",
+          // secure: true,
+          // sameSite: "strict",
+          path: "/", 
+          sameSite: "lax"
         });
       }
 
