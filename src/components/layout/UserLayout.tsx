@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -27,6 +27,33 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const id = cookie.businessId;
 
   console.log("businessId from cookie:", id);
+
+const navigate = useNavigate();
+
+
+
+  const [cookies, , removeCookie] = useCookies([
+    "accessToken",
+    "tempToken",
+    "twoFactorEnabled",
+    "requiresTwoFactor",
+    "email",
+    "token",
+    "role",
+    "fullName"
+
+  ]);
+
+   const handleLogout = () => {
+    removeCookie("token");
+    removeCookie("role");
+    removeCookie("fullName");
+    removeCookie("email");
+    removeCookie("twoFactorEnabled");
+    removeCookie("tempToken");
+
+    navigate("/");
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/portal", icon: Home },
@@ -65,8 +92,8 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <span className="text-sm text-muted-foreground">
                 Sarah Smith (User)
               </span>
-              <Button variant="ghost" size="sm">
-                <LogOut className="h-4 w-4 mr-2" />
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2"/>
                 Sign Out
               </Button>
             </div>
