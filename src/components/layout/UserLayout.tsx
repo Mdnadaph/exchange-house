@@ -23,7 +23,7 @@ interface UserLayoutProps {
 const UserLayout = ({ children }: UserLayoutProps) => {
   const location = useLocation();
   // In UserLayout.tsx, add more debugging:
-  const [cookie] = useCookies(["businessId", "fullName"]);
+  const [cookie] = useCookies(["businessId"]);
   const id = cookie.businessId;
 
   console.log("businessId from cookie:", id);
