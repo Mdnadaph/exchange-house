@@ -46,7 +46,7 @@ import StaffTwoFA from "./pages/exchange/Staff/StaffTwoFA";
 import StaffVerifyTwoFALogin from "./pages/exchange/Staff/StaffVerifyTwoFALogin";
 import BusinessPasswordSetup from "./pages/branch/Business2FA/BusinessPasswordSetup";
 import BusinessTwoFA from "./pages/branch/Business2FA/BusinessTwoFA";
-import BusinessTwoFALogin from "./pages/branch/Business2FA/BusinessTwoFALogin";
+import BusinessVerifyTwoFALogin from "./pages/branch/Business2FA/BusinessVerifyTwoFALogin";
 
 const queryClient = new QueryClient();
 
@@ -71,7 +71,7 @@ const App = () => (
               {/* business 2FA */}
               <Route path="/business-auth/set-password" element={<BusinessPasswordSetup />} />
               <Route path="/business/2fa/qr" element={<BusinessTwoFA />} />
-              <Route path="/business/2fa/login" element={<BusinessTwoFALogin />} />
+              <Route path="/business/2fa/login" element={<BusinessVerifyTwoFALogin />} />
 
               {/* Business Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />

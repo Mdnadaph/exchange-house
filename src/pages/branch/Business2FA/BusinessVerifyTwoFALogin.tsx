@@ -1,17 +1,3 @@
-// import React from 'react'
-
-// function BusinessTwoFALogin() {
-//   return (
-//     <div>
-      
-//     </div>
-//   )
-// }
-
-// export default BusinessTwoFALogin
-
-
-
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
