@@ -198,7 +198,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
       console.log("Submitting KYB Rule:", values);
 
       const response = await axios.post(
-        `${BASE_URL}/api/v3/kyb/rules/create`,
+        `http://192.168.18.174:8082/api/v3/kyb/rules/create`,
         values,
         {
           headers: {
@@ -246,15 +246,24 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
         // Fetch all three APIs in parallel
         const [businessTypesRes, documentTypesRes, riskTypesRes] =
           await Promise.all([
-            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/business-types`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/documents`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/risks`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
+            axios.get(
+              `http://192.168.18.174:8082/api/v3/admin/kyb/master/business-types`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            axios.get(
+              `http://192.168.18.174:8082/api/v3/admin/kyb/master/documents`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            axios.get(
+              `http://192.168.18.174:8082/api/v3/admin/kyb/master/risks`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
           ]);
 
         // Set business types
