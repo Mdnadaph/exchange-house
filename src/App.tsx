@@ -47,6 +47,7 @@ import StaffVerifyTwoFALogin from "./pages/exchange/Staff/StaffVerifyTwoFALogin"
 import BusinessPasswordSetup from "./pages/branch/Business2FA/BusinessPasswordSetup";
 import BusinessTwoFA from "./pages/branch/Business2FA/BusinessTwoFA";
 import BusinessVerifyTwoFALogin from "./pages/branch/Business2FA/BusinessVerifyTwoFALogin";
+import CreateKybRule from "./components/kyb/CreateKybRule";
 
 const queryClient = new QueryClient();
 
@@ -66,12 +67,21 @@ const App = () => (
               {/* Staff 2FA  */}
               <Route path="/set-password" element={<StaffSetupPassword />} />
               <Route path="/generateqr" element={<StaffTwoFA />} />
-              <Route path="/verify-2fa-login" element={<StaffVerifyTwoFALogin />} />
+              <Route
+                path="/verify-2fa-login"
+                element={<StaffVerifyTwoFALogin />}
+              />
 
               {/* business 2FA */}
-              <Route path="/business-auth/set-password" element={<BusinessPasswordSetup />} />
+              <Route
+                path="/business-auth/set-password"
+                element={<BusinessPasswordSetup />}
+              />
               <Route path="/business/2fa/qr" element={<BusinessTwoFA />} />
-              <Route path="/business/2fa/login" element={<BusinessVerifyTwoFALogin />} />
+              <Route
+                path="/business/2fa/login"
+                element={<BusinessVerifyTwoFALogin />}
+              />
 
               {/* Business Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
@@ -117,6 +127,10 @@ const App = () => (
               <Route
                 path="/exchange/kyb-config"
                 element={<ExchangeKYBConfig />}
+              />
+              <Route
+                path="/exchange/create-kyb-rule"
+                element={<CreateKybRule />}
               />
               <Route
                 path="/exchange/transactions"
