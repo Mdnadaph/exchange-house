@@ -115,7 +115,8 @@ const StaffTwoFA = () => {
           // maxAge: 60 * 60 * 24,
           // secure: true,
           // sameSite: "strict",
-          path: "/", sameSite: "lax"
+          path: "/",
+          sameSite: "lax",
         });
 
         setCookie("twoFactorEnabled", true, { path: "/" });
@@ -134,7 +135,7 @@ const StaffTwoFA = () => {
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        Please Wait Sometine Generating The QR Code...
       </div>
     );
 
@@ -166,15 +167,19 @@ const StaffTwoFA = () => {
             <p className="text-center mb-4">
               Manual Key: <strong>{manualEntryKey}</strong>
             </p>
+            <p className="text-center text-red-500 mb-2 font-semibold">
+                Notice: Using Google Authenticator App To get OTP by Scanning QR
+                Code or Type Mannual key.
+            </p>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <h3 className="font-semibold mb-2">Backup Codes</h3>
               <ul className="list-disc pl-5 text-sm">
                 {backupCodes.map((code, i) => (
                   <li key={i}>{code}</li>
                 ))}
               </ul>
-            </div>
+            </div> */}
           </>
         )}
 
