@@ -34,9 +34,7 @@ interface ApiResponse {
 /* ================= VALIDATION ================= */
 
 const PasswordSchema = Yup.object({
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+  password: Yup.string().required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
     .required("Confirm Password is required"),
@@ -100,8 +98,8 @@ const PasswordSetup: React.FC = () => {
           // path: "/",
           // secure: true,
           // sameSite: "strict",
-          path: "/", 
-          sameSite: "lax"
+          path: "/",
+          sameSite: "lax",
         });
       }
 
@@ -112,7 +110,7 @@ const PasswordSetup: React.FC = () => {
           // sameSite: "strict",
 
           path: "/",
-          sameSite: "lax"
+          sameSite: "lax",
         });
       }
 
@@ -121,8 +119,8 @@ const PasswordSetup: React.FC = () => {
           // path: "/",
           // secure: true,
           // sameSite: "strict",
-          path: "/", 
-          sameSite: "lax"
+          path: "/",
+          sameSite: "lax",
         });
       }
 
@@ -131,20 +129,10 @@ const PasswordSetup: React.FC = () => {
           // path: "/",
           // secure: true,
           // sameSite: "strict",
-          path: "/", 
-          sameSite: "lax"
+          path: "/",
+          sameSite: "lax",
         });
       }
-
-      /* ===== CONSOLE LOGS ===== */
-      console.log("Saved Temp Token:", tempToken);
-      console.log("Saved Email:", email);
-      console.log("Saved Two Factor Enabled:", twoFactorEnabled);
-      console.log("Saved Requires Two Factor:", requiresTwoFactor);
-
-      // if(requiresTwoFactor === true){
-      //    navigate("/generateqr");
-      // }
 
       if (requiresTwoFactor) {
         navigate("/generateqr");
@@ -154,7 +142,6 @@ const PasswordSetup: React.FC = () => {
 
       // navigate("/generateqr");
     } catch (error: any) {
-      console.error("Set Password Error:", error);
       setStatus(error.response?.data?.message || "Server Error");
     } finally {
       setSubmitting(false);
