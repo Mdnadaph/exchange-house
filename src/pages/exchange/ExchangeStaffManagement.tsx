@@ -802,13 +802,13 @@ import { useNavigate, useParams } from "react-router-dom";
 const ExchangeStaffManagement = () => {
   const [cookies] = useCookies(["token", "email"]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(4);
   const token = cookies.token;
   const email = cookies.email;
-
-  console.log("Admin Email :-", email);
-  console.log("Token :-", token);
-  console.log("Hello Tetsing");
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -845,7 +845,7 @@ const ExchangeStaffManagement = () => {
     },
   ];
 
-  const fetchBranchWithStaff = async () => {
+  const fetchBranchWithStaff = async (page = 0) => {
     if (!token) {
       return;
     }
@@ -856,8 +856,16 @@ const ExchangeStaffManagement = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        params: {
+          page: page,
+          size: pageSize,
+        },
       });
       setBranches(res?.data?.data?.content || []);
+      // Set pagination info from API response
+      setTotalPages(res?.data?.data?.totalPages || 0);
+      setTotalElements(res?.data?.data?.totalElements || 0);
+      setCurrentPage(res?.data?.data?.page || 0);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -870,9 +878,9 @@ const ExchangeStaffManagement = () => {
   };
   useEffect(() => {
     if (token) {
-      fetchBranchWithStaff();
+      fetchBranchWithStaff(currentPage);
     }
-  }, [token]);
+  }, [token, currentPage]);
   const createStaff = async () => {
     try {
       const response = await axios.post(
@@ -908,6 +916,8 @@ const ExchangeStaffManagement = () => {
         branchId: "",
         roleId: "",
       });
+      setCurrentPage(0);
+      fetchBranchWithStaff(0);
     } catch (error: any) {
       console.error("Create Staff Error:", error?.response?.data || error);
 
@@ -918,28 +928,6 @@ const ExchangeStaffManagement = () => {
       });
     }
   };
-
-  // const fetchBranches = async () => {
-  //   try {
-  //     setBranchLoading(true);
-  //     const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
-  //       headers: {
-  //         Authorization: `Bearer ${cookies.token}`,
-  //       },
-  //       withCredentials: true,
-  //     });
-
-  //     setBranchList(res.data?.data || []);
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to load branches",
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setBranchLoading(false);
-  //   }
-  // };
 
   const fetchBranches = async () => {
     if (!cookies.token) {
@@ -1473,6 +1461,57 @@ const ExchangeStaffManagement = () => {
           </div>
         )}
       </div>
+      {/* Pagination */}
+      {!loading && branches.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-end mt-6">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+              disabled={currentPage === 0}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i;
+              } else if (currentPage < 3) {
+                pageNum = i;
+              } else if (currentPage > totalPages - 4) {
+                pageNum = totalPages - 5 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum + 1}
+                </Button>
+              );
+            })}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
+              }
+              disabled={currentPage === totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </ExchangeLayout>
   );
 };
