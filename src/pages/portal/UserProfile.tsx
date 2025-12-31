@@ -161,9 +161,7 @@ const UserProfile = () => {
   useEffect(() => {
     const businessProfile = async () => {
       try {
-        const response = await axios.get(
-          `http://192.168.18.174:8082/api/v3/business/${id}`
-        );
+        const response = await axios.get(`${BASE_URL}/api/v3/business/${id}`);
 
         const data = response?.data?.data;
         console.log("business profile", response.data.data);

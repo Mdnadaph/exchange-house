@@ -23,14 +23,12 @@ interface UserLayoutProps {
 const UserLayout = ({ children }: UserLayoutProps) => {
   const location = useLocation();
   // In UserLayout.tsx, add more debugging:
-  const [cookie] = useCookies(["businessId"]);
-  const id = cookie.businessId;
+  const [cookie] = useCookies(["adminId"]);
+  const id = cookie.adminId;
 
   console.log("businessId from cookie:", id);
 
-const navigate = useNavigate();
-
-
+  const navigate = useNavigate();
 
   const [cookies, , removeCookie] = useCookies([
     "accessToken",
@@ -40,11 +38,10 @@ const navigate = useNavigate();
     "email",
     "token",
     "role",
-    "fullName"
-
+    "fullName",
   ]);
 
-   const handleLogout = () => {
+  const handleLogout = () => {
     removeCookie("token");
     removeCookie("role");
     removeCookie("fullName");
@@ -93,7 +90,7 @@ const navigate = useNavigate();
                 Sarah Smith (User)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2"/>
+                <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
             </div>

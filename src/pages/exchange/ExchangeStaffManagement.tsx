@@ -958,11 +958,6 @@ const ExchangeStaffManagement = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (isCreateModalOpen) {
-  //     fetchBranches();
-  //   }
-  // }, [isCreateModalOpen]);
 
   useEffect(() => {
     if (isCreateModalOpen && cookies.token) {
@@ -1158,16 +1153,6 @@ const ExchangeStaffManagement = () => {
                 />
               </div>
 
-              {/* <div>
-                <Label>Select Branch</Label>
-                <Input
-                  value={staffForm.branchId}
-                  onChange={(e) =>
-                    setStaffForm({ ...staffForm, branchId: e.target.value })
-                  }
-                  placeholder="3"
-                />
-              </div> */}
 
               <div>
                 <Label>Select Branch</Label>

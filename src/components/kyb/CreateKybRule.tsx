@@ -971,7 +971,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
       setErrorMessage("");
 
       const response = await axios.post(
-        `http://192.168.18.174:8082/api/v3/kyb/rules/create`,
+        `${BASE_URL}/api/v3/kyb/rules/create`,
         values,
         {
           headers: {
@@ -984,18 +984,18 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
       if (response.data.status) {
         setSuccessMessage("KYB Rule created successfully!");
 
-        if (isModal) {
-          setTimeout(() => {
+        // Add a small delay to show success message
+        setTimeout(() => {
+          if (isModal) {
             if (onSuccess) onSuccess();
             if (onClose) onClose();
-          }, 1500);
-        } else {
-          setTimeout(() => {
+          } else {
             navigate("/exchange/kyb-config");
-          }, 2000);
-        }
+          }
+        }, 1000);
       } else {
         setErrorMessage(response.data.message || "Failed to create rule");
+        setIsSubmitting(false); // Reset submitting state on error
       }
     } catch (error: any) {
       setErrorMessage(
@@ -1016,18 +1016,12 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
         // Fetch all three APIs in parallel
         const [businessTypesRes, documentTypesRes, riskTypesRes] =
           await Promise.all([
-            axios.get(
-              `http://192.168.18.174:8082/api/v3/admin/kyb/master/business-types`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            ),
-            axios.get(
-              `http://192.168.18.174:8082/api/v3/admin/kyb/master/documents`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            ),
+            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/business-types`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/documents`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
             axios.get(
               `http://192.168.18.174:8082/api/v3/admin/kyb/master/risks`,
               {
