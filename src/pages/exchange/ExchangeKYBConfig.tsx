@@ -25,10 +25,14 @@ import {
   Edit,
   Trash2,
   Save,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import CreateKybRule from "@/components/kyb/CreateKybRule";
 
 const ExchangeKYBConfig = () => {
+  const [showPopup, setShowPopup] = useState(false);
   const kybRules = [
     {
       id: 1,
@@ -199,10 +203,7 @@ const ExchangeKYBConfig = () => {
               <FileCheck className="h-4 w-4 mr-2" />
               Import Template
             </Button>
-            <Button
-              variant="business"
-              onClick={() => navigate("/exchange/create-kyb-rule")}
-            >
+            <Button variant="business" onClick={() => setShowPopup(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create New Rule
             </Button>
@@ -488,6 +489,38 @@ const ExchangeKYBConfig = () => {
           </Button>
         </div>
       </div>
+      {/* Create KYB Rule Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-1">
+              {/* Header with close button */}
+              <div className="flex items-end text-end justify-end">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPopup(false)}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Wrap CreateKYB to handle close */}
+              <div className="relative">
+                <CreateKybRule />
+
+                {/* Add a close button at the bottom if CreateKYB doesn't have one */}
+                <div className="sticky bottom-0 bg-background border-t p-4 flex justify-end">
+                  <Button variant="outline" onClick={() => setShowPopup(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </ExchangeLayout>
   );
 };
