@@ -38,8 +38,6 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-/* ================= TYPES & ENUMS ================= */
-
 interface DocumentType {
   documentCode: string;
   required: boolean;
@@ -88,8 +86,6 @@ interface CreateKybRuleProps {
   onClose?: () => void;
   onSuccess?: () => void;
 }
-
-/* ================= VALIDATION SCHEMAS ================= */
 
 const Step1Schema = Yup.object().shape({
   businessType: Yup.string().required("Business type is required"),
@@ -148,8 +144,6 @@ const Step2Schema = Yup.object().shape({
       }
     ),
 });
-
-/* ================= INITIAL VALUES ================= */
 
 const initialValues: KYBRuleFormValues = {
   businessType: "",
@@ -976,8 +970,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
       setSuccessMessage("");
       setErrorMessage("");
 
-      console.log("Submitting KYB Rule:", values);
-
       const response = await axios.post(
         `http://192.168.18.174:8082/api/v3/kyb/rules/create`,
         values,
@@ -988,8 +980,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           },
         }
       );
-
-      console.log("API Response:", response.data);
 
       if (response.data.status) {
         setSuccessMessage("KYB Rule created successfully!");
@@ -1008,7 +998,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
         setErrorMessage(response.data.message || "Failed to create rule");
       }
     } catch (error: any) {
-      console.error("Error creating KYB rule:", error);
       setErrorMessage(
         error.response?.data?.message ||
           error.response?.data?.error ||
@@ -1053,7 +1042,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           Array.isArray(businessTypesRes.data.data)
         ) {
           setBusinessTypes(businessTypesRes.data.data);
-          console.log("Business Types:", businessTypesRes.data.data);
         }
 
         // Set document types
@@ -1062,18 +1050,15 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           Array.isArray(documentTypesRes.data.data)
         ) {
           setDocumentTypes(documentTypesRes.data.data);
-          console.log("Document Types:", documentTypesRes.data.data);
         }
 
         // Set risk types
         if (riskTypesRes.data?.data && Array.isArray(riskTypesRes.data.data)) {
           setRiskTypes(riskTypesRes.data.data);
-          console.log("Risk Types:", riskTypesRes.data.data);
         }
 
         setSuccessMessage("All data loaded successfully");
       } catch (error: any) {
-        console.error("Error fetching master data:", error);
         setErrorMessage(
           error.response?.data?.message ||
             "Failed to fetch master data. Please try again."
