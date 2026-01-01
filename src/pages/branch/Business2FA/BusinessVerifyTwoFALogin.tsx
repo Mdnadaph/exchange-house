@@ -129,7 +129,6 @@
 
 // export default BusinessTwoFALogin;
 
-
 import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -157,6 +156,7 @@ interface VerifyResponseData {
 
 const BusinessTwoFALogin: React.FC = () => {
   const navigate = useNavigate();
+  console.log("Component rendered");
 
   // Cookies
   const [cookies, setCookie] = useCookies([
@@ -197,19 +197,25 @@ const BusinessTwoFALogin: React.FC = () => {
 
   // Verify OTP
   const handleVerify = async () => {
+    console.log("=== handleVerify STARTED ===");
     const otpCode = otp.join("");
 
     if (otpCode.length !== 6) {
+      console.log("OTP length invalid:", otpCode.length);
       toast.error("Please enter 6-digit OTP");
       return;
     }
 
     if (!cookies.tempToken) {
+      console.log("No tempToken found");
       toast.error("Session expired. Please login again.");
-      navigate("/portal");
+      //navigate("/portal");
       return;
     }
-
+    console.log("Making API call with:", {
+      tempToken: cookies.tempToken?.substring(0, 20) + "...",
+      twoFactorCode: otpCode,
+    });
     try {
       const response = await axios.post<{
         status: boolean;
@@ -219,27 +225,46 @@ const BusinessTwoFALogin: React.FC = () => {
         tempToken: cookies.tempToken,
         twoFactorCode: otpCode,
       });
-
+      console.log("API Response received:", response.data);
       if (!response.data.status) {
+        console.log("API returned false status:", response.data.message);
         toast.error(response.data.message || "OTP verification failed");
         return;
       }
 
       const { accessToken, expiresIn, businessAdmin } = response.data.data;
-
+      console.log("=== API SUCCESS ===");
       // -----------------------------
       // STORE COOKIES
       // -----------------------------
-      setCookie("accessToken", accessToken, { path: "/", sameSite: "lax", maxAge: expiresIn });
-      setCookie("businessId", businessAdmin.businessId, { path: "/", sameSite: "lax" }); 
+      setCookie("accessToken", accessToken, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: expiresIn,
+      });
+      setCookie("businessId", businessAdmin.businessId, {
+        path: "/",
+        sameSite: "lax",
+      });
       setCookie("id", businessAdmin.id, { path: "/", sameSite: "lax" });
       setCookie("uuid", businessAdmin.uuid, { path: "/", sameSite: "lax" });
-      setCookie("firstName", businessAdmin.firstName, { path: "/", sameSite: "lax" });
-      setCookie("lastName", businessAdmin.lastName, { path: "/", sameSite: "lax" });
+      setCookie("firstName", businessAdmin.firstName, {
+        path: "/",
+        sameSite: "lax",
+      });
+      setCookie("lastName", businessAdmin.lastName, {
+        path: "/",
+        sameSite: "lax",
+      });
       setCookie("email", businessAdmin.email, { path: "/", sameSite: "lax" });
-      setCookie("phoneNumber", businessAdmin.phoneNumber, { path: "/", sameSite: "lax" });
-      setCookie("designation", businessAdmin.designation, { path: "/", sameSite: "lax" });
-      
+      setCookie("phoneNumber", businessAdmin.phoneNumber, {
+        path: "/",
+        sameSite: "lax",
+      });
+      setCookie("designation", businessAdmin.designation, {
+        path: "/",
+        sameSite: "lax",
+      });
 
       // Clear tempToken
       setCookie("tempToken", "", { path: "/", maxAge: 0 });
@@ -257,16 +282,17 @@ const BusinessTwoFALogin: React.FC = () => {
       console.log("phoneNumber:", businessAdmin.phoneNumber);
       console.log("designation:", businessAdmin.designation);
       console.log("businessId:", businessAdmin.businessId);
-
-      toast.success("Login successful");
-      navigate("/portal", { replace: true });
+      setTimeout(() => {
+        console.log("⏳ About to navigate to /portal");
+        toast.success("Login successful");
+        navigate("/portal", { replace: true });
+      }, 500); // Increased
     } catch (error: any) {
       console.error("❌ VERIFY ERROR:", error);
       toast.error(error.response?.data?.message || "OTP verification failed");
     }
   };
 
- 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded shadow w-full max-w-md">
