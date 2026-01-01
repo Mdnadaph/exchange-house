@@ -31,6 +31,7 @@ const Login: React.FC = () => {
 
   const [, setCookie] = useCookies([
     "token",
+    "tempToken",
     "email",
     "role",
     "fullName",
@@ -49,29 +50,30 @@ const Login: React.FC = () => {
       apiUrl = `${BASE_URL}/api/v3/auth/admin-login`;
     }
 
-    console.group("🔐 LOGIN DEBUG START");
-    console.log("👤 Login Type:", loginType);
-    console.log("📧 Email:", values.email);
-    console.log("🔑 Password:", values.password);
-    console.log("🌐 API URL:", apiUrl);
-    console.log("📤 REQUEST PAYLOAD:", values);
+    //console.group("🔐 LOGIN DEBUG START");
+    //console.log("👤 Login Type:", loginType);
+    //console.log("📧 Email:", values.email);
+    //console.log("🔑 Password:", values.password);
+    //console.log("🌐 API URL:", apiUrl);
+    //console.log("📤 REQUEST PAYLOAD:", values);
 
     try {
       const response = await axios.post(apiUrl, values, {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("📥 FULL API RESPONSE:", response);
+      //console.log("📥 FULL API RESPONSE:", response);
       const { data } = response;
 
       if (!data?.status) {
-        console.warn("❌ LOGIN FAILED:", data.message);
+        //console.warn("❌ LOGIN FAILED:", data.message);
         toast.error(data.message || "Invalid credentials");
         return;
       }
 
       const {
         token,
+        tempToken,
         email,
         role,
         fullName,
@@ -98,6 +100,7 @@ const Login: React.FC = () => {
       setCookie("fullName", fullName, { path: "/" });
       setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
       setCookie("adminId", adminId, { path: "/" });
+      setCookie("tempToken", tempToken, { path: "/" });
 
       toast.success(data.message || "Login successful");
 
@@ -105,39 +108,39 @@ const Login: React.FC = () => {
       // STAFF / BUSINESS 2FA FLOW
       // ============================
       if (loginType === "STAFF") {
-        console.log(`🔐 STAFF LOGIN → requiresTwoFactor:`, requiresTwoFactor);
+        //console.log(`🔐 STAFF LOGIN → requiresTwoFactor:`, requiresTwoFactor);
 
         if (requiresTwoFactor === false) {
-          console.log("➡️ First-time 2FA setup → Redirecting to /generateqr");
+          //console.log("➡️ First-time 2FA setup → Redirecting to /generateqr");
           navigate("/generateqr");
           return;
         }
 
         if (requiresTwoFactor === true) {
-          console.log("➡️ Existing 2FA user → Redirecting to OTP verification");
+          //console.log("➡️ Existing 2FA user → Redirecting to OTP verification");
           navigate("/verify-2fa-login");
           return;
         }
       }
 
       if (loginType === "BUSINESS") {
-        console.log(
-          `🔐 BUSINESS LOGIN → requiresTwoFactor:`,
-          requiresTwoFactor
-        );
+        //console.log(
+        //  `🔐 BUSINESS LOGIN → requiresTwoFactor:`,
+        //  requiresTwoFactor
+        //);
 
         if (requiresTwoFactor === false) {
-          console.log(
-            "➡️ First-time 2FA setup → Redirecting to /business/2fa/qr"
-          );
+          //console.log(
+          //  "➡️ First-time 2FA setup → Redirecting to /business/2fa/qr"
+          //);
           navigate("/business/2fa/qr");
           return;
         }
 
         if (requiresTwoFactor === true) {
-          console.log(
-            "➡️ Existing 2FA user → Redirecting to business OTP verification"
-          );
+          //console.log(
+          //  "➡️ Existing 2FA user → Redirecting to business OTP verification"
+          //);
           navigate("/business/2fa/login");
           return;
         }
@@ -154,8 +157,8 @@ const Login: React.FC = () => {
         navigate("/branch");
       }
     } catch (error: any) {
-      console.group("❌ LOGIN ERROR");
-      console.error(error);
+      //console.group("❌ LOGIN ERROR");
+      //console.error(error);
       toast.error(
         error?.response?.data?.message || "Login failed. Please try again."
       );

@@ -793,7 +793,6 @@ import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useCookies } from "react-cookie";
-import { log } from "console";
 
 interface BusinessProfile {
   id: number;
@@ -876,15 +875,19 @@ const UserProfile = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [documentType, setDocumentType] = useState("");
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
-  const [cookie] = useCookies(["adminId"]);
+  const [cookie] = useCookies(["businessId"]);
   console.log(id);
 
+  console.log(cookie.businessId);
+  const businessId = cookie.businessId;
   // Fetch business profile
   useEffect(() => {
     const fetchBusinessProfile = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/v3/business/${id}`);
+        const response = await axios.get(
+          `${BASE_URL}/api/v3/business/${businessId}`
+        );
         const data = response?.data?.data;
 
         setBusinessProfile({
