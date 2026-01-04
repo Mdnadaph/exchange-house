@@ -109,6 +109,7 @@ const App = () => (
               <Route path="/portal/users" element={<AdminUserManagement />} />
               <Route path="/portal/governance" element={<UserGovernance />} />
               <Route path="/portal/documents" element={<UserDocuments />} />
+              <Route path="/portal/documents/:id" element={<UserDocuments />} />
 
               {/* Exchange House Admin Routes */}
               <Route path="/exchange" element={<ExchangeAdminDashboard />} />

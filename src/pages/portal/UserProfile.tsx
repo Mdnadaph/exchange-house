@@ -183,7 +183,6 @@ const UserProfile = () => {
     fetchBusinessProfile();
   }, [id, toast]);
 
-  // Fetch KYB context for document types
   // Fetch KYB context for document types AND uploaded documents
   useEffect(() => {
     const fetchKYBContext = async () => {

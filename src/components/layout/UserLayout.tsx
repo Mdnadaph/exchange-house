@@ -61,7 +61,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
     { name: "User Management", href: "/portal/users", icon: Users },
     { name: "Governance", href: "/portal/governance", icon: Shield },
-    { name: "Documents", href: "/portal/documents", icon: FileText },
+    { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },
   ];
 
   const isActive = (path: string) => location.pathname === path;
