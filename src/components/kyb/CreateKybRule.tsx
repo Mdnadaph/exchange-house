@@ -296,12 +296,11 @@ const Step1: React.FC<Step1Props> = ({
                 onClick={() => setFieldValue("reviewTiers", tier)}
                 className={`px-4 py-1.5 border rounded-lg font-medium transition-all ${
                   values.reviewTiers === tier
-                    ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                    ? "bg-primary text-primary-foreground text-white shadow-md"
                     : "border-slate-200 text-slate-700 hover:border-blue-300 bg-white"
                 }`}
               >
-                <div className="text-lg">{tier}</div>
-                <div className="text-xs mt-1 opacity-80">
+                <div className="text-md py-0.5 mt-1 opacity-80">
                   {tier === 1 ? "Single" : tier === 2 ? "Dual" : "Triple"}
                 </div>
               </button>
@@ -1119,21 +1118,23 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full ${
                   step >= 1
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-slate-200 text-slate-400"
                 }`}
               >
                 1
               </div>
               <div
-                className={`w-24 h-1 mx-2 ${
-                  step >= 2 ? "bg-blue-600" : "bg-slate-200"
+                className={`w-24 h-0.5 mx-2 ${
+                  step >= 2
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-slate-200"
                 }`}
               ></div>
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full ${
                   step >= 2
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-slate-200 text-slate-400"
                 }`}
               >
@@ -1229,7 +1230,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
                   <Button
                     type="submit"
                     disabled={isSubmitting || businessTypes.length === 0}
-                    className="px-8 h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-shadow"
+                    className="px-8 h-11bg-primary text-primary-foreground hover:bg-blue-800 text-white shadow-md hover:shadow-lg transition-shadow"
                   >
                     {isSubmitting ? (
                       <>
@@ -1238,7 +1239,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
                       </>
                     ) : step === 1 ? (
                       <>
-                        Next Step
+                        Next
                         <FiChevronRight className="ml-2 h-4 w-4" />
                       </>
                     ) : (
@@ -1251,7 +1252,9 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           )}
         </Formik>
       </div>
+      
     </div>
+    
   );
 };
 
