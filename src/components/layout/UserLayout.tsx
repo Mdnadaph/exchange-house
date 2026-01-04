@@ -23,13 +23,11 @@ interface UserLayoutProps {
 const UserLayout = ({ children }: UserLayoutProps) => {
   const location = useLocation();
 
-  const [cookie] = useCookies(["businessId", "fullName"]);
+  const [cookie] = useCookies(["businessId", "firstName"]);
   const id = cookie.businessId;
-  const fullName = cookie.fullName;
-  console.log(fullName);
-  
+  const firstName = cookie.firstName;
 
-  console.log("businessId from cookie:", id);
+  //console.log("businessId from cookie:", id);
 
   const navigate = useNavigate();
 
@@ -90,7 +88,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName}(User)
+                {firstName} (User)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
