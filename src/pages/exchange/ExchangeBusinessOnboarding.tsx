@@ -1,4 +1,3 @@
-
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,38 +49,42 @@ const ExchangeBusinessOnboarding = () => {
         }
       );
       const responseData = response?.data;
+
       if (!responseData?.status || !responseData?.data) {
         console.warn(
           "Invalid API response:",
           responseData?.message || "No data"
         );
         setBusinesses([]);
-        setPagination({
-          pageNumber: 0,
-          pageSize: 10,
-          totalPages: 1,
-          totalElements: 0,
-        });
         return;
       }
+
       const apiData = responseData.data;
-      console.log(apiData);
-      setBusinesses(apiData?.items || []);
+
+      // Map businesses from data.businesses.items
+      setBusinesses(apiData?.businesses?.items || []);
+
+      // Map pagination from data.businesses.pagination
       setPagination({
-        pageNumber: apiData?.pagination?.page || 0,
-        pageSize: apiData?.pagination?.size || 10,
-        totalPages: apiData?.pagination?.totalPages || 1,
-        totalElements: apiData?.pagination?.totalItems || 0,
+        pageNumber: apiData?.businesses?.pagination?.page || 0,
+        pageSize: apiData?.businesses?.pagination?.size || 10,
+        totalPages: apiData?.businesses?.pagination?.totalPages || 1,
+        totalElements: apiData?.businesses?.pagination?.totalItems || 0,
       });
+
+      // Update stats from the dashboard object in the response
+      if (apiData?.dashboard) {
+        setStats((prev) => ({
+          ...prev,
+          totalBusinesses: apiData.dashboard.totalBusinesses || 0,
+          pendingKYB: apiData.dashboard.pendingKYB || 0,
+          verified: apiData.dashboard.verified || 0,
+          thisMonth: apiData.dashboard.thisMonth || 0,
+        }));
+      }
     } catch (error) {
       console.error("Error fetching businesses:", error);
       setBusinesses([]);
-      setPagination({
-        pageNumber: 0,
-        pageSize: 10,
-        totalPages: 1,
-        totalElements: 0,
-      });
     }
   };
 
@@ -96,44 +99,22 @@ const ExchangeBusinessOnboarding = () => {
         }
       );
       const responseData = response?.data;
-      if (!responseData?.status || !responseData?.data) {
-        console.warn(
-          "Invalid API response for stats:",
-          responseData?.message || "No data"
-        );
-        setStats({
-          totalBusinesses: 0,
-          pendingKYB: 0,
-          verified: 0,
-          thisMonth: 0,
-          lastMonth: 0,
-        });
-        return;
+      if (responseData?.status && responseData?.data) {
+        const apiData = responseData.data;
+        setStats((prev) => ({
+          ...prev,
+          ...apiData,
+        }));
       }
-      const apiData = responseData.data;
-      setStats({
-        totalBusinesses: apiData?.totalBusinesses || 0,
-        pendingKYB: apiData?.pendingKYB || 0,
-        verified: apiData?.verified || 0,
-        thisMonth: apiData?.thisMonth || 0,
-        lastMonth: apiData?.lastMonth || 0,
-      });
     } catch (error) {
-      console.error("Error fetching stats:", error);
-      setStats({
-        totalBusinesses: 0,
-        pendingKYB: 0,
-        verified: 0,
-        thisMonth: 0,
-        lastMonth: 0,
-      });
+      console.error("Error fetching extra stats:", error);
     }
   };
 
   useEffect(() => {
     fetchBusinesses(pagination.pageNumber, pagination.pageSize);
     fetchStats();
-  }, []);
+  }, [pagination.pageNumber, pagination.pageSize]);
 
   const getKYBStatusBadge = (status) => {
     switch (status) {
@@ -167,11 +148,11 @@ const ExchangeBusinessOnboarding = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < pagination.totalPages) {
-      fetchBusinesses(newPage, pagination.pageSize);
+      setPagination((prev) => ({ ...prev, pageNumber: newPage }));
     }
   };
 
-  const thisMonthChange = stats.thisMonth - stats.lastMonth;
+  const thisMonthChange = stats.thisMonth - (stats.lastMonth || 0);
   const thisMonthChangeText = `${
     thisMonthChange >= 0 ? "+" : ""
   }${thisMonthChange} from last month`;
@@ -268,110 +249,124 @@ const ExchangeBusinessOnboarding = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {businesses.map((business) => (
-                <Card
-                  key={business.id}
-                  className="hover:shadow-md transition-smooth"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="p-3 bg-primary/10 rounded-lg">
-                          <Building2 className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-foreground">
-                              {business.companyName}
-                            </h3>
-                            {getStatusBadge(business.status)}
-                            {getKYBStatusBadge(business.status)}
+              {businesses.length > 0 ? (
+                businesses.map((business) => (
+                  <Card
+                    key={business.id}
+                    className="hover:shadow-md transition-smooth"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="p-3 bg-primary/10 rounded-lg">
+                            <Building2 className="h-6 w-6 text-primary" />
                           </div>
-                          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                            <div>
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Business ID:
-                                </span>
-                                <span className="ml-2 font-medium">
-                                  {business.id}
-                                </span>
-                              </div>
-
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Onboarded:
-                                </span>
-                                <span className="ml-2 font-medium">
-                                  {business.createdDate}
-                                </span>
-                              </div>
-
-                              <div className="col-span-2">
-                                <span className="text-muted-foreground">
-                                  Contact:
-                                </span>
-                                <span className="ml-2 font-medium">
-                                  {business.businessEmail} (
-                                  {business.businessPhone})
-                                </span>
-                              </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-foreground">
+                                {business.companyName}
+                              </h3>
+                              {getStatusBadge(business.status)}
+                              {getKYBStatusBadge(business.status)}
                             </div>
-                            <div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                               <div>
-                                <span className="text-muted-foreground">
-                                  Country of Trade:
-                                </span>
-                                <span className="ml-2 font-medium">
-                                  {business.country}
-                                </span>
-                              </div>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Business ID:
+                                  </span>
+                                  <span className="ml-2 font-medium">
+                                    {business.id}
+                                  </span>
+                                </div>
 
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Supported Currencies:
-                                </span>
-                                <span className="ml-2 font-medium">
-                                  {business.supportedCurrencies.join(", ")}
-                                </span>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Onboarded:
+                                  </span>
+                                  <span className="ml-2 font-medium">
+                                    {business.createdDate}
+                                  </span>
+                                </div>
+
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">
+                                    Contact:
+                                  </span>
+                                  <span className="ml-2 font-medium">
+                                    {business.businessEmail} (
+                                    {business.businessPhone})
+                                  </span>
+                                </div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">
-                                  Trade License:
-                                </span>
-                                <span className="ml-2 font-medium">
-                                  {business.tradeLicense}
-                                </span>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Country of Trade:
+                                  </span>
+                                  <span className="ml-2 font-medium">
+                                    {business.country}
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Supported Currencies:
+                                  </span>
+                                  <span className="ml-2 font-medium">
+                                    {business.supportedCurrencies?.join(", ")}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Trade License:
+                                  </span>
+                                  <span className="ml-2 font-medium">
+                                    {business.tradeLicense}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No businesses found.
+                </div>
+              )}
             </div>
+
             {pagination.totalPages > 1 && (
               <Pagination className="mt-6">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
-                      onClick={() =>
-                        handlePageChange(pagination.pageNumber - 1)
-                      }
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber - 1);
+                      }}
                       className={
                         pagination.pageNumber === 0
                           ? "pointer-events-none opacity-50"
-                          : ""
+                          : "cursor-pointer"
                       }
                     />
                   </PaginationItem>
                   {[...Array(pagination.totalPages)].map((_, index) => (
                     <PaginationItem key={index}>
                       <PaginationLink
-                        onClick={() => handlePageChange(index)}
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(index);
+                        }}
                         isActive={pagination.pageNumber === index}
+                        className="cursor-pointer"
                       >
                         {index + 1}
                       </PaginationLink>
@@ -379,13 +374,15 @@ const ExchangeBusinessOnboarding = () => {
                   ))}
                   <PaginationItem>
                     <PaginationNext
-                      onClick={() =>
-                        handlePageChange(pagination.pageNumber + 1)
-                      }
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber + 1);
+                      }}
                       className={
                         pagination.pageNumber === pagination.totalPages - 1
                           ? "pointer-events-none opacity-50"
-                          : ""
+                          : "cursor-pointer"
                       }
                     />
                   </PaginationItem>
