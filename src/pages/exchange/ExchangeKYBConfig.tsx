@@ -818,8 +818,14 @@ const ExchangeKYBConfig = () => {
       {/* Create KYB Rule Popup */}
       {/* Create KYB Rule Popup */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowPopup(false)}
+        >
+          <div
+            className="bg-background rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-1">
               {/* Header with close button */}
               <div className="flex items-end text-end justify-end">
