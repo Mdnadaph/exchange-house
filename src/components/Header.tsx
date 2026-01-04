@@ -39,11 +39,14 @@ const Header = () => {
           <div className={`hidden md:flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
             <LanguageSwitcher />
             <ThemeToggle />
-            <Button variant="ghost" asChild>
+            {/* <Button variant="ghost" asChild>
               <a href="/portal">User Portal</a>
             </Button>
             <Button variant="outline" asChild>
               <a href="/admin">Admin Portal</a>
+            </Button> */}
+            <Button variant="outline" asChild>
+              <a href="/login">Login</a>
             </Button>
             <Button variant="business" size="lg">
               {t('getStarted')}
