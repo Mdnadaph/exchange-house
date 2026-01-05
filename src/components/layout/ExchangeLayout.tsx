@@ -44,11 +44,16 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const fullName = cookies.fullName;
 
   const handleLogout = () => {
-    removeCookie("businessEmail");
-    removeCookie("tempToken");
+    // removeCookie("businessEmail");
+    // removeCookie("tempToken");
+    // removeCookie("fullName");
+    // removeCookie("accessToken");
+    // removeCookie("businessTwoFactorEnabled");
+
+    removeCookie("email");
+    removeCookie("token");
     removeCookie("fullName");
-    removeCookie("accessToken");
-    removeCookie("businessTwoFactorEnabled");
+    removeCookie("role");
 
     navigate("/");
   };

@@ -1,26 +1,3 @@
-// import { Navigate, useLocation, Outlet } from "react-router-dom";
-// import { useCookies } from "react-cookie";
-
-// const ProtectedRoute = () => {
-//   const [cookies] = useCookies(["token"]);
-//   const location = useLocation();
-
-//   // Logic: Check if the 'token' cookie exists
-//   const isAuthenticated = !!cookies.token;
-
-//   if (!isAuthenticated) {
-//     // Redirect to login, but save the current location 
-//     // so we can redirect back after successful login
-//     return <Navigate to="/login" state={{ from: location }} replace />;
-//   }
-
-//   // If authenticated, render the child routes (the dashboard/page)
-//   return <Outlet />;
-// };
-
-// export default ProtectedRoute;
-
-
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { useCookies } from "react-cookie";
 
