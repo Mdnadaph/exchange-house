@@ -330,7 +330,7 @@ import * as Yup from "yup";
 import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import { toast } from "react-toastify";
 import { IoMdEye, IoIosEyeOff } from "react-icons/io";
-import { useCookies } from "react-cookie";
+import { Cookies, useCookies } from "react-cookie";
 import axios from "axios";
 
 import sideImage from "../assets/images/BizPay.jpeg";
@@ -363,6 +363,9 @@ const Login: React.FC = () => {
     "twoFactorEnabled",
     "adminId",
   ]);
+
+
+
 
   // Capture where the user was trying to go (defaulting to null)
   const from = location.state?.from?.pathname;
@@ -416,6 +419,13 @@ const Login: React.FC = () => {
       setCookie("twoFactorEnabled", twoFactorEnabled, { path: "/" });
       setCookie("adminId", adminId, { path: "/" });
       setCookie("tempToken", tempToken, { path: "/" });
+
+
+      console.log(token);
+      console.log(email);
+      console.log(fullName);
+      console.log(adminId);
+      console.log(role);
 
       toast.success(data.message || "Login successful");
 

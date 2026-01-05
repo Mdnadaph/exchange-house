@@ -14,10 +14,10 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+          <a href="/" className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
             <Building2 className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold text-foreground">BizPay Axis</span>
-          </div>
+          </a>
 
           {/* Desktop Navigation */}
           <nav className={`hidden md:flex items-center ${isRTL ? 'space-x-reverse space-x-8' : 'space-x-8'}`}>
@@ -46,7 +46,7 @@ const Header = () => {
               <a href="/admin">Admin Portal</a>
             </Button> */}
             <Button variant="outline" asChild>
-              <a href="/login">Login</a>
+              <a href="/login">Sign In</a>
             </Button>
             <Button variant="business" size="lg">
               {t('getStarted')}
