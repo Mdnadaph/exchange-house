@@ -60,7 +60,7 @@ interface Document {
   type: string;
   uploadDate: string;
   uploadedBy: string;
-  size: string;
+  fileSize: string;
   status: "verified" | "pending_review" | "rejected";
   // Optional fields from KYB context
   documentId?: number;
@@ -122,8 +122,8 @@ const UserProfile = () => {
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [documentNumber, setDocumentNumber] = useState("");
 
-  const [cookie] = useCookies(["accessToken"]);
-  const token = cookie.accessToken;
+  const [cookie] = useCookies(["token"]);
+  const token = cookie.token;
 
   // Fetch business profile
   useEffect(() => {
@@ -227,8 +227,8 @@ const UserProfile = () => {
               (doc: KYBContextDocument, index: number) => {
                 const docData = doc.document!;
 
-                // Format uploaded date from array [year, month, day, hour, minute, second, nanosecond]
-                let uploadDate = new Date().toISOString().split("T")[0]; // Default to today
+                // Format uploaded date
+                let uploadDate = new Date().toISOString().split("T")[0];
                 if (
                   docData.uploadedAt &&
                   Array.isArray(docData.uploadedAt) &&
@@ -240,20 +240,34 @@ const UserProfile = () => {
                     .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
                 }
 
+                // Format file size from bytes to human readable format
+                let fileSizeStr = "N/A";
+                if (docData.fileSize) {
+                  const bytes = Number(docData.fileSize);
+                  if (!isNaN(bytes)) {
+                    if (bytes < 1024) {
+                      fileSizeStr = `${bytes} B`;
+                    } else if (bytes < 1024 * 1024) {
+                      fileSizeStr = `${(bytes / 1024).toFixed(1)} KB`;
+                    } else {
+                      fileSizeStr = `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+                    }
+                  }
+                }
+
                 return {
                   id: `DOC-${String(docData.id).padStart(3, "0")}`,
                   name: docData.fileName || doc.name,
                   type: doc.name,
                   uploadDate: uploadDate,
-                  uploadedBy: "Business", // You might need to get this from somewhere else
-                  size: "N/A",
+                  uploadedBy: "Business",
+                  fileSize: fileSizeStr, // Use the formatted string here
                   status:
                     doc.verified === true
                       ? "verified"
                       : doc.verified === false
                       ? "pending_review"
                       : "pending_review",
-                  // Store additional info for reference
                   documentId: docData.id,
                   fileUrl: docData.fileUrl,
                   documentNumber: docData.documentNumber,
@@ -360,7 +374,7 @@ const UserProfile = () => {
           type: documentType, // Keep the display name
           uploadDate: new Date().toISOString().split("T")[0],
           uploadedBy: businessProfile.companyName,
-          size: `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`,
+          fileSize: `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`,
           status: "pending_review",
         };
 
@@ -988,7 +1002,7 @@ const UserProfile = () => {
                                 <Calendar className="h-3 w-3" />
                                 {doc.uploadDate}
                               </span>
-                              <span>{doc.size}</span>
+                              <span>{doc.fileSize}</span>
                             </div>
                           </div>
                         </div>

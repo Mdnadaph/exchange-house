@@ -91,23 +91,46 @@ const ExchangeKYBReview = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email"]);
 
+  // Comments state for each application
+  const [comments, setComments] = useState<Record<string, string>>({});
+
   // Document viewer state
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerData, setViewerData] = useState<DocumentViewerData | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Image preview state
+  const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  // PDF preview state
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(3);
+  const [pageSize] = useState(2);
 
   const token = cookies.token;
 
   useEffect(() => {
     fetchKYBApplications(currentPage);
   }, [currentPage]);
+
+  // Clean up blob URLs when component unmounts or when viewer closes
+  useEffect(() => {
+    return () => {
+      if (imageBlobUrl) {
+        URL.revokeObjectURL(imageBlobUrl);
+      }
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [imageBlobUrl, pdfBlobUrl]);
 
   const fetchKYBApplications = async (page = 0) => {
     try {
@@ -174,6 +197,15 @@ const ExchangeKYBReview = () => {
         }));
 
         setKybApplications(mappedApplications);
+
+        // Initialize comments from existing review comments
+        const initialComments: Record<string, string> = {};
+        data.data.forEach((app) => {
+          if (app.uuid && app.kybReviewComment) {
+            initialComments[app.uuid] = app.kybReviewComment;
+          }
+        });
+        setComments((prev) => ({ ...prev, ...initialComments }));
       }
     } catch (err: any) {
       if (err.response?.status === 401) {
@@ -238,6 +270,15 @@ const ExchangeKYBReview = () => {
       REJECTED: "rejected",
     };
     return statusMap[status] || "pending_review";
+  };
+
+  // Add this helper function after the other helpers
+  const checkAllDocumentsApproved = (documents: any[]): boolean => {
+    if (!documents || documents.length === 0) return false;
+
+    return documents.every(
+      (doc) => doc.originalStatus === "APPROVED" || doc.status === "approved"
+    );
   };
 
   // Helper function to map API document status to component status
@@ -341,15 +382,95 @@ const ExchangeKYBReview = () => {
       app.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleViewDocument = (document: any, application: any) => {
+  const handleViewDocument = async (document: any, application: any) => {
     console.log("Opening document:", {
       documentId: document.documentId,
       viewUrl: document.viewUrl,
       name: document.name,
     });
+
+    // Clear previous blob URLs
+    if (imageBlobUrl) {
+      URL.revokeObjectURL(imageBlobUrl);
+      setImageBlobUrl(null);
+    }
+    if (pdfBlobUrl) {
+      URL.revokeObjectURL(pdfBlobUrl);
+      setPdfBlobUrl(null);
+    }
+
     setViewerData({ document, application });
     setRejectionReason(document.rejectionReason || "");
     setViewerOpen(true);
+
+    // If it's an image or PDF, fetch it with axios
+    if (document.viewUrl) {
+      if (isImageFile(document.documentName)) {
+        await loadImageWithAuth(document.viewUrl);
+      } else if (isPDFFile(document.documentName)) {
+        await loadPdfWithAuth(document.viewUrl);
+      }
+    }
+  };
+
+  // Function to load image with authentication
+  const loadImageWithAuth = async (imageUrl: string) => {
+    try {
+      if (!token) {
+        setError("Authentication required to view document");
+        return;
+      }
+
+      setImageLoading(true);
+
+      const response = await axios.get(imageUrl, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Create a blob URL from the response
+      const blob = new Blob([response.data]);
+      const url = URL.createObjectURL(blob);
+
+      setImageBlobUrl(url);
+      setImageLoading(false);
+    } catch (err) {
+      console.error("Error loading image:", err);
+      setImageLoading(false);
+      setError("Error loading image. Please try again.");
+    }
+  };
+
+  // Function to load PDF with authentication
+  const loadPdfWithAuth = async (pdfUrl: string) => {
+    try {
+      if (!token) {
+        setError("Authentication required to view document");
+        return;
+      }
+
+      setPdfLoading(true);
+
+      const response = await axios.get(pdfUrl, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Create a blob URL from the response
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      setPdfBlobUrl(url);
+      setPdfLoading(false);
+    } catch (err) {
+      console.error("Error loading PDF:", err);
+      setPdfLoading(false);
+      setError("Error loading PDF. Please try again.");
+    }
   };
 
   const handleDownloadDocument = async (
@@ -369,21 +490,36 @@ const ExchangeKYBReview = () => {
         },
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Create a blob from the response
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary link element
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", documentName || "document.pdf");
+
+      // Set the download filename
+      const fileName = documentName || "document";
+      const extension = fileName.split(".").pop() || "";
+      const downloadName = fileName.includes(".")
+        ? fileName
+        : `${fileName}.${extension || "pdf"}`;
+
+      link.setAttribute("download", downloadName);
       document.body.appendChild(link);
       link.click();
+
+      // Cleanup
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error downloading document:", err);
-      setError("Error downloading document");
+      setError("Error downloading document. Please try again.");
     }
   };
-  //// Handle document approval
-  const handleDocumentApprove = async () => {
+
+  // Handle document approval
+  const handleDocumentApprove = async (e: React.MouseEvent) => {
     if (!viewerData || !token) {
       setError("Missing authentication or document data");
       return;
@@ -394,7 +530,7 @@ const ExchangeKYBReview = () => {
       console.log("Approving document ID:", viewerData.document.documentId);
       console.log("Sending approval request...");
 
-      const response = await axios.put(
+      const response = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb/documents/${viewerData.document.documentId}/review`,
         {
           approved: true,
@@ -441,12 +577,7 @@ const ExchangeKYBReview = () => {
 
   // Handle document rejection
   const handleDocumentReject = async () => {
-    if (!viewerData || !token) {
-      setError("Missing authentication or document data");
-      return;
-    }
-
-    if (!rejectionReason.trim()) {
+    if (!viewerData || !token || !rejectionReason.trim()) {
       setError("Please provide a rejection reason");
       return;
     }
@@ -456,7 +587,7 @@ const ExchangeKYBReview = () => {
       console.log("Rejecting document ID:", viewerData.document.documentId);
       console.log("Rejection reason:", rejectionReason);
 
-      const response = await axios.put(
+      const response = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb/documents/${viewerData.document.documentId}/review`,
         {
           approved: false,
@@ -539,9 +670,9 @@ const ExchangeKYBReview = () => {
     return extension === "pdf";
   };
 
-  // Handle approve/reject actions for KYB application
+  // Handle approve/reject actions for KYB application (business level)
   const handleKybAction = async (
-    applicationId: string,
+    businessId: number,
     action: "approve" | "reject",
     comment: string
   ) => {
@@ -551,15 +682,44 @@ const ExchangeKYBReview = () => {
         return;
       }
 
-      // Map action to approved field
-      const approved = action === "approve";
+      // Find the application to check document statuses
+      const application = kybApplications.find(
+        (app) => app.originalData.id === businessId
+      );
 
-      const endpoint = `${BASE_URL}/api/v3/admin/kyb/businesses/${applicationId}/review`;
-      const requestBody = approved
-        ? { approved: true }
-        : { approved: false, rejectionReason: comment };
+      // If approving, check if all documents are approved
+      if (action === "approve") {
+        const hasPendingDocuments = application?.documents?.some(
+          (doc: any) =>
+            doc.originalStatus !== "APPROVED" &&
+            doc.originalStatus !== "APPROVED"
+        );
 
-      const response = await axios.put(endpoint, requestBody, {
+        // More accurate check:
+        const unapprovedDocuments = application?.documents?.filter(
+          (doc: any) =>
+            doc.originalStatus !== "APPROVED" && doc.status !== "approved"
+        );
+
+        if (unapprovedDocuments && unapprovedDocuments.length > 0) {
+          setError(
+            `Cannot approve business. ${unapprovedDocuments.length} document(s) are not approved yet.`
+          );
+          return;
+        }
+      }
+
+      // Map action to decision field for API
+      const decision = action === "approve" ? "APPROVED" : "REJECTED";
+
+      const endpoint = `${BASE_URL}/api/v3/admin/kyb/${businessId}/decision`;
+
+      const requestBody =
+        action === "approve"
+          ? { decision, comment }
+          : { decision, rejectionReason: comment };
+
+      const response = await axios.post(endpoint, requestBody, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -567,16 +727,26 @@ const ExchangeKYBReview = () => {
       });
 
       if (response.data?.status) {
-        fetchKYBApplications(currentPage);
+        // Refresh the applications list
+        await fetchKYBApplications(currentPage);
         setError(null);
+      } else {
+        setError(response.data?.message || `Failed to ${action} business`);
       }
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        `Failed to ${action} KYB application`;
-      setError(errorMessage);
-      console.error(`Error ${action}ing KYB application:`, err);
+      console.error(`Error ${action}ing business:`, err);
+
+      if (err.response) {
+        const errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          `Server error: ${err.response.status}`;
+        setError(errorMessage);
+      } else if (err.request) {
+        setError("No response from server. Please check your connection.");
+      } else {
+        setError(err.message || `Failed to ${action} business`);
+      }
     }
   };
 
@@ -628,617 +798,723 @@ const ExchangeKYBReview = () => {
 
   return (
     <ExchangeLayout>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              KYB Review & Approval
-            </h1>
-            <p className="text-muted-foreground">
-              Review and process business verification applications
-            </p>
-          </div>
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => fetchKYBApplications(currentPage)}
-              disabled={loading}
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-              />
-              {loading ? "Refreshing..." : "Refresh"}
-            </Button>
-            <Button variant="business">Assign Reviewer</Button>
-          </div>
-        </div>
-
-        {/* Error Display */}
-        {error && !viewerOpen && (
-          <Card className="bg-red-50 border-red-200">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <div className="flex-1">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setError(null)}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Search and Filters */}
-        <Card className="shadow-card">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Applications</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by business name, ID, contact person, or email..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 items-end">
-                <Button variant="outline" onClick={() => setSearchTerm("")}>
-                  Clear Filters
-                </Button>
-                <Button variant="outline">High Priority</Button>
-                <Button variant="outline">Pending Review</Button>
-              </div>
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="space-y-8"
+        noValidate
+      >
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                KYB Review & Approval
+              </h1>
+              <p className="text-muted-foreground">
+                Review and process business verification applications
+              </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* KYB Applications */}
-        <div className="space-y-6">
-          {filteredApplications.map((application) => {
-            const status = getStatusBadge(application.status);
-            const StatusIcon = status.icon;
-
-            return (
-              <Card key={application.uuid} className="shadow-card">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Building className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-foreground">
-                          {application.businessName}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {application.id} • {application.businessType}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        variant={status.variant}
-                        className="flex items-center gap-1"
-                      >
-                        <StatusIcon className="h-3 w-3" />
-                        {status.label}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {application.priority.toUpperCase()} PRIORITY
-                      </Badge>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
-                          application.riskScore
-                        )}`}
-                      >
-                        {application.riskScore.toUpperCase()} RISK
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Business Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center text-muted-foreground text-sm">
-                        <User className="h-3 w-3 mr-1" />
-                        Business Admin:
-                      </div>
-                      <p className="font-medium">{application.contactPerson}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {application.email}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center text-muted-foreground text-sm">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        Location:
-                      </div>
-                      <p className="font-medium">{application.address}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {application.phone}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center text-muted-foreground text-sm">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        Submitted:
-                      </div>
-                      <p className="font-medium">{application.submittedDate}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Assigned: {application.assignedStaff}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-muted-foreground text-sm">
-                        Completeness:
-                      </span>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${application.completeness}%` }}
-                        />
-                      </div>
-                      <p className="text-xs font-medium">
-                        {application.completeness}% Complete
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Transaction Profile */}
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-3">
-                      Transaction Profile
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">
-                          Expected Volume:
-                        </span>
-                        <p className="font-medium">
-                          {application.transactionProfile.expectedVolume ||
-                            "Not specified"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">
-                          Frequency:
-                        </span>
-                        <p className="font-medium">
-                          {application.transactionProfile.expectedFrequency ||
-                            "Not specified"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">
-                          Source of Funds:
-                        </span>
-                        <p className="font-medium">
-                          {application.transactionProfile.sourceOfFunds ||
-                            "Not specified"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">
-                          Destinations:
-                        </span>
-                        <p className="font-medium">
-                          {application.transactionProfile.destinations.length >
-                          0
-                            ? application.transactionProfile.destinations.join(
-                                ", "
-                              )
-                            : "Not specified"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Documents Review */}
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-3">
-                      Documents Review
-                    </h4>
-                    {application.documents &&
-                    application.documents.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {application.documents.map(
-                          (doc: any, index: number) => {
-                            const docStatus = getDocumentStatusBadge(
-                              doc.status
-                            );
-                            return (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between p-3 border rounded-lg"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <FileCheck className="h-4 w-4 text-muted-foreground" />
-                                  <div>
-                                    <p className="text-sm font-medium">
-                                      {doc.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {doc.documentName} • Uploaded:{" "}
-                                      {doc.uploadDate}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Badge
-                                    variant={docStatus.variant}
-                                    className="text-xs"
-                                  >
-                                    {docStatus.label}
-                                  </Badge>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleViewDocument(doc, application)
-                                    }
-                                    disabled={!doc.viewUrl}
-                                    title="View Document"
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      doc.viewUrl &&
-                                      handleDownloadDocument(
-                                        doc.viewUrl,
-                                        doc.documentName
-                                      )
-                                    }
-                                    disabled={!doc.viewUrl}
-                                    title="Download Document"
-                                  >
-                                    <Download className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          }
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 border rounded-lg">
-                        <FileCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">
-                          No documents uploaded yet
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Review Actions */}
-                  <div className="border-t pt-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <Label htmlFor={`comments-${application.uuid}`}>
-                          Review Comments
-                        </Label>
-                        <Textarea
-                          id={`comments-${application.uuid}`}
-                          placeholder="Add review comments, questions, or requirements..."
-                          rows={4}
-                          defaultValue={
-                            application.originalData?.kybReviewComment || ""
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-4">
-                        <Label>Review Actions</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button
-                            variant="default"
-                            className="w-full"
-                            onClick={() =>
-                              handleKybAction(
-                                application.uuid,
-                                "approve",
-                                "Application approved"
-                              )
-                            }
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Approve
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            className="w-full"
-                            onClick={() =>
-                              handleKybAction(
-                                application.uuid,
-                                "reject",
-                                "Application rejected"
-                              )
-                            }
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Reject
-                          </Button>
-                          <Button variant="outline" className="w-full">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Request Info
-                          </Button>
-                          <Button variant="outline" className="w-full">
-                            <User className="h-4 w-4 mr-2" />
-                            Assign Reviewer
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-
-          {filteredApplications.length === 0 && !loading && (
-            <Card className="shadow-card">
-              <CardContent className="py-12 text-center">
-                <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  No KYB Applications Found
-                </h3>
-                <p className="text-muted-foreground">
-                  {searchTerm
-                    ? "No applications match your search criteria."
-                    : "No business verification applications to review at the moment."}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Bottom Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center mt-8">
-            <div className="flex items-center space-x-2">
+            <div className="flex space-x-3">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0 || loading}
+                type="button"
+                onClick={() => fetchKYBApplications(currentPage)}
+                disabled={loading}
               >
-                Previous
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Refreshing..." : "Refresh"}
               </Button>
-
-              <div className="flex items-center space-x-1">
-                {generatePageNumbers().map((pageIndex, idx) => {
-                  if (pageIndex === -1 || pageIndex === -2) {
-                    return (
-                      <span key={`ellipsis-${idx}`} className="px-2">
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return (
-                    <Button
-                      key={pageIndex}
-                      variant={
-                        currentPage === pageIndex ? "default" : "outline"
-                      }
-                      size="sm"
-                      onClick={() => setCurrentPage(pageIndex)}
-                      disabled={loading}
-                      className="min-w-[40px]"
-                    >
-                      {pageIndex + 1}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
-                }
-                disabled={currentPage === totalPages - 1 || loading}
-              >
-                Next
+              <Button type="button" variant="business">
+                Assign Reviewer
               </Button>
             </div>
           </div>
-        )}
 
-        {/* Document Viewer Dialog */}
-        <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-          <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
-            <DialogHeader className="p-4 border-b">
-              <div className="flex items-center justify-between">
+          {/* Error Display */}
+          {error && !viewerOpen && (
+            <Card className="bg-red-50 border-red-200">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  {viewerData?.document &&
-                    getFileIcon(viewerData.document.documentName)}
-                  <div className="max-w-[80%]">
-                    <DialogTitle className="text-lg truncate">
-                      {viewerData?.document?.name || "Document Preview"}
-                    </DialogTitle>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {viewerData?.application?.businessName} •{" "}
-                      {viewerData?.document?.documentName}
-                    </p>
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <div className="flex-1">
+                    <p className="text-sm text-red-700">{error}</p>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {viewerData?.document?.viewUrl && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleDownloadDocument(
-                          viewerData.document.viewUrl,
-                          viewerData.document.documentName
-                        )
-                      }
-                      title="Download Document"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setViewerOpen(false)}
+                    onClick={() => setError(null)}
                     className="h-8 w-8 p-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            </DialogHeader>
+              </CardContent>
+            </Card>
+          )}
 
-            {viewerData && (
-              <div className="flex-1 flex flex-col">
-                {/* Document Preview - Main Content */}
-                <div className="flex-1 overflow-auto bg-gray-100">
-                  {viewerData.document.viewUrl ? (
-                    <>
-                      {isImageFile(viewerData.document.documentName) ? (
-                        <div className="h-full w-full flex items-center justify-center p-8">
-                          <img
-                            src={viewerData.document.viewUrl}
-                            alt="Document Preview"
-                            className="max-h-full max-w-full object-contain rounded-lg shadow-lg"
-                            onError={(e) => {
-                              (
-                                e.target as HTMLImageElement
-                              ).src = `https://via.placeholder.com/800x600?text=Image+Not+Available`;
-                            }}
+          {/* Search and Filters */}
+          <Card className="shadow-card">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Applications</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by business name, ID, contact person, or email..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    Clear Filters
+                  </Button>
+                  <Button type="button" variant="outline">
+                    High Priority
+                  </Button>
+                  <Button type="button" variant="outline">
+                    Pending Review
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* KYB Applications */}
+          <div className="space-y-6">
+            {filteredApplications.map((application) => {
+              const status = getStatusBadge(application.status);
+              const StatusIcon = status.icon;
+              const allDocumentsApproved = checkAllDocumentsApproved(
+                application.documents
+              );
+
+              return (
+                <Card key={application.uuid} className="shadow-card">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Building className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-foreground">
+                            {application.businessName}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {application.id} • {application.businessType}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge
+                          variant={status.variant}
+                          className="flex items-center gap-1"
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          {status.label}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {application.priority.toUpperCase()} PRIORITY
+                        </Badge>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
+                            application.riskScore
+                          )}`}
+                        >
+                          {application.riskScore.toUpperCase()} RISK
+                        </span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Business Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center text-muted-foreground text-sm">
+                          <User className="h-3 w-3 mr-1" />
+                          Business Admin:
+                        </div>
+                        <p className="font-medium">
+                          {application.contactPerson}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {application.email}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center text-muted-foreground text-sm">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Location:
+                        </div>
+                        <p className="font-medium">{application.address}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {application.phone}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center text-muted-foreground text-sm">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Submitted:
+                        </div>
+                        <p className="font-medium">
+                          {application.submittedDate}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Assigned: {application.assignedStaff}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-muted-foreground text-sm">
+                          Completeness:
+                        </span>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${application.completeness}%` }}
                           />
                         </div>
-                      ) : isPDFFile(viewerData.document.documentName) ? (
-                        <div className="h-full w-full">
-                          <iframe
-                            src={`${viewerData.document.viewUrl}#view=fitH`}
-                            className="w-full h-full border-0"
-                            title="PDF Preview"
-                            loading="lazy"
-                          />
+                        <p className="text-xs font-medium">
+                          {application.completeness}% Complete
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Transaction Profile */}
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Transaction Profile
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">
+                            Expected Volume:
+                          </span>
+                          <p className="font-medium">
+                            {application.transactionProfile.expectedVolume ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Frequency:
+                          </span>
+                          <p className="font-medium">
+                            {application.transactionProfile.expectedFrequency ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Source of Funds:
+                          </span>
+                          <p className="font-medium">
+                            {application.transactionProfile.sourceOfFunds ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Destinations:
+                          </span>
+                          <p className="font-medium">
+                            {application.transactionProfile.destinations
+                              .length > 0
+                              ? application.transactionProfile.destinations.join(
+                                  ", "
+                                )
+                              : "Not specified"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Documents Review */}
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Documents Review
+                      </h4>
+                      {application.documents &&
+                      application.documents.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {application.documents.map(
+                            (doc: any, index: number) => {
+                              const docStatus = getDocumentStatusBadge(
+                                doc.status
+                              );
+                              return (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-3 border rounded-lg"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <FileCheck className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                      <p className="text-sm font-medium">
+                                        {doc.name}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {doc.documentName} • Uploaded:{" "}
+                                        {doc.uploadDate}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Badge
+                                      variant={docStatus.variant}
+                                      className="text-xs"
+                                    >
+                                      {docStatus.label}
+                                    </Badge>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleViewDocument(doc, application)
+                                      }
+                                      disabled={!doc.viewUrl}
+                                      title="View Document"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        doc.viewUrl &&
+                                        handleDownloadDocument(
+                                          doc.viewUrl,
+                                          doc.documentName
+                                        )
+                                      }
+                                      disabled={!doc.viewUrl}
+                                      title="Download Document"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          )}
                         </div>
                       ) : (
-                        <div className="h-full w-full flex flex-col items-center justify-center p-8">
-                          <File className="h-24 w-24 text-gray-400 mb-4" />
-                          <p className="text-lg font-medium mb-2">
-                            Document Preview Not Available
+                        <div className="text-center py-8 border rounded-lg">
+                          <FileCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <p className="text-muted-foreground">
+                            No documents uploaded yet
                           </p>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            This file format cannot be previewed in the browser
-                          </p>
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              handleDownloadDocument(
-                                viewerData.document.viewUrl,
-                                viewerData.document.documentName
-                              )
-                            }
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download to View
-                          </Button>
                         </div>
                       )}
-                    </>
-                  ) : (
-                    <div className="h-full w-full flex flex-col items-center justify-center bg-gray-50 p-8">
-                      <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
-                      <p className="text-lg font-medium mb-2">
-                        Document Not Available
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        The document URL is not available or the file cannot be
-                        loaded.
-                      </p>
                     </div>
-                  )}
+
+                    {/* Review Actions */}
+                    <div className="border-t pt-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Review Comments */}
+                        <div className="space-y-4">
+                          <Label htmlFor={`comments-${application.uuid}`}>
+                            Review Comments
+                          </Label>
+                          <Textarea
+                            id={`comments-${application.uuid}`}
+                            placeholder="Add review comments, questions, or requirements..."
+                            rows={4}
+                            value={
+                              comments[application.uuid] ||
+                              application.originalData?.kybReviewComment ||
+                              ""
+                            }
+                            onChange={(e) =>
+                              setComments((prev) => ({
+                                ...prev,
+                                [application.uuid]: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="space-y-4">
+                          <Label>Review Actions</Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <Button
+                              type="button"
+                              variant="default"
+                              className="w-full"
+                              disabled={!allDocumentsApproved}
+                              title={
+                                !allDocumentsApproved
+                                  ? "All documents must be approved first"
+                                  : "Approve business application"
+                              }
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleKybAction(
+                                  application.originalData.id,
+                                  "approve",
+                                  comments[application.uuid] ||
+                                    "Application approved"
+                                );
+                              }}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              className="w-full"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleKybAction(
+                                  application.originalData.id,
+                                  "reject",
+                                  comments[application.uuid] ||
+                                    "Application rejected"
+                                );
+                              }}
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Request Info
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              Assign Reviewer
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {filteredApplications.length === 0 && !loading && (
+              <Card className="shadow-card">
+                <CardContent className="py-12 text-center">
+                  <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    No KYB Applications Found
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm
+                      ? "No applications match your search criteria."
+                      : "No business verification applications to review at the moment."}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Bottom Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center mt-8">
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0 || loading}
+                >
+                  Previous
+                </Button>
+
+                <div className="flex items-center space-x-1">
+                  {generatePageNumbers().map((pageIndex, idx) => {
+                    if (pageIndex === -1 || pageIndex === -2) {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="px-2">
+                          ...
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <Button
+                        type="button"
+                        key={pageIndex}
+                        variant={
+                          currentPage === pageIndex ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setCurrentPage(pageIndex)}
+                        disabled={loading}
+                        className="min-w-[40px]"
+                      >
+                        {pageIndex + 1}
+                      </Button>
+                    );
+                  })}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="border-t p-4 bg-white">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="rejection-reason"
-                        className="text-sm font-medium"
-                      >
-                        Rejection Reason (Optional)
-                      </Label>
-                      <Textarea
-                        id="rejection-reason"
-                        placeholder="Enter reason for rejection..."
-                        rows={3}
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        disabled={actionLoading}
-                        className="resize-none"
-                      />
-                    </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages - 1 || loading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
 
-                    <div className="flex gap-3">
-                      <Button
-                        variant="default"
-                        className="flex-1"
-                        onClick={handleDocumentApprove}
-                        disabled={
-                          actionLoading ||
-                          viewerData.document.originalStatus === "APPROVED"
-                        }
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        {actionLoading ? "Processing..." : "Approve Document"}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        className="flex-1"
-                        onClick={handleDocumentReject}
-                        disabled={
-                          actionLoading ||
-                          viewerData.document.originalStatus === "REJECTED" ||
-                          !rejectionReason.trim()
-                        }
-                      >
-                        <XCircle className="h-4 w-4 mr-2" />
-                        {actionLoading ? "Processing..." : "Reject Document"}
-                      </Button>
+          {/* Document Viewer Dialog */}
+          <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+            <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+              <DialogHeader className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {viewerData?.document &&
+                      getFileIcon(viewerData.document.documentName)}
+                    <div className="max-w-[80%]">
+                      <DialogTitle className="text-lg truncate">
+                        {viewerData?.document?.name || "Document Preview"}
+                      </DialogTitle>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {viewerData?.application?.businessName} •{" "}
+                        {viewerData?.document?.documentName}
+                      </p>
                     </div>
+                  </div>
+                </div>
+              </DialogHeader>
 
-                    {viewerData.document.rejectionReason && (
-                      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <p className="text-sm font-medium text-red-800">
-                          Previous Rejection Reason:
+              {viewerData && (
+                <div className="flex-1 flex flex-col">
+                  {/* Document Preview - Main Content */}
+                  <div className="flex-1 overflow-auto bg-gray-100">
+                    {viewerData.document.viewUrl ? (
+                      <>
+                        {isImageFile(viewerData.document.documentName) ? (
+                          <div className="h-full w-full overflow-auto">
+                            {imageLoading ? (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <div className="text-center">
+                                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                                  <p className="mt-4 text-muted-foreground">
+                                    Loading image...
+                                  </p>
+                                </div>
+                              </div>
+                            ) : imageBlobUrl ? (
+                              <div className="p-4">
+                                <img
+                                  src={imageBlobUrl}
+                                  alt="Document Preview"
+                                  className="max-w-full max-h-[calc(100vh-300px)] mx-auto object-contain rounded-lg shadow-lg"
+                                  style={{
+                                    maxWidth: "100%",
+                                    height: "auto",
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="h-full w-full flex flex-col items-center justify-center">
+                                <FileImage className="h-24 w-24 text-gray-400 mb-4 mx-auto" />
+                                <p className="text-lg font-medium mb-2">
+                                  Image Not Loaded
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  Click the View button again to load the image
+                                </p>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() =>
+                                    viewerData.document.viewUrl &&
+                                    loadImageWithAuth(
+                                      viewerData.document.viewUrl
+                                    )
+                                  }
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  Load Image
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ) : isPDFFile(viewerData.document.documentName) ? (
+                          <div className="h-full w-full">
+                            {pdfLoading ? (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <div className="text-center">
+                                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                                  <p className="mt-4 text-muted-foreground">
+                                    Loading PDF...
+                                  </p>
+                                </div>
+                              </div>
+                            ) : pdfBlobUrl ? (
+                              <iframe
+                                src={`${pdfBlobUrl}#view=fitH`}
+                                className="w-full h-full border-0"
+                                title="PDF Preview"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex flex-col items-center justify-center">
+                                <FileText className="h-24 w-24 text-gray-400 mb-4" />
+                                <p className="text-lg font-medium mb-2">
+                                  PDF Not Loaded
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  Click the View button again to load the PDF
+                                </p>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() =>
+                                    viewerData.document.viewUrl &&
+                                    loadPdfWithAuth(viewerData.document.viewUrl)
+                                  }
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  Load PDF
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="h-full w-full flex flex-col items-center justify-center p-8">
+                            <File className="h-24 w-24 text-gray-400 mb-4" />
+                            <p className="text-lg font-medium mb-2">
+                              Document Preview Not Available
+                            </p>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              This file format cannot be previewed in the
+                              browser
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                handleDownloadDocument(
+                                  viewerData.document.viewUrl,
+                                  viewerData.document.documentName
+                                )
+                              }
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download to View
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center bg-gray-50 p-8">
+                        <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+                        <p className="text-lg font-medium mb-2">
+                          Document Not Available
                         </p>
-                        <p className="text-sm text-red-600">
-                          {viewerData.document.rejectionReason}
+                        <p className="text-sm text-muted-foreground">
+                          The document URL is not available or the file cannot
+                          be loaded.
                         </p>
                       </div>
                     )}
                   </div>
+
+                  {/* Action Buttons */}
+                  <div className="border-t p-4 bg-white">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="rejection-reason"
+                          className="text-sm font-medium"
+                        >
+                          Rejection Reason (Optional)
+                        </Label>
+                        <Textarea
+                          id="rejection-reason"
+                          placeholder="Enter reason for rejection..."
+                          rows={3}
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          disabled={actionLoading}
+                          className="resize-none"
+                        />
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button
+                          type="button"
+                          variant="default"
+                          className="flex-1"
+                          onClick={handleDocumentApprove}
+                          disabled={
+                            actionLoading ||
+                            viewerData.document.originalStatus === "APPROVED"
+                          }
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          {actionLoading ? "Processing..." : "Approve Document"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={handleDocumentReject}
+                          disabled={
+                            actionLoading ||
+                            viewerData.document.originalStatus === "REJECTED" ||
+                            !rejectionReason.trim()
+                          }
+                        >
+                          {actionLoading ? "Processing..." : "Reject Document"}
+                        </Button>
+                      </div>
+
+                      {viewerData.document.rejectionReason && (
+                        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                          <p className="text-sm font-medium text-red-800">
+                            Previous Rejection Reason:
+                          </p>
+                          <p className="text-sm text-red-600">
+                            {viewerData.document.rejectionReason}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </form>
     </ExchangeLayout>
   );
 };

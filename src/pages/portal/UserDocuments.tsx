@@ -27,8 +27,8 @@ import {
 
 const UserDocuments = () => {
   const { id } = useParams();
-  const [cookie] = useCookies(["accessToken", "firstName"]);
-  const token = cookie.accessToken;
+  const [cookie] = useCookies(["token", "firstName"]);
+  const token = cookie.token;
   const firstName = cookie.firstName;
 
   const [apiData, setApiData] = useState<any>(null);
@@ -107,14 +107,36 @@ const UserDocuments = () => {
               if (doc.verified === true) status = "approved";
               if (doc.verified === false) status = "rejected";
 
+              // Add this helper function to format file sizes
+              const formatFileSize = (bytes: number): string => {
+                if (bytes === 0 || bytes === undefined || bytes === null)
+                  return "0 Bytes";
+
+                const k = 1024;
+                const sizes = ["Bytes", "KB", "MB", "GB"];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+                // Handle very small sizes (less than 1 KB)
+                if (i === 0) {
+                  return `${bytes} ${sizes[i]}`;
+                }
+
+                return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+              };
+              // Format file size - FIX HERE
+              let sizeFormatted = "N/A";
+              if (docData.fileSize) {
+                sizeFormatted = formatFileSize(docData.fileSize);
+              }
+
               return {
                 id: `DOC-${docData.id}`,
                 name: fileName,
                 type: doc.name,
                 category: categoryMap[doc.category] || doc.category,
-                size: "N/A",
+                size: sizeFormatted, // Use the formatted file size
                 uploadDate: uploadDate,
-                uploadedAt: uploadedAtFormatted, // Add this for display
+                uploadedAt: uploadedAtFormatted,
                 uploadedBy: "System",
                 status: status,
                 transactionId: null,
@@ -125,6 +147,7 @@ const UserDocuments = () => {
                   doc.verified === false ? "Verification failed" : null,
                 documentNumber: docData.documentNumber,
                 fileUrl: docData.fileUrl,
+                rawFileSize: docData.fileSize, // Keep raw size for reference if needed
               };
             });
 
