@@ -73,7 +73,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2">
+              <Link to="/portal" className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold">BizPay Axis</span>
               </Link>
@@ -99,9 +99,9 @@ const UserLayout = ({ children }: UserLayoutProps) => {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
-        <aside className="w-64 bg-background border-r min-h-[calc(100vh-4rem)]">
+        <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -124,8 +124,10 @@ const UserLayout = ({ children }: UserLayoutProps) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">{children}</div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-6 py-2 mb-4">
+            {children}
+          </div>
         </main>
       </div>
     </div>

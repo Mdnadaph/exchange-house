@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -35,51 +35,31 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     "email",
     "role",
     "fullName",
-
     "businessEmail",
-    "tempToken",
     "accessToken",
     "businessTwoFactorEnabled",
   ]);
+
   const fullName = cookies.fullName;
 
   const handleLogout = () => {
-    // removeCookie("businessEmail");
-    // removeCookie("tempToken");
-    // removeCookie("fullName");
-    // removeCookie("accessToken");
-    // removeCookie("businessTwoFactorEnabled");
-
     removeCookie("email");
     removeCookie("token");
     removeCookie("fullName");
     removeCookie("role");
-
     navigate("/");
   };
 
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home },
-    {
-      name: "Onboard Business",
-      href: "/exchange/onboard-business",
-      icon: Building2,
-    },
+    { name: "Onboard Business", href: "/exchange/onboard-business", icon: Building2 },
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
     { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
     { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/exchange/deals", icon: Handshake },
     { name: "Documents", href: "/exchange/documents", icon: Files },
-    {
-      name: "Fee Management",
-      href: "/exchange/fee-management",
-      icon: Calculator,
-    },
-    {
-      name: "Payout Config",
-      href: "/exchange/payout-config",
-      icon: DollarSign,
-    },
+    { name: "Fee Management", href: "/exchange/fee-management", icon: Calculator },
+    { name: "Payout Config", href: "/exchange/payout-config", icon: DollarSign },
     { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
     { name: "Branch Management", href: "/exchange/branches", icon: GitBranch },
     { name: "Staff Management", href: "/exchange/staff", icon: Users },
@@ -88,13 +68,13 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="h-screen overflow-hidden bg-muted/30">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-50 h-16 w-full border-b bg-background/95 backdrop-blur">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex h-full items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2">
+              <Link to="/exchange" className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold">BizPay Axis</span>
               </Link>
@@ -105,6 +85,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
                 </span>
               </div>
             </div>
+
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <ThemeToggle />
@@ -120,9 +101,10 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
         </div>
       </header>
 
-      <div className="flex">
+      {/* Body */}
+      <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
-        <aside className="w-64 bg-background border-r min-h-[calc(100vh-4rem)]">
+        <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -130,7 +112,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all ${
                     isActive(item.href)
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -144,9 +126,11 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
           </nav>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">{children}</div>
+        {/* Main Content (Scrollable) */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-6 py-2 mb-4">
+            {children}
+          </div>
         </main>
       </div>
     </div>

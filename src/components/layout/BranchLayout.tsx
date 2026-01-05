@@ -28,9 +28,14 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     "email",
     "token",
     "role",
-    "fullName"
+    "fullName",
 
   ]);
+
+  const fullName = cookies.fullName;
+  console.log(fullName);
+
+
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
     {
@@ -76,7 +81,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2">
+              <Link to="/branch" className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold">BizPay Axis</span>
               </Link>
@@ -91,7 +96,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                Ahmed Hassan (Branch Staff)
+                {fullName} (Branch Staff)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -104,7 +109,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-background border-r min-h-[calc(100vh-4rem)]">
+        <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -125,10 +130,11 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
             })}
           </nav>
         </aside>
-
         {/* Main Content */}
-        <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">{children}</div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-6 py-2 mb-4">
+            {children}
+          </div>
         </main>
       </div>
     </div>

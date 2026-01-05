@@ -222,6 +222,7 @@ import UserDashboard from "./pages/portal/UserDashboard";
 import UserBeneficiaries from "./pages/portal/UserBeneficiaries";
 import UserTransactions from "./pages/portal/UserTransactions";
 import UserDocuments from "./pages/portal/UserDocuments";
+import UserManagement from "./pages/portal/UserManagement";
 import UserGovernance from "./pages/portal/UserGovernance";
 import UserDealRequests from "./pages/portal/UserDealRequests";
 import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
@@ -299,6 +300,7 @@ const App = () => (
                   <Route index element={<AdminDashboard />} />
                   <Route path="onboarding" element={<AdminOnboarding />} />
                   <Route path="deal-settings" element={<AdminDealSettings />} />
+                  <Route path="users" element={<AdminUserManagement />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
               </Route>
@@ -312,7 +314,7 @@ const App = () => (
                   <Route path="beneficiaries" element={<UserBeneficiaries />} />
                   <Route path="transactions" element={<UserTransactions />} />
                   <Route path="deals" element={<UserDealRequests />} />
-                  <Route path="users" element={<AdminUserManagement />} />
+                  <Route path="users" element={<UserManagement />} />
                   <Route path="governance" element={<UserGovernance />} />
                   <Route path="documents" element={<UserDocuments />} />
                   <Route path="documents/:id" element={<UserDocuments />} />
