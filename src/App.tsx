@@ -306,7 +306,7 @@ const App = () => (
               </Route>
 
               {/* Portal Department (Role: BUSINESS) */}
-              <Route element={<ProtectedRoute allowedRole="BUSINESS" />}>
+              <Route element={<ProtectedRoute allowedRole="ROLE_BUSINESS" />}>
                 <Route path="/portal">
                   <Route index element={<UserDashboard />} />
                   <Route path="profile" element={<UserProfile />} />
@@ -322,7 +322,7 @@ const App = () => (
               </Route>
 
               {/* Branch Department (Role: STAFF) */}
-              <Route element={<ProtectedRoute allowedRole="STAFF" />}>
+              <Route element={<ProtectedRoute allowedRole="ROLE_STAFF" />}>
                 <Route path="/branch">
                   <Route index element={<BranchDashboard />} />
                   <Route path="onboard-business" element={<BranchBusinessOnboarding />} />

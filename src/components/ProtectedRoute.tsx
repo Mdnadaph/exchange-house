@@ -2,7 +2,7 @@ import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { useCookies } from "react-cookie";
 
 interface ProtectedRouteProps {
-  allowedRole: "ROLE_ADMIN" | "STAFF" | "BUSINESS";
+  allowedRole: "ROLE_ADMIN" | "ROLE_STAFF" | "ROLE_BUSINESS";
 }
 
 const ProtectedRoute = ({ allowedRole }: ProtectedRouteProps) => {
@@ -21,8 +21,8 @@ const ProtectedRoute = ({ allowedRole }: ProtectedRouteProps) => {
     // If they try to cross departments, redirect them to their specific home
     const roleRedirects: Record<string, string> = {
       ROLE_ADMIN: "/exchange",
-      STAFF: "/branch",
-      BUSINESS: "/portal",
+      ROLE_STAFF: "/branch",
+      ROLE_BUSINESS: "/portal",
     };
 
     const targetPath = roleRedirects[cookies.role] || "/";
