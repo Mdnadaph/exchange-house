@@ -14,6 +14,8 @@ const ProtectedRoute = ({ allowedRole }: ProtectedRouteProps) => {
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
+  console.log("token", cookies.token);
+
   // 2. Check if authorized for this specific department
   if (cookies.role !== allowedRole) {
     // If they try to cross departments, redirect them to their specific home

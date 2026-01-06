@@ -129,8 +129,6 @@
 
 // export default BusinessTwoFALogin;
 
-
-
 // import React, { useRef, useState, useEffect } from "react";
 // import axios from "axios";
 // import { useCookies } from "react-cookie";
@@ -330,9 +328,6 @@
 
 // export default BusinessTwoFALogin;
 
-
-
-
 // import React, { useRef, useState } from "react";
 // import axios from "axios";
 // import { useCookies } from "react-cookie";
@@ -479,12 +474,12 @@
 //       // LOGGING
 //       console.log("FROM API RESPONSE (Verified):");
 //       console.log("token (stored as token):", accessToken);
-      
+
 //       setTimeout(() => {
 //         console.log("⏳ Navigating to /portal");
 //         toast.success("Login successful");
 //         navigate("/portal", { replace: true });
-//       }, 500); 
+//       }, 500);
 
 //     } catch (error: any) {
 //       console.error("❌ VERIFY ERROR:", error);
@@ -525,8 +520,6 @@
 
 // export default BusinessTwoFALogin;
 
-
-
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -554,9 +547,17 @@ interface VerifyResponseData {
 const BusinessTwoFALogin: React.FC = () => {
   const navigate = useNavigate();
   const [cookies, setCookie] = useCookies([
-    "tempToken", "token", "id", "uuid", "firstName", 
-    "lastName", "email", "phoneNumber", "designation", 
-    "businessId", "role"
+    "tempToken",
+    "token",
+    "id",
+    "uuid",
+    "firstName",
+    "lastName",
+    "email",
+    "phoneNumber",
+    "designation",
+    "businessId",
+    "role",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -588,6 +589,7 @@ const BusinessTwoFALogin: React.FC = () => {
       navigate("/");
       return;
     }
+    console.log(cookies.tempToken);
 
     try {
       const response = await axios.post<{
@@ -607,15 +609,25 @@ const BusinessTwoFALogin: React.FC = () => {
       const { accessToken, expiresIn, businessAdmin } = response.data.data;
 
       // 1. STORE TOKEN
-      setCookie("token", accessToken, { path: "/", sameSite: "lax", maxAge: expiresIn || 10800 });
-      
+      setCookie("token", accessToken, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: expiresIn || 10800,
+      });
+
       // 2. STORE ROLE (Essential for ProtectedRoute)
       setCookie("role", "BUSINESS", { path: "/", sameSite: "lax" });
 
       // 3. STORE DATA
-      setCookie("businessId", businessAdmin.businessId, { path: "/", sameSite: "lax" });
+      setCookie("businessId", businessAdmin.businessId, {
+        path: "/",
+        sameSite: "lax",
+      });
       setCookie("id", businessAdmin.id, { path: "/", sameSite: "lax" });
-      setCookie("firstName", businessAdmin.firstName, { path: "/", sameSite: "lax" });
+      setCookie("firstName", businessAdmin.firstName, {
+        path: "/",
+        sameSite: "lax",
+      });
       setCookie("email", businessAdmin.email, { path: "/", sameSite: "lax" });
 
       // 4. CLEANUP
@@ -623,7 +635,6 @@ const BusinessTwoFALogin: React.FC = () => {
 
       toast.success("Login successful");
       navigate("/portal", { replace: true });
-
     } catch (error: any) {
       toast.error(error.response?.data?.message || "OTP verification failed");
     }
@@ -632,9 +643,13 @@ const BusinessTwoFALogin: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Business Verification</h2>
-        <p className="text-sm text-center text-gray-500 mb-6">Enter the 6-digit code from your authenticator app.</p>
-        
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Business Verification
+        </h2>
+        <p className="text-sm text-center text-gray-500 mb-6">
+          Enter the 6-digit code from your authenticator app.
+        </p>
+
         <div className="flex justify-between gap-2 mb-8">
           {otp.map((digit, index) => (
             <input
