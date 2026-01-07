@@ -1,438 +1,3 @@
-// import React, { useRef, useState } from "react";
-// import axios from "axios";
-// import { useCookies } from "react-cookie";
-// import { useNavigate } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import BASE_URL from "@/config/config";
-
-// const VerifyTwoFALogin: React.FC = () => {
-//   const navigate = useNavigate();
-//   const [cookies, setCookie] = useCookies(["tempToken" , "accessToken"]);
-
-//   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-//   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-
-//   /* =========================
-//      HANDLE OTP INPUT
-//   ========================== */
-//   const handleChange = (value: string, index: number) => {
-//     if (!/^[0-9]?$/.test(value)) return;
-
-//     const newOtp = [...otp];
-//     newOtp[index] = value;
-//     setOtp(newOtp);
-
-//     if (value && index < 5) {
-//       inputsRef.current[index + 1]?.focus();
-//     }
-//   };
-
-//   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-//     if (e.key === "Backspace" && !otp[index] && index > 0) {
-//       inputsRef.current[index - 1]?.focus();
-//     }
-//   };
-
-//   /* =========================
-//      VERIFY OTP
-//   ========================== */
-//   const handleVerify = async () => {
-//     const otpCode = otp.join("");
-
-//     if (otpCode.length !== 6) {
-//       toast.error("Please enter 6-digit OTP");
-//       return;
-//     }
-
-//     if (!cookies.tempToken) {
-//       toast.error("Session expired. Please login again.");
-//       navigate("/branch");
-//       return;
-//     }
-
-//     console.log("🔐 VERIFY 2FA LOGIN PAYLOAD:", {
-//       tempToken: cookies.tempToken,
-//       twoFactorCode: otpCode,
-//     });
-
-//     try {
-//       const response = await axios.post(
-//         `${BASE_URL}/api/v3/staff-auth/verify-2fa-login`,
-//         {
-//           tempToken: cookies.tempToken,
-//           twoFactorCode: otpCode,
-//         }
-//       );
-
-//       console.log("📥 VERIFY RESPONSE:", response.data);
-
-//       if (!response.data.status) {
-//         toast.error(response.data.message || "OTP verification failed");
-//         return;
-//       }
-
-//       const { accessToken, tokenExpiryTime } = response.data.data;
-
-//       setCookie("accessToken", accessToken, {
-//         // path: "/",
-//         // secure: true,
-//         // sameSite: "strict",
-//         // maxAge: tokenExpiryTime || 86400,
-
-//         path: "/", sameSite: "lax"
-//       });
-
-//       toast.success("Login successful");
-//       navigate("/branch", { replace: true });
-//     } catch (error: any) {
-//       console.error("❌ VERIFY ERROR:", error);
-//       toast.error(
-//         error.response?.data?.message || "OTP verification failed"
-//       );
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="bg-white p-6 rounded shadow w-full max-w-md">
-//         <h2 className="text-2xl font-bold text-center mb-6">
-//           Verify OTP
-//         </h2>
-
-//         {/* OTP INPUTS */}
-//         <div className="flex justify-between gap-2 mb-6">
-//           {otp.map((digit, index) => (
-//             <input
-//               key={index}
-//               ref={(el) => (inputsRef.current[index] = el)}
-//               type="text"
-//               maxLength={1}
-//               value={digit}
-//               onChange={(e) => handleChange(e.target.value, index)}
-//               onKeyDown={(e) => handleKeyDown(e, index)}
-//               className="w-12 h-12 text-center text-xl border rounded focus:outline-none focus:border-blue-500"
-//             />
-//           ))}
-//         </div>
-
-//         {/* VERIFY BUTTON */}
-//         <button
-//           onClick={handleVerify}
-//           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-//         >
-//           Verify & Login
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default VerifyTwoFALogin;
-
-
-
-
-// import React, { useRef, useState } from "react";
-// import axios from "axios";
-// import { useCookies } from "react-cookie";
-// import { useNavigate } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import BASE_URL from "@/config/config";
-
-// const VerifyTwoFALogin: React.FC = () => {
-//   const navigate = useNavigate();
-
-//   const [cookies, setCookie] = useCookies([
-//     "tempToken",
-//     "accessToken",
-//     "id",
-//     "uuid",
-//     "fullName",
-//     "email",
-//     "contactNumber",
-//   ]);
-
-//   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-//   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-
-//   /* =========================
-//      HANDLE OTP INPUT
-//   ========================== */
-//   const handleChange = (value: string, index: number) => {
-//     if (!/^[0-9]?$/.test(value)) return;
-
-//     const newOtp = [...otp];
-//     newOtp[index] = value;
-//     setOtp(newOtp);
-
-//     if (value && index < 5) {
-//       inputsRef.current[index + 1]?.focus();
-//     }
-//   };
-
-//   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-//     if (e.key === "Backspace" && !otp[index] && index > 0) {
-//       inputsRef.current[index - 1]?.focus();
-//     }
-//   };
-
-//   /* =========================
-//      VERIFY OTP
-//   ========================== */
-//   const handleVerify = async () => {
-//     const otpCode = otp.join("");
-
-//     if (otpCode.length !== 6) {
-//       toast.error("Please enter 6-digit OTP");
-//       return;
-//     }
-
-//     if (!cookies.tempToken) {
-//       toast.error("Session expired. Please login again.");
-//       navigate("/branch");
-//       return;
-//     }
-
-//     try {
-//       const response = await axios.post(
-//         `${BASE_URL}/api/v3/staff-auth/verify-2fa-login`,
-//         {
-//           tempToken: cookies.tempToken,
-//           twoFactorCode: otpCode,
-//         }
-//       );
-
-//       if (!response.data.status) {
-//         toast.error(response.data.message || "OTP verification failed");
-//         return;
-//       }
-
-//       const { accessToken, expiresIn, staff } = response.data.data;
-
-//       /* ===== STORE ACCESS TOKEN ===== */
-//       setCookie("accessToken", accessToken, {
-//         path: "/",
-//         sameSite: "lax",
-//         maxAge: expiresIn, // 10800 seconds
-//       });
-
-//       /* ===== STORE STAFF DATA ===== */
-//       setCookie("id", staff.id, { path: "/", sameSite: "lax" });
-//       setCookie("uuid", staff.uuid, { path: "/", sameSite: "lax" });
-//       setCookie("fullName", staff.fullName, { path: "/", sameSite: "lax" });
-//       setCookie("email", staff.email, { path: "/", sameSite: "lax" });
-//       setCookie("contactNumber", staff.contactNumber, {
-//         path: "/",
-//         sameSite: "lax",
-//       });
-
-//       /* ===== CLEAR TEMP TOKEN ===== */
-//       setCookie("tempToken", "", {
-//         path: "/",
-//         maxAge: 0,
-//       });
-
-//       toast.success("Login successful");
-//       navigate("/branch", { replace: true });
-//     } catch (error: any) {
-//       console.error("❌ VERIFY ERROR:", error);
-//       toast.error(
-//         error.response?.data?.message || "OTP verification failed"
-//       );
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="bg-white p-6 rounded shadow w-full max-w-md">
-//         <h2 className="text-2xl font-bold text-center mb-6">
-//           Verify OTP
-//         </h2>
-
-//         {/* OTP INPUTS */}
-//         <div className="flex justify-between gap-2 mb-6">
-//           {otp.map((digit, index) => (
-//             <input
-//               key={index}
-//               ref={(el) => (inputsRef.current[index] = el)}
-//               type="text"
-//               maxLength={1}
-//               value={digit}
-//               onChange={(e) => handleChange(e.target.value, index)}
-//               onKeyDown={(e) => handleKeyDown(e, index)}
-//               className="w-12 h-12 text-center text-xl border rounded focus:outline-none focus:border-blue-500"
-//             />
-//           ))}
-//         </div>
-
-//         {/* VERIFY BUTTON */}
-//         <button
-//           onClick={handleVerify}
-//           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-//         >
-//           Verify & Login
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default VerifyTwoFALogin;
-
-
-// import React, { useRef, useState } from "react";
-// import axios from "axios";
-// import { useCookies } from "react-cookie";
-// import { useNavigate } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import BASE_URL from "@/config/config";
-
-// const VerifyTwoFALogin: React.FC = () => {
-//   const navigate = useNavigate();
-
-//   // Unified cookie names to match ProtectedRoute and Login logic
-//   const [cookies, setCookie] = useCookies([
-//     "tempToken",
-//     "token", // Changed from accessToken to token
-//     "id",
-//     "uuid",
-//     "fullName",
-//     "email",
-//     "role",
-//     "contactNumber",
-//   ]);
-
-//   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-//   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-
-//   /* =========================
-//       HANDLE OTP INPUT
-//   ========================== */
-//   const handleChange = (value: string, index: number) => {
-//     if (!/^[0-9]?$/.test(value)) return;
-
-//     const newOtp = [...otp];
-//     newOtp[index] = value;
-//     setOtp(newOtp);
-
-//     if (value && index < 5) {
-//       inputsRef.current[index + 1]?.focus();
-//     }
-//   };
-
-//   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-//     if (e.key === "Backspace" && !otp[index] && index > 0) {
-//       inputsRef.current[index - 1]?.focus();
-//     }
-//   };
-
-//   /* =========================
-//       VERIFY OTP
-//   ========================== */
-//   const handleVerify = async () => {
-//     const otpCode = otp.join("");
-
-//     if (otpCode.length !== 6) {
-//       toast.error("Please enter 6-digit OTP");
-//       return;
-//     }
-
-//     if (!cookies.tempToken) {
-//       toast.error("Session expired. Please login again.");
-//       navigate("/login");
-//       return;
-//     }
-
-//     try {
-//       const response = await axios.post(
-//         `${BASE_URL}/api/v3/staff-auth/verify-2fa-login`,
-//         {
-//           tempToken: cookies.tempToken,
-//           twoFactorCode: otpCode,
-//         }
-//       );
-
-//       if (!response.data.status) {
-//         toast.error(response.data.message || "OTP verification failed");
-//         return;
-//       }
-
-//       const { accessToken, expiresIn, staff } = response.data.data;
-
-//       /* ===== STORE TOKEN (Key fix for ProtectedRoute) ===== */
-//       setCookie("token", accessToken, {
-//         path: "/",
-//         sameSite: "lax",
-//         maxAge: expiresIn || 10800,
-//       });
-
-//       /* ===== STORE STAFF DATA ===== */
-//       setCookie("id", staff.id, { path: "/", sameSite: "lax" });
-//       setCookie("uuid", staff.uuid, { path: "/", sameSite: "lax" });
-//       setCookie("fullName", staff.fullName, { path: "/", sameSite: "lax" });
-//       setCookie("email", staff.email, { path: "/", sameSite: "lax" });
-//       setCookie("role", "STAFF", { path: "/", sameSite: "lax" }); // Helpful for role-based redirects later
-//       setCookie("contactNumber", staff.contactNumber, {
-//         path: "/",
-//         sameSite: "lax",
-//       });
-
-//       /* ===== CLEAR TEMP TOKEN ===== */
-//       setCookie("tempToken", "", {
-//         path: "/",
-//         maxAge: 0, // Immediately expires the temp token
-//       });
-
-//       toast.success("Login successful");
-      
-//       // Redirect to the protected branch dashboard
-//       navigate("/branch", { replace: true });
-
-//     } catch (error: any) {
-//       console.error("❌ VERIFY ERROR:", error);
-//       toast.error(
-//         error.response?.data?.message || "OTP verification failed"
-//       );
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="bg-white p-6 rounded shadow w-full max-w-md">
-//         <h2 className="text-2xl font-bold text-center mb-6">
-//           Verify OTP
-//         </h2>
-
-//         {/* OTP INPUTS */}
-//         <div className="flex justify-between gap-2 mb-6">
-//           {otp.map((digit, index) => (
-//             <input
-//               key={index}
-//               ref={(el) => (inputsRef.current[index] = el)}
-//               type="text"
-//               maxLength={1}
-//               value={digit}
-//               onChange={(e) => handleChange(e.target.value, index)}
-//               onKeyDown={(e) => handleKeyDown(e, index)}
-//               className="w-12 h-12 text-center text-xl border rounded focus:outline-none focus:border-blue-500"
-//             />
-//           ))}
-//         </div>
-
-//         {/* VERIFY BUTTON */}
-//         <button
-//           onClick={handleVerify}
-//           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-//         >
-//           Verify & Login
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default VerifyTwoFALogin;
-
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -442,64 +7,131 @@ import BASE_URL from "@/config/config";
 
 const VerifyTwoFALogin: React.FC = () => {
   const navigate = useNavigate();
-  const [cookies, setCookie] = useCookies(["tempToken", "token", "role", "fullName", "email"]);
+
+  const [cookies, setCookie] = useCookies([
+    "tempToken",
+    "token",
+    "id",
+    "uuid",
+    "fullName",
+    "email",
+    "role",
+    "contactNumber",
+  ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState<string>("");
+
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
+  /* =========================
+      HANDLE OTP INPUT
+  ========================== */
   const handleChange = (value: string, index: number) => {
     if (!/^[0-9]?$/.test(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    if (value && index < 5) inputsRef.current[index + 1]?.focus();
+    setOtpError("");
+
+    if (value && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) inputsRef.current[index - 1]?.focus();
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
   };
 
+  /* =========================
+      VERIFY OTP
+  ========================== */
   const handleVerify = async () => {
     const otpCode = otp.join("");
+    setOtpError("");
+
     if (otpCode.length !== 6) {
-      toast.error("Please enter 6-digit OTP");
+      setOtpError("Please enter a 6-digit OTP");
+      toast.error("Please enter a 6-digit OTP");
+      return;
+    }
+
+    if (!cookies.tempToken) {
+      toast.error("Session expired. Please login again.");
+      navigate("/login");
       return;
     }
 
     try {
-      const response = await axios.post(`${BASE_URL}/api/v3/staff-auth/verify-2fa-login`, {
-        tempToken: cookies.tempToken,
-        twoFactorCode: otpCode,
-      });
+      const response = await axios.post(
+        `${BASE_URL}/api/v3/staff-auth/verify-2fa-login`,
+        {
+          tempToken: cookies.tempToken,
+          twoFactorCode: otpCode,
+        }
+      );
 
       if (!response.data.status) {
-        toast.error(response.data.message || "OTP verification failed");
+        setOtpError("Invalid or wrong OTP");
+        toast.error(response.data.message || "Invalid or wrong OTP");
+
+        setOtp(["", "", "", "", "", ""]);
+        inputsRef.current[0]?.focus();
         return;
       }
 
       const { accessToken, expiresIn, staff } = response.data.data;
 
-      // SETTING AUTH COOKIES
-      setCookie("token", accessToken, { path: "/", sameSite: "lax", maxAge: expiresIn || 10800 });
-      setCookie("role", "STAFF", { path: "/", sameSite: "lax" }); // VITAL: This locks them to /branch
-      setCookie("fullName", staff.fullName, { path: "/" });
-      setCookie("email", staff.email, { path: "/" });
+      /* ===== STORE TOKEN ===== */
+      setCookie("token", accessToken, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: expiresIn || 10800,
+      });
 
-      // CLEANUP
+      /* ===== STORE STAFF DATA ===== */
+      setCookie("id", staff.id, { path: "/", sameSite: "lax" });
+      setCookie("uuid", staff.uuid, { path: "/", sameSite: "lax" });
+      setCookie("fullName", staff.fullName, { path: "/", sameSite: "lax" });
+      setCookie("email", staff.email, { path: "/", sameSite: "lax" });
+      setCookie("role", "STAFF", { path: "/", sameSite: "lax" });
+      setCookie("contactNumber", staff.contactNumber, {
+        path: "/",
+        sameSite: "lax",
+      });
+
+      /* ===== CLEAR TEMP TOKEN ===== */
       setCookie("tempToken", "", { path: "/", maxAge: 0 });
 
       toast.success("Login successful");
       navigate("/branch", { replace: true });
+
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "OTP verification failed");
+      console.error("❌ VERIFY ERROR:", error);
+
+      setOtpError("Invalid or wrong OTP");
+      toast.error(error.response?.data?.message || "Invalid or wrong OTP");
+
+      setOtp(["", "", "", "", "", ""]);
+      inputsRef.current[0]?.focus();
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded shadow w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Verify Staff OTP</h2>
-        <div className="flex justify-between gap-2 mb-6">
+        <h2 className="text-2xl font-bold text-center mb-6">
+          Verify OTP
+        </h2>
+        <p className="text-sm text-center text-gray-500 mb-6">
+          Enter the 6-digit code from your authenticator app.
+        </p>
+
+        {/* OTP INPUTS */}
+        <div className="flex justify-between gap-2 mb-2">
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -513,7 +145,19 @@ const VerifyTwoFALogin: React.FC = () => {
             />
           ))}
         </div>
-        <button onClick={handleVerify} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+
+        {/* ERROR MESSAGE */}
+        {otpError && (
+          <p className="text-red-500 text-sm text-center mt-4">
+            {otpError}
+          </p>
+        )}
+
+        {/* VERIFY BUTTON */}
+        <button
+          onClick={handleVerify}
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition mt-3"
+        >
           Verify & Login
         </button>
       </div>

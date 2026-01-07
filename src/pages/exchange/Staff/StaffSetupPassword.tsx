@@ -42,7 +42,7 @@ const PasswordSchema = Yup.object({
 
 /* ================= COMPONENT ================= */
 
-const PasswordSetup: React.FC = () => {
+const StaffSetupPassword: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -230,4 +230,4 @@ const PasswordSetup: React.FC = () => {
   );
 };
 
-export default PasswordSetup;
+export default StaffSetupPassword;
