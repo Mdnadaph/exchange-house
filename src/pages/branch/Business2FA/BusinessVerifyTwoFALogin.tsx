@@ -22,28 +22,32 @@ interface VerifyResponseData {
   businessAdmin: BusinessAdmin;
 }
 
+interface JwtPayload {
+  roles?: string[];
+  exp: number;
+}
+
 const BusinessTwoFALogin: React.FC = () => {
   const navigate = useNavigate();
+
   const [cookies, setCookie] = useCookies([
     "tempToken",
     "token",
+    "role",
+    "businessId",
     "id",
     "uuid",
     "firstName",
     "lastName",
     "email",
-    "phoneNumber",
-    "designation",
-    "businessId",
-    "role",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [otpError, setOtpError] = useState<string>(""); // <-- New state for error message
+  const [otpError, setOtpError] = useState("");
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   /* =========================
-      HANDLE OTP INPUT
+      OTP INPUT HANDLING
   ========================== */
   const handleChange = (value: string, index: number) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -51,9 +55,11 @@ const BusinessTwoFALogin: React.FC = () => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    setOtpError(""); // Clear error when user types
+    setOtpError("");
 
-    if (value && index < 5) inputsRef.current[index + 1]?.focus();
+    if (value && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -75,9 +81,8 @@ const BusinessTwoFALogin: React.FC = () => {
     }
 
     if (!cookies.tempToken) {
-      setOtpError("Session expired. Please login again.");
       toast.error("Session expired. Please login again.");
-      navigate("/");
+      navigate("/login");
       return;
     }
 
@@ -92,42 +97,66 @@ const BusinessTwoFALogin: React.FC = () => {
       });
 
       if (!response.data.status) {
-        setOtpError(response.data.message || "Invalid or wrong OTP");
-        toast.error(response.data.message || "Invalid or wrong OTP");
-        setOtp(["", "", "", "", "", ""]); // Clear OTP fields
+        setOtpError(response.data.message || "Invalid OTP");
+        toast.error(response.data.message || "Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
         inputsRef.current[0]?.focus();
         return;
       }
 
       const { accessToken, expiresIn, businessAdmin } = response.data.data;
 
-      // STORE TOKEN
+      /* =========================
+          DECODE JWT (CRITICAL FIX)
+      ========================== */
+      const payload = JSON.parse(
+        atob(accessToken.split(".")[1])
+      ) as JwtPayload;
+
+      const role = payload.roles?.[0]; // e.g. ROLE_BUSINESS_ADMIN
+      const currentTime = Math.floor(Date.now() / 1000);
+      const maxAge = expiresIn || payload.exp - currentTime;
+
+      /* =========================
+          STORE AUTH DATA
+      ========================== */
       setCookie("token", accessToken, {
         path: "/",
         sameSite: "lax",
-        maxAge: expiresIn || 10800,
+        maxAge: maxAge > 0 ? maxAge : 10800,
       });
 
-      // STORE ROLE
-      setCookie("role", "BUSINESS", { path: "/", sameSite: "lax" });
+      setCookie("role", role, { path: "/", sameSite: "lax" });
 
-      // STORE BUSINESS ADMIN DATA
       setCookie("businessId", businessAdmin.businessId, {
         path: "/",
         sameSite: "lax",
       });
       setCookie("id", businessAdmin.id, { path: "/", sameSite: "lax" });
+      setCookie("uuid", businessAdmin.uuid, { path: "/", sameSite: "lax" });
       setCookie("firstName", businessAdmin.firstName, {
         path: "/",
         sameSite: "lax",
       });
-      setCookie("email", businessAdmin.email, { path: "/", sameSite: "lax" });
+      setCookie("lastName", businessAdmin.lastName, {
+        path: "/",
+        sameSite: "lax",
+      });
+      setCookie("email", businessAdmin.email, {
+        path: "/",
+        sameSite: "lax",
+      });
 
-      // CLEAR TEMP TOKEN
+      /* =========================
+          CLEANUP
+      ========================== */
       setCookie("tempToken", "", { path: "/", maxAge: 0 });
 
       toast.success("Login successful");
+
+      // ✅ FINAL REDIRECT
       navigate("/portal", { replace: true });
+
     } catch (error: any) {
       setOtpError(error.response?.data?.message || "OTP verification failed");
       toast.error(error.response?.data?.message || "OTP verification failed");
@@ -137,12 +166,12 @@ const BusinessTwoFALogin: React.FC = () => {
   };
 
   return (
-   <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded shadow w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">
-
+        <h2 className="text-2xl font-bold text-center mb-4">
           Business Verification
         </h2>
+
         <p className="text-sm text-center text-gray-500 mb-6">
           Enter the 6-digit code from your authenticator app.
         </p>
@@ -162,14 +191,13 @@ const BusinessTwoFALogin: React.FC = () => {
           ))}
         </div>
 
-        {/* ERROR MESSAGE */}
         {otpError && (
           <p className="text-red-500 text-sm text-center mt-2">{otpError}</p>
         )}
 
         <button
           onClick={handleVerify}
-          className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors shadow-sm mt-4"
+          className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition mt-4"
         >
           Verify & Access Portal
         </button>

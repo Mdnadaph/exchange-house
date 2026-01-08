@@ -67,29 +67,19 @@ const App = () => (
               {/* Staff 2FA  */}
               <Route path="/set-password" element={<StaffSetupPassword />} />
               <Route path="/generateqr" element={<StaffTwoFA />} />
-              <Route
-                path="/verify-2fa-login"
-                element={<StaffVerifyTwoFALogin />}
-              />
+              <Route path="/verify-2fa-login" element={<StaffVerifyTwoFALogin />} />
+
 
               {/* business 2FA */}
-              <Route
-                path="/business-auth/set-password"
-                element={<BusinessPasswordSetup />}
-              />
+              <Route path="/business-auth/set-password" element={<BusinessPasswordSetup />} />
               <Route path="/business/2fa/qr" element={<BusinessTwoFA />} />
-              <Route
-                path="/business/2fa/login"
-                element={<BusinessVerifyTwoFALogin />}
-              />
+              <Route path="/business/2fa/login" element={<BusinessVerifyTwoFALogin />} />
+
 
               {/* Business Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/onboarding" element={<AdminOnboarding />} />
-              <Route
-                path="/admin/deal-settings"
-                element={<AdminDealSettings />}
-              />
+              <Route path="/admin/deal-settings" element={<AdminDealSettings />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
 
               {/* Business User Routes */}
@@ -97,14 +87,8 @@ const App = () => (
               <Route path="/portal/profile" element={<UserProfile />} />
               <Route path="/portal/profile/:id" element={<UserProfile />} />
 
-              <Route
-                path="/portal/beneficiaries"
-                element={<UserBeneficiaries />}
-              />
-              <Route
-                path="/portal/transactions"
-                element={<UserTransactions />}
-              />
+              <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
+              <Route path="/portal/transactions" element={<UserTransactions />} />
               <Route path="/portal/deals" element={<UserDealRequests />} />
               <Route path="/portal/users" element={<AdminUserManagement />} />
               <Route path="/portal/governance" element={<UserGovernance />} />
@@ -113,22 +97,10 @@ const App = () => (
 
               {/* Exchange House Admin Routes */}
               <Route path="/exchange" element={<ExchangeAdminDashboard />} />
-              <Route
-                path="/exchange/Details/:uuid"
-                element={<BranchDetails />}
-              />
-              <Route
-                path="/exchange/onboard-business"
-                element={<ExchangeBusinessOnboarding />}
-              />
-              <Route
-                path="/exchange/kyb-review"
-                element={<ExchangeKYBReview />}
-              />
-              <Route
-                path="/exchange/kyb-config"
-                element={<ExchangeKYBConfig />}
-              />
+              <Route path="/exchange/Details/:uuid" element={<BranchDetails />} />
+              <Route path="/exchange/onboard-business" element={<ExchangeBusinessOnboarding />} />
+              <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
+              <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
               <Route
                 path="/exchange/create-kyb-rule"
                 element={<CreateKybRule />}
