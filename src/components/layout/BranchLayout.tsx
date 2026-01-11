@@ -51,17 +51,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // const handleLogout = () => {
-  //   removeCookie("accessToken");
-
-  //   navigate("/");
-  // };
 
   const handleLogout = () => {
-    // removeCookie("accessToken", { path: "/" });
-    // removeCookie("tempToken", { path: "/" });
-    // removeCookie("twoFactorEnabled", { path: "/" });
-    // removeCookie("requiresTwoFactor", { path: "/" });
     removeCookie("token");
     removeCookie("accessToken");
     removeCookie("tempToken");

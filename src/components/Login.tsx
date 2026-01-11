@@ -42,6 +42,7 @@ const Login: React.FC = () => {
     "role",
     "tempToken",
     "twoFactorMethod",
+    "fullName",
   ]);
 
   const from = location.state?.from?.pathname;
@@ -86,6 +87,7 @@ const Login: React.FC = () => {
         refreshToken,
         expiresIn,
         token,
+        fullName,
       } = apiData.data;
 
       // Handle STAFF / BUSINESS 2FA flow
@@ -100,15 +102,20 @@ const Login: React.FC = () => {
 
           setCookie("tempToken", tempToken, {
             path: "/",
-            sameSite: "lax",
-            maxAge: maxAge > 0 ? maxAge : 10800, // Fallback to 5 minutes
+            // sameSite: "lax",
+            maxAge: maxAge > 0 ? maxAge : 10800, 
           });
 
           setCookie("twoFactorMethod", twoFactorMethod, {
             path: "/",
-            sameSite: "lax",
+            // sameSite: "lax",
             maxAge: maxAge > 0 ? maxAge : 10800,
           });
+          // setCookie("fullName", fullName, {
+          //   path: "/",
+          //   // sameSite: "lax",
+          //   maxAge: maxAge > 0 ? maxAge : 10800,
+          // });
         }
 
         // ============================
@@ -154,14 +161,20 @@ const Login: React.FC = () => {
       // Save cookies
       setCookie("token", accessToken, {
         path: "/",
-        sameSite: "lax",
-        maxAge: maxAge > 0 ? maxAge : 10800, // Fallback to 3 hours
+        // sameSite: "lax",
+        maxAge: maxAge > 0 ? maxAge : 10800, 
+      });
+
+      setCookie("fullName", fullName, {
+        path: "/",
+        // sameSite: "lax",
+        maxAge: maxAge > 0 ? maxAge : 10800, 
       });
 
       if (refreshToken) {
         setCookie("refreshToken", refreshToken, {
           path: "/",
-          sameSite: "lax",
+          // sameSite: "lax",
         });
       }
 
@@ -217,25 +230,42 @@ const Login: React.FC = () => {
           </div>
 
           {/* LOGIN TYPE BUTTONS */}
-          <div className="flex gap-3 mb-6 flex-wrap justify-center">
-            {["SUPER_USER", "ADMIN", "STAFF", "BUSINESS"].map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setLoginType(type as LoginType)}
-                className={`px-4 py-2 rounded font-medium ${
-                  loginType === type
-                    ? "bg-gradient-to-r from-[#0B4FA8] via-[#1E63C6] to-[#F2C94C] text-white"
-                    : "bg-gray-300 text-black"
-                }`}
-              >
-                {type === "SUPER_USER"
-                  ? "Super Admin"
-                  : type === "BUSINESS"
-                  ? "Business Admin"
-                  : type}
-              </button>
-            ))}
+          <div className="flex flex-col items-center gap-3 mb-6">
+            {/* Top Row: Super Admin Only */}
+            <div>
+              {["SUPER_USER"].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setLoginType(type as LoginType)}
+                  className={`px-6 py-2 rounded font-medium ${
+                    loginType === type
+                      ? "bg-gradient-to-r from-[#0B4FA8] via-[#1E63C6] to-[#F2C94C] text-white"
+                      : "bg-gray-300 text-black"
+                  }`}
+                >
+                  Super Admin
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom Row: Remaining Roles */}
+            <div className="flex gap-3 flex-wrap justify-center">
+              {["ADMIN", "STAFF", "BUSINESS"].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setLoginType(type as LoginType)}
+                  className={`px-4 py-2 rounded font-medium ${
+                    loginType === type
+                      ? "bg-gradient-to-r from-[#0B4FA8] via-[#1E63C6] to-[#F2C94C] text-white"
+                      : "bg-gray-300 text-black"
+                  }`}
+                >
+                  {type === "BUSINESS" ? "Business Admin" : type}
+                </button>
+              ))}
+            </div>
           </div>
 
           <Formik

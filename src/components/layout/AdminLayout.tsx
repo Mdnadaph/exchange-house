@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -13,12 +13,14 @@ import {
   Shield,
   Handshake
 } from "lucide-react";
+import { useCookies } from "react-cookie";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
+  const navigate = useNavigate();
   const location = useLocation();
   
   const navigation = [
@@ -27,6 +29,28 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { name: "Deal Settings", href: "/admin/deal-settings", icon: Handshake },
     { name: "Settings & Rules", href: "/admin/settings", icon: Settings },
   ];
+
+   const [cookies, , removeCookie] = useCookies([
+      "tempToken",
+      "token",
+      "twoFactorEnabled",
+      "email",
+      "role",
+      "fullName",
+      "businessEmail",
+      "accessToken",
+      "businessTwoFactorEnabled",
+    ]);
+  
+    const fullName = cookies.fullName;
+  
+    const handleLogout = () => {
+      removeCookie("email");
+      removeCookie("token");
+      removeCookie("fullName");
+      removeCookie("role");
+      navigate("/");
+    };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -43,14 +67,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </Link>
               <div className="flex items-center space-x-2 text-sm">
                 <Shield className="h-4 w-4 text-primary" />
-                <span className="font-medium text-primary">Admin Portal</span>
+                <span className="font-medium text-primary">Super Admin Portal</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <ThemeToggle />
-              <span className="text-sm text-muted-foreground">John Doe (Admin)</span>
-              <Button variant="ghost" size="sm">
+              <span className="text-sm text-muted-foreground">Super admin (Admin)</span>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
@@ -61,7 +85,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-background border-r min-h-[calc(100vh-4rem)]">
+          <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -84,8 +108,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
-          <div className="container mx-auto px-6 py-8">
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-6 py-2 mb-4">
             {children}
           </div>
         </main>

@@ -116,7 +116,7 @@ const StaffTwoFA = () => {
           // secure: true,
           // sameSite: "strict",
           path: "/",
-          sameSite: "lax",
+          // sameSite: "lax",
         });
 
         setCookie("twoFactorEnabled", true, { path: "/" });

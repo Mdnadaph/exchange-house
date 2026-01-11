@@ -18,6 +18,7 @@ import UserBeneficiaries from "./pages/portal/UserBeneficiaries";
 import UserTransactions from "./pages/portal/UserTransactions";
 import UserDocuments from "./pages/portal/UserDocuments";
 import UserGovernance from "./pages/portal/UserGovernance";
+import UserManagement from "./pages/portal/UserManagement";
 import UserDealRequests from "./pages/portal/UserDealRequests";
 import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
 import ExchangeKYBReview from "./pages/exchange/ExchangeKYBReview";
@@ -69,12 +70,10 @@ const App = () => (
               <Route path="/generateqr" element={<StaffTwoFA />} />
               <Route path="/verify-2fa-login" element={<StaffVerifyTwoFALogin />} />
 
-
               {/* business 2FA */}
               <Route path="/business-auth/set-password" element={<BusinessPasswordSetup />} />
               <Route path="/business/2fa/qr" element={<BusinessTwoFA />} />
               <Route path="/business/2fa/login" element={<BusinessVerifyTwoFALogin />} />
-
 
               {/* Business Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
@@ -86,11 +85,10 @@ const App = () => (
               <Route path="/portal" element={<UserDashboard />} />
               <Route path="/portal/profile" element={<UserProfile />} />
               <Route path="/portal/profile/:id" element={<UserProfile />} />
-
               <Route path="/portal/beneficiaries" element={<UserBeneficiaries />} />
               <Route path="/portal/transactions" element={<UserTransactions />} />
               <Route path="/portal/deals" element={<UserDealRequests />} />
-              <Route path="/portal/users" element={<AdminUserManagement />} />
+              <Route path="/portal/users" element={<UserManagement />} />
               <Route path="/portal/governance" element={<UserGovernance />} />
               <Route path="/portal/documents" element={<UserDocuments />} />
               <Route path="/portal/documents/:id" element={<UserDocuments />} />
@@ -101,56 +99,23 @@ const App = () => (
               <Route path="/exchange/onboard-business" element={<ExchangeBusinessOnboarding />} />
               <Route path="/exchange/kyb-review" element={<ExchangeKYBReview />} />
               <Route path="/exchange/kyb-config" element={<ExchangeKYBConfig />} />
-              <Route
-                path="/exchange/create-kyb-rule"
-                element={<CreateKybRule />}
-              />
-              <Route
-                path="/exchange/transactions"
-                element={<ExchangeTransactions />}
-              />
+              <Route path="/exchange/create-kyb-rule" element={<CreateKybRule />} />
+              <Route path="/exchange/transactions" element={<ExchangeTransactions />} />
               <Route path="/exchange/deals" element={<ExchangeDealReview />} />
-              <Route
-                path="/exchange/documents"
-                element={<ExchangeBusinessDocuments />}
-              />
-              <Route
-                path="/exchange/fee-management"
-                element={<ExchangeFeeManagement />}
-              />
-              <Route
-                path="/exchange/payout-config"
-                element={<ExchangePayoutConfig />}
-              />
-              <Route
-                path="/exchange/compliance-config"
-                element={<ExchangeComplianceConfig />}
-              />
-              <Route
-                path="/exchange/branches"
-                element={<ExchangeBranchManagement />}
-              />
-              <Route
-                path="/exchange/staff"
-                element={<ExchangeStaffManagement />}
-              />
+              <Route path="/exchange/documents" element={<ExchangeBusinessDocuments />} />
+              <Route path="/exchange/fee-management" element={<ExchangeFeeManagement />} />
+              <Route path="/exchange/payout-config" element={<ExchangePayoutConfig />} />
+              <Route path="/exchange/compliance-config" element={<ExchangeComplianceConfig />} />
+              <Route path="/exchange/branches" element={<ExchangeBranchManagement />} />
+              <Route path="/exchange/staff" element={<ExchangeStaffManagement />} />
 
               {/* Branch User Routes */}
               <Route path="/branch" element={<BranchDashboard />} />
-              <Route
-                path="/branch/onboard-business"
-                element={<BranchBusinessOnboarding />}
-              />
+              <Route path="/branch/onboard-business" element={<BranchBusinessOnboarding />} />
               <Route path="/branch/kyb-queue" element={<BranchKYBQueue />} />
-              <Route
-                path="/branch/transactions"
-                element={<BranchTransactions />}
-              />
+              <Route path="/branch/transactions" element={<BranchTransactions />} />
               <Route path="/branch/deals" element={<BranchDealReview />} />
-              <Route
-                path="/branch/documents"
-                element={<BranchBusinessDocuments />}
-              />
+              <Route path="/branch/documents" element={<BranchBusinessDocuments />} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
@@ -163,16 +128,6 @@ const App = () => (
 );
 
 export default App;
-
-
-
-
-
-
-
-
-
-
 
 
 

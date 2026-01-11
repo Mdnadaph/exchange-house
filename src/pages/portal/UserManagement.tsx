@@ -1,4 +1,3 @@
-import AdminLayout from "@/components/layout/AdminLayout";
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

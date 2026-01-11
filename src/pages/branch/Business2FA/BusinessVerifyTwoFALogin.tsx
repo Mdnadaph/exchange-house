@@ -122,29 +122,38 @@ const BusinessTwoFALogin: React.FC = () => {
       ========================== */
       setCookie("token", accessToken, {
         path: "/",
-        sameSite: "lax",
+        // sameSite: "lax",
         maxAge: maxAge > 0 ? maxAge : 10800,
       });
 
-      setCookie("role", role, { path: "/", sameSite: "lax" });
+      setCookie("role", role, { 
+        path: "/",
+        //  sameSite: "lax" 
+        });
 
       setCookie("businessId", businessAdmin.businessId, {
         path: "/",
-        sameSite: "lax",
+        // sameSite: "lax",
       });
-      setCookie("id", businessAdmin.id, { path: "/", sameSite: "lax" });
-      setCookie("uuid", businessAdmin.uuid, { path: "/", sameSite: "lax" });
+      setCookie("id", businessAdmin.id, {
+         path: "/", 
+        //  sameSite: "lax"
+         });
+      setCookie("uuid", businessAdmin.uuid, {
+         path: "/",
+          // sameSite: "lax" 
+        });
       setCookie("firstName", businessAdmin.firstName, {
         path: "/",
-        sameSite: "lax",
+        // sameSite: "lax",
       });
       setCookie("lastName", businessAdmin.lastName, {
         path: "/",
-        sameSite: "lax",
+        // sameSite: "lax",
       });
       setCookie("email", businessAdmin.email, {
         path: "/",
-        sameSite: "lax",
+        // sameSite: "lax",
       });
 
       /* =========================

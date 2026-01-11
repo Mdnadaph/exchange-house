@@ -260,7 +260,7 @@ const AdminDashboard = () => {
 
             <Button variant="business" onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Business User
+              Add Exchange Admin
             </Button>
           </div>
         </div>
@@ -480,7 +480,7 @@ const AdminDashboard = () => {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add Business User</DialogTitle>
+            <DialogTitle>Add Exchange Admin</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
