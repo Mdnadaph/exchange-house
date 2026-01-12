@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
@@ -63,7 +64,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
 
-              <Route path="/login" element={<Login />} />
+              {/* <Route path="/login" element={<Login />} /> */}
+              <Route path="/login" element={<Auth />} />
 
               {/* Staff 2FA  */}
               <Route path="/set-password" element={<StaffSetupPassword />} />
