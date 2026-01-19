@@ -632,6 +632,22 @@ const ExchangeFeeManagement = () => {
   }, [selectedCountry, selectedType]);
 
   // --- UI Helpers ---
+  // const getStatusBadge = (status: boolean | string) => {
+  //   const isActive = status === true || status === "ACTIVE" || status === "Active";
+  //   return isActive ? (
+  //     <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+  //       Active
+  //     </Badge>
+  //   ) : (
+  //     <Badge variant="secondary">Inactive</Badge>
+  //   );
+  // };
+
+   // ✅ ONLY ACTIVE RULES (LOGIC ONLY)
+  const activeRules = rules.filter(
+    (rule) => rule.status === "ACTIVE" || rule.status === true || rule.status === "Active"
+  );
+
   const getStatusBadge = (status: boolean | string) => {
     const isActive = status === true || status === "ACTIVE" || status === "Active";
     return isActive ? (
@@ -892,76 +908,75 @@ const ExchangeFeeManagement = () => {
                 </TableRow>
               </TableHeader>
 
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
-                      <div className="flex flex-col items-center justify-center text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                        <span>Syncing rules...</span>
+               <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mb-2 mx-auto" />
+                  </TableCell>
+                </TableRow>
+              ) : activeRules.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                    No active configurations found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                activeRules.map((rule) => (
+                  <TableRow key={rule.id} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="pl-6 font-medium capitalize">
+                      {rule.transactionType.toLowerCase().replace("_", " ")}
+                    </TableCell>
+                    <TableCell>{countryLabel(rule.payoutCountry)}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {rule.minAmount?.toLocaleString()} – {rule.maxAmount?.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-normal">
+                        {rule.feeType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono font-bold text-primary">
+                      {rule.feeType === "BPS"
+                        ? `${rule.feeValue} BPS`
+                        : `AED ${rule.feeValue}`}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={rule.feeResponsibility === "BUSINESS" ? "default" : "secondary"}
+                        className="capitalize text-[10px]"
+                      >
+                        {rule.feeResponsibility.toLowerCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(rule.status)}</TableCell>
+                    <TableCell className="text-right pr-6">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 hover:text-primary"
+                          onClick={() => handleEditClick(rule)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-red-500 hover:text-red-600"
+                          onClick={() => {
+                            setSelectedIdForDelete(rule.id);
+                            setIsConfirmDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : rules.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                      No configurations found for the selected filters.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rules.map((rule) => (
-                    <TableRow key={rule.id} className="hover:bg-muted/20 transition-colors">
-                      <TableCell className="pl-6 font-medium capitalize">
-                        {rule.transactionType.toLowerCase().replace("_", " ")}
-                      </TableCell>
-                      <TableCell>{countryLabel(rule.payoutCountry)}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {rule.minAmount?.toLocaleString()} – {rule.maxAmount?.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-normal">
-                          {rule.feeType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-mono font-bold text-primary">
-                        {rule.feeType === "BPS" ? `${rule.feeValue} BPS` : `AED ${rule.feeValue}`}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={rule.feeResponsibility === "BUSINESS" ? "default" : "secondary"}
-                          className="capitalize text-[10px]"
-                        >
-                          {rule.feeResponsibility.toLowerCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(rule.status)}</TableCell>
-                      <TableCell className="text-right pr-6">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 hover:text-primary"
-                            onClick={() => handleEditClick(rule)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-red-500 hover:text-red-600"
-                            onClick={() => {
-                              setSelectedIdForDelete(rule.id);
-                              setIsConfirmDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
+                ))
+              )}
+            </TableBody>
             </Table>
           </CardContent>
         </Card>
