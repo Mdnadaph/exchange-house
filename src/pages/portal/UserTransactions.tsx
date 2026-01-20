@@ -544,13 +544,12 @@ import {
   Calendar,
   DollarSign,
   FileText,
-  Users,
+  Building2,
   Wallet,
   MessageSquare,
   ChevronDown,
   ChevronUp,
   Loader2,
-  Building2,
 } from "lucide-react";
 import axios from "axios";
 import BASE_URL from "@/config/config";
@@ -627,9 +626,10 @@ const UserTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [cookies] = useCookies(["token", "email"]);
+  const [cookies] = useCookies(["token", "email", "fullName"]);
 
   const token = cookies.token;
+  const userName = cookies.fullName || "User";
 
   // Fetch data from API
   useEffect(() => {
@@ -656,6 +656,7 @@ const UserTransactions = () => {
         );
 
         const data = response.data;
+        console.log("ddd", data);
 
         if (data.status && data.data) {
           // Transform API data to match UI structure
@@ -976,7 +977,7 @@ const UserTransactions = () => {
           </CardContent>
         </Card>
 
-        {/* Transactions List - UPDATED TO MATCH ExchangeTransactions */}
+        {/* Transactions List - Updated to match ExchangeTransactions layout */}
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
@@ -1017,18 +1018,22 @@ const UserTransactions = () => {
                     >
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          {/* Transaction Header - Updated to match ExchangeTransactions */}
+                          {/* Transaction Header - Matching ExchangeTransactions layout */}
                           <div className="flex items-start justify-between">
                             <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <Building2 className="h-4 w-4 text-primary" />
-                                <span className="font-semibold text-primary">
-                                  {transaction.branchName || "Business"}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  ({transaction.businessId || "N/A"})
-                                </span>
-                              </div>
+                              {transaction.branchName && (
+                                <div className="flex items-center gap-3">
+                                  <Building2 className="h-8 w-8 text-primary" />
+                                  <span className="text-primary text-2xl font-bold">
+                                    {transaction.branchName}
+                                  </span>
+                                  {transaction.businessId && (
+                                    <span className="text-xs text-muted-foreground">
+                                      ({transaction.businessId})
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                               <div className="flex items-center gap-3">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction.beneficiary}
@@ -1037,7 +1042,7 @@ const UserTransactions = () => {
                                   variant={status.variant}
                                   className="flex items-center gap-1"
                                 >
-                                  <StatusIcon className="h-3 w-3" />
+                                  <StatusIcon className="h-4 w-4" />
                                   {status.label}
                                 </Badge>
                                 <span
@@ -1049,25 +1054,24 @@ const UserTransactions = () => {
                                 </span>
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                {transaction.id} • {transaction.purpose}
+                                {transaction.id}
+                                {transaction.purpose &&
+                                  ` • ${transaction.purpose}`}
                               </p>
                             </div>
 
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction.currency}{" "}
-                                {Number(transaction.amount).toLocaleString()}
+                                {transaction.currency} {transaction.amount}
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 {transaction.localCurrency}{" "}
-                                {Number(
-                                  transaction.localAmount,
-                                ).toLocaleString()}
+                                {transaction.localAmount}
                               </p>
                             </div>
                           </div>
 
-                          {/* Transaction Details - Updated to 5 columns like ExchangeTransactions */}
+                          {/* Transaction Details */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                             <div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
@@ -1098,9 +1102,11 @@ const UserTransactions = () => {
                                 Fee Details:
                               </span>
                               <p className="font-medium">${transaction.fees}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Paid by: {transaction.feeResponsibility}
-                              </p>
+                              {transaction.feeResponsibility && (
+                                <p className="text-xs text-muted-foreground">
+                                  Paid by: {transaction.feeResponsibility}
+                                </p>
+                              )}
                             </div>
 
                             <div className="space-y-1">
@@ -1127,7 +1133,7 @@ const UserTransactions = () => {
                             </div>
                           </div>
 
-                          {/* Actions - Updated to match ExchangeTransactions layout */}
+                          {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
                               <Button variant="outline" size="sm">
@@ -1183,52 +1189,6 @@ const UserTransactions = () => {
                                 />
                               )}
                             </div>
-
-                            {/* Keep status messages for UserTransactions */}
-                            {transaction.status === "pending_approval" && (
-                              <div className="text-xs text-muted-foreground">
-                                <div className="flex items-center space-x-1">
-                                  <Users className="h-3 w-3" />
-                                  <span>
-                                    Awaiting approval from Treasury Department
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            {transaction.status === "pending_payment" && (
-                              <div className="text-xs text-muted-foreground">
-                                <div className="flex items-center space-x-1">
-                                  <Wallet className="h-3 w-3" />
-                                  <span>
-                                    Payment execution required to proceed
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            {transaction.status === "payment_verification" && (
-                              <div className="text-xs text-muted-foreground">
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>
-                                    Verifying payment proof - will route to Core
-                                    system
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            {transaction.status === "processing" && (
-                              <div className="text-xs text-muted-foreground">
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>
-                                    Processing through approval workflow
-                                  </span>
-                                </div>
-                              </div>
-                            )}
                           </div>
 
                           {/* Comments Section */}
@@ -1237,12 +1197,14 @@ const UserTransactions = () => {
                               <ProofOfPaymentUpload
                                 transactionId={transaction.id}
                                 userRole="Business"
-                                userName="Sarah Smith"
+                                userName={userName}
+                                branchName={transaction.branchName}
                               />
                               <TransactionComments
                                 transactionId={transaction.id}
                                 userRole="Business"
-                                userName="Sarah Smith"
+                                userName={userName}
+                                branchName={transaction.branchName}
                               />
                             </div>
                           )}

@@ -535,6 +535,8 @@ interface ApiTransaction {
   purpose?: string;
   feeResponsibility?: string;
   failureReason?: string;
+  commentCount?: number;
+  latestComment?: string | null;
 }
 
 interface ApiResponse {
@@ -577,9 +579,11 @@ const ExchangeTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [cookies] = useCookies(["token", "email"]);
+  const [cookies] = useCookies(["token", "email", "fullName"]);
 
   const token = cookies.token;
+  const fullname = cookies.fullName;
+  console.log("namwe", fullname);
 
   // Fetch data from API
   useEffect(() => {
@@ -646,6 +650,8 @@ const ExchangeTransactions = () => {
               branch: apiTx.branchName,
               failureReason: apiTx.failureReason || "",
               documents: apiTx.documents,
+              commentCount: apiTx.commentCount || 0,
+              latestComment: apiTx.latestComment || null,
             }),
           );
 
@@ -1129,13 +1135,13 @@ const ExchangeTransactions = () => {
                             <div className="mt-4 pt-4 border-t space-y-4">
                               <ProofOfPaymentUpload
                                 transactionId={transaction.id}
-                                userRole="Exchange"
-                                userName="Sarah Wilson"
+                                userRole={token}
+                                userName={fullname}
                               />
                               <TransactionComments
                                 transactionId={transaction.id}
-                                userRole="Exchange"
-                                userName="Sarah Wilson"
+                                userRole={token}
+                                userName={fullname}
                               />
                             </div>
                           )}
