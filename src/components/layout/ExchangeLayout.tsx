@@ -57,6 +57,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     removeCookie("firstName");
     removeCookie("lastName");
     removeCookie("role");
+    removeCookie("accessToken");
+    removeCookie("email");
+    removeCookie("tempToken");
+    removeCookie("twoFactorEnabled");
+    removeCookie("businessTwoFactorEnabled");
+    removeCookie("businessEmail");
     navigate("/");
   };
 
