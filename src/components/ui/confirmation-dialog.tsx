@@ -18,17 +18,19 @@ interface ConfirmationDialogProps {
   confirmText?: string;
   cancelText?: string;
   variant?: "default" | "destructive";
+  isConfirming?: boolean;
 }
 
 export function ConfirmationDialog({
   open,
+  isConfirming = false,
   onOpenChange,
   onConfirm,
   title,
   description,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  variant = "default"
+  variant = "default",
 }: ConfirmationDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -41,7 +43,12 @@ export function ConfirmationDialog({
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className={variant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            disabled={isConfirming}
+            className={
+              variant === "destructive"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : ""
+            }
           >
             {confirmText}
           </AlertDialogAction>
