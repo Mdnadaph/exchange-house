@@ -1135,8 +1135,8 @@ const ExchangeTransactions = () => {
                             <div className="mt-4 pt-4 border-t space-y-4">
                               <ProofOfPaymentUpload
                                 transactionId={transaction.id}
-                                userRole={token}
-                                userName={fullname}
+                                userRole="Exchange"
+                                userName="Sarah Wilson"
                               />
                               <TransactionComments
                                 transactionId={transaction.id}
