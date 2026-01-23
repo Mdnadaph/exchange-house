@@ -12,67 +12,185 @@ import {
   Trash2,
   AlertCircle,
   CheckCircle2,
-  Plus
+  Plus,
+  XCircle,
+  Power,
 } from "lucide-react";
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const UserGovernance = () => {
-  // Mock data for existing approval rules
-  const approvalRules = [
-    {
-      id: 1,
-      name: "High Value USD Transactions",
-      description: "Approval rules for USD transactions above $10,000",
-      currency: "USD",
-      minAmount: 10000,
-      maxAmount: 100000,
-      department: "All",
-      status: "active",
-      transactionTypes: ["Single Transfer", "Bulk Transfer"],
-      tiers: [
-        { level: 1, threshold: 10000, approvers: 1, roles: ["Finance Manager"] },
-        { level: 2, threshold: 50000, approvers: 2, roles: ["CFO", "CEO"] }
-      ]
-    },
-    {
-      id: 2,
-      name: "AED Salary Payments",
-      description: "Approval workflow for salary payments in AED",
-      currency: "AED",
-      minAmount: 5000,
-      maxAmount: 50000,
-      department: "HR",
-      status: "active",
-      transactionTypes: ["Salary Payment"],
-      tiers: [
-        { level: 1, threshold: 5000, approvers: 1, roles: ["HR Manager"] }
-      ]
-    },
-    {
-      id: 3,
-      name: "Supplier Payments EUR",
-      description: "Multi-tier approval for EUR supplier payments",
-      currency: "EUR",
-      minAmount: 1000,
-      maxAmount: null,
-      department: "Procurement",
-      status: "draft",
-      transactionTypes: ["Supplier Payment", "Invoice Payment"],
-      tiers: [
-        { level: 1, threshold: 1000, approvers: 1, roles: ["Operations Manager"] },
-        { level: 2, threshold: 25000, approvers: 2, roles: ["CFO", "Senior Manager"] }
-      ]
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
+  const { toast } = useToast();
+
+  const [dashboard, setDashboard] = useState({
+    totalRules: 0,
+    activeRules: 0,
+    draftRules: 0,
+    currencies: 0,
+  });
+  const [rules, setRules] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [loadingStatusChange, setLoadingStatusChange] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchData(currentPage);
+  }, [currentPage]);
+
+  const fetchData = async (page: number) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/v1/business/governance-rules?page=${page}&size=10`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      if (data.status) {
+        setDashboard(data.data.dashboard);
+        setRules(
+          data.data.rules.map((r: any) => ({
+            id: r.id,
+            name: r.ruleName,
+            description: r.description,
+            currency: r.currency,
+            minAmount: r.minAmount,
+            maxAmount: r.maxAmount,
+            department: r.department
+              .split("_")
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(" "),
+            // ────────────────────────────────────────
+            // IMPORTANT: no .toLowerCase() anymore
+            status: r.status,   // keep exactly as backend sends: DRAFT / ACTIVE / DISABLED
+            // ────────────────────────────────────────
+            transactionTypes: r.transactionTypes.map((t: string) =>
+              t
+                .split("_")
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                .join(" ")
+            ),
+            tiers: r.approvalTiers.map((t: any) => ({
+              level: t.tierOrder,
+              threshold: t.thresholdAmount,
+              approvers: t.approversRequired,
+              roles: t.eligibleRoles.map((role: string) =>
+                role
+                  .split("_")
+                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                  .join(" ")
+              ),
+            })),
+          }))
+        );
+        setPagination(data.data.pagination);
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to load rules",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch governance rules",
+        variant: "destructive",
+      });
     }
-  ];
+  };
+
+  const changeRuleStatus = async (ruleId: number, newStatus: "DRAFT" | "ACTIVE" | "DISABLED") => {
+    setLoadingStatusChange(ruleId);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/v1/business/governance-rules/${ruleId}/status?status=${newStatus}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (result.status) {
+        toast({
+          title: "Success",
+          description: `Rule status updated to ${newStatus}`,
+        });
+
+        // Optimistic update
+        setRules((prev) =>
+          prev.map((rule) =>
+            rule.id === ruleId ? { ...rule, status: newStatus } : rule
+          )
+        );
+
+        // Refresh list after short delay
+        setTimeout(() => fetchData(currentPage), 800);
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to update status",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update rule status",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStatusChange(null);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active":
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle2 className="h-3 w-3 mr-1" />Active</Badge>;
-      case "draft":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><AlertCircle className="h-3 w-3 mr-1" />Draft</Badge>;
+      case "ACTIVE":
+        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle2 className="h-3 w-3 mr-1" />ACTIVE</Badge>;
+      case "DRAFT":
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><AlertCircle className="h-3 w-3 mr-1" />DRAFT</Badge>;
+      case "DISABLED":
+        return <Badge variant="secondary" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />DISABLED</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const getStatusColor = (status: string) => {
+    const lower = status.toLowerCase();
+    if (lower === "active") return "text-green-600 hover:bg-green-50";
+    if (lower === "draft")   return "text-yellow-600 hover:bg-yellow-50";
+    if (lower === "disabled") return "text-red-600 hover:bg-red-50";
+    return "";
   };
 
   return (
@@ -104,10 +222,8 @@ const UserGovernance = () => {
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{approvalRules.length}</div>
-              <p className="text-xs text-muted-foreground">
-                +1 from last month
-              </p>
+              <div className="text-2xl font-bold">{dashboard.totalRules}</div>
+              <p className="text-xs text-muted-foreground">+1 from last month</p>
             </CardContent>
           </Card>
 
@@ -117,10 +233,8 @@ const UserGovernance = () => {
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{approvalRules.filter(r => r.status === 'active').length}</div>
-              <p className="text-xs text-muted-foreground">
-                Currently enforced
-              </p>
+              <div className="text-2xl font-bold">{dashboard.activeRules}</div>
+              <p className="text-xs text-muted-foreground">Currently enforced</p>
             </CardContent>
           </Card>
 
@@ -130,10 +244,8 @@ const UserGovernance = () => {
               <AlertCircle className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{approvalRules.filter(r => r.status === 'draft').length}</div>
-              <p className="text-xs text-muted-foreground">
-                Pending activation
-              </p>
+              <div className="text-2xl font-bold">{dashboard.draftRules}</div>
+              <p className="text-xs text-muted-foreground">Pending activation</p>
             </CardContent>
           </Card>
 
@@ -143,10 +255,8 @@ const UserGovernance = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{new Set(approvalRules.map(r => r.currency)).size}</div>
-              <p className="text-xs text-muted-foreground">
-                Configured currencies
-              </p>
+              <div className="text-2xl font-bold">{dashboard.currencies}</div>
+              <p className="text-xs text-muted-foreground">Configured currencies</p>
             </CardContent>
           </Card>
         </div>
@@ -164,7 +274,7 @@ const UserGovernance = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {approvalRules.map((rule) => (
+              {rules.map((rule) => (
                 <Card key={rule.id} className="border-l-4 border-l-primary">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
@@ -175,7 +285,52 @@ const UserGovernance = () => {
                         </div>
                         <p className="text-sm text-muted-foreground">{rule.description}</p>
                       </div>
+
                       <div className="flex items-center gap-2">
+                        {/* Status Dropdown Button */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={`min-w-[110px] ${getStatusColor(rule.status)}`}
+                              disabled={loadingStatusChange === rule.id}
+                            >
+                              {loadingStatusChange === rule.id ? (
+                                "Updating..."
+                              ) : (
+                                <>
+                                  <Power className="h-4 w-4 mr-1" />
+                                  {rule.status}
+                                </>
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => changeRuleStatus(rule.id, "ACTIVE")}
+                              className="text-green-700"
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              ACTIVE
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => changeRuleStatus(rule.id, "DRAFT")}
+                              className="text-yellow-700"
+                            >
+                              <AlertCircle className="h-4 w-4 mr-2" />
+                              DRAFT
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => changeRuleStatus(rule.id, "DISABLED")}
+                              className="text-red-700"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              DISABLED
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
                         <ApprovalRuleForm 
                           editRule={rule}
                           trigger={
@@ -205,7 +360,7 @@ const UserGovernance = () => {
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Transaction Types</p>
                         <div className="flex flex-wrap gap-1">
-                          {rule.transactionTypes.map((type) => (
+                          {rule.transactionTypes.map((type: string) => (
                             <Badge key={type} variant="secondary" className="text-xs">
                               {type}
                             </Badge>
@@ -220,7 +375,7 @@ const UserGovernance = () => {
                         Approval Tiers ({rule.tiers.length})
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {rule.tiers.map((tier) => (
+                        {rule.tiers.map((tier: any) => (
                           <div key={tier.level} className="p-3 bg-muted/50 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
                               <Badge variant="outline" className="text-xs">
@@ -234,7 +389,7 @@ const UserGovernance = () => {
                               Threshold: {rule.currency} {tier.threshold.toLocaleString()}+
                             </p>
                             <div className="flex flex-wrap gap-1">
-                              {tier.roles.map((role) => (
+                              {tier.roles.map((role: string) => (
                                 <Badge key={role} variant="outline" className="text-xs">
                                   {role}
                                 </Badge>
@@ -248,6 +403,49 @@ const UserGovernance = () => {
                 </Card>
               ))}
             </div>
+
+            {pagination.totalPages > 1 && (
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href={currentPage > 0 ? "#" : undefined}
+                      onClick={(e) => {
+                        if (currentPage > 0) {
+                          e.preventDefault();
+                          setCurrentPage(currentPage - 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: pagination.totalPages }).map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        href="#"
+                        isActive={currentPage === i}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(i);
+                        }}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href={currentPage < pagination.totalPages - 1 ? "#" : undefined}
+                      onClick={(e) => {
+                        if (currentPage < pagination.totalPages - 1) {
+                          e.preventDefault();
+                          setCurrentPage(currentPage + 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </CardContent>
         </Card>
       </div>

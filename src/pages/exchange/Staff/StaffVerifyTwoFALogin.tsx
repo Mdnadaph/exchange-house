@@ -73,7 +73,7 @@ const VerifyTwoFALogin: React.FC = () => {
         {
           tempToken: cookies.tempToken,
           twoFactorCode: otpCode,
-        }
+        },
       );
 
       if (!response.data.status) {
@@ -87,25 +87,19 @@ const VerifyTwoFALogin: React.FC = () => {
 
       const { accessToken, expiresIn, staff } = response.data.data;
 
-
-
       // 2. PRINT DATA TO CONSOLE
-    console.log("--- Login Success Data ---");
-    console.log("Access Token:", accessToken);
-    console.log("Staff Details:", staff);
-    // Individual fields as requested:
-    console.log("ID:", staff.id);
-    console.log("UUID:", staff.uuid);
-    console.log("Full Name:", staff.fullName);
-    console.log("Email:", staff.email);
-    console.log("Branch ID:", staff.branchId);
-    console.log("Role Name:", staff.roleName);
-    console.log("Contact Number:", staff.contactNumber);
-    console.log("--------------------------");
-
-
-
-
+      console.log("--- Login Success Data ---");
+      console.log("Access Token:", accessToken);
+      console.log("Staff Details:", staff);
+      // Individual fields as requested:
+      console.log("ID:", staff.id);
+      console.log("UUID:", staff.uuid);
+      console.log("Full Name:", staff.fullName);
+      console.log("Email:", staff.email);
+      console.log("Branch ID:", staff.branchId);
+      console.log("Role Name:", staff.roleName);
+      console.log("Contact Number:", staff.contactNumber);
+      console.log("--------------------------");
 
       /* ===== STORE TOKEN ===== */
       setCookie("Token", accessToken, {
@@ -116,36 +110,35 @@ const VerifyTwoFALogin: React.FC = () => {
 
       /* ===== STORE STAFF DATA ===== */
       setCookie("id", staff.id, {
-         path: "/", 
-        //  sameSite: "lax"
-         });
-      setCookie("uuid", staff.uuid, {
-         path: "/", 
-        //  sameSite: "lax" 
-        });
-      setCookie("fullName", staff.fullName, { 
         path: "/",
-        //  sameSite: "lax" 
-        });
-      setCookie("email", staff.email, {
-         path: "/", 
         //  sameSite: "lax"
-         });
+      });
+      setCookie("uuid", staff.uuid, {
+        path: "/",
+        //  sameSite: "lax"
+      });
+      setCookie("fullName", staff.fullName, {
+        path: "/",
+        //  sameSite: "lax"
+      });
+      setCookie("email", staff.email, {
+        path: "/",
+        //  sameSite: "lax"
+      });
 
       setCookie("branchId", staff.branchId, {
-         path: "/",
-          // sameSite: "lax"
-         });
+        path: "/",
+        // sameSite: "lax"
+      });
       setCookie("roleName", staff.roleName, {
-         path: "/",
-          // sameSite: "lax" 
-        });
+        path: "/",
+        // sameSite: "lax"
+      });
 
-
-      setCookie("role", "STAFF", { 
+      setCookie("role", "STAFF", {
         path: "/",
         //  sameSite: "lax"
-         });
+      });
       setCookie("contactNumber", staff.contactNumber, {
         path: "/",
         // sameSite: "lax",
@@ -156,7 +149,6 @@ const VerifyTwoFALogin: React.FC = () => {
 
       toast.success("Login successful");
       navigate("/branch", { replace: true });
-
     } catch (error: any) {
       console.error("❌ VERIFY ERROR:", error);
 
@@ -196,9 +188,7 @@ const VerifyTwoFALogin: React.FC = () => {
 
         {/* ERROR MESSAGE */}
         {otpError && (
-          <p className="text-red-500 text-sm text-center mt-4">
-            {otpError}
-          </p>
+          <p className="text-red-500 text-sm text-center mt-4">{otpError}</p>
         )}
 
         {/* VERIFY BUTTON */}

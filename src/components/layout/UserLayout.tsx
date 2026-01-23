@@ -125,9 +125,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-6 py-2 mb-4">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-2 mb-4">{children}</div>
         </main>
       </div>
     </div>

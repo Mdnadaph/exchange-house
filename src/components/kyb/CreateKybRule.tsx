@@ -1022,7 +1022,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
               headers: { Authorization: `Bearer ${token}` },
             }),
             axios.get(
-              `http://192.168.18.174:8082/api/v3/admin/kyb/master/risks`,
+              `${BASE_URL}/api/v3/admin/kyb/master/risks`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }

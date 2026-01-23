@@ -2,129 +2,162 @@ import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  CreditCard, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  Plus, 
-  ArrowUpRight, 
+import {
+  CreditCard,
+  Users,
+  Clock,
+  CheckCircle,
+  Plus,
+  ArrowUpRight,
   TrendingUp,
   FileText,
   AlertCircle,
   DollarSign,
   ShieldCheck,
-  XCircle
+  XCircle,
 } from "lucide-react";
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
+
   // Mock KYB status - in real implementation this would come from backend
-  const kybStatus = "pending_kyb" as "verified" | "pending_review" | "pending_kyb" | "rejected";
+  const kybStatus = "pending_kyb" as
+    | "verified"
+    | "pending_review"
+    | "pending_kyb"
+    | "rejected";
   const kybSubmitted = false;
 
-  const stats = [
-    {
-      title: "Monthly Transactions",
-      value: "$45,230",
-      change: "+12% from last month",
-      icon: CreditCard,
-      color: "text-green-600"
-    },
-    {
-      title: "Registered Beneficiaries",
-      value: "18",
-      change: "+3 this week",
-      icon: Users,
-      color: "text-blue-600"
-    },
-    {
-      title: "Pending Approvals",
-      value: "5",
-      change: "2 require action",
-      icon: Clock,
-      color: "text-orange-600"
-    },
-    {
-      title: "Completed This Week",
-      value: "12",
-      change: "85% success rate",
-      icon: CheckCircle,
-      color: "text-purple-600"
-    }
-  ];
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const recentTransactions = [
-    {
-      id: "TXN-2024-001",
-      beneficiary: "Global Suppliers Inc",
-      amount: "15,000",
-      currency: "USD",
-      status: "completed",
-      date: "2024-01-16",
-      type: "Invoice Payment"
-    },
-    {
-      id: "TXN-2024-002", 
-      beneficiary: "Tech Solutions Ltd",
-      amount: "8,500",
-      currency: "USD", 
-      status: "pending_approval",
-      date: "2024-01-16",
-      type: "Service Payment"
-    },
-    {
-      id: "TXN-2024-003",
-      beneficiary: "Office Supplies Co",
-      amount: "2,340",
-      currency: "USD",
-      status: "processing", 
-      date: "2024-01-15",
-      type: "Purchase Order"
-    },
-    {
-      id: "TXN-2024-004",
-      beneficiary: "Marketing Agency",
-      amount: "12,000",
-      currency: "USD",
-      status: "completed",
-      date: "2024-01-15", 
-      type: "Marketing Services"
-    }
-  ];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/dashboard/business-portal`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.status) {
+          setDashboardData(result.data);
+        } else {
+          throw new Error(result.message || "Failed to retrieve dashboard data");
+        }
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [token]);
+
+  const stats = dashboardData
+    ? [
+        {
+          title: "Monthly Transactions",
+          value: `$${dashboardData.stats.monthlyTransactions.toLocaleString()}`,
+          change: "",
+          icon: CreditCard,
+          color: "text-green-600",
+        },
+        {
+          title: "Registered Beneficiaries",
+          value: dashboardData.stats.registeredBeneficiaries.toString(),
+          change: "",
+          icon: Users,
+          color: "text-blue-600",
+        },
+        {
+          title: "Pending Approvals",
+          value: dashboardData.stats.pendingApprovals.toString(),
+          change: "",
+          icon: Clock,
+          color: "text-orange-600",
+        },
+        {
+          title: "Completed This Week",
+          value: dashboardData.stats.completedThisWeek.toString(),
+          change: "",
+          icon: CheckCircle,
+          color: "text-purple-600",
+        },
+      ]
+    : [];
+
+  const recentTransactions = dashboardData ? dashboardData.recentTransactions : [];
 
   const pendingActions = [
     {
       type: "approval_required",
       message: "Transaction TXN-2024-002 requires your approval",
       priority: "high",
-      time: "2 hours ago"
+      time: "2 hours ago",
     },
     {
       type: "document_needed",
       message: "Upload invoice for TXN-2024-005",
       priority: "medium",
-      time: "4 hours ago"
+      time: "4 hours ago",
     },
     {
       type: "beneficiary_expiring",
       message: "Beneficiary verification expires in 3 days",
       priority: "low",
-      time: "1 day ago"
-    }
+      time: "1 day ago",
+    },
   ];
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
       completed: { variant: "default" as const, label: "Completed" },
-      pending_approval: { variant: "secondary" as const, label: "Pending Approval" },
+      pending_approval: {
+        variant: "secondary" as const,
+        label: "Pending Approval",
+      },
       processing: { variant: "destructive" as const, label: "Processing" },
-      failed: { variant: "destructive" as const, label: "Failed" }
+      failed: { variant: "destructive" as const, label: "Failed" },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.processing;
   };
+
+  if (loading) {
+    return (
+      <UserLayout>
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-lg text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </UserLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <UserLayout>
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-lg text-destructive">Error: {error}</p>
+        </div>
+      </UserLayout>
+    );
+  }
 
   return (
     <UserLayout>
@@ -136,8 +169,12 @@ const UserDashboard = () => {
               <div className="flex items-center gap-3">
                 <ShieldCheck className="h-6 w-6 text-green-600" />
                 <div>
-                  <h3 className="font-semibold text-green-900">Business Verified</h3>
-                  <p className="text-sm text-green-800">Your business has been successfully verified and approved.</p>
+                  <h3 className="font-semibold text-green-900">
+                    Business Verified
+                  </h3>
+                  <p className="text-sm text-green-800">
+                    Your business has been successfully verified and approved.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -150,15 +187,20 @@ const UserDashboard = () => {
               <div className="flex items-center gap-3">
                 <Clock className="h-6 w-6 text-yellow-600" />
                 <div>
-                  <h3 className="font-semibold text-yellow-900">Verification Pending</h3>
-                  <p className="text-sm text-yellow-800">Your KYB application is under review. This typically takes 1-2 business days.</p>
+                  <h3 className="font-semibold text-yellow-900">
+                    Verification Pending
+                  </h3>
+                  <p className="text-sm text-yellow-800">
+                    Your KYB application is under review. This typically takes
+                    1-2 business days.
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {kybStatus === "pending_kyb" && !kybSubmitted && (
+        {/* {kybStatus === "pending_kyb" && !kybSubmitted && (
           <Card className="border-orange-200 bg-orange-50">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -180,7 +222,7 @@ const UserDashboard = () => {
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {kybStatus === "rejected" && (
           <Card className="border-red-200 bg-red-50">
@@ -188,14 +230,17 @@ const UserDashboard = () => {
               <div className="flex items-start gap-3">
                 <XCircle className="h-6 w-6 text-red-600" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-red-900">Verification Rejected</h3>
+                  <h3 className="font-semibold text-red-900">
+                    Verification Rejected
+                  </h3>
                   <p className="text-sm text-red-800 mb-3">
-                    Your KYB application was not approved. Please review the feedback and resubmit with updated documentation.
+                    Your KYB application was not approved. Please review the
+                    feedback and resubmit with updated documentation.
                   </p>
-                  <Button 
-                    variant="default" 
+                  <Button
+                    variant="default"
                     size="sm"
-                    onClick={() => navigate('/portal/profile')}
+                    onClick={() => navigate("/portal/profile")}
                   >
                     Review & Resubmit
                   </Button>
@@ -209,26 +254,32 @@ const UserDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's your transaction overview</p>
+            <p className="text-muted-foreground">
+              Welcome back! Here's your transaction overview
+            </p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              View Reports
-            </Button>
-            <Button variant="business">
+            <Button
+              // variant="default"
+              onClick={() => navigate("/portal/transactions")}
+              variant="business"
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Transaction
             </Button>
           </div>
         </div>
+        {/* /portal/transactions */}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="shadow-card hover:shadow-lg transition-smooth">
+              <Card
+                key={index}
+                className="shadow-card hover:shadow-lg transition-smooth"
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     {stat.title}
@@ -236,8 +287,12 @@ const UserDashboard = () => {
                   <Icon className={`h-5 w-5 ${stat.color}`} />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">{stat.change}</p>
+                  <div className="text-2xl font-bold text-foreground">
+                    {stat.value}
+                  </div>
+                  {stat.change && (
+                    <p className="text-xs text-muted-foreground">{stat.change}</p>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -259,30 +314,44 @@ const UserDashboard = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentTransactions.map((transaction) => {
-                  const status = getStatusBadge(transaction.status);
-                  return (
-                    <div key={transaction.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground">{transaction.beneficiary}</p>
-                          <Badge variant={status.variant} className="text-xs">
-                            {status.label}
-                          </Badge>
+                {recentTransactions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    No recent transactions
+                  </p>
+                ) : (
+                  recentTransactions.map((transaction) => {
+                    const status = getStatusBadge(transaction.status);
+                    return (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground">
+                              {transaction.beneficiary}
+                            </p>
+                            <Badge variant={status.variant} className="text-xs">
+                              {status.label}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {transaction.id} • {transaction.type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {transaction.date}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {transaction.id} • {transaction.type}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                        <div className="text-right">
+                          <p className="font-semibold text-foreground">
+                            {transaction.currency}{" "}
+                            {Number(transaction.amount).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">
-                          {transaction.currency} {Number(transaction.amount).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </div>
@@ -296,29 +365,39 @@ const UserDashboard = () => {
                   Pending Actions
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              {/* <CardContent className="space-y-4">
                 {pendingActions.map((action, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-start justify-between">
                       <p className="text-sm font-medium text-foreground leading-tight">
                         {action.message}
                       </p>
-                      <Badge 
-                        variant={action.priority === "high" ? "destructive" : 
-                               action.priority === "medium" ? "secondary" : "outline"}
+                      <Badge
+                        variant={
+                          action.priority === "high"
+                            ? "destructive"
+                            : action.priority === "medium"
+                              ? "secondary"
+                              : "outline"
+                        }
                         className="text-xs"
                       >
                         {action.priority}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{action.time}</p>
-                    {index < pendingActions.length - 1 && <div className="border-b" />}
+                    <p className="text-xs text-muted-foreground">
+                      {action.time}
+                    </p>
+                    {index < pendingActions.length - 1 && (
+                      <div className="border-b" />
+                    )}
                   </div>
                 ))}
                 <Button variant="outline" className="w-full mt-4">
                   View All Actions
                 </Button>
-              </CardContent>
+              </CardContent> */}
+              <p className="text-center pb-3">No data available</p>
             </Card>
           </div>
         </div>
@@ -330,21 +409,36 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button variant="outline" className="h-20 flex-col">
+              <Button
+                variant="outline"
+                className="h-20 flex-col"
+                onClick={() => navigate("/portal/transactions")}
+              >
                 <CreditCard className="h-6 w-6 mb-2" />
                 <span className="text-sm">Single Payment</span>
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+              <Button
+                variant="outline"
+                className="h-20 flex-col"
+                onClick={() => navigate("/portal/transactions")}
+              >
                 <TrendingUp className="h-6 w-6 mb-2" />
                 <span className="text-sm">Bulk Payment</span>
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+              <Button
+                variant="outline"
+                className="h-20 flex-col"
+                onClick={() => navigate("/portal/beneficiaries")}
+              >
                 <Users className="h-6 w-6 mb-2" />
                 <span className="text-sm">Add Beneficiary</span>
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+
+              <Button variant="outline" className="h-20 flex-col"
+              onClick={() => navigate('/portal/deals')}
+              >
                 <FileText className="h-6 w-6 mb-2" />
-                <span className="text-sm">Upload Document</span>
+                <span className="text-sm">Add Rete Deals</span>
               </Button>
             </div>
           </CardContent>
@@ -359,7 +453,7 @@ const UserDashboard = () => {
                 Monthly Summary
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            {/* <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Total Sent</span>
                 <span className="font-semibold">USD 45,230</span>
@@ -376,36 +470,48 @@ const UserDashboard = () => {
                 <span className="text-muted-foreground">Avg. Amount</span>
                 <span className="font-semibold">USD 1,615</span>
               </div>
-            </CardContent>
+            </CardContent> */}
+            <p className="text-center pb-5">No data found</p>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>Transaction Limits</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            {/* <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Daily Limit</span>
                   <span className="font-semibold">USD 50,000</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: "30%" }} />
+                  <div
+                    className="bg-primary h-2 rounded-full"
+                    style={{ width: "30%" }}
+                  />
                 </div>
-                <p className="text-xs text-muted-foreground">Used: USD 15,000 (30%)</p>
+                <p className="text-xs text-muted-foreground">
+                  Used: USD 15,000 (30%)
+                </p>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Monthly Limit</span>
                   <span className="font-semibold">USD 500,000</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-accent h-2 rounded-full" style={{ width: "9%" }} />
+                  <div
+                    className="bg-accent h-2 rounded-full"
+                    style={{ width: "9%" }}
+                  />
                 </div>
-                <p className="text-xs text-muted-foreground">Used: USD 45,230 (9%)</p>
+                <p className="text-xs text-muted-foreground">
+                  Used: USD 45,230 (9%)
+                </p>
               </div>
-            </CardContent>
+            </CardContent> */}
+            <p className="text-center pb-5">No data found</p>
           </Card>
         </div>
       </div>

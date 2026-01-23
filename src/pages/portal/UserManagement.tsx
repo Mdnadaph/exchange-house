@@ -5,14 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import UserCreationForm from "@/components/governance/UserCreationForm";
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  UserCheck, 
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
+import {
+  Users,
+  Plus,
+  Search,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  UserCheck,
   UserX,
   Shield,
   Mail,
@@ -21,68 +23,41 @@ import {
   Key,
   Settings
 } from "lucide-react";
+import { useState, useEffect } from 'react';
 
 const UserManagement = () => {
-  const businessUsers = [
-    {
-      id: "USR-001",
-      name: "Sarah Johnson",
-      email: "sarah.johnson@techcorp.ae",
-      role: "Transaction Manager",
-      department: "Finance",
-      status: "active",
-      transactionLimit: "50000",
-      currency: "USD",
-      lastLogin: "2024-01-16 14:30",
-      joinDate: "2023-08-15",
-      permissions: ["create_transactions", "manage_beneficiaries", "view_reports"],
-      approvalLimit: "25000",
-      canApprove: false
-    },
-    {
-      id: "USR-002", 
-      name: "Michael Chen",
-      email: "m.chen@techcorp.ae",
-      role: "Senior Approver",
-      department: "Treasury",
-      status: "active", 
-      transactionLimit: "100000",
-      currency: "USD",
-      lastLogin: "2024-01-16 09:15",
-      joinDate: "2023-03-22",
-      permissions: ["approve_transactions", "manage_limits", "create_transactions", "view_reports"]
-    },
-    {
-      id: "USR-003",
-      name: "Emma Wilson",
-      email: "emma.w@techcorp.ae", 
-      role: "Finance Clerk",
-      department: "Finance",
-      status: "inactive",
-      transactionLimit: "25000",
-      currency: "USD",
-      lastLogin: "2024-01-12 16:45",
-      joinDate: "2023-11-10",
-      permissions: ["create_transactions", "view_reports"],
-      approvalLimit: "10000",
-      canApprove: false
-    },
-    {
-      id: "USR-004",
-      name: "Ahmad Al-Rashid", 
-      email: "ahmad.r@techcorp.ae",
-      role: "Operations Manager",
-      department: "Operations", 
-      status: "pending",
-      transactionLimit: "75000",
-      currency: "USD",
-      lastLogin: "Never",
-      joinDate: "2024-01-15",
-      permissions: ["create_transactions", "manage_beneficiaries", "approve_transactions"],
-      approvalLimit: "75000",
-      canApprove: true
-    }
-  ];
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
+  const [dashboard, setDashboard] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({ page: 0, size: 10, totalPages: 0, totalItems: 0 });
+  const [currentPage, setCurrentPage] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/business-users?page=${currentPage}&size=10`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const json = await response.json();
+        if (json.status) {
+          setDashboard(json.data.dashboard);
+          setUsers(json.data.users);
+          setPagination(json.data.pagination);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
+  }, [currentPage, token]);
+
+  const totalUsers = dashboard.find(d => d.key === "TOTAL_USERS") || { value: 0, subValue: "" };
+  const activeUsers = dashboard.find(d => d.key === "ACTIVE_USERS") || { value: 0, subValue: "" };
+  const pendingApproval = dashboard.find(d => d.key === "PENDING_APPROVAL") || { value: 0, subValue: "" };
+  const approvers = dashboard.find(d => d.key === "APPROVERS") || { value: 0, subValue: "" };
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -96,7 +71,7 @@ const UserManagement = () => {
   const getRoleColor = (role: string) => {
     const colors = {
       "Transaction Manager": "bg-blue-100 text-blue-800",
-      "Senior Approver": "bg-purple-100 text-purple-800", 
+      "Senior Approver": "bg-purple-100 text-purple-800",
       "Finance Clerk": "bg-green-100 text-green-800",
       "Operations Manager": "bg-orange-100 text-orange-800"
     };
@@ -123,8 +98,8 @@ const UserManagement = () => {
               <Users className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">+3 this month</p>
+              <div className="text-2xl font-bold">{totalUsers.value}</div>
+              <p className="text-xs text-muted-foreground">{totalUsers.subValue}</p>
             </CardContent>
           </Card>
 
@@ -134,8 +109,8 @@ const UserManagement = () => {
               <UserCheck className="h-5 w-5 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">20</div>
-              <p className="text-xs text-muted-foreground">83% active rate</p>
+              <div className="text-2xl font-bold text-success">{activeUsers.value}</div>
+              <p className="text-xs text-muted-foreground">{activeUsers.subValue}</p>
             </CardContent>
           </Card>
 
@@ -145,8 +120,8 @@ const UserManagement = () => {
               <UserX className="h-5 w-5 text-warning" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-warning">3</div>
-              <p className="text-xs text-muted-foreground">Awaiting activation</p>
+              <div className="text-2xl font-bold text-warning">{pendingApproval.value}</div>
+              <p className="text-xs text-muted-foreground">{pendingApproval.subValue}</p>
             </CardContent>
           </Card>
 
@@ -156,10 +131,8 @@ const UserManagement = () => {
               <Key className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-accent">
-                {businessUsers.filter(user => user.canApprove).length}
-              </div>
-              <p className="text-xs text-muted-foreground">With approval authority</p>
+              <div className="text-2xl font-bold text-accent">{approvers.value}</div>
+              <p className="text-xs text-muted-foreground">{approvers.subValue}</p>
             </CardContent>
           </Card>
         </div>
@@ -172,7 +145,7 @@ const UserManagement = () => {
                 <Label htmlFor="search">Search Users</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
+                  <Input
                     id="search"
                     placeholder="Search by name, email, or role..."
                     className="pl-9"
@@ -195,10 +168,10 @@ const UserManagement = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {businessUsers.map((user) => {
+              {users.map((user) => {
                 const status = getStatusBadge(user.status);
                 const StatusIcon = status.icon;
-                
+
                 return (
                   <Card key={user.id} className="hover:shadow-md transition-smooth">
                     <CardContent className="p-6">
@@ -208,11 +181,11 @@ const UserManagement = () => {
                           <div className="flex items-center space-x-4">
                             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                               <span className="text-primary-foreground font-semibold">
-                                {user.name.split(' ').map(n => n[0]).join('')}
+                                {user.fullName ? user.fullName.split(' ').map(n => n[0]).join('') : ''}
                               </span>
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-semibold text-foreground">{user.name}</h3>
+                              <h3 className="font-semibold text-foreground">{user.fullName || 'N/A'}</h3>
                               <p className="text-sm text-muted-foreground">ID: {user.id}</p>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -225,7 +198,7 @@ const UserManagement = () => {
                               </span>
                             </div>
                           </div>
-                          
+
                           {/* User Details Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                             <div className="space-y-1">
@@ -283,7 +256,7 @@ const UserManagement = () => {
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Actions */}
                         <div className="flex space-x-2 ml-4">
                           <Button variant="outline" size="sm">
@@ -300,17 +273,17 @@ const UserManagement = () => {
                 );
               })}
             </div>
-            
+
             {/* Pagination */}
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing 4 of 24 users
+                Showing {users.length} of {pagination.totalItems} users
               </p>
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" disabled>
+                <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setCurrentPage(prev => prev - 1)}>
                   Previous
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" disabled={currentPage >= pagination.totalPages - 1} onClick={() => setCurrentPage(prev => prev + 1)}>
                   Next
                 </Button>
               </div>

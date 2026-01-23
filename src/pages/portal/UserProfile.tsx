@@ -588,7 +588,7 @@ const UserProfile = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* KYB Status Alert */}
-        {kybContext &&
+        {/* {kybContext &&
           kybContext.documents
             .filter((doc) => doc.required)
             .some((doc) => !doc.uploaded) && (
@@ -617,9 +617,10 @@ const UserProfile = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
 
         {/* Header */}
+        
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">

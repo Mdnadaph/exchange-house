@@ -27,6 +27,8 @@ import {
 
 const UserDocuments = () => {
   const { id } = useParams();
+  console.log(id);
+  console.log("Hello");
   const [cookie] = useCookies(["token", "firstName"]);
   const token = cookie.token;
   const firstName = cookie.firstName;
@@ -261,10 +263,10 @@ const UserDocuments = () => {
               Manage transaction supporting documents and compliance files
             </p>
           </div>
-          <Button variant="business">
+          {/* <Button variant="business">
             <Upload className="h-4 w-4 mr-2" />
             Upload Document
-          </Button>
+          </Button> */}
         </div>
 
         {/* Statistics Cards */}
@@ -373,7 +375,7 @@ const UserDocuments = () => {
         </Card>
 
         {/* Upload Area */}
-        <Card className="shadow-card border-2 border-dashed border-muted hover:border-primary transition-colors">
+        {/* <Card className="shadow-card border-2 border-dashed border-muted hover:border-primary transition-colors">
           <CardContent className="p-8 text-center">
             <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -388,12 +390,12 @@ const UserDocuments = () => {
               <Button variant="outline">Scan Document</Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Documents List */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Document Library</CardTitle>
+            <CardTitle>Documents Library</CardTitle>
             {apiData && (
               <p className="text-sm text-muted-foreground">
                 KYB Type: {apiData.kybType} • Business Type:{" "}
@@ -412,7 +414,7 @@ const UserDocuments = () => {
                   <p className="text-muted-foreground mb-4">
                     Upload your required documents to complete KYB compliance
                   </p>
-                  <Button variant="business">Upload Your First Document</Button>
+                  {/* <Button variant="business">Upload Your First Document</Button> */}
                 </div>
               ) : (
                 documents.map((doc) => {

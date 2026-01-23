@@ -253,10 +253,10 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex space-x-3">
-            <Button variant="outline">
+            {/* <Button variant="outline">
               <Settings className="h-4 w-4 mr-2" />
               System Settings
-            </Button>
+            </Button> */}
 
             <Button variant="business" onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -377,12 +377,12 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex justify-between">
                   Recent Activities
-                  <Button variant="ghost" size="sm">
+                  {/* <Button variant="ghost" size="sm">
                     View All <ArrowUpRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  </Button> */}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              {/* <CardContent className="space-y-4">
                 {recentActivities.map((a, i) => (
                   <div
                     key={i}
@@ -403,7 +403,8 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-              </CardContent>
+              </CardContent> */}
+              <p className="text-center pb-2">No data found</p>
             </Card>
           </div>
 
@@ -413,7 +414,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle>Pending Tasks</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              {/* <CardContent className="space-y-4">
                 {pendingTasks.map((task, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-start justify-between">
@@ -444,12 +445,13 @@ const AdminDashboard = () => {
                 <Button variant="outline" className="w-full mt-4">
                   View All Tasks
                 </Button>
-              </CardContent>
+              </CardContent> */}
+              <p className="text-center pb-2">No data found</p>
             </Card>
           </div>
         </div>
         {/* Quick Actions */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
@@ -473,7 +475,7 @@ const AdminDashboard = () => {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* ================= ADD BUSINESS USER MODAL ================= */}

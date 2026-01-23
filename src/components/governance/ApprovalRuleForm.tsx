@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,15 +15,23 @@ import {
   DollarSign,
   Trash2,
   ArrowRight,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
 
 interface ApprovalRuleFormProps {
   trigger?: React.ReactNode;
   editRule?: any;
+  onSuccess?: () => void; 
 }
 
-const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
+const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProps) => {
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
+
+  const [open, setOpen] = useState(false);   
   const [formData, setFormData] = useState({
     name: editRule?.name || "",
     description: editRule?.description || "",
@@ -37,10 +45,29 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
     ]
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
   const currencies = ["USD", "AED", "EUR", "GBP", "INR", "PKR", "PHP", "ANY"];
   const departments = ["All", "Finance", "Treasury", "Operations", "HR", "Procurement"];
   const transactionTypes = ["Single Transfer", "Bulk Transfer", "Salary Payment", "Supplier Payment", "Invoice Payment"];
   const approverRoles = ["Senior Manager", "Finance Manager", "Treasury Officer", "Operations Manager", "CEO", "CFO"];
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      currency: "USD",
+      minAmount: "",
+      maxAmount: "",
+      department: "All",
+      transactionTypes: [],
+      tiers: [{ level: 1, threshold: "", approvers: 1, roles: [] }]
+    });
+    setError(null);
+    setSuccess(false);
+  };
 
   const addTier = () => {
     setFormData(prev => ({
@@ -90,8 +117,83 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
     );
   };
 
+  const handleSubmit = async () => {
+    setError(null);
+    setSuccess(false);
+    setLoading(true);
+
+    const payload = {
+      ruleName: formData.name.trim(),
+      currency: formData.currency,
+      description: formData.description.trim(),
+      minAmount: formData.minAmount ? Number(formData.minAmount) : 0,
+      maxAmount: formData.maxAmount ? Number(formData.maxAmount) : 1000000,
+      department: formData.department === "All" ? "ALL" : formData.department.toUpperCase(),
+      transactionTypes: formData.transactionTypes.map(t => t.toUpperCase().replace(/\s+/g, '_')),
+      approvalTiers: formData.tiers.map(tier => ({
+        tierOrder: tier.level,
+        thresholdAmount: Number(tier.threshold) || 0,
+        approversRequired: Number(tier.approvers),
+        eligibleRoles: tier.roles.map(r => r.toUpperCase().replace(/\s+/g, '_'))
+      }))
+    };
+
+    if (!payload.ruleName) {
+      setError("Rule name is required");
+      setLoading(false);
+      return;
+    }
+    if (payload.approvalTiers.some(t => !t.thresholdAmount || t.thresholdAmount <= 0)) {
+      setError("All tiers must have a valid threshold amount");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/v1/business/governance-rules`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || `Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Rule created:", result);
+
+      setSuccess(true);
+
+      // Close dialog after short delay so user sees success message
+      setTimeout(() => {
+        setOpen(false);
+        resetForm();
+        onSuccess?.();         
+      }, 1200); // 1.2 seconds — adjust as needed (800–1500ms usually feels good)
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to create approval rule");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Optional: reset error/success when dialog is opened again
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      setSuccess(false);
+    }
+  }, [open]);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline">
@@ -100,6 +202,7 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
           </Button>
         )}
       </DialogTrigger>
+
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -117,6 +220,7 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* ... same as before ... */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="ruleName">Rule Name *</Label>
@@ -133,21 +237,18 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      {currencies.map((currency) => (
-                        <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                      ))}
+                    <SelectContent>
+                      {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label>Description</Label>
                 <Textarea
-                  id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe when this approval rule applies..."
                   rows={3}
                 />
@@ -155,35 +256,31 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="minAmount">Minimum Amount</Label>
+                  <Label>Minimum Amount</Label>
                   <Input
-                    id="minAmount"
                     type="number"
                     value={formData.minAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, minAmount: e.target.value }))}
+                    onChange={e => setFormData(prev => ({ ...prev, minAmount: e.target.value }))}
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="maxAmount">Maximum Amount</Label>
+                  <Label>Maximum Amount</Label>
                   <Input
-                    id="maxAmount"
                     type="number"
                     value={formData.maxAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, maxAmount: e.target.value }))}
+                    onChange={e => setFormData(prev => ({ ...prev, maxAmount: e.target.value }))}
                     placeholder="Unlimited"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
+                  <Label>Department</Label>
+                  <Select value={formData.department} onValueChange={v => setFormData(prev => ({ ...prev, department: v }))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      {departments.map((dept) => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
+                    <SelectContent>
+                      {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -191,7 +288,7 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
             </CardContent>
           </Card>
 
-          {/* Transaction Types */}
+          {/* Transaction Types – unchanged */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -201,12 +298,12 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {transactionTypes.map((type) => (
+                {transactionTypes.map(type => (
                   <div key={type} className="flex items-center space-x-2">
                     <Checkbox
                       id={`type-${type}`}
                       checked={formData.transactionTypes.includes(type)}
-                      onCheckedChange={(checked) => handleTransactionTypeChange(type, checked as boolean)}
+                      onCheckedChange={checked => handleTransactionTypeChange(type, !!checked)}
                     />
                     <Label htmlFor={`type-${type}`} className="text-sm">{type}</Label>
                   </div>
@@ -215,7 +312,7 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
             </CardContent>
           </Card>
 
-          {/* Approval Tiers */}
+          {/* Approval Tiers – unchanged */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -230,6 +327,7 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
               </div>
             </CardHeader>
             <CardContent>
+              {/* ... tiers content remains exactly the same ... */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 p-3 bg-accent-muted/20 rounded-lg">
                   <Info className="h-4 w-4 text-accent" />
@@ -241,17 +339,14 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
                 {formData.tiers.map((tier, index) => (
                   <Card key={index} className="border-l-4 border-l-primary">
                     <CardContent className="p-4">
+                      {/* tier header, threshold, approvers, roles – unchanged */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline">Tier {tier.level}</Badge>
                           {index > 0 && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
                         </div>
                         {formData.tiers.length > 1 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeTier(index)}
-                          >
+                          <Button variant="outline" size="sm" onClick={() => removeTier(index)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
@@ -259,27 +354,26 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <Label htmlFor={`threshold-${index}`}>Amount Threshold</Label>
+                          <Label>Amount Threshold</Label>
                           <Input
-                            id={`threshold-${index}`}
                             type="number"
                             value={tier.threshold}
-                            onChange={(e) => updateTier(index, 'threshold', e.target.value)}
+                            onChange={e => updateTier(index, 'threshold', e.target.value)}
                             placeholder="Enter threshold amount"
                           />
                         </div>
                         <div>
-                          <Label htmlFor={`approvers-${index}`}>Number of Approvers Required</Label>
+                          <Label>Number of Approvers Required</Label>
                           <Select 
                             value={tier.approvers.toString()} 
-                            onValueChange={(value) => updateTier(index, 'approvers', parseInt(value))}
+                            onValueChange={v => updateTier(index, 'approvers', parseInt(v))}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select approvers" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border border-border z-50">
-                              {[1, 2, 3, 4, 5].map((num) => (
-                                <SelectItem key={num} value={num.toString()}>{num} Approver{num > 1 ? 's' : ''}</SelectItem>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {[1,2,3,4,5].map(n => (
+                                <SelectItem key={n} value={n.toString()}>
+                                  {n} Approver{n > 1 ? 's' : ''}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -289,12 +383,12 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
                       <div>
                         <Label className="text-sm font-medium mb-2 block">Eligible Approver Roles</Label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {approverRoles.map((role) => (
+                          {approverRoles.map(role => (
                             <div key={role} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`tier-${index}-role-${role}`}
                                 checked={tier.roles.includes(role)}
-                                onCheckedChange={(checked) => handleRoleChange(index, role, checked as boolean)}
+                                onCheckedChange={checked => handleRoleChange(index, role, !!checked)}
                               />
                               <Label htmlFor={`tier-${index}-role-${role}`} className="text-xs">{role}</Label>
                             </div>
@@ -308,9 +402,32 @@ const ApprovalRuleForm = ({ trigger, editRule }: ApprovalRuleFormProps) => {
             </CardContent>
           </Card>
 
+          {/* Feedback */}
+          {error && (
+            <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="p-3 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-md text-sm font-medium">
+              Approval rule created successfully!
+            </div>
+          )}
+
           <div className="flex justify-between pt-6 border-t">
-            <Button variant="outline">Cancel</Button>
-            <Button variant="business">
+            <Button 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="business" 
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editRule ? "Update Rule" : "Create Approval Rule"}
             </Button>
           </div>

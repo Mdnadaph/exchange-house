@@ -8,10 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Plus, 
-  User, 
-  Shield, 
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
+import { useToast } from "@/hooks/use-toast";
+
+import {
+  Plus,
+  User,
+  Shield,
   DollarSign,
   Mail,
   Phone,
@@ -25,6 +29,11 @@ interface UserCreationFormProps {
 }
 
 const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
+  const { toast } = useToast();
+
+  const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Personal Information
@@ -33,21 +42,22 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
     email: "",
     phone: "",
     employeeId: "",
-    
+
     // Role & Department
     role: "",
     department: "",
     reportingManager: "",
-    
+    tier: "",
+
     // Access & Limits
     transactionLimit: "",
     currency: "USD",
     dailyLimit: "",
     monthlyLimit: "",
-    
+
     // Permissions
     permissions: [] as string[],
-    
+
     // Additional Settings
     requireTwoFactor: false,
     emailNotifications: true,
@@ -57,38 +67,38 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
   });
 
   const roles = [
-    { 
-      value: "transaction_manager", 
+    {
+      value: "transaction_manager",
       label: "Transaction Manager",
       description: "Can create and manage transactions, beneficiaries",
       permissions: ["create_transactions", "manage_beneficiaries", "view_reports"]
     },
-    { 
-      value: "senior_approver", 
+    {
+      value: "senior_approver",
       label: "Senior Approver",
       description: "Can approve high-value transactions and manage limits",
       permissions: ["approve_transactions", "manage_limits", "create_transactions", "view_reports", "manage_users"]
     },
-    { 
-      value: "finance_clerk", 
+    {
+      value: "finance_clerk",
       label: "Finance Clerk",
       description: "Basic transaction creation and beneficiary management",
       permissions: ["create_transactions", "view_reports"]
     },
-    { 
-      value: "operations_manager", 
+    {
+      value: "operations_manager",
       label: "Operations Manager",
       description: "Operational oversight and approval capabilities",
       permissions: ["create_transactions", "manage_beneficiaries", "approve_transactions", "view_reports"]
     },
-    { 
-      value: "compliance_officer", 
+    {
+      value: "compliance_officer",
       label: "Compliance Officer",
       description: "Compliance monitoring and reporting access",
       permissions: ["view_reports", "manage_compliance", "audit_transactions"]
     },
-    { 
-      value: "treasury_officer", 
+    {
+      value: "treasury_officer",
       label: "Treasury Officer",
       description: "Treasury management and high-value approvals",
       permissions: ["approve_transactions", "manage_limits", "treasury_operations", "view_reports"]
@@ -97,7 +107,9 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
 
   const departments = ["Finance", "Treasury", "Operations", "HR", "Procurement", "Compliance", "IT"];
   const currencies = ["USD", "AED", "EUR", "GBP"];
-  
+
+  const tiers = ["TIER_1", "TIER_2","TIER_3"]
+
   const allPermissions = [
     { id: "create_transactions", label: "Create Transactions", category: "Transactions" },
     { id: "approve_transactions", label: "Approve Transactions", category: "Transactions" },
@@ -124,10 +136,87 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      permissions: checked 
+      permissions: checked
         ? [...prev.permissions, permissionId]
         : prev.permissions.filter(p => p !== permissionId)
     }));
+  };
+
+  const handleSubmit = async () => {
+    const body = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phoneNumber: formData.phone,
+      employeeId: formData.employeeId,
+      department: formData.department,
+      reportingManager: formData.reportingManager,
+      role: formData.role.toUpperCase(),
+      tier: formData.tier,
+      singleTransactionLimit: Number(formData.transactionLimit),
+      dailyLimit: Number(formData.dailyLimit),
+      monthlyLimit: Number(formData.monthlyLimit),
+      currency: formData.currency,
+      permissions: formData.permissions.map(p => p.toUpperCase()),
+    };
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/business-users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Success:', data);
+        toast({
+          title: "Success",
+          description: data.message,
+        });
+        // Reset form and go back to step 1
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          employeeId: "",
+          role: "",
+          department: "",
+          reportingManager: "",
+          tier: "",
+          transactionLimit: "",
+          currency: "USD",
+          dailyLimit: "",
+          monthlyLimit: "",
+          permissions: [],
+          requireTwoFactor: false,
+          emailNotifications: true,
+          mobileAccess: false,
+          temporaryAccess: false,
+          accessExpiryDate: ""
+        });
+        setCurrentStep(1);
+        setIsOpen(false); // Close the modal
+      } else {
+        console.error('Error creating user:', res.statusText);
+        toast({
+          title: "Error",
+          description: 'Error creating user',
+          variant: "destructive"
+        });
+      }
+    } catch (e) {
+      console.error('Request failed:', e);
+      toast({
+        title: "Error",
+        description: 'Request failed',
+        variant: "destructive"
+      });
+    }
   };
 
   const getSelectedRole = () => roles.find(role => role.value === formData.role);
@@ -266,7 +355,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-2">
+            <div >
               <Label htmlFor="reportingManager">Reporting Manager</Label>
               <Input
                 id="reportingManager"
@@ -274,6 +363,19 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                 onChange={(e) => setFormData(prev => ({ ...prev, reportingManager: e.target.value }))}
                 placeholder="Enter reporting manager name"
               />
+            </div>
+            <div >
+              <Label htmlFor="tier">Select Tiers</Label>
+              <Select value={formData.tier} onValueChange={(value) => setFormData(prev => ({ ...prev, tier: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Tiers" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {tiers.map((dept) => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -416,7 +518,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, requireTwoFactor: checked as boolean }))}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="emailNotifications">Email Notifications</Label>
@@ -428,7 +530,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, emailNotifications: checked as boolean }))}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="mobileAccess">Mobile App Access</Label>
@@ -440,7 +542,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, mobileAccess: checked as boolean }))}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="temporaryAccess">Temporary Access</Label>
@@ -452,7 +554,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, temporaryAccess: checked as boolean }))}
                 />
               </div>
-              
+
               {formData.temporaryAccess && (
                 <div>
                   <Label htmlFor="accessExpiryDate">Access Expiry Date</Label>
@@ -472,7 +574,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="business">
@@ -485,14 +587,14 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
         <DialogHeader>
           <DialogTitle>Create Business User with Governance Controls</DialogTitle>
         </DialogHeader>
-        
+
         <div className="mt-6">
           {renderStepIndicator()}
-          
+
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
-          
+
           <div className="flex justify-between pt-6 border-t">
             <Button
               variant="outline"
@@ -501,7 +603,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
             >
               Previous
             </Button>
-            
+
             {currentStep < 3 ? (
               <Button
                 onClick={() => setCurrentStep(prev => Math.min(3, prev + 1))}
@@ -510,7 +612,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                 Next
               </Button>
             ) : (
-              <Button variant="business">
+              <Button variant="business" onClick={handleSubmit}>
                 Create User Account
               </Button>
             )}

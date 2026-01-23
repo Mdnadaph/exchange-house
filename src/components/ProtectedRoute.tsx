@@ -34,6 +34,61 @@
 
 // export default ProtectedRoute;
 
+// import { Navigate, Outlet, useLocation } from "react-router-dom";
+// import { useCookies } from "react-cookie";
+
+// interface ProtectedRouteProps {
+//   allowedRoles: string[];
+// }
+
+// const BRANCH_ROLES = [
+//   "ROLE_KYB_OFFICER",
+//   "ROLE_SENIOR_KYB_OFFICER",
+//   "ROLE_BRANCH_MANAGER",
+//   "ROLE_EXCHANGE_ADMIN",
+// ];
+
+// const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
+//   const [cookies] = useCookies(["token", "role"]);
+//   const location = useLocation();
+
+//   console.log("hami yeta xau");
+//   console.log(cookies.token);
+
+//   // 🔐 1. Not authenticated
+//   if (!cookies.token) {
+//     return <Navigate to="/login" state={{ from: location }} replace />;
+//   }
+
+//   const role = cookies.role;
+
+//   // ✅ 2. Allowed for this route
+//   if (allowedRoles.includes(role)) {
+//     return <Outlet />;
+//   }
+
+//   // 🔁 3. Global redirect rules (based on backend roles)
+
+//   // Exchange Admin
+//   if (role === "EXCHANGE_ADMIN") {
+//     return <Navigate to="/exchange" replace />;
+//   }
+
+//   // Branch (KYB / Manager)
+//   if (BRANCH_ROLES.includes(role)) {
+//     return <Navigate to="/branch" replace />;
+//   }
+
+//   // Portal (Staff)
+//   if (role === "STAFF") {
+//     return <Navigate to="/portal" replace />;
+//   }
+
+//   // ❌ Unknown role
+//   return <Navigate to="/login" replace />;
+// };
+
+// export default ProtectedRoute;
 
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
@@ -46,11 +101,15 @@ const BRANCH_ROLES = [
   "ROLE_KYB_OFFICER",
   "ROLE_SENIOR_KYB_OFFICER",
   "ROLE_BRANCH_MANAGER",
+  "ROLE_EXCHANGE_ADMIN",
 ];
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const [cookies] = useCookies(["token", "role"]);
   const location = useLocation();
+
+  console.log("hami yeta xau aaaaaaaaaaaa aaaaaaaaaaaaa aaaaaaaaaaaaaaa");
+  console.log(cookies.token);
 
   // 🔐 1. Not authenticated
   if (!cookies.token) {
