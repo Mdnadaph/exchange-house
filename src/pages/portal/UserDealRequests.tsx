@@ -22,6 +22,7 @@ import {
   Eye,
   ThumbsUp,
   ThumbsDown,
+  Loader2,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -39,7 +40,9 @@ const UserDealRequests = () => {
   const [rateDealsData, setRateDealsData] = useState(null);
   const [searchValue, setSearchValue] = useState<string>("");
   const [id, setId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const getRateDeals = async () => {
+    setLoading(true);
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
@@ -57,6 +60,8 @@ const UserDealRequests = () => {
     } catch (error) {
       const msg = error.message || "Failed to load rate-deals";
       toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -327,14 +332,26 @@ const UserDealRequests = () => {
   };
   const getCounterRate = (negotiationHistory: any) => {
     return negotiationHistory?.find(
-      (item) => item?.actionType === "COUNTER_PROPOSAL",
+      (item: any) => item?.actionType === "COUNTER_PROPOSAL",
     )?.rate;
   };
   const getCounterComments = (negotiationHistory: any) => {
     return negotiationHistory?.find(
-      (item) => item?.actionType === "COUNTER_PROPOSAL",
+      (item: any) => item?.actionType === "COUNTER_PROPOSAL",
     )?.comments;
   };
+  if (loading) {
+    return (
+      <UserLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading transactions...</p>
+          </div>
+        </div>
+      </UserLayout>
+    );
+  }
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -526,7 +543,6 @@ const UserDealRequests = () => {
                         </p>
                       </div>
                     </div>
-
                     {/* Counter Proposal Message */}
                     {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
                       deal?.dealStatus,
@@ -634,6 +650,7 @@ const UserDealRequests = () => {
                 <Button
                   variant="outline"
                   size="sm"
+                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
                   onClick={() => setPage(page + 1)}
                 >
                   Next

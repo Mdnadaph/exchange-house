@@ -98,8 +98,6 @@ const DealResponseForm = ({
       } finally {
       }
     };
-
-    console.log("data", formDTO);
     counterProposal();
   };
 

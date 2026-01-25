@@ -20,12 +20,14 @@ import {
   ChevronDown,
   ChevronUp,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
 
 import { formateDateTime } from "@/utils/formateDateTime";
 import { useToast } from "@/hooks/use-toast";
+import UserLayout from "@/components/layout/UserLayout";
 
 const ExchangeDealReview = () => {
   const [cookies] = useCookies(["token"]);
@@ -35,10 +37,13 @@ const ExchangeDealReview = () => {
   const [expandedDeal, setExpandedDeal] = useState<string | null>(null);
   const [rateDealsData, setRateDealsData] = useState(null);
   const [searchValue, setSearchValue] = useState<string>("");
+  const [page, setPage] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
   const getRateDeals = async () => {
+    setLoading(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}`,
+        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -53,13 +58,16 @@ const ExchangeDealReview = () => {
     } catch (error) {
       const msg = error.message || "Failed to load rate-deals";
       toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
     getRateDeals();
-  }, [searchValue]);
+  }, [searchValue, page]);
   const exchangeAdminStats = rateDealsData?.exchangeAdminStats;
   const dealsData = rateDealsData?.rateDeals?.content;
+  const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
   // const deals = [
   //   {
   //     id: "DEAL-001",
@@ -156,7 +164,18 @@ const ExchangeDealReview = () => {
       100;
     return diff.toFixed(2);
   };
-
+  if (loading) {
+    return (
+      <UserLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading transactions...</p>
+          </div>
+        </div>
+      </UserLayout>
+    );
+  }
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -425,6 +444,32 @@ const ExchangeDealReview = () => {
             <p className="font-semibold text-sm text-center text-gray-400">
               No Data Found
             </p>
+          )}
+          {totalDealsRateDataList > 10 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
+                {totalDealsRateDataList} beneficiaries
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>
