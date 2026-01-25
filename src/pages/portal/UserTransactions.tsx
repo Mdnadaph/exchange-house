@@ -660,8 +660,8 @@ const UserTransactions = () => {
 
         if (data.status && data.data) {
           // Transform API data to match UI structure
-          const transformedTransactions: Transaction[] = data.data.map(
-            (apiTx) => ({
+          const transformedTransactions: Transaction[] =
+            data?.data?.transactions?.map((apiTx: any) => ({
               id: apiTx.transactionId,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
@@ -697,8 +697,7 @@ const UserTransactions = () => {
               branch: apiTx.branchName,
               failureReason: apiTx.failureReason || "",
               documents: apiTx.documents,
-            }),
-          );
+            }));
 
           setTransactions(transformedTransactions);
         } else {
