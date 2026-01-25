@@ -14,12 +14,12 @@
 // import BASE_URL from "@/config/config";
 // import { useCookies } from "react-cookie";
 
-// import { 
-//   Plus, 
-//   DollarSign, 
-//   FileText, 
-//   Upload, 
-//   User, 
+// import {
+//   Plus,
+//   DollarSign,
+//   FileText,
+//   Upload,
+//   User,
 //   Building,
 //   AlertCircle,
 //   Info,
@@ -46,7 +46,6 @@
 //   const [showConfirmation, setShowConfirmation] = useState(false);
 //   const [open, setOpen] = useState(false);
 
-
 //   const [cookie] = useCookies(["token"]);
 //     const token = cookie.token;
 
@@ -61,7 +60,7 @@
 //       country: "UAE"
 //     },
 //     {
-//       id: "BEN-002", 
+//       id: "BEN-002",
 //       name: "Tech Solutions Ltd",
 //       type: "business",
 //       accountNumber: "9876543210",
@@ -89,7 +88,7 @@
 //     },
 //     {
 //       id: "SRC-002",
-//       name: "FAB USD Account", 
+//       name: "FAB USD Account",
 //       accountNumber: "AE070331987654321098765",
 //       balance: "85,000",
 //       currency: "USD",
@@ -130,11 +129,11 @@
 
 //   const calculateTotalAmount = () => {
 //     if (!amount || !currency) return null;
-    
+
 //     const amountNum = parseFloat(amount);
 //     const exchangeRate = parseFloat(exchangeRates[currency as keyof typeof exchangeRates]?.rate || "1");
 //     const fees = parseFloat(exchangeRates[currency as keyof typeof exchangeRates]?.fees || "0");
-    
+
 //     return {
 //       originalAmount: amountNum,
 //       aedAmount: amountNum * exchangeRate,
@@ -184,7 +183,7 @@
 //         <DialogHeader>
 //           <DialogTitle className="text-xl">Create Single Transaction</DialogTitle>
 //         </DialogHeader>
-        
+
 //         <div className="space-y-6 mt-6">
 //           {/* Transaction Purpose */}
 //           <Card>
@@ -427,7 +426,7 @@
 //             <CardContent className="space-y-4">
 //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 //                 <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-//                   <CardContent 
+//                   <CardContent
 //                     className="p-6 text-center"
 //                     onClick={() => handleDocumentUpload("invoice_001.pdf")}
 //                   >
@@ -436,7 +435,7 @@
 //                     <p className="text-xs text-muted-foreground">PDF, JPG, PNG (Max 10MB)</p>
 //                   </CardContent>
 //                 </Card>
-                
+
 //                 <div className="space-y-2">
 //                   <h4 className="font-medium text-foreground">Uploaded Documents</h4>
 //                   {uploadedDocuments.length === 0 ? (
@@ -516,7 +515,7 @@
 //                 <div className="text-sm">
 //                   <p className="font-medium text-foreground">Approval Workflow</p>
 //                   <p className="text-muted-foreground">
-//                     {totals && totals.originalAmount > 50000 
+//                     {totals && totals.originalAmount > 50000
 //                       ? "This transaction will require multi-tier approval (Treasury + CFO approval required)."
 //                       : "This transaction will be routed through standard approval process."
 //                     }
@@ -530,8 +529,8 @@
 //             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
 //             <div className="space-x-3">
 //               <Button variant="outline">Save as Draft</Button>
-//               <Button 
-//                 variant="business" 
+//               <Button
+//                 variant="business"
 //                 disabled={!selectedBeneficiary || !selectedSource || !amount || !transactionPurpose}
 //                 onClick={() => setShowConfirmation(true)}
 //               >
@@ -557,23 +556,26 @@
 
 // export default SingleTransactionForm;
 
-
-
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import {
-  Card, CardContent, CardHeader, CardTitle
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -581,7 +583,13 @@ import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import {
-  Plus, FileText, Upload, User, DollarSign, CreditCard, Trash2
+  Plus,
+  FileText,
+  Upload,
+  User,
+  DollarSign,
+  CreditCard,
+  Trash2,
 } from "lucide-react";
 
 /* ---------------- PURPOSE CONFIG ---------------- */
@@ -626,22 +634,25 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
   useEffect(() => {
     if (!open) return;
 
-    axios.get(`${BASE_URL}/api/v1/beneficiaries`, {
-      headers: { Authorization: `Bearer ${cookies.token}` },
-    })
-      .then(res => setBeneficiaries(res.data.data))
+    axios
+      .get(`${BASE_URL}/api/v1/beneficiaries`, {
+        headers: { Authorization: `Bearer ${cookies.token}` },
+      })
+      .then((res) => setBeneficiaries(res?.data?.data?.beneficiaries))
       .catch(() =>
-        toast({ variant: "destructive", title: "Failed to load beneficiaries" })
+        toast({
+          variant: "destructive",
+          title: "Failed to load beneficiaries",
+        }),
       );
   }, [open]);
-
   /* ---------------- SOURCE → CURRENCY ---------------- */
   useEffect(() => {
-    const src = transactionSources.find(s => s.id === sourceAccountId);
+    const src = transactionSources.find((s) => s.id === sourceAccountId);
     if (src) setCurrency(src.currency);
   }, [sourceAccountId]);
 
-  const selectedPurpose = PURPOSES.find(p => p.code === purpose);
+  const selectedPurpose = PURPOSES.find((p) => p.code === purpose);
 
   /* ---------------- DOCUMENT HANDLING ---------------- */
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -650,7 +661,7 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
   };
 
   const removeDocument = (index: number) => {
-    setDocuments(prev => prev.filter((_, i) => i !== index));
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
   /* ---------------- SUBMIT (🔥 FIXED) ---------------- */
@@ -680,25 +691,21 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
       "data",
       new Blob([JSON.stringify(payload)], {
         type: "application/json",
-      })
+      }),
     );
 
     // ✅ documents
-    documents.forEach(file => {
+    documents.forEach((file) => {
       formData.append("documents", file);
     });
 
     try {
-      await axios.post(
-        `${BASE_URL}/api/v1/transactions/single`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${cookies.token}`,
-            // ❌ DO NOT SET Content-Type
-          },
-        }
-      );
+      await axios.post(`${BASE_URL}/api/v1/transactions/single`, formData, {
+        headers: {
+          Authorization: `Bearer ${cookies.token}`,
+          // ❌ DO NOT SET Content-Type
+        },
+      });
 
       toast({ title: "Transaction created successfully" });
       setOpen(false);
@@ -728,7 +735,6 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
           </DialogHeader>
 
           <div className="space-y-6">
-
             {/* PURPOSE */}
             <Card>
               <CardHeader>
@@ -738,9 +744,11 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
               </CardHeader>
               <CardContent>
                 <Select value={purpose} onValueChange={setPurpose}>
-                  <SelectTrigger><SelectValue placeholder="Select purpose" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select purpose" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {PURPOSES.map(p => (
+                    {PURPOSES.map((p) => (
                       <SelectItem key={p.code} value={p.code}>
                         {p.label}
                         {p.doc && <Badge className="ml-2">Doc Required</Badge>}
@@ -761,11 +769,13 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
               <CardContent>
                 <Select
                   value={sourceAccountId?.toString()}
-                  onValueChange={v => setSourceAccountId(Number(v))}
+                  onValueChange={(v) => setSourceAccountId(Number(v))}
                 >
-                  <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {transactionSources.map(s => (
+                    {transactionSources.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {s.name} — {s.currency}
                       </SelectItem>
@@ -784,9 +794,11 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
               </CardHeader>
               <CardContent>
                 <Select value={beneficiaryId} onValueChange={setBeneficiaryId}>
-                  <SelectTrigger><SelectValue placeholder="Select beneficiary" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select beneficiary" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {beneficiaries.map(b => (
+                    {beneficiaries?.map((b) => (
                       <SelectItem key={b.id} value={String(b.id)}>
                         {b.name}
                       </SelectItem>
@@ -808,7 +820,7 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
                   type="number"
                   placeholder="0.00"
                   value={amount}
-                  onChange={e => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(e.target.value)}
                 />
                 <Input value={currency} disabled />
               </CardContent>
@@ -825,9 +837,16 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
                 <Input type="file" multiple onChange={handleFileUpload} />
                 <div className="mt-3 space-y-2">
                   {documents.map((doc, i) => (
-                    <div key={i} className="flex justify-between bg-muted p-2 rounded">
+                    <div
+                      key={i}
+                      className="flex justify-between bg-muted p-2 rounded"
+                    >
                       <span className="text-sm">{doc.name}</span>
-                      <Button size="sm" variant="outline" onClick={() => removeDocument(i)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeDocument(i)}
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -838,20 +857,23 @@ const SingleTransactionForm = ({ trigger }: { trigger?: React.ReactNode }) => {
 
             {/* NOTES */}
             <Card>
-              <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Notes</CardTitle>
+              </CardHeader>
               <CardContent>
                 <Textarea
                   value={notes}
-                  onChange={e => setNotes(e.target.value)}
+                  onChange={(e) => setNotes(e.target.value)}
                 />
               </CardContent>
             </Card>
 
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={() => setConfirm(true)}>Submit</Button>
             </div>
-
           </div>
         </DialogContent>
       </Dialog>
