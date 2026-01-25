@@ -32,6 +32,7 @@ const UserDealRequests = () => {
   const token = cookies?.token;
   const { toast } = useToast();
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(0);
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
   const [showDeclineConfirmation, setShowDeclineConfirmation] = useState(false);
   const [counterDeal, setCounterDeal] = useState<any>(null);
@@ -41,7 +42,7 @@ const UserDealRequests = () => {
   const getRateDeals = async () => {
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}`,
+        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -60,8 +61,7 @@ const UserDealRequests = () => {
   };
   useEffect(() => {
     getRateDeals();
-  }, [searchValue]);
-  console.log("rateDealsData", rateDealsData);
+  }, [searchValue, page]);
   const businessAdminstates = rateDealsData?.businessAdminStats;
 
   const deals = [
@@ -197,7 +197,7 @@ const UserDealRequests = () => {
       ],
     },
   ];
-
+  const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING_REVIEW":
@@ -325,7 +325,16 @@ const UserDealRequests = () => {
       });
     }
   };
-
+  const getCounterRate = (negotiationHistory: any) => {
+    return negotiationHistory?.find(
+      (item) => item?.actionType === "COUNTER_PROPOSAL",
+    )?.rate;
+  };
+  const getCounterComments = (negotiationHistory: any) => {
+    return negotiationHistory?.find(
+      (item) => item?.actionType === "COUNTER_PROPOSAL",
+    )?.comments;
+  };
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -487,17 +496,22 @@ const UserDealRequests = () => {
                           {deal.currentMarketRate} {deal.payoutCurrency}
                         </p>
                       </div>
-                      {deal?.counterRate && (
+                      {[
+                        "COUNTER_PROPOSAL",
+                        "COUNTER_PROPOSAL_ACCEPTED",
+                      ].includes(deal?.dealStatus) && (
                         <div className="space-y-1">
                           <span className="text-muted-foreground flex items-center gap-1">
                             <MessageSquare className="h-3 w-3" />
                             Counter Rate:
                           </span>
                           <p className="font-semibold text-accent">
-                            {deal?.counterRate} {deal.payoutCurrency}
+                            {getCounterRate(deal?.negotiationHistory)}{" "}
+                            {deal.payoutCurrency}
                           </p>
                         </div>
                       )}
+
                       <div className="space-y-1">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -514,24 +528,25 @@ const UserDealRequests = () => {
                     </div>
 
                     {/* Counter Proposal Message */}
-                    {deal.dealStatus === "COUNTER_PROPOSAL" &&
-                      deal?.counterMessage && (
-                        <Card className="bg-accent-muted/20 border-accent">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-3">
-                              <MessageSquare className="h-5 w-5 text-accent mt-0.5" />
-                              <div className="flex-1">
-                                <p className="font-medium text-sm mb-1">
-                                  Counter Proposal Message
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {deal.counterMessage}
-                                </p>
-                              </div>
+                    {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
+                      deal?.dealStatus,
+                    ) && (
+                      <Card className="bg-accent-muted/20 border-accent">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <MessageSquare className="h-5 w-5 text-accent mt-0.5" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm mb-1">
+                                Counter Proposal Message
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {getCounterComments(deal?.negotiationHistory)}
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-2 border-t">
@@ -600,6 +615,31 @@ const UserDealRequests = () => {
             <p className="text-center font-semibold text-sm text-gray-500">
               No Date Found
             </p>
+          )}
+          {totalDealsRateDataList > 10 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
+                {totalDealsRateDataList} beneficiaries
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>

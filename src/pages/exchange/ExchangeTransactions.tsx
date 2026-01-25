@@ -583,7 +583,6 @@ const ExchangeTransactions = () => {
 
   const token = cookies.token;
   const fullname = cookies.fullName;
-  console.log("namwe", fullname);
 
   // Fetch data from API
   useEffect(() => {
@@ -610,11 +609,10 @@ const ExchangeTransactions = () => {
         );
 
         const data = response.data;
-
         if (data.status && data.data) {
           // Transform API data to match UI structure
-          const transformedTransactions: Transaction[] = data.data.map(
-            (apiTx) => ({
+          const transformedTransactions: Transaction[] =
+            data?.data?.transactions?.map((apiTx) => ({
               id: apiTx.transactionId,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
@@ -652,8 +650,7 @@ const ExchangeTransactions = () => {
               documents: apiTx.documents,
               commentCount: apiTx.commentCount || 0,
               latestComment: apiTx.latestComment || null,
-            }),
-          );
+            }));
 
           setTransactions(transformedTransactions);
         } else {

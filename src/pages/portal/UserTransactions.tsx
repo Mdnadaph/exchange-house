@@ -656,7 +656,6 @@ const UserTransactions = () => {
         );
 
         const data = response.data;
-        console.log("ddd", data);
 
         if (data.status && data.data) {
           // Transform API data to match UI structure
