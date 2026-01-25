@@ -312,7 +312,7 @@ const UserDealRequests = () => {
       }
       toast({
         title: "Counter Proposal Declined",
-        description: "You have declined the counter proposal",
+        description: "You have declined the counter proposals",
       });
       setShowDeclineConfirmation(false);
       setId(null);
