@@ -1,25 +1,56 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, TrendingUp, Info, DollarSign, MapPin, Calendar } from "lucide-react";
+import {
+  Plus,
+  TrendingUp,
+  Info,
+  DollarSign,
+  MapPin,
+  Calendar,
+} from "lucide-react";
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
+import { setLocale } from "yup";
 
 interface DealRequestFormProps {
   trigger?: React.ReactNode;
   onSubmitSuccess?: () => void;
+  refetch?: () => any;
 }
 
-const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => {
+const DealRequestForm = ({
+  trigger,
+  onSubmitSuccess,
+  refetch,
+}: DealRequestFormProps) => {
+  const [cookies] = useCookies(["token"]);
+  const token = cookies.token;
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
+  const [countries, setCountries] = useState([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [transactionPurposeData, setTransactionPurpose] = useState([]);
   const [formData, setFormData] = useState({
     sendingCurrency: "AED",
     sendingAmount: "",
@@ -28,18 +59,76 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
     proposedRate: "",
     currentMarketRate: "",
     purpose: "",
-    notes: ""
+    notes: "",
   });
+  const getCountries = async () => {
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "No token found",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/payout/config`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-  const countries = [
-    { code: "IN", name: "India", currency: "INR" },
-    { code: "PK", name: "Pakistan", currency: "PKR" },
-    { code: "BD", name: "Bangladesh", currency: "BDT" },
-    { code: "PH", name: "Philippines", currency: "PHP" },
-    { code: "GB", name: "United Kingdom", currency: "GBP" },
-    { code: "US", name: "United States", currency: "USD" },
-    { code: "EU", name: "European Union", currency: "EUR" }
-  ];
+      const json = await res.json();
+      if (json.status !== true || !json.data?.countries) {
+        throw new Error("Unexpected response format");
+      }
+      setCountries(json?.data?.countries);
+    } catch (error) {
+      const msg = error.message || "Failed to load beneficiaries";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+
+  const getTransitionPropose = async () => {
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "No token found",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/rate-deals/rate-deals-purpose`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json = await res.json();
+      if (json.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      setTransactionPurpose(json?.data);
+    } catch (error) {
+      const msg = error.message || "Failed to load beneficiaries";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+  useEffect(() => {
+    getCountries();
+    getTransitionPropose();
+  }, []);
+
+  // const countries = [
+  //   { code: "IN", name: "India", currency: "INR" },
+  //   { code: "PK", name: "Pakistan", currency: "PKR" },
+  //   { code: "BD", name: "Bangladesh", currency: "BDT" },
+  //   { code: "PH", name: "Philippines", currency: "PHP" },
+  //   { code: "GB", name: "United Kingdom", currency: "GBP" },
+  //   { code: "US", name: "United States", currency: "USD" },
+  //   { code: "EU", name: "European Union", currency: "EUR" },
+  // ];
 
   const sendingCurrencies = ["AED", "USD", "EUR", "GBP"];
 
@@ -53,17 +142,20 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
     "AED-EUR": "0.25",
     "USD-INR": "83.20",
     "USD-PKR": "278.50",
-    "USD-BDT": "109.50"
+    "USD-BDT": "109.50",
   };
 
   const handleCountryChange = (countryCode: string) => {
-    const country = countries.find(c => c.code === countryCode);
+    const country = countries.find((c) => c.countryId === countryCode);
     if (country) {
       setFormData({
         ...formData,
         payoutCountry: countryCode,
-        payoutCurrency: country.currency,
-        currentMarketRate: marketRates[`${formData.sendingCurrency}-${country.currency}` as keyof typeof marketRates] || ""
+        payoutCurrency: country?.currency,
+        // currentMarketRate:
+        //   marketRates[
+        //     `${formData.sendingCurrency}-${country.currency}` as keyof typeof marketRates
+        //   ] || "",
       });
     }
   };
@@ -72,9 +164,11 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
     setFormData({
       ...formData,
       sendingCurrency: currency,
-      currentMarketRate: formData.payoutCurrency 
-        ? marketRates[`${currency}-${formData.payoutCurrency}` as keyof typeof marketRates] || ""
-        : ""
+      // currentMarketRate: formData.payoutCurrency
+      //   ? marketRates[
+      //       `${currency}-${formData.payoutCurrency}` as keyof typeof marketRates
+      //     ] || ""
+      //   : "",
     });
   };
 
@@ -82,7 +176,7 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
     const amount = parseFloat(formData.sendingAmount);
     const proposedRate = parseFloat(formData.proposedRate);
     const marketRate = parseFloat(formData.currentMarketRate);
-    
+
     if (!amount || !proposedRate || !marketRate) return null;
 
     const marketPayout = amount * marketRate;
@@ -94,33 +188,76 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
       marketPayout: marketPayout.toFixed(2),
       proposedPayout: proposedPayout.toFixed(2),
       difference: difference.toFixed(2),
-      percentageDiff: percentageDiff.toFixed(2)
+      percentageDiff: percentageDiff.toFixed(2),
     };
   };
 
   const savings = calculateSavings();
 
-  const handleSubmit = () => {
-    toast({
-      title: "Deal Request Submitted",
-      description: "Your exchange rate deal request has been submitted for review.",
-    });
-    setOpen(false);
-    setFormData({
-      sendingCurrency: "AED",
-      sendingAmount: "",
-      payoutCountry: "",
-      payoutCurrency: "",
-      proposedRate: "",
-      currentMarketRate: "",
-      purpose: "",
-      notes: ""
-    });
-    onSubmitSuccess?.();
+  const handleSubmit = async () => {
+    const formDTO = {
+      sendingCurrency: formData?.sendingCurrency,
+      amount: formData?.sendingAmount,
+      countryId: formData?.payoutCountry,
+      payoutCurrency: formData?.payoutCurrency,
+      transactionPurposeId: formData?.purpose,
+      currentMarketRate: formData?.currentMarketRate,
+      proposedRate: formData?.proposedRate,
+      notes: formData?.notes,
+    };
+    setLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/rate-deals/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formDTO),
+      });
+      const json = await res.json();
+
+      if (!res.ok || json.status !== true) {
+        throw new Error(json.message || "Create failed");
+      }
+
+      setFormData({
+        sendingCurrency: "AED",
+        sendingAmount: "",
+        payoutCountry: "",
+        payoutCurrency: "",
+        proposedRate: "",
+        currentMarketRate: "",
+        purpose: "",
+        notes: "",
+      });
+
+      toast({
+        title: "Deal Request Submitted",
+        description:
+          "Your exchange rate deal request has been submitted for review.",
+      });
+      setOpen(false);
+      onSubmitSuccess?.();
+      refetch?.();
+    } catch (error) {
+      toast({
+        title: "Failed to Custome Rate",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleConfirm = () => {
-    if (!formData.sendingAmount || !formData.payoutCountry || !formData.proposedRate || !formData.purpose) {
+    if (
+      !formData.sendingAmount ||
+      !formData.payoutCountry ||
+      !formData.proposedRate ||
+      !formData.purpose
+    ) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -144,7 +281,9 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
         </DialogTrigger>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">Request Custom Exchange Rate Deal</DialogTitle>
+            <DialogTitle className="text-xl">
+              Request Custom Exchange Rate Deal
+            </DialogTitle>
             <p className="text-sm text-muted-foreground">
               Negotiate a better exchange rate for your transaction
             </p>
@@ -159,7 +298,10 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
                   <div className="text-sm">
                     <p className="font-medium text-foreground">How it works</p>
                     <p className="text-muted-foreground">
-                      Submit your desired exchange rate. The Exchange House or your Branch will review and either approve, reject, or counter-propose a rate. You can accept or reject their counter-offer.
+                      Submit your desired exchange rate. The Exchange House or
+                      your Branch will review and either approve, reject, or
+                      counter-propose a rate. You can accept or reject their
+                      counter-offer.
                     </p>
                   </div>
                 </div>
@@ -177,13 +319,18 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="sendingCurrency">Sending Currency *</Label>
-                    <Select value={formData.sendingCurrency} onValueChange={handleSendingCurrencyChange}>
+                    <Select
+                      value={formData.sendingCurrency}
+                      onValueChange={handleSendingCurrencyChange}
+                    >
                       <SelectTrigger id="sendingCurrency">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {sendingCurrencies.map(currency => (
-                          <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                        {sendingCurrencies.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            {currency}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -196,20 +343,31 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
                       type="number"
                       placeholder="Enter amount"
                       value={formData.sendingAmount}
-                      onChange={(e) => setFormData({...formData, sendingAmount: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          sendingAmount: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="payoutCountry">Payout Country *</Label>
-                    <Select value={formData.payoutCountry} onValueChange={handleCountryChange}>
+                    <Select
+                      value={formData.payoutCountry}
+                      onValueChange={handleCountryChange}
+                    >
                       <SelectTrigger id="payoutCountry">
                         <SelectValue placeholder="Select country" />
                       </SelectTrigger>
                       <SelectContent>
-                        {countries.map(country => (
-                          <SelectItem key={country.code} value={country.code}>
-                            {country.name} ({country.currency})
+                        {countries?.map((country) => (
+                          <SelectItem
+                            key={country?.id}
+                            value={country?.countryId}
+                          >
+                            {country.countryName} ({country.currency})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -229,16 +387,24 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
 
                 <div className="space-y-2">
                   <Label htmlFor="purpose">Transaction Purpose *</Label>
-                  <Select value={formData.purpose} onValueChange={(value) => setFormData({...formData, purpose: value})}>
+                  <Select
+                    value={formData.purpose}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, purpose: value })
+                    }
+                  >
                     <SelectTrigger id="purpose">
                       <SelectValue placeholder="Select purpose" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="salary">Salary Payment</SelectItem>
-                      <SelectItem value="supplier">Supplier Payment</SelectItem>
-                      <SelectItem value="invoice">Invoice Payment</SelectItem>
-                      <SelectItem value="remittance">Personal Remittance</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {transactionPurposeData?.map((transitionPurposeItem) => (
+                        <SelectItem
+                          key={transitionPurposeItem?.id}
+                          value={transitionPurposeItem?.id}
+                        >
+                          {transitionPurposeItem?.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -255,12 +421,26 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentMarketRate">Current Market Rate</Label>
-                    <Input
+                    <Label htmlFor="currentMarketRate">
+                      Current Market Rate
+                    </Label>
+                    {/* <Input
                       id="currentMarketRate"
                       value={formData.currentMarketRate}
                       disabled
                       placeholder="Auto-filled"
+                    /> */}
+                    <Input
+                      type="number"
+                      id="currentMarketRate"
+                      value={formData.currentMarketRate}
+                      placeholder="Enter CurrentMarketRate"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          currentMarketRate: e.target.value,
+                        })
+                      }
                     />
                     <p className="text-xs text-muted-foreground">
                       Standard rate offered by the exchange house
@@ -275,7 +455,12 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
                       step="0.01"
                       placeholder="Enter your desired rate"
                       value={formData.proposedRate}
-                      onChange={(e) => setFormData({...formData, proposedRate: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          proposedRate: e.target.value,
+                        })
+                      }
                     />
                     <p className="text-xs text-muted-foreground">
                       Rate you would like to negotiate
@@ -290,23 +475,41 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
                       <h4 className="font-medium mb-3">Potential Impact</h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Market Payout:</span>
-                          <p className="font-semibold">{formData.payoutCurrency} {savings.marketPayout}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Proposed Payout:</span>
-                          <p className="font-semibold">{formData.payoutCurrency} {savings.proposedPayout}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Difference:</span>
-                          <p className={`font-semibold ${parseFloat(savings.difference) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                            {parseFloat(savings.difference) >= 0 ? '+' : ''}{formData.payoutCurrency} {savings.difference}
+                          <span className="text-muted-foreground">
+                            Market Payout:
+                          </span>
+                          <p className="font-semibold">
+                            {formData.payoutCurrency} {savings.marketPayout}
                           </p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Rate Change:</span>
-                          <p className={`font-semibold ${parseFloat(savings.percentageDiff) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                            {parseFloat(savings.percentageDiff) >= 0 ? '+' : ''}{savings.percentageDiff}%
+                          <span className="text-muted-foreground">
+                            Proposed Payout:
+                          </span>
+                          <p className="font-semibold">
+                            {formData.payoutCurrency} {savings.proposedPayout}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Difference:
+                          </span>
+                          <p
+                            className={`font-semibold ${parseFloat(savings.difference) >= 0 ? "text-success" : "text-destructive"}`}
+                          >
+                            {parseFloat(savings.difference) >= 0 ? "+" : ""}
+                            {formData.payoutCurrency} {savings.difference}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Rate Change:
+                          </span>
+                          <p
+                            className={`font-semibold ${parseFloat(savings.percentageDiff) >= 0 ? "text-success" : "text-destructive"}`}
+                          >
+                            {parseFloat(savings.percentageDiff) >= 0 ? "+" : ""}
+                            {savings.percentageDiff}%
                           </p>
                         </div>
                       </div>
@@ -323,14 +526,18 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
                 id="notes"
                 placeholder="Add any additional information to support your request..."
                 value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 rows={3}
               />
             </div>
 
             {/* Actions */}
             <div className="flex justify-between pt-4 border-t">
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
               <Button variant="default" onClick={handleConfirm}>
                 Submit Deal Request
               </Button>
@@ -340,6 +547,7 @@ const DealRequestForm = ({ trigger, onSubmitSuccess }: DealRequestFormProps) => 
       </Dialog>
 
       <ConfirmationDialog
+        isConfirming={loading}
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
         onConfirm={handleSubmit}

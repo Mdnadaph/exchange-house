@@ -7,8 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, MessageSquare } from "lucide-react";
+import BASE_URL from "@/config/config";
+import { useCookies } from "react-cookie";
 
 interface DealResponseFormProps {
+  refetch?: () => any;
   dealId: string;
   businessName: string;
   requestedRate: string;
@@ -16,21 +19,28 @@ interface DealResponseFormProps {
   onResponse?: () => void;
 }
 
-const DealResponseForm = ({ 
-  dealId, 
-  businessName, 
-  requestedRate, 
+const DealResponseForm = ({
+  refetch,
+  dealId,
+  businessName,
+  requestedRate,
   currency,
-  onResponse 
+  onResponse,
 }: DealResponseFormProps) => {
   const { toast } = useToast();
-  const [action, setAction] = useState<"approve" | "reject" | "counter" | null>(null);
+  const [cookies] = useCookies(["token"]);
+  const token = cookies?.token;
+  const [action, setAction] = useState<
+    "DEAL_APPROVED" | "DEAL_REJECTED" | "COUNTER_PROPOSAL" | null
+  >(null);
   const [counterRate, setCounterRate] = useState("");
   const [message, setMessage] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const handleAction = (actionType: "approve" | "reject" | "counter") => {
-    if (actionType === "counter" && !counterRate) {
+  const handleAction = (
+    actionType: "DEAL_APPROVED" | "DEAL_REJECTED" | "COUNTER_PROPOSAL",
+  ) => {
+    if (actionType === "COUNTER_PROPOSAL" && !counterRate) {
       toast({
         title: "Missing Information",
         description: "Please enter a counter-proposed rate",
@@ -43,19 +53,54 @@ const DealResponseForm = ({
   };
 
   const confirmAction = () => {
+    const formDTO = {
+      action: action,
+      counterRate: counterRate,
+      message: message,
+    };
     const actionMessages = {
-      approve: "Deal approved and rate locked for the business",
-      reject: "Deal request rejected",
-      counter: "Counter proposal sent to business"
+      DEAL_APPROVED: "Deal approved and rate locked for the business",
+      DEAL_REJECTED: "Deal request rejected",
+      COUNTER_PROPOSAL: "Counter proposal sent to business",
+    };
+    const counterProposal = async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/v1/rate-deals/${dealId}/action`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(formDTO),
+          },
+        );
+        const json = await res.json();
+
+        if (!res.ok || json.status !== true) {
+          throw new Error(json.message || "Create failed");
+        }
+        toast({
+          title: "Response Submitted",
+          description: actionMessages[action],
+        });
+        onResponse?.();
+        refetch?.();
+        setCounterRate("");
+        setMessage("");
+      } catch (error) {
+        toast({
+          title: "Failed",
+          description: error?.message || "Please try again",
+          variant: "destructive",
+        });
+      } finally {
+      }
     };
 
-    if (action) {
-      toast({
-        title: "Response Submitted",
-        description: actionMessages[action],
-      });
-      onResponse?.();
-    }
+    console.log("data", formDTO);
+    counterProposal();
   };
 
   return (
@@ -70,15 +115,15 @@ const DealResponseForm = ({
               <Button
                 variant="default"
                 className="bg-success hover:bg-success/90"
-                onClick={() => handleAction("approve")}
+                onClick={() => handleAction("DEAL_APPROVED")}
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Approve Deal
               </Button>
-              
+
               <Button
                 variant="destructive"
-                onClick={() => handleAction("reject")}
+                onClick={() => handleAction("DEAL_REJECTED")}
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Reject Deal
@@ -91,7 +136,7 @@ const DealResponseForm = ({
                 <MessageSquare className="h-5 w-5 text-primary" />
                 <h4 className="font-medium">Counter Proposal</h4>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -115,17 +160,28 @@ const DealResponseForm = ({
                       {counterRate && (
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Requested:</span>
+                            <span className="text-muted-foreground">
+                              Requested:
+                            </span>
                             <span className="font-medium">{requestedRate}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Your Counter:</span>
+                            <span className="text-muted-foreground">
+                              Your Counter:
+                            </span>
                             <span className="font-medium">{counterRate}</span>
                           </div>
                           <div className="flex justify-between pt-1 border-t">
-                            <span className="text-muted-foreground">Difference:</span>
-                            <span className={`font-medium ${parseFloat(counterRate) > parseFloat(requestedRate) ? 'text-success' : 'text-destructive'}`}>
-                              {(parseFloat(counterRate) - parseFloat(requestedRate)).toFixed(4)}
+                            <span className="text-muted-foreground">
+                              Difference:
+                            </span>
+                            <span
+                              className={`font-medium ${parseFloat(counterRate) > parseFloat(requestedRate) ? "text-success" : "text-destructive"}`}
+                            >
+                              {(
+                                parseFloat(counterRate) -
+                                parseFloat(requestedRate)
+                              ).toFixed(4)}
                             </span>
                           </div>
                         </div>
@@ -135,7 +191,9 @@ const DealResponseForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message">Message to Business (Optional)</Label>
+                  <Label htmlFor="message">
+                    Message to Business (Optional)
+                  </Label>
                   <Textarea
                     id="message"
                     placeholder="Provide reasoning for your decision..."
@@ -147,7 +205,7 @@ const DealResponseForm = ({
 
                 <Button
                   variant="outline"
-                  onClick={() => handleAction("counter")}
+                  onClick={() => handleAction("COUNTER_PROPOSAL")}
                   disabled={!counterRate}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
@@ -163,16 +221,22 @@ const DealResponseForm = ({
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
         onConfirm={confirmAction}
-        title={`Confirm ${action === 'approve' ? 'Approval' : action === 'reject' ? 'Rejection' : 'Counter Proposal'}`}
+        title={`Confirm ${action === "DEAL_APPROVED" ? "Approval" : action === "DEAL_REJECTED" ? "Rejection" : "Counter Proposal"}`}
         description={
-          action === 'approve' 
+          action === "DEAL_APPROVED"
             ? `Approve the requested rate of ${requestedRate} ${currency} for ${businessName}? This will lock the rate for the deal validity period.`
-            : action === 'reject'
-            ? `Reject the deal request from ${businessName}? They will be notified of the rejection.`
-            : `Send counter proposal of ${counterRate} ${currency} to ${businessName}? They can accept or decline this rate.`
+            : action === "DEAL_REJECTED"
+              ? `Reject the deal request from ${businessName}? They will be notified of the rejection.`
+              : `Send counter proposal of ${counterRate} ${currency} to ${businessName}? They can accept or decline this rate.`
         }
-        confirmText={action === 'approve' ? 'Approve Deal' : action === 'reject' ? 'Reject Deal' : 'Send Counter'}
-        variant={action === 'reject' ? 'destructive' : 'default'}
+        confirmText={
+          action === "DEAL_APPROVED"
+            ? "Approve Deal"
+            : action === "DEAL_REJECTED"
+              ? "Reject Deal"
+              : "Send Counter"
+        }
+        variant={action === "DEAL_REJECTED" ? "destructive" : "default"}
       />
     </>
   );
