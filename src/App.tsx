@@ -164,6 +164,7 @@ import AdminOnboarding from "./pages/admin/AdminOnboarding";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDealSettings from "./pages/admin/AdminDealSettings";
+import AdminLis from "./pages/admin/AdminList";
 
 // Portal / Business Admin
 import UserDashboard from "./pages/portal/UserDashboard";
@@ -302,6 +303,7 @@ function App() {
                   <Route path="/admin">
                     <Route index element={<AdminDashboard />} />
                     <Route path="onboarding" element={<AdminOnboarding />} />
+                    <Route path="exchangeAdmin" element={<AdminLis />} />
                     <Route
                       path="deal-settings"
                       element={<AdminDealSettings />}

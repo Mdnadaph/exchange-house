@@ -573,9 +573,9 @@ const BranchTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [cookies] = useCookies(["Token", "email", "fullName"]);
+  const [cookies] = useCookies(["token", "email", "fullName"]);
 
-  const token = cookies.Token;
+  const token = cookies.token;
   console.log("token", token);
 
   const fullname = cookies.fullName;

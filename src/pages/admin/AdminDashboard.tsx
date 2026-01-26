@@ -571,6 +571,7 @@
 
 
 
+
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -629,6 +630,12 @@ import BASE_URL from "@/config/config";
 
 const AdminDashboard = () => {
   const [exchangeAdmins, setExchangeAdmins] = useState<any[]>([]);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalExchangeAdmin: 0,
+    pendingApproval: 0,
+    activeBusinesses: 0,
+    totalBranch: 0,
+  });
   const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -711,7 +718,7 @@ const AdminDashboard = () => {
       });
       setShowPassword(false);
       setShowConfirmPassword(false);
-      fetchExchangeAdmins(currentPage, pageSize);
+      fetchExchangeAdmins();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -726,26 +733,32 @@ const AdminDashboard = () => {
      Exchange Admins List
   ========================= */
 
-  const fetchExchangeAdmins = async (page: number, size: number) => {
+  const fetchExchangeAdmins = async () => {
     try {
       setLoadingAdmins(true);
       const res = await axios.get(
-        `${BASE_URL}/api/v3/super/exchange-admins?page=${page}&size=${size}`,
+        `${BASE_URL}/api/v1/dashboard/super-admin`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setExchangeAdmins(res.data.data || []);
-      setTotalElements(res.data.totalElements || 0);
-      setTotalPages(res.data.totalPages || 1);
-      setCurrentPage(res.data.currentPage || 0);
-      setPageSize(res.data.pageSize || 10);
+      setExchangeAdmins(res.data.data.exchangeAdmins || []);
+      setDashboardStats(res.data.data.stats || {
+        totalExchangeAdmin: 0,
+        pendingApproval: 0,
+        activeBusinesses: 0,
+        totalBranch: 0,
+      });
+      setTotalElements(res.data.data.exchangeAdmins?.length || 0);
+      setTotalPages(1);
+      setCurrentPage(0);
+      setPageSize(res.data.data.exchangeAdmins?.length || 10);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch exchange admins",
+        description: "Failed to fetch dashboard data",
         variant: "destructive",
       });
     } finally {
@@ -754,7 +767,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    fetchExchangeAdmins(0, 10);
+    fetchExchangeAdmins();
   }, []);
 
   /* =========================
@@ -763,28 +776,28 @@ const AdminDashboard = () => {
   const stats = [
     {
       title: "Total Exchange Admins",
-      value: totalElements.toString(),
+      value: dashboardStats.totalExchangeAdmin.toString(),
       change: "+3 this month",
       icon: Users,
       color: "text-blue-600",
     },
     {
-      title: "Pending KYB Applications",
-      value: "3",
+      title: "Pending Approvals",
+      value: dashboardStats.pendingApproval.toString(),
       change: "2 due today",
       icon: FileCheck,
       color: "text-orange-600",
     },
     {
-      title: "Active Beneficiaries",
-      value: "127",
+      title: "Active Businesses",
+      value: dashboardStats.activeBusinesses.toString(),
       change: "+12 this week",
       icon: Building,
       color: "text-green-600",
     },
     {
-      title: "Approval Rules",
-      value: "8",
+      title: "Total Branches",
+      value: dashboardStats.totalBranch.toString(),
       change: "Last updated 2d ago",
       icon: Settings,
       color: "text-purple-600",
@@ -974,7 +987,7 @@ const AdminDashboard = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         if (currentPage > 0) {
-                          fetchExchangeAdmins(currentPage - 1, pageSize);
+                          fetchExchangeAdmins();
                         }
                       }}
                     />
@@ -986,7 +999,7 @@ const AdminDashboard = () => {
                         isActive={index === currentPage}
                         onClick={(e) => {
                           e.preventDefault();
-                          fetchExchangeAdmins(index, pageSize);
+                          fetchExchangeAdmins();
                         }}
                       >
                         {index + 1}
@@ -999,7 +1012,7 @@ const AdminDashboard = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         if (currentPage < totalPages - 1) {
-                          fetchExchangeAdmins(currentPage + 1, pageSize);
+                          fetchExchangeAdmins();
                         }
                       }}
                     />
