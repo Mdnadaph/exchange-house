@@ -218,7 +218,7 @@ const VerifyTwoFALogin: React.FC = () => {
 
   const [cookies, setCookie] = useCookies([
     "tempToken",
-    "Token",
+    "token",
     "id",
     "uuid",
     "fullName",
@@ -310,7 +310,7 @@ const VerifyTwoFALogin: React.FC = () => {
       console.log("--------------------------");
 
       /* ===== STORE TOKEN ===== */
-      setCookie("Token", accessToken, {
+      setCookie("token", accessToken, {
         path: "/",
         // sameSite: "lax",
         maxAge: expiresIn || 10800,

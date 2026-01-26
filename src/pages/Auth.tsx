@@ -350,6 +350,7 @@
 
 
 
+
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -396,6 +397,15 @@ interface JwtPayload {
   roles?: string[];
   exp: number;
 }
+
+/* ================= ROLE CONSTANTS ================= */
+
+const BRANCH_ROLES = [
+  "ROLE_STAFF",
+  "ROLE_KYB_OFFICER",
+  "ROLE_SENIOR_KYB_OFFICER",
+  "ROLE_BRANCH_MANAGER",
+];
 
 /* ================= COMPONENT ================= */
 
@@ -481,7 +491,7 @@ const Auth: React.FC = () => {
       /* ===== NORMAL LOGIN ===== */
       const payload = JSON.parse(atob(accessToken.split(".")[1])) as JwtPayload;
       const role = payload.roles?.[0];
-      const maxAge = payload.exp - Math.floor(Date.now() / 1000);
+      const maxAge = payload.exp - Math.floor(Date.now() / 10800);
 
       setCookie("token", accessToken, { path: "/", maxAge });
       setCookie("role", role, { path: "/" });
@@ -503,8 +513,18 @@ const Auth: React.FC = () => {
           case "ROLE_EXCHANGE_ADMIN":
             navigate("/exchange");
             break;
+          case "ROLE_BUSINESS_ADMIN":
+            navigate("/portal");
+            break;
           default:
-            navigate(loginType === "BUSINESS" ? "/portal" : "/branch");
+            if (BRANCH_ROLES.includes(role)) {
+              navigate("/branch");
+            } else {
+              console.warn("Unknown role:", role);
+              toast.error("Unknown role. Please contact support.");
+              navigate("/login");
+            }
+            break;
         }
       }
     } catch (err: any) {
