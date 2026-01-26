@@ -223,11 +223,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-  const [cookies] = useCookies(["Token", "role"]);
+  const [cookies] = useCookies(["token", "role"]);
   const location = useLocation();
 
   // No token → redirect to login
-  if (!cookies.Token) {
+  if (!cookies.token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -247,9 +247,6 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to="/branch" replace />;
   }
 
-  // if (currentRole == "ROLE_STAFF", "ROLE_SENIOR_KYB_OFFICER") {
-  //   return <Navigate to="/branch" replace />;
-  // }
 
   if (currentRole === "ROLE_BUSINESS_ADMIN") {
     return <Navigate to="/portal" replace />;

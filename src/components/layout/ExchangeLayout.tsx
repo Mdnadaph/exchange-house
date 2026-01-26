@@ -42,13 +42,9 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     "lastName",
   ]);
 
-  const firstName = cookies.firstName;
-  const lastName = cookies.lastName;
   const fullName = cookies.fullName;
 
-  console.log("first Name ", firstName);
-  console.log("Last Name", lastName);
-  console.log("full Name ", fullName);
+  // console.log("full Name ", fullName);
 
   const handleLogout = () => {
     removeCookie("email");
@@ -106,7 +102,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName} {firstName} {lastName} (Exchange Admin)
+                {fullName} (Exchange Admin)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
