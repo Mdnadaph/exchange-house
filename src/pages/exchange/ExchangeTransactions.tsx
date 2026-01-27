@@ -543,7 +543,9 @@ interface ApiResponse {
   status: boolean;
   message: string | null;
   statusCode: number;
-  data: ApiTransaction[];
+  data: {
+    transactions: ApiTransaction[];
+  };
 }
 
 // Define the UI transaction interface
@@ -651,7 +653,6 @@ const ExchangeTransactions = () => {
               commentCount: apiTx.commentCount || 0,
               latestComment: apiTx.latestComment || null,
             }));
-
           setTransactions(transformedTransactions);
         } else {
           throw new Error(data.message || "Failed to fetch transactions");
@@ -692,7 +693,7 @@ const ExchangeTransactions = () => {
 
     fetchTransactions();
   }, []);
-
+  console.log("transitionData", transactions);
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
     return (

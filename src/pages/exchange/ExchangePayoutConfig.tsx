@@ -84,7 +84,7 @@ const AVAILABLE_MECHANISMS = [
   "BANK_TRANSFER",
   "MOBILE_WALLET",
   "UPI",
-  " CASH_PICKUP",
+  "CASH_PICKUP",
   "GCASH",
   "JAZZCASH",
   "EASYPaisa",
@@ -160,6 +160,7 @@ const ExchangePayoutConfig = () => {
   //   },
   // ]);
   const [destinations, setDestinations] = useState(null);
+  const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
@@ -204,6 +205,7 @@ const ExchangePayoutConfig = () => {
     getPayOutConfig();
   }, []);
   const summaryData = destinations?.summary;
+  const totalPayOutConfigDataList = destinations?.totalElements;
   function formatEnumText(value?: string): string {
     if (typeof value !== "string") return "-";
     return value
@@ -230,6 +232,7 @@ const ExchangePayoutConfig = () => {
   const [editDestinationOpen, setEditDestinationOpen] = useState(false);
   const [globalSettingsOpen, setGlobalSettingsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [page, setPage] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] =
     useState<PayoutDestination | null>(null);
 
@@ -416,36 +419,64 @@ const ExchangePayoutConfig = () => {
     // });
   };
 
-  // const handleEditDestination = () => {
-  //   if (!selectedDestination) return;
+  const handleEditDestination = async () => {
+    // if (!selectedDestination) return;
 
-  //   const updatedDestinations = destinations.map((d) =>
-  //     d.id === selectedDestination.id
-  //       ? {
-  //           ...d,
-  //           country: destinationForm.country,
-  //           currency: destinationForm.currency,
-  //           status: destinationForm.status,
-  //           mechanisms: destinationForm.mechanisms,
-  //           volume: destinationForm.volume,
-  //           partners: parseInt(destinationForm.partners) || d.partners,
-  //           fees: `${destinationForm.feeMin}-${destinationForm.feeMax}%`,
-  //           processingTime: `${destinationForm.processingMin}-${destinationForm.processingMax} minutes`,
-  //         }
-  //       : d,
-  //   );
+    // const updatedDestinations = destinations.map((d) =>
+    //   d.id === selectedDestination.id
+    //     ? {
+    //         ...d,
+    //         country: destinationForm.country,
+    //         currency: destinationForm.currency,
+    //         status: destinationForm.status,
+    //         mechanisms: destinationForm.mechanisms,
+    //         volume: destinationForm.volume,
+    //         partners: parseInt(destinationForm.partners) || d.partners,
+    //         fees: `${destinationForm.feeMin}-${destinationForm.feeMax}%`,
+    //         processingTime: `${destinationForm.processingMin}-${destinationForm.processingMax} minutes`,
+    //       }
+    //     : d,
+    // );
 
-  //   setDestinations(updatedDestinations);
-  //   setEditDestinationOpen(false);
-  //   setSelectedDestination(null);
-  //   resetForm();
-  //   toast({
-  //     title: t("destinationUpdated") || "Destination Updated",
-  //     description:
-  //       t("destinationUpdatedDesc") ||
-  //       "Destination configuration has been updated.",
-  //   });
-  // };
+    // setDestinations(updatedDestinations);
+    const payload = buildPayload();
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout/config/country/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+      const json = await res.json();
+
+      if (!res.ok || json.status !== true) {
+        throw new Error(json.message || "Create failed");
+      }
+
+      resetForm();
+      getPayOutConfig();
+      setEditDestinationOpen(false);
+      setSelectedDestination(null);
+      setId(null);
+      toast({
+        title: t("destinationUpdated") || "Destination Updated",
+        description:
+          t("destinationUpdatedDesc") ||
+          "Destination configuration has been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to Create Global Settting",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleDeleteDestination = async () => {
     if (!selectedDestination) return;
@@ -478,28 +509,35 @@ const ExchangePayoutConfig = () => {
       });
     }
   };
+  const buildMechanismConfigs = (data: any) => {
+    const configs: Record<string, any> = {};
 
-  // const openEditDialog = (destination: PayoutDestination) => {
-  //   setSelectedDestination(destination);
-  //   const feeParts = destination.fees.replace("%", "").split("-");
-  //   const timeParts = destination.processingTime
-  //     .replace(" minutes", "")
-  //     .split("-");
+    data?.mechanisms?.forEach((item: any) => {
+      configs[item?.name] = {
+        feeMin: item?.feeMinPercent?.toString() ?? "",
+        feeMax: item?.feeMaxPercent?.toString() ?? "",
+        processingMin: item?.processingMinMinutes?.toString() ?? "",
+        processingMax: item?.processingMaxMinutes?.toString() ?? "",
+      };
+    });
 
-  //   setDestinationForm({
-  //     country: destination.country,
-  //     currency: destination.currency,
-  //     status: destination.status,
-  //     mechanisms: destination.mechanisms,
-  //     feeMin: feeParts[0] || "",
-  //     feeMax: feeParts[1] || "",
-  //     processingMin: timeParts[0] || "",
-  //     processingMax: timeParts[1] || "",
-  //     partners: destination.partners.toString(),
-  //     volume: destination.volume,
-  //   });
-  //   setEditDestinationOpen(true);
-  // };
+    return configs;
+  };
+  const openEditDialog = (destinationEditableData: any) => {
+    setId(destinationEditableData?.id);
+    setDestinationForm({
+      country: destinationEditableData?.countryId,
+      currency: destinationEditableData?.currency,
+      status: destinationEditableData?.status.toLowerCase(),
+      mechanisms: destinationEditableData?.mechanisms?.map(
+        (item: any) => item?.name,
+      ),
+      mechanismConfigs: buildMechanismConfigs(destinationEditableData),
+      partners: destinationEditableData.partners.toString(),
+      volume: destinationEditableData?.volumeUsd,
+    });
+    setEditDestinationOpen(true);
+  };
 
   const openDeleteConfirm = (destination: PayoutDestination) => {
     setSelectedDestination(destination);
@@ -687,7 +725,7 @@ const ExchangePayoutConfig = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {t("successRate") || "Success Rate"}
@@ -696,6 +734,22 @@ const ExchangePayoutConfig = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">99.2%</div>
+              <p className="text-xs text-muted-foreground">
+                {t("allDestinations") || "All destinations"}
+              </p>
+            </CardContent>
+          </Card> */}
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Mantainance Country
+              </CardTitle>
+              <CheckCircle className="h-5 w-5 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {summaryData?.maintenanceCountries}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {t("allDestinations") || "All destinations"}
               </p>
@@ -824,16 +878,16 @@ const ExchangePayoutConfig = () => {
                           </div>
 
                           <div className="flex flex-wrap gap-2 justify-end">
-                            {/* <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditDialog(destination)}
-                          >
-                            <Edit className="h-4 w-4 sm:mr-1" />
-                            <span className="hidden sm:inline">
-                              {t("configure") || "Configure"}
-                            </span>
-                          </Button> */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(destination)}
+                            >
+                              <Edit className="h-4 w-4 sm:mr-1" />
+                              <span className="hidden sm:inline">
+                                {t("configure") || "Configure"}
+                              </span>
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
@@ -853,6 +907,32 @@ const ExchangePayoutConfig = () => {
                 </p>
               )}
             </div>
+            {totalPayOutConfigDataList > 10 && (
+              <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Showing {destinations?.countries?.length} of{" "}
+                  {totalPayOutConfigDataList} beneficiaries
+                </p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={(page + 1) * 10 >= totalPayOutConfigDataList}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -1246,7 +1326,7 @@ const ExchangePayoutConfig = () => {
               </div>
 
               {destinationForm.mechanisms.map((m) => {
-                const c = destinationForm.mechanismConfigs[m];
+                const c = destinationForm?.mechanismConfigs[m];
 
                 return (
                   <div key={m} className="border rounded-lg p-4 mt-4 space-y-4">
@@ -1258,14 +1338,14 @@ const ExchangePayoutConfig = () => {
                       <Input
                         type="number"
                         placeholder="Fee Min %"
-                        value={c.feeMin}
+                        value={c?.feeMin}
                         onChange={(e) =>
                           setDestinationForm((p) => ({
                             ...p,
                             mechanismConfigs: {
-                              ...p.mechanismConfigs,
+                              ...p?.mechanismConfigs,
                               [m]: {
-                                ...p.mechanismConfigs[m],
+                                ...p?.mechanismConfigs[m],
                                 feeMin: e.target.value,
                               },
                             },
@@ -1275,14 +1355,14 @@ const ExchangePayoutConfig = () => {
                       <Input
                         type="number"
                         placeholder="Fee Max %"
-                        value={c.feeMax}
+                        value={c?.feeMax}
                         onChange={(e) =>
                           setDestinationForm((p) => ({
                             ...p,
                             mechanismConfigs: {
-                              ...p.mechanismConfigs,
+                              ...p?.mechanismConfigs,
                               [m]: {
-                                ...p.mechanismConfigs[m],
+                                ...p?.mechanismConfigs[m],
                                 feeMax: e.target.value,
                               },
                             },
@@ -1295,14 +1375,14 @@ const ExchangePayoutConfig = () => {
                       <Input
                         type="number"
                         placeholder="Processing Min (minutes)"
-                        value={c.processingMin}
+                        value={c?.processingMin}
                         onChange={(e) =>
                           setDestinationForm((p) => ({
                             ...p,
                             mechanismConfigs: {
-                              ...p.mechanismConfigs,
+                              ...p?.mechanismConfigs,
                               [m]: {
-                                ...p.mechanismConfigs[m],
+                                ...p?.mechanismConfigs[m],
                                 processingMin: e.target.value,
                               },
                             },
@@ -1312,14 +1392,14 @@ const ExchangePayoutConfig = () => {
                       <Input
                         type="number"
                         placeholder="Processing Max (minutes)"
-                        value={c.processingMax}
+                        value={c?.processingMax}
                         onChange={(e) =>
                           setDestinationForm((p) => ({
                             ...p,
                             mechanismConfigs: {
-                              ...p.mechanismConfigs,
+                              ...p?.mechanismConfigs,
                               [m]: {
-                                ...p.mechanismConfigs[m],
+                                ...p?.mechanismConfigs[m],
                                 processingMax: e.target.value,
                               },
                             },
@@ -1347,7 +1427,7 @@ const ExchangePayoutConfig = () => {
         </Dialog>
 
         {/* Edit Destination Dialog */}
-        {/* <Dialog
+        <Dialog
           open={editDestinationOpen}
           onOpenChange={setEditDestinationOpen}
         >
@@ -1374,8 +1454,8 @@ const ExchangePayoutConfig = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRIES.map((country) => (
-                        <SelectItem key={country.name} value={country.name}>
+                      {countries.map((country) => (
+                        <SelectItem key={country.id} value={country.id}>
                           {country.name}
                         </SelectItem>
                       ))}
@@ -1436,7 +1516,9 @@ const ExchangePayoutConfig = () => {
                     >
                       <Checkbox
                         id={`edit-${mechanism}`}
-                        checked={destinationForm.mechanisms.includes(mechanism)}
+                        checked={destinationForm?.mechanisms?.includes(
+                          mechanism,
+                        )}
                         onCheckedChange={() => handleMechanismToggle(mechanism)}
                       />
                       <label
@@ -1450,7 +1532,7 @@ const ExchangePayoutConfig = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("feeRangeMin") || "Fee Range Min (%)"}</Label>
                   <Input
@@ -1512,14 +1594,98 @@ const ExchangePayoutConfig = () => {
                     }
                   />
                 </div>
-              </div>
+              </div> */}
+              {destinationForm?.mechanisms?.map((m) => {
+                const c = destinationForm?.mechanismConfigs[m];
 
+                return (
+                  <div key={m} className="border rounded-lg p-4 mt-4 space-y-4">
+                    <h4 className="font-semibold">
+                      {formatEnumText(m)} Configuration
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        type="number"
+                        placeholder="Fee Min %"
+                        value={c?.feeMin}
+                        onChange={(e) =>
+                          setDestinationForm((p) => ({
+                            ...p,
+                            mechanismConfigs: {
+                              ...p?.mechanismConfigs,
+                              [m]: {
+                                ...p?.mechanismConfigs[m],
+                                feeMin: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Fee Max %"
+                        value={c?.feeMax}
+                        onChange={(e) =>
+                          setDestinationForm((p) => ({
+                            ...p,
+                            mechanismConfigs: {
+                              ...p?.mechanismConfigs,
+                              [m]: {
+                                ...p?.mechanismConfigs[m],
+                                feeMax: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        type="number"
+                        placeholder="Processing Min (minutes)"
+                        value={c?.processingMin}
+                        onChange={(e) =>
+                          setDestinationForm((p) => ({
+                            ...p,
+                            mechanismConfigs: {
+                              ...p?.mechanismConfigs,
+                              [m]: {
+                                ...p?.mechanismConfigs[m],
+                                processingMin: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Processing Max (minutes)"
+                        value={c?.processingMax}
+                        onChange={(e) =>
+                          setDestinationForm((p) => ({
+                            ...p,
+                            mechanismConfigs: {
+                              ...p?.mechanismConfigs,
+                              [m]: {
+                                ...p?.mechanismConfigs[m],
+                                processingMax: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                );
+              })}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("partnerCount") || "Partner Count"}</Label>
                   <Input
                     type="number"
-                    value={destinationForm.partners}
+                    value={destinationForm?.partners}
                     onChange={(e) =>
                       setDestinationForm((prev) => ({
                         ...prev,
@@ -1555,7 +1721,7 @@ const ExchangePayoutConfig = () => {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog> */}
+        </Dialog>
 
         {/* Global Settings Dialog */}
         <Dialog open={globalSettingsOpen} onOpenChange={setGlobalSettingsOpen}>

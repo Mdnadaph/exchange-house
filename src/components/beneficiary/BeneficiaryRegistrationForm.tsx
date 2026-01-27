@@ -47,11 +47,13 @@ import {
 import { useState } from "react";
 import { toast } from "sonner"; // Assuming sonner for notifications
 
-const BeneficiaryRegistrationForm = () => {
+const BeneficiaryRegistrationForm = ({
+  payOutConfigData,
+}: {
+  payOutConfigData: any;
+}) => {
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
-  console.log("token", token);
-
   // Form & UI States
   const [loading, setLoading] = useState(false);
   const [beneficiaryType, setBeneficiaryType] = useState<
@@ -68,7 +70,9 @@ const BeneficiaryRegistrationForm = () => {
   const [walletProvider, setWalletProvider] = useState("");
   const [requiresApproval, setRequiresApproval] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
-  const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(undefined);
+  const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(
+    undefined,
+  );
 
   // Input States for API
   const [formData, setFormData] = useState({
@@ -101,7 +105,6 @@ const BeneficiaryRegistrationForm = () => {
     correspondentSwift: "",
     correspondentAccountNumber: "",
     correspondentBankAddress: "",
-
   });
 
   const handleInputChange = (
@@ -119,7 +122,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "22.45",
       fees: "5.00",
-      currency: "INR"
+      currency: "INR",
     },
     {
       country: "Philippines",
@@ -128,7 +131,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "3.67",
       fees: "3.50",
-      currency: "PHP"
+      currency: "PHP",
     },
     {
       country: "Pakistan",
@@ -137,7 +140,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "84.50",
       fees: "4.00",
-      currency: "PKR"
+      currency: "PKR",
     },
     {
       country: "Bangladesh",
@@ -146,7 +149,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "29.75",
       fees: "3.00",
-      currency: "BDT"
+      currency: "BDT",
     },
     {
       country: "Sri Lanka",
@@ -155,7 +158,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "109.25",
       fees: "6.00",
-      currency: "LKR"
+      currency: "LKR",
     },
     {
       country: "Nepal",
@@ -164,7 +167,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "36.15",
       fees: "4.50",
-      currency: "NPR"
+      currency: "NPR",
     },
     {
       country: "United Arab Emirates",
@@ -173,7 +176,7 @@ const BeneficiaryRegistrationForm = () => {
       supported: true,
       exchangeRate: "1.00",
       fees: "2.00",
-      currency: "AED"
+      currency: "AED",
     },
   ];
 
@@ -492,11 +495,14 @@ const BeneficiaryRegistrationForm = () => {
                     <SelectValue placeholder="Select destination country" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border border-border z-50">
-                    {payoutDestinations
-                      .filter((dest) => dest.code !== "AE")
-                      .map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          {country.country}
+                    {payOutConfigData?.countries
+                      .filter((dest: any) => dest?.currency !== "AED")
+                      .map((country: any) => (
+                        <SelectItem
+                          key={country.countryId}
+                          value={country.countryId}
+                        >
+                          {country.countryName}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -598,7 +604,10 @@ const BeneficiaryRegistrationForm = () => {
                       onSelect={(date) => {
                         setDateOfBirth(date);
                         if (date) {
-                          setFormData({ ...formData, dateOfBirth: format(date, "yyyy-MM-dd") });
+                          setFormData({
+                            ...formData,
+                            dateOfBirth: format(date, "yyyy-MM-dd"),
+                          });
                         }
                       }}
                       disabled={(date) =>
@@ -624,11 +633,11 @@ const BeneficiaryRegistrationForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="companyName">Company Name *</Label>
-                <Input 
-                  id="companyName" 
+                <Input
+                  id="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  placeholder="Enter company name" 
+                  placeholder="Enter company name"
                 />
               </div>
               <div className="space-y-2">
@@ -677,7 +686,10 @@ const BeneficiaryRegistrationForm = () => {
                       onSelect={(date) => {
                         setIncorporationDate(date);
                         if (date) {
-                          setFormData({ ...formData, incorporationDate: format(date, "yyyy-MM-dd") });
+                          setFormData({
+                            ...formData,
+                            incorporationDate: format(date, "yyyy-MM-dd"),
+                          });
                         }
                       }}
                       disabled={(date) =>
@@ -819,7 +831,10 @@ const BeneficiaryRegistrationForm = () => {
                     ? "ring-2 ring-primary bg-primary/5"
                     : ""
                 } ${getAvailableBanks().length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={() => getAvailableBanks().length > 0 && setPayoutMechanism("bank_account")}
+                onClick={() =>
+                  getAvailableBanks().length > 0 &&
+                  setPayoutMechanism("bank_account")
+                }
               >
                 <CardContent className="p-4 flex items-center space-x-3">
                   <Banknote className="h-8 w-8 text-primary" />
@@ -828,7 +843,9 @@ const BeneficiaryRegistrationForm = () => {
                       Bank Account
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {getAvailableBanks().length > 0 ? "Direct bank transfer" : "Not available"}
+                      {getAvailableBanks().length > 0
+                        ? "Direct bank transfer"
+                        : "Not available"}
                     </p>
                   </div>
                 </CardContent>
@@ -956,52 +973,62 @@ const BeneficiaryRegistrationForm = () => {
                     <div className="border-t pt-4 mt-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Building className="h-4 w-4 text-muted-foreground" />
-                        <h5 className="font-medium text-foreground">Correspondent Bank (Optional)</h5>
+                        <h5 className="font-medium text-foreground">
+                          Correspondent Bank (Optional)
+                        </h5>
                       </div>
                       <p className="text-xs text-muted-foreground mb-3">
-                        Required for some international transfers when an intermediary bank is used
+                        Required for some international transfers when an
+                        intermediary bank is used
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="correspondentBankName">Correspondent Bank Name</Label>
-                          <Input 
-                            id="correspondentBankName" 
-                            value={formData.correspondentBankName} 
-                            onChange={handleInputChange} 
-                            placeholder="Enter correspondent bank name" 
+                          <Label htmlFor="correspondentBankName">
+                            Correspondent Bank Name
+                          </Label>
+                          <Input
+                            id="correspondentBankName"
+                            value={formData.correspondentBankName}
+                            onChange={handleInputChange}
+                            placeholder="Enter correspondent bank name"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="correspondentSwift">Correspondent SWIFT/BIC</Label>
-                          <Input 
-                            id="correspondentSwift" 
-                            value={formData.correspondentSwift} 
-                            onChange={handleInputChange} 
-                            placeholder="e.g., CITIUS33" 
+                          <Label htmlFor="correspondentSwift">
+                            Correspondent SWIFT/BIC
+                          </Label>
+                          <Input
+                            id="correspondentSwift"
+                            value={formData.correspondentSwift}
+                            onChange={handleInputChange}
+                            placeholder="e.g., CITIUS33"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="correspondentAccountNumber">Correspondent Account Number</Label>
-                          <Input 
-                            id="correspondentAccountNumber" 
-                            value={formData.correspondentAccountNumber} 
-                            onChange={handleInputChange} 
-                            placeholder="Enter correspondent account number" 
+                          <Label htmlFor="correspondentAccountNumber">
+                            Correspondent Account Number
+                          </Label>
+                          <Input
+                            id="correspondentAccountNumber"
+                            value={formData.correspondentAccountNumber}
+                            onChange={handleInputChange}
+                            placeholder="Enter correspondent account number"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="correspondentBankAddress">Correspondent Bank Address</Label>
-                          <Input 
-                            id="correspondentBankAddress" 
-                            value={formData.correspondentBankAddress} 
-                            onChange={handleInputChange} 
-                            placeholder="Enter correspondent bank address" 
+                          <Label htmlFor="correspondentBankAddress">
+                            Correspondent Bank Address
+                          </Label>
+                          <Input
+                            id="correspondentBankAddress"
+                            value={formData.correspondentBankAddress}
+                            onChange={handleInputChange}
+                            placeholder="Enter correspondent bank address"
                           />
                         </div>
                       </div>
                     </div>
                   )}
-
                 </CardContent>
               </Card>
             )}
@@ -1016,7 +1043,10 @@ const BeneficiaryRegistrationForm = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Wallet Provider *</Label>
-                      <Select value={walletProvider} onValueChange={setWalletProvider}>
+                      <Select
+                        value={walletProvider}
+                        onValueChange={setWalletProvider}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose wallet provider" />
                         </SelectTrigger>
@@ -1031,11 +1061,11 @@ const BeneficiaryRegistrationForm = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="walletId">Wallet ID/Phone Number *</Label>
-                      <Input 
+                      <Input
                         id="walletId"
                         value={formData.walletId}
                         onChange={handleInputChange}
-                        placeholder="Enter wallet ID or phone number" 
+                        placeholder="Enter wallet ID or phone number"
                       />
                     </div>
                   </div>

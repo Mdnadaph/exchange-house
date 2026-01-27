@@ -1019,12 +1019,6 @@
 
 // export default UserBeneficiaries;
 
-
-
-
-
-
-
 // import UserLayout from "@/components/layout/UserLayout";
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // import { Button } from "@/components/ui/button";
@@ -2092,7 +2086,6 @@
 
 // export default UserBeneficiaries;
 
-
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -2129,6 +2122,7 @@ import {
 import { useState, useEffect } from "react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
+import { useToast } from "@/hooks/use-toast";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -2173,7 +2167,6 @@ interface Beneficiary {
   status: string;
   verificationStatus: string;
   lastUsed: string;
-  totalSent: string;
   transactionCount: number;
   averageTransaction?: string;
 }
@@ -2205,15 +2198,23 @@ interface DashboardData {
 const UserBeneficiaries = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
+  const { toast } = useToast();
 
   const [view, setView] = useState<"list" | "register" | "profile">("list");
-  const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
+  const [selectedBeneficiary, setSelectedBeneficiary] =
+    useState<Beneficiary | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"beneficiaries" | "groups">("beneficiaries");
+  const [activeTab, setActiveTab] = useState<"beneficiaries" | "groups">(
+    "beneficiaries",
+  );
 
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
-  const [beneficiaryGroups, setBeneficiaryGroups] = useState<BeneficiaryGroup[]>([]);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [beneficiaryGroups, setBeneficiaryGroups] = useState<
+    BeneficiaryGroup[]
+  >([]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -2228,7 +2229,7 @@ const UserBeneficiaries = () => {
   const [groupsSize] = useState(10);
   const [groupsTotalPages, setGroupsTotalPages] = useState(1);
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
-
+  const [payOutConfigData, setPayOutConfigData] = useState(null);
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
     if (!active) return "inactive";
@@ -2256,9 +2257,9 @@ const UserBeneficiaries = () => {
       if (searchQuery) {
         url += `&search=${encodeURIComponent(searchQuery)}`;
       }
-      let approvalStatus = '';
-      if (filterStatus === 'active') approvalStatus = 'APPROVED';
-      if (filterStatus === 'pending_approval') approvalStatus = 'PENDING';
+      let approvalStatus = "";
+      if (filterStatus === "active") approvalStatus = "APPROVED";
+      if (filterStatus === "pending_approval") approvalStatus = "PENDING";
       if (approvalStatus) url += `&approvalStatus=${approvalStatus}`;
 
       const res = await fetch(url, {
@@ -2319,6 +2320,27 @@ const UserBeneficiaries = () => {
     }
   };
 
+  const getPayOutConfig = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/payout/config`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      setPayOutConfigData(json?.data);
+    } catch (error) {
+      const msg = error.message || "Failed to load payout config";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+
+  useEffect(() => {
+    getPayOutConfig();
+  }, []);
   // Fetch groups from API
   const fetchGroups = async () => {
     try {
@@ -2425,8 +2447,8 @@ const UserBeneficiaries = () => {
   const handleGroupCreated = (group: BeneficiaryGroup) => {
     const groupWithBeneficiaries = {
       ...group,
-      beneficiaries: beneficiaries.filter((b) =>
-        group.beneficiaryIds.includes(b.id),
+      beneficiaries: beneficiaries.filter((b: any) =>
+        group.beneficiaryIds.includes(b?.id),
       ),
     };
     setBeneficiaryGroups((prev) => [...prev, groupWithBeneficiaries]);
@@ -2434,14 +2456,14 @@ const UserBeneficiaries = () => {
   };
 
   const handleDeleteGroup = (groupId: string) => {
-    setBeneficiaryGroups((prev) => prev.filter((g) => g.id !== groupId));
+    setBeneficiaryGroups((prev) => prev.filter((g: any) => g.id !== groupId));
     fetchGroups(); // Refetch
   };
 
   // Update groups with beneficiary data
   const groupsWithBeneficiaryData = beneficiaryGroups.map((group) => ({
     ...group,
-    beneficiaries: beneficiaries.filter((b) =>
+    beneficiaries: beneficiaries.filter((b: any) =>
       group.beneficiaryIds.includes(b.id),
     ),
   }));
@@ -2527,62 +2549,31 @@ const UserBeneficiaries = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {[
-                    {
-                      country: "India",
-                      code: "IN",
-                      exchangeRate: "22.45",
-                      fees: "5.00",
-                    },
-                    {
-                      country: "Philippines",
-                      code: "PH",
-                      exchangeRate: "3.67",
-                      fees: "3.50",
-                    },
-                    {
-                      country: "Pakistan",
-                      code: "PK",
-                      exchangeRate: "84.50",
-                      fees: "4.00",
-                    },
-                    {
-                      country: "Bangladesh",
-                      code: "BD",
-                      exchangeRate: "29.75",
-                      fees: "3.00",
-                    },
-                    {
-                      country: "UAE",
-                      code: "AE",
-                      exchangeRate: "1.00",
-                      fees: "2.00",
-                    },
-                  ].map((destination) => (
+                  {payOutConfigData?.countries?.map((destination: any) => (
                     <div
-                      key={destination.code}
+                      key={destination.countryId}
                       className="flex items-center justify-between p-3 border rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                           <span className="text-xs font-bold text-primary">
-                            {destination.code}
+                            {destination?.currency}
                           </span>
                         </div>
                         <div>
                           <p className="font-medium text-foreground">
-                            {destination.country}
+                            {destination?.countryName}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          {/* <p className="text-xs text-muted-foreground">
                             Rate: 1 AED = {destination.exchangeRate}
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                       <div className="text-right">
                         <Badge variant="default">Available</Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        {/* <p className="text-xs text-muted-foreground mt-1">
                           Fee: AED {destination.fees}
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                   ))}
@@ -2645,7 +2636,9 @@ const UserBeneficiaries = () => {
                 <Users className="h-5 w-5 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardData?.totalBeneficiaries || 0}</div>
+                <div className="text-2xl font-bold">
+                  {dashboardData?.totalBeneficiaries || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.active || 0} active
                 </p>
@@ -2662,7 +2655,9 @@ const UserBeneficiaries = () => {
                 <div className="text-2xl font-bold">
                   {dashboardData?.groups || 0}
                 </div>
-                <p className="text-xs text-muted-foreground">For bulk payments</p>
+                <p className="text-xs text-muted-foreground">
+                  For bulk payments
+                </p>
               </CardContent>
             </Card>
             <Card className="shadow-card">
@@ -2676,7 +2671,9 @@ const UserBeneficiaries = () => {
                 <div className="text-2xl font-bold text-success">
                   {dashboardData?.active || 0}
                 </div>
-                <p className="text-xs text-muted-foreground">Verified & active</p>
+                <p className="text-xs text-muted-foreground">
+                  Verified & active
+                </p>
               </CardContent>
             </Card>
             <Card className="shadow-card">
@@ -2690,7 +2687,9 @@ const UserBeneficiaries = () => {
                 <div className="text-2xl font-bold text-orange-600">
                   {dashboardData?.pending || 0}
                 </div>
-                <p className="text-xs text-muted-foreground">Awaiting approval</p>
+                <p className="text-xs text-muted-foreground">
+                  Awaiting approval
+                </p>
               </CardContent>
             </Card>
             <Card className="shadow-card">
@@ -2793,20 +2792,22 @@ const UserBeneficiaries = () => {
                                   </p>
                                 )}
                                 <div className="flex flex-wrap gap-2">
-                                  {group.beneficiaries.slice(0, 5).map((ben) => (
-                                    <Badge
-                                      key={ben.id}
-                                      variant="outline"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {ben.type === "corporate" ? (
-                                        <Building className="h-3 w-3" />
-                                      ) : (
-                                        <User className="h-3 w-3" />
-                                      )}
-                                      {ben.name}
-                                    </Badge>
-                                  ))}
+                                  {group.beneficiaries
+                                    .slice(0, 5)
+                                    .map((ben) => (
+                                      <Badge
+                                        key={ben.id}
+                                        variant="outline"
+                                        className="flex items-center gap-1"
+                                      >
+                                        {ben.type === "corporate" ? (
+                                          <Building className="h-3 w-3" />
+                                        ) : (
+                                          <User className="h-3 w-3" />
+                                        )}
+                                        {ben.name}
+                                      </Badge>
+                                    ))}
                                   {group.beneficiaries.length > 5 && (
                                     <Badge variant="outline">
                                       +{group.beneficiaries.length - 5} more
@@ -2835,19 +2836,20 @@ const UserBeneficiaries = () => {
                   {/* Pagination for groups */}
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
-                      Showing {beneficiaryGroups.length} of {groupsTotalItems} groups
+                      Showing {beneficiaryGroups.length} of {groupsTotalItems}{" "}
+                      groups
                     </p>
                     <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         disabled={groupsPage === 0}
                         onClick={() => setGroupsPage(groupsPage - 1)}
                       >
                         Previous
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         disabled={groupsPage >= groupsTotalPages - 1}
                         onClick={() => setGroupsPage(groupsPage + 1)}
@@ -3058,7 +3060,8 @@ const UserBeneficiaries = () => {
                                       <p className="text-xs">
                                         Avg:{" "}
                                         {beneficiary.averageTransaction
-                                          ? beneficiary.bankDetails[0]?.currency +
+                                          ? beneficiary.bankDetails[0]
+                                              ?.currency +
                                             " " +
                                             Number(
                                               beneficiary.averageTransaction,
@@ -3181,19 +3184,25 @@ const UserBeneficiaries = () => {
                       {beneficiariesTotalItems} beneficiaries
                     </p>
                     <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         disabled={beneficiariesPage === 0}
-                        onClick={() => setBeneficiariesPage(beneficiariesPage - 1)}
+                        onClick={() =>
+                          setBeneficiariesPage(beneficiariesPage - 1)
+                        }
                       >
                         Previous
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
-                        disabled={beneficiariesPage >= beneficiariesTotalPages - 1}
-                        onClick={() => setBeneficiariesPage(beneficiariesPage + 1)}
+                        disabled={
+                          beneficiariesPage >= beneficiariesTotalPages - 1
+                        }
+                        onClick={() =>
+                          setBeneficiariesPage(beneficiariesPage + 1)
+                        }
                       >
                         Next
                       </Button>
@@ -3210,7 +3219,10 @@ const UserBeneficiaries = () => {
           <Button variant="outline" onClick={() => setView("list")}>
             Back to List
           </Button>
-          <BeneficiaryRegistrationForm onSuccess={fetchBeneficiaries} />
+          <BeneficiaryRegistrationForm
+            onSuccess={fetchBeneficiaries}
+            payOutConfigData={payOutConfigData}
+          />
         </div>
       )}
       {view === "profile" && selectedBeneficiary && (

@@ -590,7 +590,9 @@ interface ApiResponse {
   status: boolean;
   message: string | null;
   statusCode: number;
-  data: ApiTransaction[];
+  data: {
+    transactions: ApiTransaction[];
+  };
 }
 
 // Define the UI transaction interface

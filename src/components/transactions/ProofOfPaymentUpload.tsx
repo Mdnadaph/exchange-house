@@ -366,7 +366,7 @@ const ProofOfPaymentUpload = ({
 
         if (response.data.status && response.data.data) {
           // Find the specific transaction by ID
-          const transaction = response.data.data.find(
+          const transaction = response?.data?.data?.transactions.find(
             (tx: any) => tx.transactionId === transactionId,
           );
 
