@@ -29,20 +29,21 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const location = useLocation();
 
   const [cookies, , removeCookie] = useCookies([
-    "tempToken",
     "token",
-    "twoFactorEnabled",
     "email",
     "role",
     "fullName",
-    "businessEmail",
+    "refreshToken",
     "accessToken",
-    "businessTwoFactorEnabled",
-    "firstName",
-    "lastName",
   ]);
 
   const fullName = cookies.fullName;
+  const token = cookies.token;
+  const role = cookies.role;
+  const email = cookies.email;
+
+  const accessToken = cookies.accessToken;
+  const refreshToken = cookies.refreshToken;
 
   // console.log("full Name ", fullName);
 
@@ -50,15 +51,9 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     removeCookie("email");
     removeCookie("token");
     removeCookie("fullName");
-    removeCookie("firstName");
-    removeCookie("lastName");
     removeCookie("role");
     removeCookie("accessToken");
-    removeCookie("email");
-    removeCookie("tempToken");
-    removeCookie("twoFactorEnabled");
-    removeCookie("businessTwoFactorEnabled");
-    removeCookie("businessEmail");
+    removeCookie("refreshToken");
     navigate("/");
   };
 

@@ -11,7 +11,8 @@ import {
   FileCheck, 
   LogOut,
   Shield,
-  Handshake
+  Handshake,
+  Landmark,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -25,6 +26,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: Home },
+    { name: "Exchange House Management", href: "/admin/exchange-houses", icon: Landmark },
     // { name: "Excahnge Admin", href: "/admin/exchangeAdmin", icon: Home },
     // { name: "KYB Onboarding", href: "/admin/onboarding", icon: FileCheck },
     // { name: "Deal Settings", href: "/admin/deal-settings", icon: Handshake },
@@ -32,22 +34,24 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   ];
 
    const [cookies, , removeCookie] = useCookies([
-      "tempToken",
       "token",
-      "twoFactorEnabled",
-      "email",
-      "role",
-      "fullName",
-      "businessEmail",
       "accessToken",
-      "businessTwoFactorEnabled",
+      "refreshToken",
+      "fullName",
+      "role",
     ]);
   
+    const token = cookies.token;
+    const accessToken = cookies.accessToken;
+    const refreshToken = cookies.refreshToken;
+
     const fullName = cookies.fullName;
-  
+    const role = cookies.role;
+
     const handleLogout = () => {
-      removeCookie("email");
       removeCookie("token");
+      removeCookie("accessToken");
+      removeCookie("refreshToken");
       removeCookie("fullName");
       removeCookie("role");
       navigate("/");
