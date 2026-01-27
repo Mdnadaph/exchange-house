@@ -20,21 +20,68 @@ interface BranchLayoutProps {
 const BranchLayout = ({ children }: BranchLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [cookies, , removeCookie] = useCookies([
+
+  const [cookie, , removeCookie] = useCookies([
     "accessToken",
     "tempToken",
     "twoFactorEnabled",
     "requiresTwoFactor",
     "email",
+
     "token",
     "role",
     "fullName",
+    "firstName",
+    "lastName",
 
+    "uuid",
+    "branchId",
+    "contactNumber",
+    "roleName",
+    "id"
+    
   ]);
 
-  const fullName = cookies.fullName;
-  console.log(fullName);
+  const id = cookie.branchId;
+  const fullName = cookie.fullName;
+  const firstName = cookie.firstName;
+  const lastName = cookie.lastName;
 
+  const token =cookie.token;
+  const role = cookie.role;
+  const tempToken = cookie.tempToken;
+  const email = cookie.email;
+  const uuid = cookie.uuid;
+  const requiresTwoFactor = cookie.requiresTwoFactor;
+  const branchId = cookie.branchId;
+  const contactNumber = cookie.contactNumber;
+  const roleName = cookie.roleName;
+
+  console.log(firstName);
+  console.log(id);
+
+  const handleLogout = () => {
+    removeCookie("token");
+    removeCookie("role");
+    removeCookie("fullName");
+    removeCookie("email");
+    removeCookie("twoFactorEnabled");
+    removeCookie("tempToken");
+
+    removeCookie("token");
+    removeCookie("email");
+    removeCookie("uuid");
+    removeCookie("id");
+
+    removeCookie("firstName");
+    removeCookie("lastName");
+    removeCookie("requiresTwoFactor");
+    removeCookie("branchId");
+    removeCookie("contactNumber");
+    removeCookie("roleName");
+
+    navigate("/");
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/branch", icon: Home },
@@ -50,20 +97,6 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
-
-
-  const handleLogout = () => {
-    removeCookie("token");
-    removeCookie("accessToken");
-    removeCookie("tempToken");
-    removeCookie("requiresTwoFactor");
-    removeCookie("twoFactorEnabled");
-    removeCookie("email");
-    removeCookie("role");
-    removeCookie("fullName");
-
-    navigate("/");
-  };
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -87,7 +120,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName} (Branch Staff)
+                {fullName} {firstName} {lastName} (Branch Staff)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

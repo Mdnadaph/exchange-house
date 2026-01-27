@@ -21,17 +21,10 @@ interface UserLayoutProps {
 }
 
 const UserLayout = ({ children }: UserLayoutProps) => {
+  const navigate = useNavigate();
   const location = useLocation();
 
-  const [cookie] = useCookies(["businessId", "firstName"]);
-  const id = cookie.businessId;
-  const firstName = cookie.firstName;
-
-  //console.log("businessId from cookie:", id);
-
-  const navigate = useNavigate();
-
-  const [cookies, , removeCookie] = useCookies([
+  const [cookie, , removeCookie] = useCookies([
     "accessToken",
     "tempToken",
     "twoFactorEnabled",
@@ -40,7 +33,28 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     "token",
     "role",
     "fullName",
+    "firstName",
+    "lastName",
+    "businessId",
+    "uuid",
+    "id",
   ]);
+
+  const id = cookie.businessId;
+  const fullName = cookie.fullName;
+  const firstName = cookie.firstName;
+  const lastName = cookie.lastName;
+
+  const token =cookie.token;
+  const role = cookie.role;
+  const tempToken = cookie.tempToken;
+  const email = cookie.email;
+  const uuid = cookie.uuid;
+  const requiresTwoFactor = cookie.requiresTwoFactor;
+  const businessId = cookie.businessId;
+
+  console.log(firstName);
+  console.log(id);
 
   const handleLogout = () => {
     removeCookie("token");
@@ -49,6 +63,16 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     removeCookie("email");
     removeCookie("twoFactorEnabled");
     removeCookie("tempToken");
+
+    removeCookie("token");
+    removeCookie("email");
+    removeCookie("uuid");
+    removeCookie("id");
+
+    removeCookie("firstName");
+    removeCookie("lastName");
+    removeCookie("requiresTwoFactor");
+    removeCookie("businessId");
 
     navigate("/");
   };
@@ -88,7 +112,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {firstName} (User)
+                {fullName} {firstName} {lastName} (User)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

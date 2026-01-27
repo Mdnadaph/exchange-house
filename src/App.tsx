@@ -165,6 +165,7 @@ import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDealSettings from "./pages/admin/AdminDealSettings";
 import AdminLis from "./pages/admin/AdminList";
+import AdminExchangeHouses from "./pages/admin/AdminExchangeHouses";
 
 // Portal / Business Admin
 import UserDashboard from "./pages/portal/UserDashboard";
@@ -175,6 +176,7 @@ import UserDocuments from "./pages/portal/UserDocuments";
 import UserGovernance from "./pages/portal/UserGovernance";
 import UserManagement from "./pages/portal/UserManagement";
 import UserDealRequests from "./pages/portal/UserDealRequests";
+
 
 // Exchange Admin
 import ExchangeAdminDashboard from "./pages/exchange/ExchangeAdminDashboard";
@@ -302,6 +304,7 @@ function App() {
                 >
                   <Route path="/admin">
                     <Route index element={<AdminDashboard />} />
+                    <Route path="/admin/exchange-houses" element={<AdminExchangeHouses />} />
                     <Route path="onboarding" element={<AdminOnboarding />} />
                     <Route path="exchangeAdmin" element={<AdminLis />} />
                     <Route

@@ -944,9 +944,7 @@ const AdminDashboard = () => {
                 {exchangeAdmins.map((admin) => (
                   <TableRow key={admin.id}>
                     <TableCell className="font-medium">
-                      {admin.firstName || admin.lastName
-                        ? `${admin.firstName} ${admin.lastName}`
-                        : "—"}
+                      {admin.fullName}
                     </TableCell>
 
                     <TableCell>{admin.email}</TableCell>
