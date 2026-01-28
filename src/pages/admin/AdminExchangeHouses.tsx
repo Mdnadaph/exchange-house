@@ -12,12 +12,12 @@
 // import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 // import { useLanguage } from "@/contexts/LanguageContext";
 // import { useToast } from "@/hooks/use-toast";
-// import { 
-//   Landmark, 
-//   Plus, 
-//   Search, 
-//   Building2, 
-//   Users, 
+// import {
+//   Landmark,
+//   Plus,
+//   Search,
+//   Building2,
+//   Users,
 //   GitBranch,
 //   Clock,
 //   CheckCircle,
@@ -45,7 +45,6 @@
 //   const [cookies] = useCookies(["token"]);
 //   const token = cookies.token;
 
-
 //   const { t, isRTL } = useLanguage();
 //   const { toast } = useToast();
 //   const [searchQuery, setSearchQuery] = useState("");
@@ -53,7 +52,7 @@
 //   const [selectedHouse, setSelectedHouse] = useState<string | null>(null);
 //   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
 //   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
-  
+
 //   // Form state
 //   const [formData, setFormData] = useState({
 //     legalName: "",
@@ -271,7 +270,7 @@
 //                   {t('manageExchangeHouses')}
 //                 </DialogDescription>
 //               </DialogHeader>
-              
+
 //               <div className="space-y-6 py-4">
 //                 {/* Business Information */}
 //                 <div className="space-y-4">
@@ -435,7 +434,7 @@
 //                 <div className="space-y-4">
 //                   <h3 className="font-semibold text-foreground">{t('subscriptionPlan')}</h3>
 //                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//                     <Card 
+//                     <Card
 //                       className={`cursor-pointer transition-all ${formData.subscriptionPlan === 'basic' ? 'ring-2 ring-primary' : 'hover:border-primary/50'}`}
 //                       onClick={() => setFormData({...formData, subscriptionPlan: 'basic'})}
 //                     >
@@ -445,7 +444,7 @@
 //                         <p className="text-lg font-bold mt-2">$299/mo</p>
 //                       </CardContent>
 //                     </Card>
-//                     <Card 
+//                     <Card
 //                       className={`cursor-pointer transition-all ${formData.subscriptionPlan === 'professional' ? 'ring-2 ring-primary' : 'hover:border-primary/50'}`}
 //                       onClick={() => setFormData({...formData, subscriptionPlan: 'professional'})}
 //                     >
@@ -455,7 +454,7 @@
 //                         <p className="text-lg font-bold mt-2">$799/mo</p>
 //                       </CardContent>
 //                     </Card>
-//                     <Card 
+//                     <Card
 //                       className={`cursor-pointer transition-all ${formData.subscriptionPlan === 'enterprise' ? 'ring-2 ring-primary' : 'hover:border-primary/50'}`}
 //                       onClick={() => setFormData({...formData, subscriptionPlan: 'enterprise'})}
 //                     >
@@ -518,7 +517,7 @@
 //             const status = getStatusBadge(house.status);
 //             const plan = getPlanBadge(house.plan);
 //             const StatusIcon = status.icon;
-            
+
 //             return (
 //               <Card key={house.id} className="shadow-card">
 //                 <CardContent className="p-6">
@@ -558,7 +557,7 @@
 //                         </div>
 //                       </div>
 //                     </div>
-                    
+
 //                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
 //                       <Button variant="outline" size="sm" className={isRTL ? 'flex-row-reverse' : ''}>
 //                         <Eye className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -576,7 +575,7 @@
 //                             {t('editExchangeHouse')}
 //                           </DropdownMenuItem>
 //                           {house.status === 'active' ? (
-//                             <DropdownMenuItem 
+//                             <DropdownMenuItem
 //                               className={`text-orange-600 ${isRTL ? 'flex-row-reverse' : ''}`}
 //                               onClick={() => {
 //                                 setSelectedHouse(house.name);
@@ -587,7 +586,7 @@
 //                               {t('suspendExchangeHouse')}
 //                             </DropdownMenuItem>
 //                           ) : house.status === 'suspended' ? (
-//                             <DropdownMenuItem 
+//                             <DropdownMenuItem
 //                               className={`text-green-600 ${isRTL ? 'flex-row-reverse' : ''}`}
 //                               onClick={() => {
 //                                 setSelectedHouse(house.name);
@@ -637,7 +636,6 @@
 // };
 
 // export default AdminExchangeHouses;
-
 
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -811,8 +809,8 @@ const AdminExchangeHouses = () => {
       } catch (err) {
         console.error("Failed to load countries/plans", err);
         toast({
-          title: t("error"),
-          description: t("failedToLoadRequiredData"),
+          title: "error",
+          description: "Failed To Load Required Data",
           variant: "destructive",
         });
       }
@@ -831,24 +829,26 @@ const AdminExchangeHouses = () => {
         `${BASE_URL}/api/v3/super/exchange-admins?page=0&size=50&query=`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (res.data.status) {
         const data: ListData = res.data.data;
         setExchangeAdmins(data.exchangeAdminResponse || []);
-        setStats(data.exchangeHouseStats || {
-          totalExchangeHouse: 0,
-          activeExchangeHouse: 0,
-          pendingApproval: 0,
-          suspended: 0,
-        });
+        setStats(
+          data.exchangeHouseStats || {
+            totalExchangeHouse: 0,
+            activeExchangeHouse: 0,
+            pendingApproval: 0,
+            suspended: 0,
+          },
+        );
       }
     } catch (err) {
       console.error("Failed to fetch exchange admins", err);
       toast({
-        title: t("error"),
-        description: t("failedToLoadExchangeHouses"),
+        title: "error",
+        description: "failed ToLoad Exchange Houses",
         variant: "destructive",
       });
     } finally {
@@ -870,7 +870,7 @@ const AdminExchangeHouses = () => {
     ) {
       toast({
         title: t("validationError"),
-        description: t("pleaseFillAllRequiredFields"),
+        description: "please Fill All Required Fields",
         variant: "destructive",
       });
       return;
@@ -904,12 +904,12 @@ const AdminExchangeHouses = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.data.status) {
         toast({
-          title: t("success"),
+          title: "success",
           description: res.data.message || t("exchangeHouseCreated"),
         });
         setIsOnboardingOpen(false);
@@ -936,8 +936,9 @@ const AdminExchangeHouses = () => {
     } catch (err: any) {
       console.error("Onboarding error:", err);
       toast({
-        title: t("error"),
-        description: err.response?.data?.message || t("failedToCreateExchangeHouse"),
+        title: "error",
+        description:
+          err.response?.data?.message || "Failed To Create Exchange House",
         variant: "destructive",
       });
     } finally {
@@ -949,7 +950,7 @@ const AdminExchangeHouses = () => {
   const handleSuspend = () => {
     toast({
       title: t("suspendExchangeHouse"),
-      description: t("featureComingSoon"),
+      description: "Feature Coming Soon",
     });
     setSuspendDialogOpen(false);
     setSelectedHouseId(null);
@@ -958,7 +959,7 @@ const AdminExchangeHouses = () => {
   const handleActivate = () => {
     toast({
       title: t("activateExchangeHouse"),
-      description: t("featureComingSoon"),
+      description: "Feature Coming Soon",
     });
     setActivateDialogOpen(false);
     setSelectedHouseId(null);
@@ -968,20 +969,32 @@ const AdminExchangeHouses = () => {
   const getStatusBadge = (status: string | null) => {
     const lower = (status || "").toLowerCase();
     if (lower === "active" || lower === "ACTIVE") {
-      return { variant: "default" as const, label: t("active"), icon: CheckCircle };
+      return {
+        variant: "default" as const,
+        label: t("active"),
+        icon: CheckCircle,
+      };
     }
     if (lower === "pending" || lower === "PENDING") {
-      return { variant: "secondary" as const, label: t("pending"), icon: Clock };
+      return {
+        variant: "secondary" as const,
+        label: t("pending"),
+        icon: Clock,
+      };
     }
     if (lower === "suspended") {
-      return { variant: "destructive" as const, label: t("suspended"), icon: XCircle };
+      return {
+        variant: "destructive" as const,
+        label: t("suspended"),
+        icon: XCircle,
+      };
     }
     return { variant: "secondary" as const, label: t("pending"), icon: Clock };
   };
 
   // Plan badge logic
   const getPlanBadge = (plan: Plan | null) => {
-    if (!plan) return { variant: "outline" as const, label: t("unknown") };
+    if (!plan) return { variant: "outline" as const, label: "unknown" };
 
     const nameLower = plan.name.toLowerCase();
     if (nameLower.includes("basic")) {
@@ -1014,15 +1027,24 @@ const AdminExchangeHouses = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
+        <div
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+        >
           <div className={isRTL ? "text-right" : ""}>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t("exchangeHouseManagement")}</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">{t("manageExchangeHouses")}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              {t("exchangeHouseManagement")}
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              {t("manageExchangeHouses")}
+            </p>
           </div>
 
           <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
             <DialogTrigger asChild>
-              <Button variant="business" className={isRTL ? "flex-row-reverse" : ""}>
+              <Button
+                variant="business"
+                className={isRTL ? "flex-row-reverse" : ""}
+              >
                 <Plus className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
                 {t("onboardExchangeHouse")}
               </Button>
@@ -1031,20 +1053,26 @@ const AdminExchangeHouses = () => {
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t("exchangeHouseOnboardingForm")}</DialogTitle>
-                <DialogDescription>{t("enterDetailsToOnboardNewExchangeHouse")}</DialogDescription>
+                <DialogDescription>
+                  {"Enter Details To Onboard New Exchange House"}
+                </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6 py-4">
                 {/* Admin / Contact Info */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-foreground">{t("adminDetails")}</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {"Admin Details"}
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="fullName">{t("fullName")} *</Label>
                       <Input
                         id="fullName"
                         value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, fullName: e.target.value })
+                        }
                         placeholder="Hamdan Al Nahyan"
                       />
                     </div>
@@ -1054,26 +1082,40 @@ const AdminExchangeHouses = () => {
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                         placeholder="admin@uaeexchange.com"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">{t("phoneNumber")}</Label>
+                      <Label htmlFor="phoneNumber">{"Phone Number"}</Label>
                       <Input
                         id="phoneNumber"
                         value={formData.phoneNumber}
-                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            phoneNumber: e.target.value,
+                          })
+                        }
                         placeholder="971501234567"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="primaryContactEmail">{t("primaryContactEmail")}</Label>
+                      <Label htmlFor="primaryContactEmail">
+                        {t("primaryContactEmail")}
+                      </Label>
                       <Input
                         id="primaryContactEmail"
                         type="email"
                         value={formData.primaryContactEmail}
-                        onChange={(e) => setFormData({ ...formData, primaryContactEmail: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            primaryContactEmail: e.target.value,
+                          })
+                        }
                         placeholder="contact@uaeexchange.com"
                       />
                     </div>
@@ -1082,14 +1124,23 @@ const AdminExchangeHouses = () => {
 
                 {/* Business Details */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-foreground">{t("exchangeHouseDetails")}</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("exchangeHouseDetails")}
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="legalBusinessName">{t("legalBusinessName")} *</Label>
+                      <Label htmlFor="legalBusinessName">
+                        {t("legalBusinessName")} *
+                      </Label>
                       <Input
                         id="legalBusinessName"
                         value={formData.legalBusinessName}
-                        onChange={(e) => setFormData({ ...formData, legalBusinessName: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            legalBusinessName: e.target.value,
+                          })
+                        }
                         placeholder="UAE Exchange Centre LLC"
                       />
                     </div>
@@ -1098,35 +1149,61 @@ const AdminExchangeHouses = () => {
                       <Input
                         id="tradingName"
                         value={formData.tradingName}
-                        onChange={(e) => setFormData({ ...formData, tradingName: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            tradingName: e.target.value,
+                          })
+                        }
                         placeholder="UAE Exchange"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="registrationNumber">{t("registrationNumber")}</Label>
+                      <Label htmlFor="registrationNumber">
+                        {t("registrationNumber")}
+                      </Label>
                       <Input
                         id="registrationNumber"
                         value={formData.registrationNumber}
-                        onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            registrationNumber: e.target.value,
+                          })
+                        }
                         placeholder="REG-998877"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="centralBankLicense">{t("centralBankLicense")} *</Label>
+                      <Label htmlFor="centralBankLicense">
+                        {t("centralBankLicense")} *
+                      </Label>
                       <Input
                         id="centralBankLicense"
                         value={formData.centralBankLicense}
-                        onChange={(e) => setFormData({ ...formData, centralBankLicense: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            centralBankLicense: e.target.value,
+                          })
+                        }
                         placeholder="CB-UAE-2024-001"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="licenseExpiryDate">{t("licenseExpiryDate")}</Label>
+                      <Label htmlFor="licenseExpiryDate">
+                        {t("licenseExpiryDate")}
+                      </Label>
                       <Input
                         id="licenseExpiryDate"
                         type="date"
                         value={formData.licenseExpiryDate}
-                        onChange={(e) => setFormData({ ...formData, licenseExpiryDate: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            licenseExpiryDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -1134,13 +1211,22 @@ const AdminExchangeHouses = () => {
 
                 {/* Address */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-foreground">{t("businessAddress")}</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("businessAddress")}
+                  </h3>
                   <div className="space-y-2">
-                    <Label htmlFor="businessAddress">{t("businessAddress")}</Label>
+                    <Label htmlFor="businessAddress">
+                      {t("businessAddress")}
+                    </Label>
                     <Textarea
                       id="businessAddress"
                       value={formData.businessAddress}
-                      onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          businessAddress: e.target.value,
+                        })
+                      }
                       placeholder="Level 12, Al Sayegh Officers Tower..."
                       rows={2}
                     />
@@ -1151,7 +1237,9 @@ const AdminExchangeHouses = () => {
                       <Input
                         id="city"
                         value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, city: e.target.value })
+                        }
                         placeholder="Abu Dhabi"
                       />
                     </div>
@@ -1159,7 +1247,9 @@ const AdminExchangeHouses = () => {
                       <Label htmlFor="countryId">{t("country")}</Label>
                       <Select
                         value={formData.countryId.toString()}
-                        onValueChange={(val) => setFormData({ ...formData, countryId: Number(val) })}
+                        onValueChange={(val) =>
+                          setFormData({ ...formData, countryId: Number(val) })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectCountry")} />
@@ -1178,7 +1268,12 @@ const AdminExchangeHouses = () => {
                       <Input
                         id="postalCode"
                         value={formData.postalCode}
-                        onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            postalCode: e.target.value,
+                          })
+                        }
                         placeholder="17001"
                       />
                     </div>
@@ -1187,27 +1282,41 @@ const AdminExchangeHouses = () => {
 
                 {/* Subscription Plan - using dynamic plans */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-foreground">{t("subscriptionPlan")}</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("subscriptionPlan")}
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {plans.map((plan) => {
-                      const isSelected = formData.subscriptionPlanId === plan.id;
+                      const isSelected =
+                        formData.subscriptionPlanId === plan.id;
                       const nameLower = plan.name.toLowerCase();
                       let displayName = plan.name;
                       let descKey = "basicPlanDesc";
-                      if (nameLower.includes("professional")) descKey = "professionalPlanDesc";
-                      if (nameLower.includes("enterprise")) descKey = "enterprisePlanDesc";
+                      if (nameLower.includes("professional"))
+                        descKey = "professionalPlanDesc";
+                      if (nameLower.includes("enterprise"))
+                        descKey = "enterprisePlanDesc";
 
                       return (
                         <Card
                           key={plan.id}
                           className={`cursor-pointer transition-all ${
-                            isSelected ? "ring-2 ring-primary" : "hover:border-primary/50"
+                            isSelected
+                              ? "ring-2 ring-primary"
+                              : "hover:border-primary/50"
                           }`}
-                          onClick={() => setFormData({ ...formData, subscriptionPlanId: plan.id })}
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              subscriptionPlanId: plan.id,
+                            })
+                          }
                         >
                           <CardContent className="p-4 text-center">
-                            <h4 className="font-semibold">{t(nameLower)}</h4>
-                            <p className="text-xs text-muted-foreground mt-1">{t(descKey)}</p>
+                            <h4 className="font-semibold">NameLower</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Desc Key
+                            </p>
                             <p className="text-lg font-bold mt-2">
                               ${plan.price.toFixed(0)}/mo
                             </p>
@@ -1219,11 +1328,17 @@ const AdminExchangeHouses = () => {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setIsOnboardingOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsOnboardingOpen(false)}
+                  >
                     {t("cancel")}
                   </Button>
-                  <Button onClick={handleSubmitOnboarding} disabled={formSubmitting}>
-                    {formSubmitting ? t("submitting") : t("submitOnboarding")}
+                  <Button
+                    onClick={handleSubmitOnboarding}
+                    disabled={formSubmitting}
+                  >
+                    {formSubmitting ? "Submitting" : "Submit On boarding"}
                   </Button>
                 </div>
               </div>
@@ -1234,31 +1349,41 @@ const AdminExchangeHouses = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           <Card className="shadow-card hover:shadow-lg transition-smooth">
-            <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <CardHeader
+              className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {t("totalExchangeHouses")}
               </CardTitle>
               <Landmark className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent className={isRTL ? "text-right" : ""}>
-              <div className="text-2xl font-bold">{stats.totalExchangeHouse}</div>
+              <div className="text-2xl font-bold">
+                {stats.totalExchangeHouse}
+              </div>
             </CardContent>
           </Card>
 
           <Card className="shadow-card hover:shadow-lg transition-smooth">
-            <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <CardHeader
+              className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {t("activeExchangeHouses")}
               </CardTitle>
               <CheckCircle className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent className={isRTL ? "text-right" : ""}>
-              <div className="text-2xl font-bold">{stats.activeExchangeHouse}</div>
+              <div className="text-2xl font-bold">
+                {stats.activeExchangeHouse}
+              </div>
             </CardContent>
           </Card>
 
           <Card className="shadow-card hover:shadow-lg transition-smooth">
-            <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <CardHeader
+              className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {t("pendingApprovalHouses")}
               </CardTitle>
@@ -1270,7 +1395,9 @@ const AdminExchangeHouses = () => {
           </Card>
 
           <Card className="shadow-card hover:shadow-lg transition-smooth">
-            <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <CardHeader
+              className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {t("suspendedHouses")}
               </CardTitle>
@@ -1288,21 +1415,23 @@ const AdminExchangeHouses = () => {
             className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`}
           />
           <Input
-            placeholder={`${t("search")} ${t("exchangeHouses")}...`}
+            placeholder="search exchangeHouses..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: any) => setSearchQuery(e.target.value)}
             className={isRTL ? "pr-10" : "pl-10"}
           />
         </div>
 
         {/* List */}
         {loading ? (
-          <div className="text-center py-10 text-muted-foreground">{t("loading")}...</div>
+          <div className="text-center py-10 text-muted-foreground">
+            loading...
+          </div>
         ) : (
           <div className="space-y-4">
             {filteredAdmins.length === 0 ? (
               <div className="text-center py-10 text-muted-foreground">
-                {searchQuery ? t("noResultsFound") : t("noExchangeHousesFound")}
+                {searchQuery ? "No Results Found" : "No ExchangeHouses Found"}
               </div>
             ) : (
               filteredAdmins.map((admin) => {
@@ -1324,13 +1453,19 @@ const AdminExchangeHouses = () => {
                           isRTL ? "lg:flex-row-reverse" : ""
                         }`}
                       >
-                        <div className={`flex items-start gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <div
+                          className={`flex items-start gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+                        >
                           <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Landmark className="h-6 w-6 text-primary" />
                           </div>
                           <div className={isRTL ? "text-right" : ""}>
-                            <div className={`flex items-center gap-2 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
-                              <h3 className="font-semibold text-lg">{displayName}</h3>
+                            <div
+                              className={`flex items-center gap-2 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}
+                            >
+                              <h3 className="font-semibold text-lg">
+                                {displayName}
+                              </h3>
                               <Badge
                                 variant={status.variant}
                                 className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
@@ -1342,20 +1477,31 @@ const AdminExchangeHouses = () => {
                             </div>
 
                             <p className="text-sm text-muted-foreground mt-1">
-                              {admin.tradingName || admin.legalBusinessName || admin.fullName}
+                              {admin.tradingName ||
+                                admin.legalBusinessName ||
+                                admin.fullName}
                             </p>
 
                             <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                              <span className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                              <span
+                                className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                              >
                                 <Building2 className="h-3.5 w-3.5" />
-                                {admin.city || "N/A"}, {admin.country?.name || "N/A"}
+                                {admin.city || "N/A"},{" "}
+                                {admin.country?.name || "N/A"}
                               </span>
-                              <span className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                              <span
+                                className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                              >
                                 <GitBranch className="h-3.5 w-3.5" />
                                 {/* Branch limit from plan if available */}
-                                {admin.subscriptionPlan?.branchLimit ?? "N/A"} {t("branches")}
+                                {admin.subscriptionPlan?.branchLimit ??
+                                  "N/A"}{" "}
+                                "Branches"
                               </span>
-                              <span className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                              <span
+                                className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                              >
                                 <Users className="h-3.5 w-3.5" />
                                 {admin.fullName}
                               </span>
@@ -1363,19 +1509,25 @@ const AdminExchangeHouses = () => {
 
                             <div className="flex flex-wrap gap-4 mt-1 text-xs text-muted-foreground">
                               <span>
-                                {t("centralBankLicense")}: {admin.centralBankLicense || "N/A"}
+                                {t("centralBankLicense")}:{" "}
+                                {admin.centralBankLicense || "N/A"}
                               </span>
                               <span>
-                                {t("dateOnboarded")}: {admin.subscriptionStartDate || "N/A"}
+                                {t("dateOnboarded")}:{" "}
+                                {admin.subscriptionStartDate || "N/A"}
                               </span>
                               <span>{t("monthlyTransactionVolume")}: N/A</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <div
+                          className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                        >
                           <Button variant="outline" size="sm">
-                            <Eye className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                            <Eye
+                              className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                            />
                             {t("viewDetails")}
                           </Button>
 
@@ -1385,13 +1537,20 @@ const AdminExchangeHouses = () => {
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align={isRTL ? "start" : "end"}>
-                              <DropdownMenuItem className={isRTL ? "flex-row-reverse" : ""}>
-                                <Edit className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                            <DropdownMenuContent
+                              align={isRTL ? "start" : "end"}
+                            >
+                              <DropdownMenuItem
+                                className={isRTL ? "flex-row-reverse" : ""}
+                              >
+                                <Edit
+                                  className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                />
                                 {t("editExchangeHouse")}
                               </DropdownMenuItem>
 
-                              {admin.exchangeStatus?.toUpperCase() === "ACTIVE" ? (
+                              {admin.exchangeStatus?.toUpperCase() ===
+                              "ACTIVE" ? (
                                 <DropdownMenuItem
                                   className={`text-orange-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
@@ -1399,11 +1558,14 @@ const AdminExchangeHouses = () => {
                                     setSuspendDialogOpen(true);
                                   }}
                                 >
-                                  <Ban className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                                  <Ban
+                                    className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                  />
                                   {t("suspendExchangeHouse")}
                                 </DropdownMenuItem>
                               ) : (
-                                admin.exchangeStatus?.toUpperCase() === "SUSPENDED" && (
+                                admin.exchangeStatus?.toUpperCase() ===
+                                  "SUSPENDED" && (
                                   <DropdownMenuItem
                                     className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                     onClick={() => {
@@ -1411,14 +1573,20 @@ const AdminExchangeHouses = () => {
                                       setActivateDialogOpen(true);
                                     }}
                                   >
-                                    <Power className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                                    <Power
+                                      className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                    />
                                     {t("activateExchangeHouse")}
                                   </DropdownMenuItem>
                                 )
                               )}
 
-                              <DropdownMenuItem className={`text-destructive ${isRTL ? "flex-row-reverse" : ""}`}>
-                                <Trash2 className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                              <DropdownMenuItem
+                                className={`text-destructive ${isRTL ? "flex-row-reverse" : ""}`}
+                              >
+                                <Trash2
+                                  className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                />
                                 {t("deleteExchangeHouse")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>

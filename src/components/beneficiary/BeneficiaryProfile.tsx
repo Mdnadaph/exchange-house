@@ -1,15 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Building, 
-  User, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Banknote, 
-  FileText, 
-  Edit, 
+import {
+  Building,
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  Banknote,
+  FileText,
+  Edit,
   CreditCard,
   Calendar,
   DollarSign,
@@ -17,16 +17,16 @@ import {
   Clock,
   AlertTriangle,
   Download,
-  Eye
+  Eye,
 } from "lucide-react";
 
 interface BeneficiaryProfileProps {
   beneficiary: {
-    id: string;
+    id: string | number;
     name: string;
-    type: "individual" | "corporate";
-    email: string;
-    phone: string;
+    type: "INDIVIDUAL" | "CORPORATE";
+    email?: string;
+    phone?: string;
     address: {
       line1: string;
       line2?: string;
@@ -44,7 +44,7 @@ interface BeneficiaryProfileProps {
     relationship: string;
     status: string;
     verificationStatus: string;
-    totalSent: string;
+    totalSent: string | number;
     transactionCount: number;
     lastTransaction?: string;
     registrationDate: string;
@@ -59,12 +59,30 @@ interface BeneficiaryProfileProps {
 const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      active: { variant: "default" as const, label: "Active", icon: CheckCircle },
-      pending_approval: { variant: "secondary" as const, label: "Pending Approval", icon: Clock },
-      verification_required: { variant: "destructive" as const, label: "Verification Required", icon: AlertTriangle },
-      inactive: { variant: "outline" as const, label: "Inactive", icon: AlertTriangle }
+      active: {
+        variant: "default" as const,
+        label: "Active",
+        icon: CheckCircle,
+      },
+      pending_approval: {
+        variant: "secondary" as const,
+        label: "Pending Approval",
+        icon: Clock,
+      },
+      verification_required: {
+        variant: "destructive" as const,
+        label: "Verification Required",
+        icon: AlertTriangle,
+      },
+      inactive: {
+        variant: "outline" as const,
+        label: "Inactive",
+        icon: AlertTriangle,
+      },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.pending_approval;
+    return (
+      statusMap[status as keyof typeof statusMap] || statusMap.pending_approval
+    );
   };
 
   const getVerificationBadge = (status: string) => {
@@ -72,7 +90,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
       verified: { variant: "default" as const, label: "Verified" },
       pending: { variant: "secondary" as const, label: "Pending" },
       expired: { variant: "destructive" as const, label: "Expired" },
-      rejected: { variant: "destructive" as const, label: "Rejected" }
+      rejected: { variant: "destructive" as const, label: "Rejected" },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
@@ -84,15 +102,15 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
       currency: "USD",
       purpose: "Invoice Payment",
       date: "2024-01-16",
-      status: "completed"
+      status: "completed",
     },
     {
       id: "TXN-2024-005",
       amount: "8,500",
-      currency: "USD", 
+      currency: "USD",
       purpose: "Service Payment",
       date: "2024-01-12",
-      status: "completed"
+      status: "completed",
     },
     {
       id: "TXN-2023-089",
@@ -100,14 +118,14 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
       currency: "USD",
       purpose: "Equipment Purchase",
       date: "2023-12-28",
-      status: "completed"
-    }
+      status: "completed",
+    },
   ];
 
   const status = getStatusBadge(beneficiary.status);
   const verification = getVerificationBadge(beneficiary.verificationStatus);
   const StatusIcon = status.icon;
-
+  console.log("beneficiary", beneficiary);
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
@@ -115,17 +133,22 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
         <div className="space-y-2">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-              {beneficiary.type === "corporate" ? (
+              {beneficiary.type === "CORPORATE" ? (
                 <Building className="h-8 w-8 text-muted-foreground" />
               ) : (
                 <User className="h-8 w-8 text-muted-foreground" />
               )}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{beneficiary.name}</h1>
+              <h1 className="text-3xl font-bold text-foreground">
+                {beneficiary.name}
+              </h1>
               <p className="text-muted-foreground">ID: {beneficiary.id}</p>
               <div className="flex items-center gap-2 mt-2">
-                <Badge variant={status.variant} className="flex items-center gap-1">
+                <Badge
+                  variant={status.variant}
+                  className="flex items-center gap-1"
+                >
                   <StatusIcon className="h-3 w-3" />
                   {status.label}
                 </Badge>
@@ -133,7 +156,9 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
                   {verification.label}
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {beneficiary.type === "corporate" ? "Corporate" : "Individual"}
+                  {beneficiary.type === "CORPORATE"
+                    ? "Corporate"
+                    : "Individual"}
                 </Badge>
               </div>
             </div>
@@ -155,44 +180,62 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sent</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Sent
+            </CardTitle>
             <DollarSign className="h-5 w-5 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">USD {Number(beneficiary.totalSent).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">{beneficiary.transactionCount} transactions</p>
+            <div className="text-2xl font-bold">
+              USD {Number(beneficiary.totalSent).toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {beneficiary.transactionCount} transactions
+            </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Last Transaction</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Last Transaction
+            </CardTitle>
             <Calendar className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{beneficiary.lastTransaction || "Never"}</div>
+            <div className="text-2xl font-bold">
+              {beneficiary.lastTransaction || "Never"}
+            </div>
             <p className="text-xs text-muted-foreground">Most recent payment</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Relationship</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Relationship
+            </CardTitle>
             <Building className="h-5 w-5 text-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{beneficiary.relationship}</div>
-            <p className="text-xs text-muted-foreground">Business relationship</p>
+            <p className="text-xs text-muted-foreground">
+              Business relationship
+            </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Registered</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Registered
+            </CardTitle>
             <CheckCircle className="h-5 w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{beneficiary.registrationDate}</div>
+            <div className="text-2xl font-bold">
+              {beneficiary.registrationDate}
+            </div>
             <p className="text-xs text-muted-foreground">Registration date</p>
           </CardContent>
         </Card>
@@ -230,9 +273,15 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
                   <p className="text-sm text-muted-foreground">Address</p>
                   <div className="font-medium">
                     <p>{beneficiary.address.line1}</p>
-                    {beneficiary.address.line2 && <p>{beneficiary.address.line2}</p>}
-                    <p>{beneficiary.address.city}, {beneficiary.address.country}</p>
-                    {beneficiary.address.postalCode && <p>{beneficiary.address.postalCode}</p>}
+                    {beneficiary.address.line2 && (
+                      <p>{beneficiary.address.line2}</p>
+                    )}
+                    <p>
+                      {beneficiary.address.city}, {beneficiary.address.country}
+                    </p>
+                    {beneficiary.address.postalCode && (
+                      <p>{beneficiary.address.postalCode}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -249,16 +298,26 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             </CardHeader>
             <CardContent className="space-y-3">
               {beneficiary.documents.map((doc, index) => (
-                <div key={index} className="flex items-center justify-between p-2 rounded border">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-2 rounded border"
+                >
                   <div className="flex items-center space-x-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">{doc.type}</p>
-                      <p className="text-xs text-muted-foreground">Uploaded {doc.uploadDate}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Uploaded {doc.uploadDate}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant={doc.status === "approved" ? "default" : "secondary"} className="text-xs">
+                    <Badge
+                      variant={
+                        doc.status === "approved" ? "default" : "secondary"
+                      }
+                      className="text-xs"
+                    >
                       {doc.status}
                     </Badge>
                     <Button variant="outline" size="sm">
@@ -289,25 +348,41 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold">{bank.bankName}</h4>
-                          {index === 0 && <Badge variant="default" className="text-xs">Default</Badge>}
+                          {index === 0 && (
+                            <Badge variant="default" className="text-xs">
+                              Default
+                            </Badge>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Account Name:</span>
+                            <span className="text-muted-foreground">
+                              Account Name:
+                            </span>
                             <p className="font-medium">{bank.accountName}</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Account Number:</span>
-                            <p className="font-medium font-mono">****{bank.accountNumber.slice(-4)}</p>
+                            <span className="text-muted-foreground">
+                              Account Number:
+                            </span>
+                            <p className="font-medium font-mono">
+                              ****{bank.accountNumber.slice(-4)}
+                            </p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Currency:</span>
+                            <span className="text-muted-foreground">
+                              Currency:
+                            </span>
                             <p className="font-medium">{bank.currency}</p>
                           </div>
                           {bank.swift && (
                             <div>
-                              <span className="text-muted-foreground">SWIFT:</span>
-                              <p className="font-medium font-mono">{bank.swift}</p>
+                              <span className="text-muted-foreground">
+                                SWIFT:
+                              </span>
+                              <p className="font-medium font-mono">
+                                {bank.swift}
+                              </p>
                             </div>
                           )}
                         </div>
@@ -334,16 +409,22 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             </CardHeader>
             <CardContent className="space-y-4">
               {recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                >
                   <div className="space-y-1">
-                    <p className="font-medium text-foreground">{transaction.purpose}</p>
+                    <p className="font-medium text-foreground">
+                      {transaction.purpose}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {transaction.id} • {transaction.date}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-foreground">
-                      {transaction.currency} {Number(transaction.amount).toLocaleString()}
+                      {transaction.currency}{" "}
+                      {Number(transaction.amount).toLocaleString()}
                     </p>
                     <Badge variant="default" className="text-xs">
                       {transaction.status}
