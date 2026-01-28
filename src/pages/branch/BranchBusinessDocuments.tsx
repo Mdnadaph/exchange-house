@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  FileText, 
-  Search, 
-  Download, 
+import {
+  FileText,
+  Search,
+  Download,
   Eye,
   CheckCircle,
   Clock,
   X,
   Building2,
   Calendar,
-  Info
+  Info,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
@@ -46,12 +46,12 @@ interface Dashboard {
 }
 
 function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
 const BranchBusinessDocuments = () => {
@@ -83,9 +83,12 @@ const BranchBusinessDocuments = () => {
       let fetchedDashboard: Dashboard | null = null;
       while (true) {
         try {
-          const response = await axios.get(`${BASE_URL}/api/v3/staff/kyb/documents?page=${page}&size=${size}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const response = await axios.get(
+            `${BASE_URL}/api/v3/staff/kyb/documents?page=${page}&size=${size}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
           const res = response.data;
           if (!res.status) throw new Error(res.message || "Failed to fetch");
           allDocuments = [...allDocuments, ...res.data.documents];
@@ -108,7 +111,7 @@ const BranchBusinessDocuments = () => {
         type: apiDoc.documentType,
         uploadDate: apiDoc.uploadedAt,
         size: formatBytes(apiDoc.fileSize),
-        status: apiDoc.status.toLowerCase().replace(/\s+/g, '_'),
+        status: apiDoc.status.toLowerCase().replace(/\s+/g, "_"),
         viewUrl: apiDoc.viewUrl,
       }));
       setDocuments(mappedDocuments);
@@ -119,7 +122,10 @@ const BranchBusinessDocuments = () => {
       const businessMap = new Map<string, Business>();
       mappedDocuments.forEach((doc) => {
         if (!businessMap.has(doc.businessId)) {
-          businessMap.set(doc.businessId, { id: doc.businessId, name: doc.businessName });
+          businessMap.set(doc.businessId, {
+            id: doc.businessId,
+            name: doc.businessName,
+          });
         }
       });
       setBranchBusinesses(Array.from(businessMap.values()));
@@ -143,24 +149,43 @@ const BranchBusinessDocuments = () => {
     ) {
       return false;
     }
-    if (selectedBusiness !== "all" && doc.businessId !== selectedBusiness) return false;
+    if (selectedBusiness !== "all" && doc.businessId !== selectedBusiness)
+      return false;
     if (selectedStatus !== "all" && doc.status !== selectedStatus) return false;
     return true;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentDocuments = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  const currentDocuments = filteredDocuments.slice(
+    indexOfFirstItem,
+    indexOfLastItem,
+  );
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "verified":
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Verified
+          </Badge>
+        );
       case "pending_review":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending Review</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Review
+          </Badge>
+        );
       case "rejected":
-        return <Badge variant="destructive"><X className="h-3 w-3 mr-1" />Rejected</Badge>;
+        return (
+          <Badge variant="destructive">
+            <X className="h-3 w-3 mr-1" />
+            Rejected
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -170,13 +195,13 @@ const BranchBusinessDocuments = () => {
     try {
       const response = await axios.get(viewUrl, {
         headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
+        responseType: "blob",
       });
       const blob = response.data;
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      window.open(url, "_blank");
     } catch (error) {
-      console.error('Error viewing document:', error);
+      console.error("Error viewing document:", error);
     }
   };
 
@@ -184,11 +209,11 @@ const BranchBusinessDocuments = () => {
     try {
       const response = await axios.get(viewUrl, {
         headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
+        responseType: "blob",
       });
       const blob = response.data;
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
@@ -196,13 +221,13 @@ const BranchBusinessDocuments = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error("Error downloading document:", error);
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   if (error) {
     return <div>{error}</div>;
@@ -214,8 +239,12 @@ const BranchBusinessDocuments = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Business Documents</h1>
-            <p className="text-muted-foreground">View documents from businesses registered through this branch</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Business Documents
+            </h1>
+            <p className="text-muted-foreground">
+              View documents from businesses registered through this branch
+            </p>
           </div>
           {/* <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
@@ -243,49 +272,69 @@ const BranchBusinessDocuments = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Branch Businesses</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Branch Businesses
+              </CardTitle>
               <Building2 className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboard.branchBusinesses}</div>
-              <p className="text-xs text-muted-foreground">Registered through branch</p>
+              <div className="text-2xl font-bold">
+                {dashboard.branchBusinesses}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Registered through branch
+              </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Documents</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Documents
+              </CardTitle>
               <FileText className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboard.totalDocuments}</div>
-              <p className="text-xs text-muted-foreground">From branch businesses</p>
+              <div className="text-2xl font-bold">
+                {dashboard.totalDocuments}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                From branch businesses
+              </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Verified</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Verified
+              </CardTitle>
               <CheckCircle className="h-5 w-5 text-success" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
                 {dashboard.verifiedDocuments}
               </div>
-              <p className="text-xs text-muted-foreground">Approved documents</p>
+              <p className="text-xs text-muted-foreground">
+                Approved documents
+              </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Review</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pending Review
+              </CardTitle>
               <Clock className="h-5 w-5 text-warning" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">
                 {dashboard.pendingDocuments}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting verification</p>
+              <p className="text-xs text-muted-foreground">
+                Awaiting verification
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -298,7 +347,7 @@ const BranchBusinessDocuments = () => {
                 <Label htmlFor="search">Search Documents</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
+                  <Input
                     id="search"
                     placeholder="Search by document name, type, or business..."
                     className="pl-9"
@@ -317,7 +366,9 @@ const BranchBusinessDocuments = () => {
                 >
                   <option value="all">All Businesses</option>
                   {branchBusinesses.map((business) => (
-                    <option key={business.id} value={business.id}>{business.name}</option>
+                    <option key={business.id} value={business.id}>
+                      {business.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -350,14 +401,19 @@ const BranchBusinessDocuments = () => {
           <CardContent>
             <div className="space-y-3">
               {currentDocuments.map((doc) => (
-                <Card key={doc.id} className="hover:shadow-md transition-smooth">
+                <Card
+                  key={doc.id}
+                  className="hover:shadow-md transition-smooth"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
                         <FileText className="h-8 w-8 text-primary" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-foreground">{doc.name}</h4>
+                            <h4 className="font-semibold text-foreground">
+                              {doc.name}
+                            </h4>
                             {getStatusBadge(doc.status)}
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
@@ -378,11 +434,19 @@ const BranchBusinessDocuments = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleView(doc.viewUrl)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleView(doc.viewUrl)}
+                        >
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDownload(doc.viewUrl, doc.name)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(doc.viewUrl, doc.name)}
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
@@ -398,7 +462,9 @@ const BranchBusinessDocuments = () => {
                 <Button
                   variant="outline"
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                 >
                   Previous
                 </Button>
@@ -408,7 +474,9 @@ const BranchBusinessDocuments = () => {
                 <Button
                   variant="outline"
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                 >
                   Next
                 </Button>

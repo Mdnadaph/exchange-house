@@ -2470,8 +2470,8 @@ const UserBeneficiaries = () => {
   const handleGroupCreated = (group: BeneficiaryGroup) => {
     const groupWithBeneficiaries = {
       ...group,
-      beneficiaries: beneficiaries.filter((b: any) =>
-        group.beneficiaryIds.includes(b?.id),
+      beneficiaries: beneficiaries?.filter((b: any) =>
+        group?.beneficiaryIds?.includes(b?.id),
       ),
     };
     setBeneficiaryGroups((prev) => [...prev, groupWithBeneficiaries]);
@@ -2484,10 +2484,10 @@ const UserBeneficiaries = () => {
   };
 
   // Update groups with beneficiary data
-  const groupsWithBeneficiaryData = beneficiaryGroups.map((group) => ({
+  const groupsWithBeneficiaryData = beneficiaryGroups?.map((group) => ({
     ...group,
-    beneficiaries: beneficiaries.filter((b: any) =>
-      group.beneficiaryIds.includes(b.id),
+    beneficiaries: beneficiaries?.filter((b: any) =>
+      group.beneficiaryIds?.includes(b.id),
     ),
   }));
 

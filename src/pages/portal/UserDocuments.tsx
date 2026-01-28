@@ -51,7 +51,7 @@ const UserDocuments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         const data = response?.data?.data;
@@ -82,10 +82,10 @@ const UserDocuments = () => {
                   const [year, month, day, hour, minute] = docData.uploadedAt;
                   uploadDate = `${year}-${String(month).padStart(
                     2,
-                    "0"
+                    "0",
                   )}-${String(day).padStart(2, "0")} ${String(hour).padStart(
                     2,
-                    "0"
+                    "0",
                   )}:${String(minute).padStart(2, "0")}`;
                   uploadedAtFormatted = uploadDate;
                 }
@@ -226,6 +226,40 @@ const UserDocuments = () => {
     );
   };
 
+  const handleView = async (viewUrl: string) => {
+    try {
+      const response = await axios.get(viewUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("Error viewing document:", error);
+    }
+  };
+
+  const handleDownload = async (viewUrl: string, fileName: string) => {
+    try {
+      const response = await axios.get(viewUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading document:", error);
+    }
+  };
+
   if (loading) {
     return (
       <UserLayout>
@@ -307,7 +341,7 @@ const UserDocuments = () => {
                   ? `${Math.round(
                       (documents.filter((d) => d.status === "approved").length /
                         documents.length) *
-                        100
+                        100,
                     )}% approval rate`
                   : "No documents"}
               </p>
@@ -421,7 +455,6 @@ const UserDocuments = () => {
                   const status = getStatusBadge(doc.status);
                   const StatusIcon = status.icon;
                   const FileIcon = getFileIcon(doc.fileType);
-
                   return (
                     <Card
                       key={doc.id}
@@ -451,7 +484,7 @@ const UserDocuments = () => {
                                   </Badge>
                                   <span
                                     className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                                      doc.category
+                                      doc.category,
                                     )}`}
                                   >
                                     {doc.category}
@@ -468,11 +501,21 @@ const UserDocuments = () => {
                               </div>
 
                               <div className="flex space-x-1 pl-8">
-                                <Button variant="outline" size="sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleView(doc?.fileUrl)}
+                                >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownload(doc?.fileUrl, doc?.name)
+                                  }
+                                >
                                   <Download className="h-4 w-4 mr-1" />
                                   Download
                                 </Button>

@@ -193,8 +193,8 @@ const BeneficiaryGroupForm = ({
         description: json.data?.description || description,
         totalBeneficiaries: selectedIds.length,
         beneficiaryNames: beneficiaries
-          .filter((b) => selectedIds.includes(b.id))
-          .map((b) => b.name),
+          ?.filter((b: any) => selectedIds?.includes(b.id))
+          .map((b: any) => b.name),
       };
 
       onGroupCreated?.(createdGroup);
@@ -215,8 +215,9 @@ const BeneficiaryGroupForm = ({
       setSearch("");
       setOpen(false);
     } catch (err: any) {
+      console.log("errror", err);
       toast({
-        title: "Failed to create group gfhgf",
+        title: "Failed to create group ",
         description: err.message || "Please try again hshsh",
         variant: "destructive",
       });

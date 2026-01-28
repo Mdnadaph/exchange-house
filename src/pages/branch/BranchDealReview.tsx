@@ -139,14 +139,14 @@ const BranchDealReview = () => {
   const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
   if (loading) {
     return (
-      <UserLayout>
+      <BranchLayout>
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground">Loading transactions...</p>
           </div>
         </div>
-      </UserLayout>
+      </BranchLayout>
     );
   }
   return (
