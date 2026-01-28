@@ -396,7 +396,6 @@
 // export default BranchDashboard;
 
 
-
 import BranchLayout from "@/components/layout/BranchLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -500,12 +499,13 @@ const BranchDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
+      APPROVED: { variant: "default" as const, label: "Approved", color: "text-green-600" },
       in_progress: { variant: "secondary" as const, label: "In Progress", color: "text-blue-600" },
       pending_documents: { variant: "destructive" as const, label: "Pending Documents", color: "text-orange-600" },
       ready_for_review: { variant: "default" as const, label: "Ready for Review", color: "text-green-600" },
       completed: { variant: "default" as const, label: "Completed", color: "text-success" }
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.in_progress;
+    return statusMap[status as keyof typeof statusMap] || { variant: "secondary" as const, label: status, color: "text-blue-600" };
   };
 
   const getPriorityColor = (priority?: string) => {
@@ -603,7 +603,7 @@ const BranchDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {myKYBQueue.map((application) => {
-                  const status = getStatusBadge(application.status);
+                  const status = getStatusBadge(application.kybStatus);
                   
                   return (
                     <Card key={application.id} className={`border-l-4 ${getPriorityColor(application.priority)}`}>
@@ -611,13 +611,15 @@ const BranchDashboard = () => {
                         <div className="flex items-start justify-between">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-foreground">{application.businessName}</h4>
+                              <h4 className="font-semibold text-foreground">{application.companyName}</h4>
                               <Badge variant={status.variant} className="text-xs">
                                 {status.label}
                               </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {application.priority?.toUpperCase() ?? 'UNKNOWN'}
-                              </Badge>
+                              {application.priority && (
+                                <Badge variant="outline" className="text-xs">
+                                  {application.priority?.toUpperCase()}
+                                </Badge>
+                              )}
                             </div>
                             
                             <p className="text-sm text-muted-foreground">
@@ -626,28 +628,9 @@ const BranchDashboard = () => {
                             
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                               <div>
-                                <span className="text-muted-foreground">Assigned:</span>
-                                <p className="font-medium">{application.assignedDate}</p>
+                                <span className="text-muted-foreground">Created:</span>
+                                <p className="font-medium">{new Date(application.createdAt).toLocaleDateString()}</p>
                               </div>
-                              <div>
-                                <span className="text-muted-foreground">Due Date:</span>
-                                <p className="font-medium">{application.dueDate}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Time Spent:</span>
-                                <p className="font-medium">{application.timeSpent}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Complete:</span>
-                                <p className="font-medium">{application.completeness}%</p>
-                              </div>
-                            </div>
-                            
-                            <div className="w-full bg-muted rounded-full h-2">
-                              <div 
-                                className="bg-primary h-2 rounded-full transition-all"
-                                style={{ width: `${application.completeness}%` }}
-                              />
                             </div>
                           </div>
                           
@@ -655,7 +638,7 @@ const BranchDashboard = () => {
                             <Button variant="outline" size="sm">
                               Continue
                             </Button>
-                            {application.status === "ready_for_review" && (
+                            {application.kybStatus === "READY_FOR_REVIEW" && (
                               <Button variant="business" size="sm">
                                 Review
                               </Button>
