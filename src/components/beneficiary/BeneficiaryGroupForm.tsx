@@ -64,7 +64,10 @@ interface BeneficiaryGroupFormProps {
   trigger?: React.ReactNode;
 }
 
-const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormProps) => {
+const BeneficiaryGroupForm = ({
+  onGroupCreated,
+  trigger,
+}: BeneficiaryGroupFormProps) => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
 
@@ -90,7 +93,11 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
 
   const loadBeneficiaries = async () => {
     if (!token) {
-      toast({ title: "Error", description: "No token found", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "No token found",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -122,12 +129,12 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
   const activeBeneficiaries = beneficiaries.filter((b) => b.active);
 
   const filtered = activeBeneficiaries.filter((b) =>
-    b.name.toLowerCase().includes(search.toLowerCase())
+    b.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const toggle = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -141,11 +148,19 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
 
   const handleCreate = async () => {
     if (!groupName.trim()) {
-      toast({ title: "Error", description: "Group name is required", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Group name is required",
+        variant: "destructive",
+      });
       return;
     }
     if (selectedIds.length === 0) {
-      toast({ title: "Error", description: "Select at least one beneficiary", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Select at least one beneficiary",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -183,12 +198,12 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
       };
 
       onGroupCreated?.(createdGroup);
-
       toast({
         title: "Success",
         description: (
           <span>
-            Group <strong>{groupName}</strong> created ({selectedIds.length} members)
+            Group <strong>{groupName}</strong> created ({selectedIds.length}{" "}
+            members)
           </span>
         ),
       });
@@ -201,8 +216,8 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
       setOpen(false);
     } catch (err: any) {
       toast({
-        title: "Failed to create group",
-        description: err.message || "Please try again",
+        title: "Failed to create group gfhgf",
+        description: err.message || "Please try again hshsh",
         variant: "destructive",
       });
     } finally {
@@ -211,7 +226,7 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
   };
 
   const countIndividuals = selectedIds.filter(
-    (id) => beneficiaries.find((b) => b.id === id)?.type === "INDIVIDUAL"
+    (id) => beneficiaries.find((b) => b.id === id)?.type === "INDIVIDUAL",
   ).length;
 
   const countBusinesses = selectedIds.length - countIndividuals;
@@ -289,7 +304,9 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
               <Label>Select Beneficiaries</Label>
               {filtered.length > 0 && (
                 <Button variant="ghost" size="sm" onClick={toggleAll}>
-                  {selectedIds.length === filtered.length ? "Deselect All" : "Select All"}
+                  {selectedIds.length === filtered.length
+                    ? "Deselect All"
+                    : "Select All"}
                 </Button>
               )}
             </div>
@@ -314,7 +331,12 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
                 <div className="p-6 text-center text-destructive">
                   <AlertCircle className="mx-auto h-10 w-10 mb-3" />
                   <p className="font-medium">{error}</p>
-                  <Button variant="outline" size="sm" className="mt-4" onClick={loadBeneficiaries}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={loadBeneficiaries}
+                  >
                     Retry
                   </Button>
                 </div>
@@ -369,7 +391,9 @@ const BeneficiaryGroupForm = ({ onGroupCreated, trigger }: BeneficiaryGroupFormP
           </Button>
           <Button
             onClick={handleCreate}
-            disabled={isLoading || !groupName.trim() || selectedIds.length === 0}
+            disabled={
+              isLoading || !groupName.trim() || selectedIds.length === 0
+            }
           >
             {isLoading ? (
               <>

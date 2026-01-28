@@ -2123,6 +2123,7 @@ import { useState, useEffect } from "react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -2230,6 +2231,7 @@ const UserBeneficiaries = () => {
   const [groupsTotalPages, setGroupsTotalPages] = useState(1);
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
   const [payOutConfigData, setPayOutConfigData] = useState(null);
+  const [page, setPage] = useState(0);
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
     if (!active) return "inactive";
@@ -2237,7 +2239,6 @@ const UserBeneficiaries = () => {
     if (approvalStatus === "APPROVED") return "active";
     return "inactive";
   };
-
   // Helper function to map verification status
   const mapVerificationStatus = (approvalStatus: string) => {
     const statusMap: Record<string, string> = {
@@ -2248,7 +2249,7 @@ const UserBeneficiaries = () => {
     };
     return statusMap[approvalStatus] || "pending";
   };
-
+  const { t, language } = useLanguage();
   // Fetch beneficiaries from API
   const fetchBeneficiaries = async () => {
     try {
@@ -2279,8 +2280,8 @@ const UserBeneficiaries = () => {
         id: item.id,
         name: item.name,
         type: item.type,
-        email: "", // API doesn't provide, keep empty
-        phone: "", // API doesn't provide, keep empty
+        email: item?.email, // API doesn't provide, keep empty
+        phone: item?.phoneNumber,
         address: {
           line1: "",
           city: "",
@@ -2322,16 +2323,19 @@ const UserBeneficiaries = () => {
 
   const getPayOutConfig = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/payout/config`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout/config?page=${page}&size=10`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
       if (json?.status !== true || !json.data) {
         throw new Error("Unexpected response format");
       }
-      setPayOutConfigData(json?.data);
+      setPayOutConfigData(json);
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -2340,7 +2344,7 @@ const UserBeneficiaries = () => {
 
   useEffect(() => {
     getPayOutConfig();
-  }, []);
+  }, [page]);
   // Fetch groups from API
   const fetchGroups = async () => {
     try {
@@ -2428,7 +2432,26 @@ const UserBeneficiaries = () => {
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
-
+  const getAvailabePayoutDestinationStatusBadge = (status: string) => {
+    const statusMap = {
+      ACTIVE: {
+        variant: "default" as const,
+        label: t("active") || "Active",
+        icon: CheckCircle,
+      },
+      MAINTENANCE: {
+        variant: "secondary" as const,
+        label: t("maintenance") || "Maintenance",
+        icon: Clock,
+      },
+      INACTIVE: {
+        variant: "destructive" as const,
+        label: t("inactive") || "Inactive",
+        icon: AlertCircle,
+      },
+    };
+    return statusMap[status as keyof typeof statusMap] || statusMap?.ACTIVE;
+  };
   const getRiskColor = (risk: string) => {
     const colors = {
       low: "bg-green-100 text-green-800",
@@ -2472,7 +2495,7 @@ const UserBeneficiaries = () => {
   if (typeof window !== "undefined") {
     (window as any).__beneficiaryGroups = groupsWithBeneficiaryData;
   }
-
+  const totalPayOutConfigDataList = payOutConfigData?.totalElements;
   // Loading state
   if (loading) {
     return (
@@ -2522,7 +2545,6 @@ const UserBeneficiaries = () => {
             </div>
             <div className="flex gap-2">
               <BeneficiaryGroupForm
-                beneficiaries={beneficiaries}
                 onGroupCreated={handleGroupCreated}
                 trigger={
                   <Button variant="outline">
@@ -2549,34 +2571,82 @@ const UserBeneficiaries = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {payOutConfigData?.countries?.map((destination: any) => (
-                    <div
-                      key={destination.countryId}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-primary">
-                            {destination?.currency}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {destination?.countryName}
-                          </p>
-                          {/* <p className="text-xs text-muted-foreground">
+                  {payOutConfigData?.data?.countries?.length > 0 ? (
+                    payOutConfigData?.data?.countries?.map(
+                      (destination: any) => {
+                        const status = getAvailabePayoutDestinationStatusBadge(
+                          destination?.status,
+                        );
+                        const StatusIcon = status.icon;
+                        return (
+                          <div
+                            key={destination.countryId}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-primary">
+                                  {destination?.currency}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-foreground">
+                                  {destination?.countryName}
+                                </p>
+                                {/* <p className="text-xs text-muted-foreground">
                             Rate: 1 AED = {destination.exchangeRate}
                           </p> */}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="default">Available</Badge>
-                        {/* <p className="text-xs text-muted-foreground mt-1">
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge
+                                variant={status?.variant}
+                                className="flex items-center gap-1 self-start sm:self-auto"
+                              >
+                                <StatusIcon className="h-3 w-3" />
+                                {status?.label}
+                              </Badge>
+                              {/* <p className="text-xs text-muted-foreground mt-1">
                           Fee: AED {destination.fees}
                         </p> */}
+                            </div>
+                          </div>
+                        );
+                      },
+                    )
+                  ) : (
+                    <p className="text-center font-medium text-gray-400 text-xl">
+                      No Data Found
+                    </p>
+                  )}
+                  {totalPayOutConfigDataList > 10 && (
+                    <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {payOutConfigData?.data?.countries?.length} of{" "}
+                        {totalPayOutConfigDataList} beneficiaries
+                      </p>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page === 0}
+                          onClick={() => setPage(page - 1)}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            (page + 1) * 10 >= totalPayOutConfigDataList
+                          }
+                          onClick={() => setPage(page + 1)}
+                        >
+                          Next
+                        </Button>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -2752,10 +2822,7 @@ const UserBeneficiaries = () => {
                       <Layers className="h-5 w-5" />
                       Beneficiary Groups
                     </CardTitle>
-                    <BeneficiaryGroupForm
-                      beneficiaries={beneficiaries}
-                      onGroupCreated={handleGroupCreated}
-                    />
+                    <BeneficiaryGroupForm onGroupCreated={handleGroupCreated} />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -2770,7 +2837,7 @@ const UserBeneficiaries = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {groupsWithBeneficiaryData.map((group) => (
+                      {groupsWithBeneficiaryData.map((group: any) => (
                         <Card
                           key={group.id}
                           className="border-l-4 border-l-primary"
@@ -2794,7 +2861,7 @@ const UserBeneficiaries = () => {
                                 <div className="flex flex-wrap gap-2">
                                   {group.beneficiaries
                                     .slice(0, 5)
-                                    .map((ben) => (
+                                    .map((ben: any) => (
                                       <Badge
                                         key={ben.id}
                                         variant="outline"
@@ -2942,7 +3009,7 @@ const UserBeneficiaries = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {filteredBeneficiaries.map((beneficiary) => {
+                      {filteredBeneficiaries.map((beneficiary: any) => {
                         const status = getStatusBadge(beneficiary.status);
                         const verification = getVerificationBadge(
                           beneficiary.verificationStatus,
@@ -3221,7 +3288,7 @@ const UserBeneficiaries = () => {
           </Button>
           <BeneficiaryRegistrationForm
             onSuccess={fetchBeneficiaries}
-            payOutConfigData={payOutConfigData}
+            setView={setView}
           />
         </div>
       )}

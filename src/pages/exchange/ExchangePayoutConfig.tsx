@@ -111,6 +111,7 @@ const ExchangePayoutConfig = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
   const [countries, setCountries] = useState([]);
+  const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
   //  const [destinations, setDestinations] = useState<PayoutDestination[]>([
@@ -185,9 +186,12 @@ const ExchangePayoutConfig = () => {
 
   const getPayOutConfig = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/payout/config`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout/config?page=${page}&size=10`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
@@ -203,7 +207,7 @@ const ExchangePayoutConfig = () => {
 
   useEffect(() => {
     getPayOutConfig();
-  }, []);
+  }, [page]);
   const summaryData = destinations?.summary;
   const totalPayOutConfigDataList = destinations?.totalElements;
   function formatEnumText(value?: string): string {
@@ -232,7 +236,6 @@ const ExchangePayoutConfig = () => {
   const [editDestinationOpen, setEditDestinationOpen] = useState(false);
   const [globalSettingsOpen, setGlobalSettingsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [page, setPage] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] =
     useState<PayoutDestination | null>(null);
 

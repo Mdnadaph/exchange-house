@@ -44,13 +44,16 @@ import {
   TrendingUp,
   Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner"; // Assuming sonner for notifications
+import { useNavigate } from "react-router-dom";
 
 const BeneficiaryRegistrationForm = ({
-  payOutConfigData,
+  onSuccess,
+  setView,
 }: {
-  payOutConfigData: any;
+  onSuccess: () => void;
+  setView: (arg: "list" | "profile" | "register") => void;
 }) => {
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
@@ -69,6 +72,7 @@ const BeneficiaryRegistrationForm = ({
   const [selectedBank, setSelectedBank] = useState("");
   const [walletProvider, setWalletProvider] = useState("");
   const [requiresApproval, setRequiresApproval] = useState(false);
+  const [beneficiariesCountries, setBeneficiariesCountries] = useState(null);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(
     undefined,
@@ -211,12 +215,18 @@ const BeneficiaryRegistrationForm = ({
     { name: "Nagad", country: "BD", type: "Digital Payment" },
   ];
 
+  // const getAvailableBanks = () => {
+  //   if (!beneficiaryCountry) return [];
+  //   if (beneficiaryCountry === "AE") return uaeBanks;
+  //   return internationalBanks.filter(
+  //     (bank) => bank?.country === beneficiaryCountry,
+  //   );
+  // };
+
   const getAvailableBanks = () => {
     if (!beneficiaryCountry) return [];
     if (beneficiaryCountry === "AE") return uaeBanks;
-    return internationalBanks.filter(
-      (bank) => bank.country === beneficiaryCountry,
-    );
+    return internationalBanks;
   };
 
   const getAvailableWallets = () => {
@@ -302,8 +312,6 @@ const BeneficiaryRegistrationForm = ({
       payload.bankAddress = "";
     }
 
-    console.log("Payload being sent:", payload);
-
     try {
       const response = await fetch(fullUrl, {
         method: "POST",
@@ -329,6 +337,8 @@ const BeneficiaryRegistrationForm = ({
       } else {
         toast.error(result.message || "Failed to register beneficiary");
       }
+      onSuccess();
+      setView("list");
     } catch (error: any) {
       console.error("Fetch Error:", error);
       // This will now show the actual error message in the toast
@@ -341,6 +351,32 @@ const BeneficiaryRegistrationForm = ({
       setLoading(false);
     }
   };
+
+  const getBeneficiaryCountry = async () => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout/config/beneficiary/enabled`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      setBeneficiariesCountries(json);
+    } catch (error) {
+      const msg = error.message || "Failed to load payout config";
+      toast.error(msg);
+    }
+  };
+  useEffect(() => {
+    getBeneficiaryCountry();
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
@@ -495,14 +531,11 @@ const BeneficiaryRegistrationForm = ({
                     <SelectValue placeholder="Select destination country" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border border-border z-50">
-                    {payOutConfigData?.countries
-                      .filter((dest: any) => dest?.currency !== "AED")
+                    {beneficiariesCountries?.data
+                      .filter((dest: any) => dest?.payoutCurrency !== "AED")
                       .map((country: any) => (
-                        <SelectItem
-                          key={country.countryId}
-                          value={country.countryId}
-                        >
-                          {country.countryName}
+                        <SelectItem key={country?.id} value={country?.id}>
+                          {country?.countryName}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -897,9 +930,9 @@ const BeneficiaryRegistrationForm = ({
                           <SelectValue placeholder="Choose bank" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-border z-50">
-                          {getAvailableBanks().map((bank) => (
-                            <SelectItem key={bank.name} value={bank.name}>
-                              {bank.name}
+                          {getAvailableBanks()?.map((bank) => (
+                            <SelectItem key={bank?.name} value={bank?.name}>
+                              {bank?.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
