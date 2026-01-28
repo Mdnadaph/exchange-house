@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BranchLayout from "@/components/layout/BranchLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,82 +17,141 @@ import {
   Calendar,
   Info
 } from "lucide-react";
+import { useCookies } from "react-cookie";
+import BASE_URL from "@/config/config";
+import axios from "axios";
+
+interface Document {
+  id: string;
+  businessId: string;
+  businessName: string;
+  name: string;
+  type: string;
+  uploadDate: string;
+  size: string;
+  status: string;
+  viewUrl: string;
+}
+
+interface Business {
+  id: string;
+  name: string;
+}
+
+interface Dashboard {
+  branchBusinesses: number;
+  totalDocuments: number;
+  verifiedDocuments: number;
+  pendingDocuments: number;
+}
+
+function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
 
 const BranchBusinessDocuments = () => {
+  const [cookies] = useCookies(["token", "email", "fullName"]);
+  const token = cookies.token;
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [dashboard, setDashboard] = useState<Dashboard>({
+    branchBusinesses: 0,
+    totalDocuments: 0,
+    verifiedDocuments: 0,
+    pendingDocuments: 0,
+  });
+  const [branchBusinesses, setBranchBusinesses] = useState<Business[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Only businesses registered through this branch
-  const branchBusinesses = [
-    { id: "BIZ-001", name: "Tech Solutions LLC", registeredDate: "2023-05-15" },
-    { id: "BIZ-003", name: "Global Enterprises", registeredDate: "2023-08-22" },
-    { id: "BIZ-005", name: "Retail Solutions Ltd", registeredDate: "2023-11-10" }
-  ];
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      setLoading(true);
+      setError(null);
+      let allDocuments: any[] = [];
+      let page = 0;
+      const size = 100;
+      let fetchedDashboard: Dashboard | null = null;
+      while (true) {
+        try {
+          const response = await axios.get(`${BASE_URL}/api/v3/staff/kyb/documents?page=${page}&size=${size}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const res = response.data;
+          if (!res.status) throw new Error(res.message || "Failed to fetch");
+          allDocuments = [...allDocuments, ...res.data.documents];
+          if (!fetchedDashboard) {
+            fetchedDashboard = res.data.dashboard;
+          }
+          if (page + 1 >= res.totalPages) break;
+          page++;
+        } catch (err) {
+          setError("Failed to fetch documents");
+          setLoading(false);
+          return;
+        }
+      }
+      const mappedDocuments: Document[] = allDocuments.map((apiDoc: any) => ({
+        id: apiDoc.documentId.toString(),
+        businessId: apiDoc.businessId.toString(),
+        businessName: apiDoc.businessName,
+        name: apiDoc.documentName,
+        type: apiDoc.documentType,
+        uploadDate: apiDoc.uploadedAt,
+        size: formatBytes(apiDoc.fileSize),
+        status: apiDoc.status.toLowerCase().replace(/\s+/g, '_'),
+        viewUrl: apiDoc.viewUrl,
+      }));
+      setDocuments(mappedDocuments);
+      if (fetchedDashboard) {
+        setDashboard(fetchedDashboard);
+      }
+      // Extract unique businesses
+      const businessMap = new Map<string, Business>();
+      mappedDocuments.forEach((doc) => {
+        if (!businessMap.has(doc.businessId)) {
+          businessMap.set(doc.businessId, { id: doc.businessId, name: doc.businessName });
+        }
+      });
+      setBranchBusinesses(Array.from(businessMap.values()));
+      setLoading(false);
+    };
 
-  // Only documents from branch-registered businesses
-  const documents = [
-    {
-      id: "DOC-001",
-      businessId: "BIZ-001",
-      businessName: "Tech Solutions LLC",
-      name: "Trade License.pdf",
-      type: "Trade License",
-      uploadDate: "2023-05-15",
-      uploadedBy: "Tech Solutions LLC",
-      size: "2.4 MB",
-      status: "verified"
-    },
-    {
-      id: "DOC-002",
-      businessId: "BIZ-001",
-      businessName: "Tech Solutions LLC",
-      name: "Tax Registration Certificate.pdf",
-      type: "Tax Certificate",
-      uploadDate: "2023-05-15",
-      uploadedBy: "Tech Solutions LLC",
-      size: "1.8 MB",
-      status: "verified"
-    },
-    {
-      id: "DOC-003",
-      businessId: "BIZ-001",
-      businessName: "Tech Solutions LLC",
-      name: "Bank Statement - January 2024.pdf",
-      type: "Bank Statement",
-      uploadDate: "2024-01-10",
-      uploadedBy: "Tech Solutions LLC",
-      size: "3.2 MB",
-      status: "pending_review"
-    },
-    {
-      id: "DOC-007",
-      businessId: "BIZ-003",
-      businessName: "Global Enterprises",
-      name: "Trade License.pdf",
-      type: "Trade License",
-      uploadDate: "2023-08-22",
-      uploadedBy: "Global Enterprises",
-      size: "2.3 MB",
-      status: "verified"
-    },
-    {
-      id: "DOC-008",
-      businessId: "BIZ-005",
-      businessName: "Retail Solutions Ltd",
-      name: "Memorandum of Association.pdf",
-      type: "Memorandum of Association",
-      uploadDate: "2023-11-10",
-      uploadedBy: "Retail Solutions Ltd",
-      size: "4.1 MB",
-      status: "verified"
+    fetchDocuments();
+  }, [token]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedBusiness, selectedStatus]);
+
+  const filteredDocuments = documents.filter((doc) => {
+    const searchLower = searchQuery.toLowerCase();
+    if (
+      searchQuery &&
+      !doc.name.toLowerCase().includes(searchLower) &&
+      !doc.type.toLowerCase().includes(searchLower) &&
+      !doc.businessName.toLowerCase().includes(searchLower)
+    ) {
+      return false;
     }
-  ];
-
-  const filteredDocuments = documents.filter(doc => {
     if (selectedBusiness !== "all" && doc.businessId !== selectedBusiness) return false;
     if (selectedStatus !== "all" && doc.status !== selectedStatus) return false;
     return true;
   });
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentDocuments = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -107,6 +166,48 @@ const BranchBusinessDocuments = () => {
     }
   };
 
+  const handleView = async (viewUrl: string) => {
+    try {
+      const response = await axios.get(viewUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error viewing document:', error);
+    }
+  };
+
+  const handleDownload = async (viewUrl: string, fileName: string) => {
+    try {
+      const response = await axios.get(viewUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <BranchLayout>
       <div className="space-y-8">
@@ -116,14 +217,14 @@ const BranchBusinessDocuments = () => {
             <h1 className="text-3xl font-bold text-foreground">Business Documents</h1>
             <p className="text-muted-foreground">View documents from businesses registered through this branch</p>
           </div>
-          <Button variant="outline">
+          {/* <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export Report
-          </Button>
+          </Button> */}
         </div>
 
         {/* Info Alert */}
-        <Card className="bg-accent-muted/20 border-accent">
+        {/* <Card className="bg-accent-muted/20 border-accent">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <Info className="h-5 w-5 text-accent mt-0.5" />
@@ -136,7 +237,7 @@ const BranchBusinessDocuments = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -146,7 +247,7 @@ const BranchBusinessDocuments = () => {
               <Building2 className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{branchBusinesses.length}</div>
+              <div className="text-2xl font-bold">{dashboard.branchBusinesses}</div>
               <p className="text-xs text-muted-foreground">Registered through branch</p>
             </CardContent>
           </Card>
@@ -157,7 +258,7 @@ const BranchBusinessDocuments = () => {
               <FileText className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{documents.length}</div>
+              <div className="text-2xl font-bold">{dashboard.totalDocuments}</div>
               <p className="text-xs text-muted-foreground">From branch businesses</p>
             </CardContent>
           </Card>
@@ -169,7 +270,7 @@ const BranchBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {documents.filter(d => d.status === "verified").length}
+                {dashboard.verifiedDocuments}
               </div>
               <p className="text-xs text-muted-foreground">Approved documents</p>
             </CardContent>
@@ -182,7 +283,7 @@ const BranchBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">
-                {documents.filter(d => d.status === "pending_review").length}
+                {dashboard.pendingDocuments}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting verification</p>
             </CardContent>
@@ -201,6 +302,8 @@ const BranchBusinessDocuments = () => {
                     id="search"
                     placeholder="Search by document name, type, or business..."
                     className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
               </div>
@@ -246,7 +349,7 @@ const BranchBusinessDocuments = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredDocuments.map((doc) => (
+              {currentDocuments.map((doc) => (
                 <Card key={doc.id} className="hover:shadow-md transition-smooth">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -275,11 +378,11 @@ const BranchBusinessDocuments = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleView(doc.viewUrl)}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleDownload(doc.viewUrl, doc.name)}>
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
@@ -289,6 +392,28 @@ const BranchBusinessDocuments = () => {
                 </Card>
               ))}
             </div>
+
+            {filteredDocuments.length > 0 && (
+              <div className="flex justify-center items-center mt-6 gap-4">
+                <Button
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
 
             {filteredDocuments.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
