@@ -635,113 +635,112 @@ const UserTransactions = () => {
   const userName = cookies.fullName || "User";
   const { toast } = useToast();
   // Fetch data from API
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        if (!token) {
-          throw new Error("No authentication token found. Please log in.");
-        }
-
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 10000,
-        };
-
-        const response = await axios.get<ApiResponse>(
-          `${BASE_URL}/api/v1/transactions?type=SINGLE1`,
-          config,
-        );
-
-        const data = response.data;
-
-        if (data.status && data.data) {
-          // Transform API data to match UI structure
-          const transformedTransactions: Transaction[] =
-            data?.data?.transactions?.map((apiTx: any) => ({
-              id: apiTx.transactionId,
-              branchName: apiTx.branchName || "",
-              businessId: apiTx.businessId || "",
-              beneficiary: apiTx.beneficiaryName || "Beneficiary",
-              amount: apiTx.sourceAmount.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-              currency: apiTx.sourceCurrency,
-              exchangeRate: apiTx.exchangeRate.toFixed(3),
-              localAmount: apiTx.convertedAmount.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-              localCurrency: apiTx.targetCurrency,
-              status: apiTx.status.toLowerCase().replace(" ", "_"),
-              type: "single",
-              purpose: apiTx.purpose || "Transaction",
-              date: new Date(apiTx.createdAt)
-                .toLocaleString("en-US", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-                .replace(",", ""),
-              processedDate: null,
-              referenceNumber: apiTx.transactionId,
-              fees: apiTx.feeAmount.toFixed(2),
-              feeResponsibility: apiTx.feeResponsibility || "",
-              branch: apiTx.branchName,
-              failureReason: apiTx.failureReason || "",
-              documents: apiTx.documents,
-            }));
-
-          setTransactions(transformedTransactions);
-        } else {
-          throw new Error(data.message || "Failed to fetch transactions");
-        }
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err?.message,
-          variant: "destructive",
-        });
-        if (axios.isAxiosError(err)) {
-          if (err.response?.status === 401) {
-            setError("Unauthorized: Please log in again.");
-          } else if (err.response?.status === 403) {
-            setError(
-              "Forbidden: You don't have permission to view transactions.",
-            );
-          } else if (err.response?.status === 404) {
-            setError("API endpoint not found. Please check the URL.");
-          } else if (err.code === "ECONNABORTED") {
-            setError("Request timeout. Please try again.");
-          } else if (err.response) {
-            setError(
-              `Server Error: ${err.response.status} - ${err.response.data?.message || "Unknown error"}`,
-            );
-          } else if (err.request) {
-            setError("Network error: Could not connect to server.");
-          } else {
-            setError(`Error: ${err.message}`);
-          }
-        } else {
-          setError(
-            err instanceof Error ? err.message : "Failed to fetch transactions",
-          );
-        }
-        setTransactions([]);
-      } finally {
-        setIsLoading(false);
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
       }
-    };
 
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      };
+
+      const response = await axios.get<ApiResponse>(
+        `${BASE_URL}/api/v1/transactions?type=SINGLE1`,
+        config,
+      );
+
+      const data = response.data;
+
+      if (data.status && data.data) {
+        // Transform API data to match UI structure
+        const transformedTransactions: Transaction[] =
+          data?.data?.transactions?.map((apiTx: any) => ({
+            id: apiTx.transactionId,
+            branchName: apiTx.branchName || "",
+            businessId: apiTx.businessId || "",
+            beneficiary: apiTx.beneficiaryName || "Beneficiary",
+            amount: apiTx.sourceAmount.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+            currency: apiTx.sourceCurrency,
+            exchangeRate: apiTx.exchangeRate.toFixed(3),
+            localAmount: apiTx.convertedAmount.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+            localCurrency: apiTx.targetCurrency,
+            status: apiTx.status.toLowerCase().replace(" ", "_"),
+            type: "single",
+            purpose: apiTx.purpose || "Transaction",
+            date: new Date(apiTx.createdAt)
+              .toLocaleString("en-US", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })
+              .replace(",", ""),
+            processedDate: null,
+            referenceNumber: apiTx.transactionId,
+            fees: apiTx.feeAmount.toFixed(2),
+            feeResponsibility: apiTx.feeResponsibility || "",
+            branch: apiTx.branchName,
+            failureReason: apiTx.failureReason || "",
+            documents: apiTx.documents,
+          }));
+
+        setTransactions(transformedTransactions);
+      } else {
+        throw new Error(data.message || "Failed to fetch transactions");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message,
+        variant: "destructive",
+      });
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setError("Unauthorized: Please log in again.");
+        } else if (err.response?.status === 403) {
+          setError(
+            "Forbidden: You don't have permission to view transactions.",
+          );
+        } else if (err.response?.status === 404) {
+          setError("API endpoint not found. Please check the URL.");
+        } else if (err.code === "ECONNABORTED") {
+          setError("Request timeout. Please try again.");
+        } else if (err.response) {
+          setError(
+            `Server Error: ${err.response.status} - ${err.response.data?.message || "Unknown error"}`,
+          );
+        } else if (err.request) {
+          setError("Network error: Could not connect to server.");
+        } else {
+          setError(`Error: ${err.message}`);
+        }
+      } else {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch transactions",
+        );
+      }
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchTransactions();
   }, [token]);
 
@@ -866,7 +865,7 @@ const UserTransactions = () => {
               Export
             </Button>
             <BulkTransactionForm />
-            <SingleTransactionForm />
+            <SingleTransactionForm refetch={fetchTransactions} />
           </div>
         </div>
 
