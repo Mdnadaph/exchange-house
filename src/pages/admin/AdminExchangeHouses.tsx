@@ -826,7 +826,7 @@ const AdminExchangeHouses = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v3/super/exchange-admins?page=0&size=50&query=`,
+        `${BASE_URL}/api/v3/super/exchange-admins?page=0&size=10&query=`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
