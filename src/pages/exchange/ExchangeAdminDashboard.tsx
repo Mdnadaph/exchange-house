@@ -361,13 +361,13 @@ import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileCheck, 
-  Building, 
-  Users, 
-  Settings, 
-  TrendingUp, 
-  AlertCircle, 
+import {
+  FileCheck,
+  Building,
+  Users,
+  Settings,
+  TrendingUp,
+  AlertCircle,
   CheckCircle,
   Clock,
   ArrowUpRight,
@@ -500,7 +500,7 @@ const ExchangeAdminDashboard = () => {
       status: "optimal"
     },
     {
-      branch: "Abu Dhabi ADGM Branch", 
+      branch: "Abu Dhabi ADGM Branch",
       manager: "Fatima Al-Zahra",
       pendingKYB: 7,
       completed: 22,
@@ -509,7 +509,7 @@ const ExchangeAdminDashboard = () => {
     },
     {
       branch: "Sharjah City Centre Branch",
-      manager: "Omar Abdullah", 
+      manager: "Omar Abdullah",
       pendingKYB: 2,
       completed: 12,
       efficiency: 92,
@@ -538,7 +538,7 @@ const ExchangeAdminDashboard = () => {
   const getBranchStatusColor = (status: string) => {
     const colors = {
       optimal: "border-l-green-500",
-      busy: "border-l-orange-500", 
+      busy: "border-l-orange-500",
       available: "border-l-blue-500",
       overloaded: "border-l-red-500"
     };
@@ -546,7 +546,14 @@ const ExchangeAdminDashboard = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">
+          Loading branches data...
+        </p>
+      </div>
+    </div>
   }
 
   if (error) {

@@ -383,11 +383,11 @@ const ExchangeKYBReview = () => {
   );
 
   const handleViewDocument = async (document: any, application: any) => {
-    console.log("Opening document:", {
-      documentId: document.documentId,
-      viewUrl: document.viewUrl,
-      name: document.name,
-    });
+    // console.log("Opening document:", {
+    //   documentId: document.documentId,
+    //   viewUrl: document.viewUrl,
+    //   name: document.name,
+    // });
 
     // Clear previous blob URLs
     if (imageBlobUrl) {
@@ -527,8 +527,8 @@ const ExchangeKYBReview = () => {
 
     try {
       setActionLoading(true);
-      console.log("Approving document ID:", viewerData.document.documentId);
-      console.log("Sending approval request...");
+      // console.log("Approving document ID:", viewerData.document.documentId);
+      // console.log("Sending approval request...");
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb/documents/${viewerData.document.documentId}/review`,
@@ -543,7 +543,7 @@ const ExchangeKYBReview = () => {
         }
       );
 
-      console.log("Approval response:", response.data);
+      // console.log("Approval response:", response.data);
 
       if (response.data?.status) {
         await fetchKYBApplications(currentPage);
@@ -584,8 +584,8 @@ const ExchangeKYBReview = () => {
 
     try {
       setActionLoading(true);
-      console.log("Rejecting document ID:", viewerData.document.documentId);
-      console.log("Rejection reason:", rejectionReason);
+      // console.log("Rejecting document ID:", viewerData.document.documentId);
+      // console.log("Rejection reason:", rejectionReason);
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb/documents/${viewerData.document.documentId}/review`,
@@ -601,7 +601,7 @@ const ExchangeKYBReview = () => {
         }
       );
 
-      console.log("Rejection response:", response.data);
+      // console.log("Rejection response:", response.data);
 
       if (response.data?.status) {
         await fetchKYBApplications(currentPage);

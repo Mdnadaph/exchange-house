@@ -27,7 +27,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: Home },
     { name: "Exchange House Management", href: "/admin/exchange-houses", icon: Landmark },
-    // { name: "Excahnge Admin", href: "/admin/exchangeAdmin", icon: Home },
     // { name: "KYB Onboarding", href: "/admin/onboarding", icon: FileCheck },
     // { name: "Deal Settings", href: "/admin/deal-settings", icon: Handshake },
     // { name: "Settings & Rules", href: "/admin/settings", icon: Settings },
