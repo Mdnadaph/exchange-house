@@ -553,6 +553,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import BASE_URL from "@/config/config";
+import { useToast } from "@/hooks/use-toast";
 
 interface TransactionDocument {
   id: number;
@@ -632,7 +633,7 @@ const UserTransactions = () => {
 
   const token = cookies.token;
   const userName = cookies.fullName || "User";
-
+  const { toast } = useToast();
   // Fetch data from API
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -653,7 +654,7 @@ const UserTransactions = () => {
         };
 
         const response = await axios.get<ApiResponse>(
-          `${BASE_URL}/api/v1/transactions?type=SINGLE`,
+          `${BASE_URL}/api/v1/transactions?type=SINGLE1`,
           config,
         );
 
@@ -705,8 +706,11 @@ const UserTransactions = () => {
           throw new Error(data.message || "Failed to fetch transactions");
         }
       } catch (err: any) {
-        console.error("Error fetching transactions:", err);
-
+        toast({
+          title: "Error",
+          description: err?.message,
+          variant: "destructive",
+        });
         if (axios.isAxiosError(err)) {
           if (err.response?.status === 401) {
             setError("Unauthorized: Please log in again.");

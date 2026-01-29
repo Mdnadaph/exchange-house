@@ -2315,7 +2315,11 @@ const UserBeneficiaries = () => {
       setBeneficiariesTotalItems(json.data.pagination.totalItems);
     } catch (err: any) {
       setError(err.message || "Failed to fetch beneficiaries");
-      console.error("Error fetching beneficiaries:", err);
+      toast({
+        title: "Error",
+        description: err?.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -2380,7 +2384,11 @@ const UserBeneficiaries = () => {
       setGroupsTotalPages(json.data.pagination.totalPages);
       setGroupsTotalItems(json.data.pagination.totalItems);
     } catch (err: any) {
-      console.error("Error fetching groups:", err);
+      toast({
+        title: "Error",
+        description: err?.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -2571,7 +2579,7 @@ const UserBeneficiaries = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {payOutConfigData?.data?.countries?.length > 0 ? (
                     payOutConfigData?.data?.countries?.map(
                       (destination: any) => {

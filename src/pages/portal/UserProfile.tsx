@@ -124,7 +124,6 @@ const UserProfile = () => {
 
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
-
   // Fetch business profile
   useEffect(() => {
     const fetchBusinessProfile = async () => {
@@ -187,19 +186,14 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchKYBContext = async () => {
       try {
-        console.log("Fetching KYB context for ID:", id);
-        console.log("Token exists:", !!token);
-
         const response = await axios.get(
           `${BASE_URL}/api/business/${id}/kyb-context`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
-        console.log("KYB context API response:", response.data);
-
         const data = response?.data?.data;
 
         if (data?.documents) {
@@ -207,22 +201,16 @@ const UserProfile = () => {
 
           // Extract document names from KYB context for the dropdown
           const types = data.documents.map(
-            (doc: KYBContextDocument) => doc.name
+            (doc: KYBContextDocument) => doc.name,
           );
-          console.log("Document types found:", types);
           setDocumentTypes(types);
 
           // Extract uploaded documents from KYB context and set to documents state
           const uploadedDocs = data.documents.filter(
-            (doc: KYBContextDocument) => doc.uploaded && doc.document
+            (doc: KYBContextDocument) => doc.uploaded && doc.document,
           );
 
           if (uploadedDocs.length > 0) {
-            console.log(
-              "Found uploaded documents in KYB context:",
-              uploadedDocs.length
-            );
-
             const transformedDocuments: Document[] = uploadedDocs.map(
               (doc: KYBContextDocument, index: number) => {
                 const docData = doc.document!;
@@ -266,25 +254,27 @@ const UserProfile = () => {
                     doc.verified === true
                       ? "verified"
                       : doc.verified === false
-                      ? "pending_review"
-                      : "pending_review",
+                        ? "pending_review"
+                        : "pending_review",
                   documentId: docData.id,
                   fileUrl: docData.fileUrl,
                   documentNumber: docData.documentNumber,
                   verified: doc.verified,
                 };
-              }
+              },
             );
 
-            console.log("Transformed KYB documents:", transformedDocuments);
             setDocuments(transformedDocuments);
           } else {
-            console.log("No uploaded documents found in KYB context");
+            toast({
+              title: "Error",
+              description: "No uploaded documents found in KYB context",
+              variant: "destructive",
+            });
           }
         }
       } catch (error) {
-        console.error("Failed to fetch KYB context", error);
-        console.error("Error details:", error.response?.data);
+        toast({ title: "Error", description: error, variant: "destructive" });
       }
     };
 
@@ -321,7 +311,7 @@ const UserProfile = () => {
     try {
       // Find the document from KYB context to get the CODE
       const selectedDoc = kybContext?.documents.find(
-        (doc) => doc.name === documentType
+        (doc) => doc.name === documentType,
       );
 
       if (!selectedDoc) {
@@ -345,15 +335,9 @@ const UserProfile = () => {
         formData.append("documentNumber", documentNumber);
       }
 
-      console.log("FormData entries:");
       for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
-
-      console.log(
-        "Making request to:",
-        `${BASE_URL}/api/business/${id}/documents/upload`
-      );
 
       const response = await axios.post(
         `${BASE_URL}/api/business/${id}/documents/upload`,
@@ -363,7 +347,7 @@ const UserProfile = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (response.data.status) {
@@ -424,7 +408,7 @@ const UserProfile = () => {
   const handleUploadDocument = () => {
     // Find the corresponding KYB document
     const selectedDoc = kybContext?.documents.find(
-      (doc) => doc.name === documentType
+      (doc) => doc.name === documentType,
     );
 
     if (!selectedFile || !documentType) {
@@ -513,7 +497,7 @@ const UserProfile = () => {
 
     const anyUploaded = kybContext.documents.some((doc) => doc.uploaded);
     const anyPendingReview = kybContext.documents.some(
-      (doc) => doc.uploaded && !doc.verified
+      (doc) => doc.uploaded && !doc.verified,
     );
 
     if (allRequiredUploaded) {
@@ -620,7 +604,7 @@ const UserProfile = () => {
           )} */}
 
         {/* Header */}
-        
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -915,7 +899,7 @@ const UserProfile = () => {
                   <option value="">Select document type...</option>
                   {documentTypes.map((type) => {
                     const docInfo = kybContext?.documents.find(
-                      (d) => d.name === type
+                      (d) => d.name === type,
                     );
                     return (
                       <option key={type} value={type}>

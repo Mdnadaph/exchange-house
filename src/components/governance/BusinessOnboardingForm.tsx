@@ -166,7 +166,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     setSelectedCurrencies((prev) =>
       prev.includes(currency)
         ? prev.filter((c) => c !== currency)
-        : [...prev, currency]
+        : [...prev, currency],
     );
   };
 
@@ -223,7 +223,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (response.data.status) {
@@ -256,7 +256,6 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           monthlyLimit: "",
           dealValidityDays: "7",
         });
-
 
         // Optionally navigate or reload if needed
       } else {
@@ -884,11 +883,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         </DialogTrigger> */}
         <DialogTrigger asChild>
           {trigger || (
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => console.log("clicked")}
-            >
+            <Button type="button" variant="default">
               <Plus className="h-4 w-4 mr-2" />
               Onboard Business
             </Button>

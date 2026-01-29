@@ -125,7 +125,6 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
   const status = getStatusBadge(beneficiary.status);
   const verification = getVerificationBadge(beneficiary.verificationStatus);
   const StatusIcon = status.icon;
-  console.log("beneficiary", beneficiary);
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}

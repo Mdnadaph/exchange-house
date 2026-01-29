@@ -1,22 +1,34 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Plus, 
-  Shield, 
-  Users, 
+import {
+  Plus,
+  Shield,
+  Users,
   DollarSign,
   Trash2,
   ArrowRight,
   Info,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -24,14 +36,18 @@ import { useCookies } from "react-cookie";
 interface ApprovalRuleFormProps {
   trigger?: React.ReactNode;
   editRule?: any;
-  onSuccess?: () => void; 
+  onSuccess?: () => void;
 }
 
-const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProps) => {
+const ApprovalRuleForm = ({
+  trigger,
+  editRule,
+  onSuccess,
+}: ApprovalRuleFormProps) => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
 
-  const [open, setOpen] = useState(false);   
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: editRule?.name || "",
     description: editRule?.description || "",
@@ -41,8 +57,8 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
     department: editRule?.department || "All",
     transactionTypes: editRule?.transactionTypes || [],
     tiers: editRule?.tiers || [
-      { level: 1, threshold: "", approvers: 1, roles: [] }
-    ]
+      { level: 1, threshold: "", approvers: 1, roles: [] },
+    ],
   });
 
   const [loading, setLoading] = useState(false);
@@ -50,9 +66,29 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
   const [success, setSuccess] = useState(false);
 
   const currencies = ["USD", "AED", "EUR", "GBP", "INR", "PKR", "PHP", "ANY"];
-  const departments = ["All", "Finance", "Treasury", "Operations", "HR", "Procurement"];
-  const transactionTypes = ["Single Transfer", "Bulk Transfer", "Salary Payment", "Supplier Payment", "Invoice Payment"];
-  const approverRoles = ["Senior Manager", "Finance Manager", "Treasury Officer", "Operations Manager", "CEO", "CFO"];
+  const departments = [
+    "All",
+    "Finance",
+    "Treasury",
+    "Operations",
+    "HR",
+    "Procurement",
+  ];
+  const transactionTypes = [
+    "Single Transfer",
+    "Bulk Transfer",
+    "Salary Payment",
+    "Supplier Payment",
+    "Invoice Payment",
+  ];
+  const approverRoles = [
+    "Senior Manager",
+    "Finance Manager",
+    "Treasury Officer",
+    "Operations Manager",
+    "CEO",
+    "CFO",
+  ];
 
   const resetForm = () => {
     setFormData({
@@ -63,57 +99,68 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
       maxAmount: "",
       department: "All",
       transactionTypes: [],
-      tiers: [{ level: 1, threshold: "", approvers: 1, roles: [] }]
+      tiers: [{ level: 1, threshold: "", approvers: 1, roles: [] }],
     });
     setError(null);
     setSuccess(false);
   };
 
   const addTier = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tiers: [...prev.tiers, { 
-        level: prev.tiers.length + 1, 
-        threshold: "", 
-        approvers: 1, 
-        roles: [] 
-      }]
+      tiers: [
+        ...prev.tiers,
+        {
+          level: prev.tiers.length + 1,
+          threshold: "",
+          approvers: 1,
+          roles: [],
+        },
+      ],
     }));
   };
 
   const removeTier = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tiers: prev.tiers.filter((_, i) => i !== index).map((tier, i) => ({
-        ...tier,
-        level: i + 1
-      }))
+      tiers: prev.tiers
+        .filter((_, i) => i !== index)
+        .map((tier, i) => ({
+          ...tier,
+          level: i + 1,
+        })),
     }));
   };
 
   const updateTier = (index: number, field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tiers: prev.tiers.map((tier, i) => 
-        i === index ? { ...tier, [field]: value } : tier
-      )
+      tiers: prev.tiers.map((tier, i) =>
+        i === index ? { ...tier, [field]: value } : tier,
+      ),
     }));
   };
 
   const handleTransactionTypeChange = (type: string, checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      transactionTypes: checked 
+      transactionTypes: checked
         ? [...prev.transactionTypes, type]
-        : prev.transactionTypes.filter(t => t !== type)
+        : prev.transactionTypes.filter((t) => t !== type),
     }));
   };
 
-  const handleRoleChange = (tierIndex: number, role: string, checked: boolean) => {
-    updateTier(tierIndex, 'roles', 
-      checked 
+  const handleRoleChange = (
+    tierIndex: number,
+    role: string,
+    checked: boolean,
+  ) => {
+    updateTier(
+      tierIndex,
+      "roles",
+      checked
         ? [...formData.tiers[tierIndex].roles, role]
-        : formData.tiers[tierIndex].roles.filter(r => r !== role)
+        : formData.tiers[tierIndex].roles.filter((r) => r !== role),
     );
   };
 
@@ -128,14 +175,21 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
       description: formData.description.trim(),
       minAmount: formData.minAmount ? Number(formData.minAmount) : 0,
       maxAmount: formData.maxAmount ? Number(formData.maxAmount) : 1000000,
-      department: formData.department === "All" ? "ALL" : formData.department.toUpperCase(),
-      transactionTypes: formData.transactionTypes.map(t => t.toUpperCase().replace(/\s+/g, '_')),
-      approvalTiers: formData.tiers.map(tier => ({
+      department:
+        formData.department === "All"
+          ? "ALL"
+          : formData.department.toUpperCase(),
+      transactionTypes: formData.transactionTypes.map((t) =>
+        t.toUpperCase().replace(/\s+/g, "_"),
+      ),
+      approvalTiers: formData.tiers.map((tier) => ({
         tierOrder: tier.level,
         thresholdAmount: Number(tier.threshold) || 0,
         approversRequired: Number(tier.approvers),
-        eligibleRoles: tier.roles.map(r => r.toUpperCase().replace(/\s+/g, '_'))
-      }))
+        eligibleRoles: tier.roles.map((r) =>
+          r.toUpperCase().replace(/\s+/g, "_"),
+        ),
+      })),
     };
 
     if (!payload.ruleName) {
@@ -143,21 +197,28 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
       setLoading(false);
       return;
     }
-    if (payload.approvalTiers.some(t => !t.thresholdAmount || t.thresholdAmount <= 0)) {
+    if (
+      payload.approvalTiers.some(
+        (t) => !t.thresholdAmount || t.thresholdAmount <= 0,
+      )
+    ) {
       setError("All tiers must have a valid threshold amount");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/business/governance-rules`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+      const response = await fetch(
+        `${BASE_URL}/api/v1/business/governance-rules`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -165,19 +226,15 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
       }
 
       const result = await response.json();
-      console.log("Rule created:", result);
-
       setSuccess(true);
 
       // Close dialog after short delay so user sees success message
       setTimeout(() => {
         setOpen(false);
         resetForm();
-        onSuccess?.();         
+        onSuccess?.();
       }, 1200); // 1.2 seconds — adjust as needed (800–1500ms usually feels good)
-
     } catch (err: any) {
-      console.error(err);
       setError(err.message || "Failed to create approval rule");
     } finally {
       setLoading(false);
@@ -206,10 +263,12 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editRule ? "Edit Approval Rule" : "Create Multi-Tier Approval Rule"}
+            {editRule
+              ? "Edit Approval Rule"
+              : "Create Multi-Tier Approval Rule"}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6 mt-6">
           {/* Basic Information */}
           <Card>
@@ -227,18 +286,29 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
                   <Input
                     id="ruleName"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     placeholder="e.g., High Value USD Transactions"
                   />
                 </div>
                 <div>
                   <Label htmlFor="currency">Currency *</Label>
-                  <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, currency: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
-                      {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      {currencies.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -248,7 +318,12 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
                 <Label>Description</Label>
                 <Textarea
                   value={formData.description}
-                  onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Describe when this approval rule applies..."
                   rows={3}
                 />
@@ -260,7 +335,12 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
                   <Input
                     type="number"
                     value={formData.minAmount}
-                    onChange={e => setFormData(prev => ({ ...prev, minAmount: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        minAmount: e.target.value,
+                      }))
+                    }
                     placeholder="0"
                   />
                 </div>
@@ -269,18 +349,32 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
                   <Input
                     type="number"
                     value={formData.maxAmount}
-                    onChange={e => setFormData(prev => ({ ...prev, maxAmount: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        maxAmount: e.target.value,
+                      }))
+                    }
                     placeholder="Unlimited"
                   />
                 </div>
                 <div>
                   <Label>Department</Label>
-                  <Select value={formData.department} onValueChange={v => setFormData(prev => ({ ...prev, department: v }))}>
+                  <Select
+                    value={formData.department}
+                    onValueChange={(v) =>
+                      setFormData((prev) => ({ ...prev, department: v }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                      {departments.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -298,14 +392,18 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {transactionTypes.map(type => (
+                {transactionTypes.map((type) => (
                   <div key={type} className="flex items-center space-x-2">
                     <Checkbox
                       id={`type-${type}`}
                       checked={formData.transactionTypes.includes(type)}
-                      onCheckedChange={checked => handleTransactionTypeChange(type, !!checked)}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange(type, !!checked)
+                      }
                     />
-                    <Label htmlFor={`type-${type}`} className="text-sm">{type}</Label>
+                    <Label htmlFor={`type-${type}`} className="text-sm">
+                      {type}
+                    </Label>
                   </div>
                 ))}
               </div>
@@ -332,10 +430,11 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
                 <div className="flex items-center space-x-2 p-3 bg-accent-muted/20 rounded-lg">
                   <Info className="h-4 w-4 text-accent" />
                   <p className="text-sm text-muted-foreground">
-                    Define approval tiers based on transaction amounts. Higher tiers require more approvers.
+                    Define approval tiers based on transaction amounts. Higher
+                    tiers require more approvers.
                   </p>
                 </div>
-                
+
                 {formData.tiers.map((tier, index) => (
                   <Card key={index} className="border-l-4 border-l-primary">
                     <CardContent className="p-4">
@@ -343,54 +442,78 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline">Tier {tier.level}</Badge>
-                          {index > 0 && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
+                          {index > 0 && (
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </div>
                         {formData.tiers.length > 1 && (
-                          <Button variant="outline" size="sm" onClick={() => removeTier(index)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeTier(index)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                           <Label>Amount Threshold</Label>
                           <Input
                             type="number"
                             value={tier.threshold}
-                            onChange={e => updateTier(index, 'threshold', e.target.value)}
+                            onChange={(e) =>
+                              updateTier(index, "threshold", e.target.value)
+                            }
                             placeholder="Enter threshold amount"
                           />
                         </div>
                         <div>
                           <Label>Number of Approvers Required</Label>
-                          <Select 
-                            value={tier.approvers.toString()} 
-                            onValueChange={v => updateTier(index, 'approvers', parseInt(v))}
+                          <Select
+                            value={tier.approvers.toString()}
+                            onValueChange={(v) =>
+                              updateTier(index, "approvers", parseInt(v))
+                            }
                           >
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
                             <SelectContent>
-                              {[1,2,3,4,5].map(n => (
+                              {[1, 2, 3, 4, 5].map((n) => (
                                 <SelectItem key={n} value={n.toString()}>
-                                  {n} Approver{n > 1 ? 's' : ''}
+                                  {n} Approver{n > 1 ? "s" : ""}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
-                      
+
                       <div>
-                        <Label className="text-sm font-medium mb-2 block">Eligible Approver Roles</Label>
+                        <Label className="text-sm font-medium mb-2 block">
+                          Eligible Approver Roles
+                        </Label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {approverRoles.map(role => (
-                            <div key={role} className="flex items-center space-x-2">
+                          {approverRoles.map((role) => (
+                            <div
+                              key={role}
+                              className="flex items-center space-x-2"
+                            >
                               <Checkbox
                                 id={`tier-${index}-role-${role}`}
                                 checked={tier.roles.includes(role)}
-                                onCheckedChange={checked => handleRoleChange(index, role, !!checked)}
+                                onCheckedChange={(checked) =>
+                                  handleRoleChange(index, role, !!checked)
+                                }
                               />
-                              <Label htmlFor={`tier-${index}-role-${role}`} className="text-xs">{role}</Label>
+                              <Label
+                                htmlFor={`tier-${index}-role-${role}`}
+                                className="text-xs"
+                              >
+                                {role}
+                              </Label>
                             </div>
                           ))}
                         </div>
@@ -415,15 +538,15 @@ const ApprovalRuleForm = ({ trigger, editRule, onSuccess }: ApprovalRuleFormProp
           )}
 
           <div className="flex justify-between pt-6 border-t">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setOpen(false)}
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button 
-              variant="business" 
+            <Button
+              variant="business"
               onClick={handleSubmit}
               disabled={loading}
             >

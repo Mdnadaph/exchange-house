@@ -41,13 +41,16 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/v1/dashboard/business-portal`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `${BASE_URL}/api/v1/dashboard/business-portal`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -57,11 +60,12 @@ const UserDashboard = () => {
         if (result.status) {
           setDashboardData(result.data);
         } else {
-          throw new Error(result.message || "Failed to retrieve dashboard data");
+          throw new Error(
+            result.message || "Failed to retrieve dashboard data",
+          );
         }
       } catch (err) {
-        setError(err.message);
-        console.error("Error fetching dashboard data:", err);
+        setError(err?.message);
       } finally {
         setLoading(false);
       }
@@ -103,7 +107,9 @@ const UserDashboard = () => {
       ]
     : [];
 
-  const recentTransactions = dashboardData ? dashboardData.recentTransactions : [];
+  const recentTransactions = dashboardData
+    ? dashboardData.recentTransactions
+    : [];
 
   const pendingActions = [
     {
@@ -291,7 +297,9 @@ const UserDashboard = () => {
                     {stat.value}
                   </div>
                   {stat.change && (
-                    <p className="text-xs text-muted-foreground">{stat.change}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {stat.change}
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -434,8 +442,10 @@ const UserDashboard = () => {
                 <span className="text-sm">Add Beneficiary</span>
               </Button>
 
-              <Button variant="outline" className="h-20 flex-col"
-              onClick={() => navigate('/portal/deals')}
+              <Button
+                variant="outline"
+                className="h-20 flex-col"
+                onClick={() => navigate("/portal/deals")}
               >
                 <FileText className="h-6 w-6 mb-2" />
                 <span className="text-sm">Add Rete Deals</span>

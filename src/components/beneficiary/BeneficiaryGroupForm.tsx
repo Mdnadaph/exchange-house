@@ -118,7 +118,7 @@ const BeneficiaryGroupForm = ({
 
       setBeneficiaries(json.data.beneficiaries);
     } catch (err: any) {
-      const msg = err.message || "Failed to load beneficiaries";
+      const msg = err?.message || "Failed to load beneficiaries";
       setError(msg);
       toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
@@ -215,10 +215,9 @@ const BeneficiaryGroupForm = ({
       setSearch("");
       setOpen(false);
     } catch (err: any) {
-      console.log("errror", err);
       toast({
         title: "Failed to create group ",
-        description: err.message || "Please try again hshsh",
+        description: err?.message || "Please try again hshsh",
         variant: "destructive",
       });
     } finally {

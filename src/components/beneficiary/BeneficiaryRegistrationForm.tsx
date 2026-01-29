@@ -251,7 +251,6 @@ const BeneficiaryRegistrationForm = ({
 
     // 1. Log the final URL to ensure it's correct
     const fullUrl = `${BASE_URL.endsWith("/") ? BASE_URL : BASE_URL + "/"}api/v1/beneficiaries`;
-    console.log("Requesting URL:", fullUrl);
 
     const countryObj = payoutDestinations.find(
       (d) => d.code === (residencyType === "uae" ? "AE" : beneficiaryCountry),
@@ -325,7 +324,6 @@ const BeneficiaryRegistrationForm = ({
       // Check if the response is actually okay (200-299)
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Server Error Detail:", errorData);
         throw new Error(
           errorData.message || `Server responded with ${response.status}`,
         );
@@ -340,7 +338,6 @@ const BeneficiaryRegistrationForm = ({
       onSuccess();
       setView("list");
     } catch (error: any) {
-      console.error("Fetch Error:", error);
       // This will now show the actual error message in the toast
       toast.error(
         error.message === "Failed to fetch"

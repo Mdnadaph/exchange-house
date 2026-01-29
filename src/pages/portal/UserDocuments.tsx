@@ -24,15 +24,14 @@ import {
   Image,
   FileSpreadsheet,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const UserDocuments = () => {
   const { id } = useParams();
-  console.log(id);
-  console.log("Hello");
   const [cookie] = useCookies(["token", "firstName"]);
   const token = cookie.token;
   const firstName = cookie.firstName;
-
+  const { toast } = useToast();
   const [apiData, setApiData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,12 +152,9 @@ const UserDocuments = () => {
               };
             });
 
-          setDocuments(transformedDocs);
-          console.log("Transformed documents:", transformedDocs); // Add this for debugging
+          setDocuments(transformedDocs); // Add this for debugging
         }
       } catch (err: any) {
-        console.error("Failed to fetch documents:", err);
-        console.error("Full error:", err);
         setError(err.response?.data?.message || "Failed to load documents");
       } finally {
         setLoading(false);
@@ -236,7 +232,11 @@ const UserDocuments = () => {
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
     } catch (error) {
-      console.error("Error viewing document:", error);
+      toast({
+        title: "Failed",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
@@ -256,7 +256,11 @@ const UserDocuments = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading document:", error);
+      toast({
+        title: "Failed",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
@@ -519,9 +523,9 @@ const UserDocuments = () => {
                                   <Download className="h-4 w-4 mr-1" />
                                   Download
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                {/* <Button variant="outline" size="sm">
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </Button> */}
                               </div>
                             </div>
 
