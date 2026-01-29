@@ -2495,6 +2495,7 @@ const UserBeneficiaries = () => {
   if (typeof window !== "undefined") {
     (window as any).__beneficiaryGroups = groupsWithBeneficiaryData;
   }
+
   const totalPayOutConfigDataList = payOutConfigData?.totalElements;
   // Loading state
   if (loading) {
