@@ -53,8 +53,8 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const requiresTwoFactor = cookie.requiresTwoFactor;
   const businessId = cookie.businessId;
 
-  console.log(firstName);
-  console.log(id);
+  // console.log(firstName);
+  // console.log(id);
 
   const handleLogout = () => {
     removeCookie("token");
@@ -112,7 +112,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName} {firstName} {lastName} (User)
+                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Portal User)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
