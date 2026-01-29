@@ -578,9 +578,9 @@ const BranchTransactions = () => {
   const [cookies] = useCookies(["token", "email", "fullName"]);
 
   const token = cookies.token;
-  console.log("token", token);
-
   const fullname = cookies.fullName;
+  // console.log("token", token);
+
 
   // Fetch data from API
   useEffect(() => {
@@ -607,7 +607,7 @@ const BranchTransactions = () => {
         );
 
         const data = response.data;
-        console.log("ddd", data);
+        // console.log("ddd", data);
 
         if (data.status && data.data) {
           // Transform API data to match UI structure

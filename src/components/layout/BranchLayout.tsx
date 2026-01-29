@@ -57,8 +57,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   const contactNumber = cookie.contactNumber;
   const roleName = cookie.roleName;
 
-  console.log(firstName);
-  console.log(id);
+  // console.log(firstName);
+  // console.log(id);
 
   const handleLogout = () => {
     removeCookie("token");
@@ -120,7 +120,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName} {firstName} {lastName} (Branch Staff)
+                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Branch Staff)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

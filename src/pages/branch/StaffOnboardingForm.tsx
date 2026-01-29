@@ -47,8 +47,8 @@ import { useNavigate, useParams } from "react-router-dom";
 const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
 
-  const [cookies] = useCookies(["Token", "branchId", "role"]); // Added "role"
-  const Token = cookies.Token;
+  const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
+  const token = cookies.token;
   const branchId = cookies.branchId;
   const userRole = cookies.role;
 
@@ -172,7 +172,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
 
   const confirmOnboarding = async () => {
 
-    console.log("DEBUG: Sending request with Token:", Token);
+    console.log("DEBUG: Sending request with token:", token);
   console.log("DEBUG: User Role from cookies:", userRole);
   console.log("DEBUG: BranchId from cookies:", branchId);
 
@@ -222,7 +222,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         apiFormData,
         {
           headers: {
-            Authorization: `Bearer ${Token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         }

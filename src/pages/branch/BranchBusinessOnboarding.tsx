@@ -20,8 +20,8 @@ import { useEffect, useState } from "react";
 
 const BranchBusinessOnboarding = () => {
 
-  const [cookies] = useCookies(["Token", "branchId", "role"]); // Added "role"
-    const Token = cookies.Token;
+  const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
+    const token = cookies.token;
     const branchId = cookies.branchId;
     const userRole = cookies.role;
 
@@ -49,7 +49,7 @@ const BranchBusinessOnboarding = () => {
         `${BASE_URL}/api/v3/business?page=${page}&size=${size}`,
         {
           headers: {
-            Authorization: `Bearer ${Token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -99,7 +99,7 @@ const BranchBusinessOnboarding = () => {
         `${BASE_URL}/api/v3/dashboard/business-stats`,
         {
           headers: {
-            Authorization: `Bearer ${Token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
