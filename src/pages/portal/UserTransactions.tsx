@@ -554,6 +554,7 @@ import {
 import axios from "axios";
 import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TransactionDocument {
   id: number;
@@ -630,7 +631,6 @@ const UserTransactions = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
-
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const { toast } = useToast();
@@ -833,6 +833,35 @@ const UserTransactions = () => {
     };
   };
 
+  // const handleReviewAction = async (id: string, reviewActionStatus: string) => {
+  //   const payload = {
+  //     status: reviewActionStatus,
+  //     notes: comment,
+  //   };
+  //   setDisableButton(true);
+  //   try {
+  //     const res = await axios.patch(
+  //       `${BASE_URL}/api/v1/transactions/${id}/toggle-status`,
+  //       payload,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       },
+  //     );
+  //     console.log("data", res);
+  //     setComment("");
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: error?.message,
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setDisableButton(false);
+  //   }
+  // };
+
   const statistics = calculateStatistics();
 
   if (isLoading) {
@@ -847,7 +876,6 @@ const UserTransactions = () => {
       </UserLayout>
     );
   }
-
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -1135,7 +1163,61 @@ const UserTransactions = () => {
                               </p>
                             </div>
                           </div>
-
+                          {/* <div className="border-t pt-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              
+                              <div className="space-y-4">
+                                <Label htmlFor={`comments-${transaction?.id}`}>
+                                  Review Comments
+                                </Label>
+                                <Textarea
+                                  id={`comments-${transaction.id}`}
+                                  placeholder="Add review comments, questions, or requirements..."
+                                  rows={4}
+                                  value={comment}
+                                  onChange={(e) => setComment(e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-4">
+                                <Label>Review Actions</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <Button
+                                    type="button"
+                                    variant="default"
+                                    className="w-full"
+                                    disabled={disableButton}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleReviewAction(
+                                        transaction?.id,
+                                        "APPROVED",
+                                      );
+                                    }}
+                                  >
+                                    df
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    className="w-full"
+                                    disabled={disableButton}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleReviewAction(
+                                        transaction?.id,
+                                        "REJECTED",
+                                      );
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div> */}
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">

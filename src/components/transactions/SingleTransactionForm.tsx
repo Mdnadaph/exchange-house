@@ -543,7 +543,7 @@ const SingleTransactionForm = ({
                         ))} */}
                         {currencyListData?.data?.map((curr: any) => (
                           <SelectItem key={curr?.id} value={curr?.id}>
-                            {curr?.name}
+                            {curr?.name?.toUpperCase()}
                           </SelectItem>
                         ))}
                       </SelectContent>
