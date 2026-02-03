@@ -629,6 +629,8 @@ const UserTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [disableButton, setDisableButton] = useState(false);
+  const [comment, setComment] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const token = cookies.token;
@@ -833,34 +835,34 @@ const UserTransactions = () => {
     };
   };
 
-  // const handleReviewAction = async (id: string, reviewActionStatus: string) => {
-  //   const payload = {
-  //     status: reviewActionStatus,
-  //     notes: comment,
-  //   };
-  //   setDisableButton(true);
-  //   try {
-  //     const res = await axios.patch(
-  //       `${BASE_URL}/api/v1/transactions/${id}/toggle-status`,
-  //       payload,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       },
-  //     );
-  //     console.log("data", res);
-  //     setComment("");
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: error?.message,
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setDisableButton(false);
-  //   }
-  // };
+  const handleReviewAction = async (id: string, reviewActionStatus: string) => {
+    const payload = {
+      status: reviewActionStatus,
+      notes: comment,
+    };
+    setDisableButton(true);
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v1/transactions/${id}/toggle-status`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      console.log("data", res);
+      setComment("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDisableButton(false);
+    }
+  };
 
   const statistics = calculateStatistics();
 
@@ -1163,9 +1165,8 @@ const UserTransactions = () => {
                               </p>
                             </div>
                           </div>
-                          {/* <div className="border-t pt-6">
+                          <div className="border-t pt-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              
                               <div className="space-y-4">
                                 <Label htmlFor={`comments-${transaction?.id}`}>
                                   Review Comments
@@ -1178,7 +1179,7 @@ const UserTransactions = () => {
                                   onChange={(e) => setComment(e.target.value)}
                                 />
                               </div>
-                              
+
                               <div className="space-y-4">
                                 <Label>Review Actions</Label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -1217,7 +1218,7 @@ const UserTransactions = () => {
                                 </div>
                               </div>
                             </div>
-                          </div> */}
+                          </div>
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
