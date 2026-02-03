@@ -38,7 +38,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     "branchId",
     "contactNumber",
     "roleName",
-    "id"
+    "id",
+    "refreshToken",
     
   ]);
 
@@ -56,6 +57,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   const branchId = cookie.branchId;
   const contactNumber = cookie.contactNumber;
   const roleName = cookie.roleName;
+  const refreshToken = cookie.refreshToken;
 
   // console.log(firstName);
   // console.log(id);
@@ -67,6 +69,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     removeCookie("email");
     removeCookie("twoFactorEnabled");
     removeCookie("tempToken");
+    removeCookie("refreshToken");
 
     removeCookie("token");
     removeCookie("email");
