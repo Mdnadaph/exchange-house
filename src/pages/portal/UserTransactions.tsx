@@ -630,9 +630,10 @@ const UserTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [disableButton, setDisableButton] = useState(false);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
+
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const { toast } = useToast();
@@ -838,7 +839,7 @@ const UserTransactions = () => {
   const handleReviewAction = async (id: string, reviewActionStatus: string) => {
     const payload = {
       status: reviewActionStatus,
-      notes: comment,
+      notes: comment[id],
     };
     setDisableButton(true);
     try {
@@ -851,8 +852,20 @@ const UserTransactions = () => {
           },
         },
       );
-      console.log("data", res);
-      setComment("");
+
+      if (res?.data?.status == true) {
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else if (res?.data?.status === false) {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+      setComment({});
     } catch (error) {
       toast({
         title: "Error",
@@ -865,6 +878,13 @@ const UserTransactions = () => {
   };
 
   const statistics = calculateStatistics();
+
+  const handleCommentChange = (transactionId: string, value: string) => {
+    setComment((prev) => ({
+      ...prev,
+      [transactionId]: value,
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -1172,11 +1192,16 @@ const UserTransactions = () => {
                                   Review Comments
                                 </Label>
                                 <Textarea
-                                  id={`comments-${transaction.id}`}
+                                  id={`comments-${transaction?.id}`}
                                   placeholder="Add review comments, questions, or requirements..."
                                   rows={4}
-                                  value={comment}
-                                  onChange={(e) => setComment(e.target.value)}
+                                  value={comment[transaction?.id]}
+                                  onChange={(e) =>
+                                    handleCommentChange(
+                                      transaction?.id,
+                                      e?.target?.value,
+                                    )
+                                  }
                                 />
                               </div>
 
@@ -1196,7 +1221,6 @@ const UserTransactions = () => {
                                       );
                                     }}
                                   >
-                                    df
                                     <CheckCircle className="h-4 w-4 mr-2" />
                                     Approve
                                   </Button>
