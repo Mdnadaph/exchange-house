@@ -20,6 +20,7 @@ import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { formateDate } from "@/utils/formateDateTime";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -134,15 +135,23 @@ const UserDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      completed: { variant: "default" as const, label: "Completed" },
-      pending_approval: {
+      COMPLETED: { variant: "default" as const, label: "Completed" },
+      PENDING_APPROVAL: {
         variant: "secondary" as const,
         label: "Pending Approval",
       },
-      processing: { variant: "destructive" as const, label: "Processing" },
-      failed: { variant: "destructive" as const, label: "Failed" },
+      PROCESSING: { variant: "destructive" as const, label: "Processing" },
+      FAILED: { variant: "destructive" as const, label: "Failed" },
+      DRAFT: {
+        variant: "outline" as const,
+        label: "Draft",
+      },
+      REJECTED: {
+        variant: "destructive" as const,
+        label: "Rejected",
+      },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.processing;
+    return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
   };
 
   if (loading) {
@@ -321,44 +330,60 @@ const UserDashboard = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
                 {recentTransactions.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">
                     No recent transactions
                   </p>
                 ) : (
-                  recentTransactions.map((transaction) => {
-                    const status = getStatusBadge(transaction.status);
-                    return (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground">
-                              {transaction.beneficiary}
+                  recentTransactions.map(
+                    (transaction: {
+                      id: number;
+                      companyName: string;
+                      transactionStatus: string;
+                      transactionPurpose: string;
+                      createdAt: string;
+                      sourceAmount: number;
+                      sourceCurrency: string;
+                    }) => {
+                      const status = getStatusBadge(
+                        transaction?.transactionStatus,
+                      );
+                      return (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 "
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-foreground">
+                                {transaction?.companyName}
+                              </p>
+                              <Badge
+                                variant={status?.variant}
+                                className="text-xs"
+                              >
+                                {status?.label}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {transaction?.id} •{" "}
+                              {transaction?.transactionPurpose}
                             </p>
-                            <Badge variant={status.variant} className="text-xs">
-                              {status.label}
-                            </Badge>
+                            <p className="text-xs text-muted-foreground">
+                              {formateDate(transaction?.createdAt)}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {transaction.id} • {transaction.type}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {transaction.date}
-                          </p>
+                          <div className="text-right">
+                            <p className="font-semibold text-foreground">
+                              {transaction?.sourceCurrency}
+                              {transaction?.sourceAmount}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-foreground">
-                            {transaction.currency}{" "}
-                            {Number(transaction.amount).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
+                      );
+                    },
+                  )
                 )}
               </CardContent>
             </Card>

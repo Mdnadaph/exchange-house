@@ -2363,20 +2363,21 @@ const UserBeneficiaries = () => {
       if (json.status !== true || !json.data?.groups) {
         throw new Error("Unexpected response format");
       }
-
       // Map to your design shape (mock beneficiaries from names since API doesn't give full info)
-      const mappedGroups = json.data.groups.map((group: any) => ({
+      const mappedGroups = json?.data?.groups?.map((group: any) => ({
         id: group.id.toString(),
         name: group.groupName,
         description: group.description,
         beneficiaryIds: [], // API doesn't provide IDs
-        beneficiaries: group.beneficiaryNames.map((name: string) => ({
-          id: Math.random().toString(), // Mock ID
-          name,
-          type: "individual", // Default, since API doesn't provide type
-          // Mock other fields for display
-          bankDetails: [{ bankName: "", accountNumber: "", currency: "" }],
-        })),
+        beneficiaries: group?.beneficiaries?.map(
+          (item: { id: number; name: string; type: string }) => ({
+            id: item?.id, // Mock ID
+            name: item?.name,
+            type: item?.type, // Default, since API doesn't provide type
+            // Mock other fields for display
+            bankDetails: [{ bankName: "", accountNumber: "", currency: "" }],
+          }),
+        ),
         createdAt: "", // API doesn't provide
         memberCount: group.totalBeneficiaries,
       }));
@@ -2912,7 +2913,7 @@ const UserBeneficiaries = () => {
                   {/* Pagination for groups */}
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
-                      Showing {beneficiaryGroups.length} of {groupsTotalItems}{" "}
+                      Showing {beneficiaryGroups?.length} of {groupsTotalItems}{" "}
                       groups
                     </p>
                     <div className="flex space-x-2">

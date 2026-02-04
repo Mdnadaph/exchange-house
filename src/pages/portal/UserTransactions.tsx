@@ -609,7 +609,7 @@ interface Transaction {
   localAmount: string;
   localCurrency: string;
   status: string;
-  type: "single" | "bulk";
+  type: "SINGLE" | "BULK";
   purpose: string;
   date: string;
   processedDate: string | null;
@@ -633,7 +633,7 @@ const UserTransactions = () => {
   const [comment, setComment] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
-
+  const [transactionType, setTransactionType] = useState<string>("ALL");
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const { toast } = useToast();
@@ -656,7 +656,7 @@ const UserTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=SINGLE1`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}`,
         config,
       );
 
@@ -670,19 +670,20 @@ const UserTransactions = () => {
             branchName: apiTx.branchName || "",
             businessId: apiTx.businessId || "",
             beneficiary: apiTx.beneficiaryName || "Beneficiary",
-            amount: apiTx.sourceAmount.toLocaleString("en-US", {
+            amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }),
             currency: apiTx.sourceCurrency,
-            exchangeRate: apiTx.exchangeRate.toFixed(3),
-            localAmount: apiTx.convertedAmount.toLocaleString("en-US", {
+            exchangeRate: apiTx?.exchangeRate?.toFixed(3),
+            localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }),
             localCurrency: apiTx.targetCurrency,
-            status: apiTx.status.toLowerCase().replace(" ", "_"),
-            type: "single",
+            status: apiTx.status,
+            type: apiTx?.type,
+            bulkCount: apiTx?.itemCount,
             purpose: apiTx.purpose || "Transaction",
             date: new Date(apiTx.createdAt)
               .toLocaleString("en-US", {
@@ -695,8 +696,8 @@ const UserTransactions = () => {
               })
               .replace(",", ""),
             processedDate: null,
-            referenceNumber: apiTx.transactionId,
-            fees: apiTx.feeAmount.toFixed(2),
+            referenceNumber: apiTx.reference,
+            fees: apiTx?.feeAmount?.toFixed(2),
             feeResponsibility: apiTx.feeResponsibility || "",
             branch: apiTx.branchName,
             failureReason: apiTx.failureReason || "",
@@ -745,7 +746,7 @@ const UserTransactions = () => {
   };
   useEffect(() => {
     fetchTransactions();
-  }, [token]);
+  }, [token, transactionType]);
 
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
@@ -764,12 +765,12 @@ const UserTransactions = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      completed: {
+      COMPLETED: {
         variant: "default" as const,
         label: "Completed",
         icon: CheckCircle,
       },
-      pending_approval: {
+      PENDING_APPROVAL: {
         variant: "secondary" as const,
         label: "Pending Approval",
         icon: Clock,
@@ -784,14 +785,19 @@ const UserTransactions = () => {
         label: "Payment Verification",
         icon: Clock,
       },
-      processing: {
+      PROCESSING: {
         variant: "destructive" as const,
         label: "Processing",
         icon: Clock,
       },
-      failed: {
+      FAILED: {
         variant: "destructive" as const,
         label: "Failed",
+        icon: AlertCircle,
+      },
+      APPROVED: {
+        variant: "default" as const,
+        label: "Approved",
         icon: AlertCircle,
       },
       cancelled: {
@@ -800,7 +806,7 @@ const UserTransactions = () => {
         icon: AlertCircle,
       },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.processing;
+    return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
   };
 
   const getTypeColor = (type: string) => {
@@ -815,13 +821,13 @@ const UserTransactions = () => {
   const calculateStatistics = () => {
     const totalTransactions = transactions.length;
     const completedTransactions = transactions.filter(
-      (tx) => tx.status === "completed",
+      (tx) => tx.status === "COMPLETED",
     ).length;
     const pendingTransactions = transactions.filter(
       (tx) =>
-        tx.status === "pending_approval" ||
+        tx.status === "PENDING_APPROVAL" ||
         tx.status === "pending_payment" ||
-        tx.status === "processing",
+        tx.status === "PROCESSING",
     ).length;
     const totalVolume = transactions.reduce(
       (sum, tx) => sum + parseFloat(tx.amount.replace(/,/g, "")),
@@ -1020,11 +1026,31 @@ const UserTransactions = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">All Status</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("ALL")}
+                >
+                  All Status
+                </Button>
                 <Button variant="outline">This Month</Button>
-                <Button variant="outline">Completed</Button>
-                <Button variant="outline">Single</Button>
-                <Button variant="outline">Bulk</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("COMPLETED")}
+                >
+                  Completed
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("SINGLE")}
+                >
+                  Single
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("BULK")}
+                >
+                  Bulk
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -1101,7 +1127,7 @@ const UserTransactions = () => {
                                 <span
                                   className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(transaction.type)}`}
                                 >
-                                  {transaction.type === "bulk"
+                                  {transaction?.type === "BULK"
                                     ? `Bulk (${transaction.bulkCount})`
                                     : "Single"}
                                 </span>
@@ -1181,7 +1207,7 @@ const UserTransactions = () => {
                                 Reference:
                               </span>
                               <p className="font-medium font-mono text-xs">
-                                {transaction.referenceNumber}
+                                {transaction?.referenceNumber}
                               </p>
                             </div>
                           </div>
