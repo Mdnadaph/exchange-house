@@ -200,23 +200,15 @@ import BranchBusinessDocuments from "./pages/branch/BranchBusinessDocuments";
 import BranchDealReview from "./pages/branch/BranchDealReview";
 import BranchBusinessOnboarding from "./pages/branch/BranchBusinessOnboarding";
 
-// 2FA / setup routes
-import StaffSetupPassword from "./pages/exchange/Staff/StaffSetupPassword";
-import StaffTwoFA from "./pages/exchange/Staff/StaffTwoFA";
-import StaffVerifyTwoFALogin from "./pages/exchange/Staff/StaffVerifyTwoFALogin";
-
-
-
-// import BusinessPasswordSetup from "./pages/branch/Business2FA/BusinessPasswordSetup";
-// import BusinessTwoFA from "./pages/branch/Business2FA/BusinessTwoFA";
-// import BusinessVerifyTwoFALogin from "./pages/branch/Business2FA/BusinessVerifyTwoFALogin";
+// Branch Admin 2FA
+import StaffSetupPassword from "./pages/branch/BranchAdmin2FA/StaffSetupPassword";
+import StaffTwoFA from "./pages/branch/BranchAdmin2FA/StaffTwoFA";
+import StaffVerifyTwoFALogin from "./pages/branch/BranchAdmin2FA/StaffVerifyTwoFALogin";
 
 // Business Admin 2FA
 import BusinessPasswordSetup from "./pages/portal/BusinessAdmin2FA/BusinessPasswordSetup";
 import BusinessTwoFA from "./pages/portal/BusinessAdmin2FA/BusinessTwoFA";
 import BusinessVerifyTwoFALogin from "./pages/portal/BusinessAdmin2FA/BusinessVerifyTwoFALogin";
-
-
 
 // Business User 2FA
 import UserSetupPassword from "./pages/user/BusinessUser2FA/UserSetupPassword";
