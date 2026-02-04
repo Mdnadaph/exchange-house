@@ -235,7 +235,7 @@ const BussinessUserDashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">Business User Dashboard</h1>
             <p className="text-muted-foreground">
               Welcome back! Here's your transaction overview
             </p>
