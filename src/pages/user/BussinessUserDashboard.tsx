@@ -1,20 +1,4 @@
-// import React from 'react'
-// import BusinessUserLayout from '@/components/layout/BusinnessUserLayout';
-
-// function BussinessUserDashboard() {
-//   return (
-//     <BusinessUserLayout>
-//       Hello Dashboard
-//     </BusinessUserLayout>
-//   )
-// }
-
-// export default BussinessUserDashboard
-
-
-
-// import UserLayout from "@/components/layout/UserLayout";
-import BusinessUserLayout from '@/components/layout/BusinnessUserLayout';
+import BusinessUserLayout from "@/components/layout/BusinnessUserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +42,7 @@ const BussinessUserDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         const response = await fetch(
-          `${BASE_URL}/api/v1/dashboard/business-portal`,
+          `${BASE_URL}/api/v1/dashboard/business-user`,
           {
             method: "GET",
             headers: {
@@ -92,40 +76,38 @@ const BussinessUserDashboard = () => {
 
   const stats = dashboardData
     ? [
-        {
-          title: "Monthly Transactions",
-          value: `$${dashboardData.stats.monthlyTransactions.toLocaleString()}`,
-          change: "",
-          icon: CreditCard,
-          color: "text-green-600",
-        },
-        {
-          title: "Registered Beneficiaries",
-          value: dashboardData.stats.registeredBeneficiaries.toString(),
-          change: "",
-          icon: Users,
-          color: "text-blue-600",
-        },
-        {
-          title: "Pending Approvals",
-          value: dashboardData.stats.pendingApprovals.toString(),
-          change: "",
-          icon: Clock,
-          color: "text-orange-600",
-        },
-        {
-          title: "Completed This Week",
-          value: dashboardData.stats.completedThisWeek.toString(),
-          change: "",
-          icon: CheckCircle,
-          color: "text-purple-600",
-        },
-      ]
+      {
+        title: "Total Transactions",
+        value: dashboardData.stats.totalTransactions.toString(),
+        change: "",
+        icon: CreditCard,
+        color: "text-green-600",
+      },
+      {
+        title: "Approved Transactions",
+        value: dashboardData.stats.approvedTransactions.toString(),
+        change: "",
+        icon: CheckCircle,
+        color: "text-blue-600",
+      },
+      {
+        title: "Rejected Transactions",
+        value: dashboardData.stats.rejectedTransactions.toString(),
+        change: "",
+        icon: XCircle,
+        color: "text-red-600",
+      },
+      {
+        title: "Pending Transactions",
+        value: dashboardData.stats.pendingTransactions.toString(),
+        change: "",
+        icon: Clock,
+        color: "text-orange-600",
+      },
+    ]
     : [];
 
-  const recentTransactions = dashboardData
-    ? dashboardData.recentTransactions
-    : [];
+  const recentActivities = dashboardData ? dashboardData.recentActivities : [];
 
   const pendingActions = [
     {
@@ -150,15 +132,17 @@ const BussinessUserDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      completed: { variant: "default" as const, label: "Completed" },
-      pending_approval: {
-        variant: "secondary" as const,
-        label: "Pending Approval",
-      },
-      processing: { variant: "destructive" as const, label: "Processing" },
-      failed: { variant: "destructive" as const, label: "Failed" },
+      APPROVED: { variant: "default" as const, label: "Approved" },
+      PENDING: { variant: "secondary" as const, label: "Pending" },
+      REJECTED: { variant: "destructive" as const, label: "Rejected" },
+      PROCESSING: { variant: "outline" as const, label: "Processing" },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.processing;
+    return (
+      statusMap[status as keyof typeof statusMap] || {
+        variant: "secondary" as const,
+        label: status,
+      }
+    );
   };
 
   if (loading) {
@@ -222,30 +206,6 @@ const BussinessUserDashboard = () => {
           </Card>
         )}
 
-        {/* {kybStatus === "pending_kyb" && !kybSubmitted && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-6 w-6 text-orange-600" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-orange-900">KYB Verification Required</h3>
-                  <p className="text-sm text-orange-800 mb-3">
-                    Complete your KYB verification to unlock all platform features and start making transactions.
-                  </p>
-                  <Button 
-                    variant="default" 
-                    size="sm"
-                    onClick={() => navigate('/portal/profile')}
-                  >
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Complete Verification Now
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )} */}
-
         {kybStatus === "rejected" && (
           <Card className="border-red-200 bg-red-50">
             <CardContent className="p-4">
@@ -282,8 +242,7 @@ const BussinessUserDashboard = () => {
           </div>
           <div className="flex space-x-3">
             <Button
-              // variant="default"
-              onClick={() => navigate("/portal/transactions")}
+              onClick={() => navigate("/user/transactions")}
               variant="business"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -291,7 +250,6 @@ const BussinessUserDashboard = () => {
             </Button>
           </div>
         </div>
-        {/* /portal/transactions */}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -325,12 +283,12 @@ const BussinessUserDashboard = () => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Transactions */}
+          {/* Recent Activities */}
           <div className="lg:col-span-2">
             <Card className="shadow-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardTitle>Recent Activities</CardTitle>
                   <Button variant="ghost" size="sm">
                     View All
                     <ArrowUpRight className="h-4 w-4 ml-1" />
@@ -338,38 +296,38 @@ const BussinessUserDashboard = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentTransactions.length === 0 ? (
+                {recentActivities.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">
-                    No recent transactions
+                    No recent activities
                   </p>
                 ) : (
-                  recentTransactions.map((transaction) => {
-                    const status = getStatusBadge(transaction.status);
+                  recentActivities.map((activity) => {
+                    const status = getStatusBadge(activity.status);
                     return (
                       <div
-                        key={transaction.id}
+                        key={activity.id}
                         className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <p className="font-medium text-foreground">
-                              {transaction.beneficiary}
+                              {activity.reference}
                             </p>
                             <Badge variant={status.variant} className="text-xs">
                               {status.label}
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {transaction.id} • {transaction.type}
+                            ID: {activity.id}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {transaction.date}
+                            {new Date(activity.createdAt).toLocaleString()}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-foreground">
-                            {transaction.currency}{" "}
-                            {Number(transaction.amount).toLocaleString()}
+                            {activity.sourceCurrency.toUpperCase()}{" "}
+                            {activity.sourceAmount.toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -389,38 +347,6 @@ const BussinessUserDashboard = () => {
                   Pending Actions
                 </CardTitle>
               </CardHeader>
-              {/* <CardContent className="space-y-4">
-                {pendingActions.map((action, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium text-foreground leading-tight">
-                        {action.message}
-                      </p>
-                      <Badge
-                        variant={
-                          action.priority === "high"
-                            ? "destructive"
-                            : action.priority === "medium"
-                              ? "secondary"
-                              : "outline"
-                        }
-                        className="text-xs"
-                      >
-                        {action.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {action.time}
-                    </p>
-                    {index < pendingActions.length - 1 && (
-                      <div className="border-b" />
-                    )}
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mt-4">
-                  View All Actions
-                </Button>
-              </CardContent> */}
               <p className="text-center pb-3">No data available</p>
             </Card>
           </div>
@@ -436,7 +362,7 @@ const BussinessUserDashboard = () => {
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => navigate("/portal/transactions")}
+                onClick={() => navigate("/user/transactions")}
               >
                 <CreditCard className="h-6 w-6 mb-2" />
                 <span className="text-sm">Single Payment</span>
@@ -444,7 +370,7 @@ const BussinessUserDashboard = () => {
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => navigate("/portal/transactions")}
+                onClick={() => navigate("/user/transactions")}
               >
                 <TrendingUp className="h-6 w-6 mb-2" />
                 <span className="text-sm">Bulk Payment</span>
@@ -452,7 +378,7 @@ const BussinessUserDashboard = () => {
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => navigate("/portal/beneficiaries")}
+                onClick={() => navigate("/user/transactions")}
               >
                 <Users className="h-6 w-6 mb-2" />
                 <span className="text-sm">Add Beneficiary</span>
@@ -461,10 +387,10 @@ const BussinessUserDashboard = () => {
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => navigate("/portal/deals")}
+                onClick={() => navigate("/user/transactions")}
               >
                 <FileText className="h-6 w-6 mb-2" />
-                <span className="text-sm">Add Rete Deals</span>
+                <span className="text-sm">Add Rate Deals</span>
               </Button>
             </div>
           </CardContent>
@@ -479,24 +405,6 @@ const BussinessUserDashboard = () => {
                 Monthly Summary
               </CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total Sent</span>
-                <span className="font-semibold">USD 45,230</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Transactions</span>
-                <span className="font-semibold">28</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Success Rate</span>
-                <span className="font-semibold text-success">96.4%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Avg. Amount</span>
-                <span className="font-semibold">USD 1,615</span>
-              </div>
-            </CardContent> */}
             <p className="text-center pb-5">No data found</p>
           </Card>
 
@@ -504,39 +412,6 @@ const BussinessUserDashboard = () => {
             <CardHeader>
               <CardTitle>Transaction Limits</CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Daily Limit</span>
-                  <span className="font-semibold">USD 50,000</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full"
-                    style={{ width: "30%" }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Used: USD 15,000 (30%)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Monthly Limit</span>
-                  <span className="font-semibold">USD 500,000</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-accent h-2 rounded-full"
-                    style={{ width: "9%" }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Used: USD 45,230 (9%)
-                </p>
-              </div>
-            </CardContent> */}
             <p className="text-center pb-5">No data found</p>
           </Card>
         </div>

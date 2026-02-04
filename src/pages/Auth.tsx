@@ -1449,13 +1449,13 @@ const Auth: React.FC = () => {
                                 Exchange Admin Portal
                               </SelectItem>
                               <SelectItem value="STAFF">
-                                Branch User Portal
+                                Branch Admin Portal
                               </SelectItem>
                               <SelectItem value="BUSINESS">
-                                Business User Portal
+                                Business Admin Portal
                               </SelectItem>
                               <SelectItem value="BUSINESS_USER">
-                                Business User
+                                Business User Portal
                               </SelectItem>
                             </SelectContent>
                           </Select>

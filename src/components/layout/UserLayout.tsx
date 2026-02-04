@@ -104,7 +104,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <User className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Business Portal
+                  Business Admin Portal
                 </span>
               </div>
             </div>
@@ -112,7 +112,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Portal User)
+                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Business Admin)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
