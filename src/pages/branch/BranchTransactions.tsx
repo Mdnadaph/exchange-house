@@ -512,6 +512,7 @@ interface TransactionDocument {
 
 interface ApiTransaction {
   transactionId: string;
+  reference: string;
   status: string;
   sourceAmount: number;
   convertedAmount: number;
@@ -531,6 +532,8 @@ interface ApiTransaction {
   purpose?: string;
   feeResponsibility?: string;
   failureReason?: string;
+  type?: "SINGLE" | "BULK";
+  itemCount?: number;
 }
 
 interface ApiResponse {
@@ -554,7 +557,7 @@ interface Transaction {
   localAmount: string;
   localCurrency: string;
   status: string;
-  type: "single" | "bulk";
+  type: "SINGLE" | "BULK";
   purpose: string;
   date: string;
   processedDate: string | null;
@@ -575,12 +578,12 @@ const BranchTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [transactionType, setTransactionType] = useState<string>("ALL");
   const [cookies] = useCookies(["token", "email", "fullName"]);
 
   const token = cookies.token;
   const fullname = cookies.fullName;
   // console.log("token", token);
-
 
   // Fetch data from API
   useEffect(() => {
@@ -602,34 +605,34 @@ const BranchTransactions = () => {
         };
 
         const response = await axios.get<ApiResponse>(
-          `${BASE_URL}/api/v1/transactions?type=SINGLE`,
+          `${BASE_URL}/api/v1/transactions?type=${transactionType}`,
           config,
         );
 
         const data = response.data;
-        // console.log("ddd", data);
 
         if (data.status && data.data) {
           // Transform API data to match UI structure
           const transformedTransactions: Transaction[] =
             data?.data?.transactions?.map((apiTx) => ({
-              id: apiTx.transactionId,
+              id: apiTx.reference,
+              bulkCount: apiTx?.itemCount,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "Beneficiary",
-              amount: apiTx.sourceAmount.toLocaleString("en-US", {
+              amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               }),
               currency: apiTx.sourceCurrency,
-              exchangeRate: apiTx.exchangeRate.toFixed(3),
-              localAmount: apiTx.convertedAmount.toLocaleString("en-US", {
+              exchangeRate: apiTx?.exchangeRate?.toFixed(3),
+              localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               }),
               localCurrency: apiTx.targetCurrency,
-              status: apiTx.status.toLowerCase().replace(" ", "_"),
-              type: "single",
+              status: apiTx?.status,
+              type: apiTx?.type,
               purpose: apiTx.purpose || "Transaction",
               date: new Date(apiTx.createdAt)
                 .toLocaleString("en-US", {
@@ -642,8 +645,8 @@ const BranchTransactions = () => {
                 })
                 .replace(",", ""),
               processedDate: null,
-              referenceNumber: apiTx.transactionId,
-              fees: apiTx.feeAmount.toFixed(2),
+              referenceNumber: apiTx?.reference,
+              fees: apiTx?.feeAmount?.toFixed(2),
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
               failureReason: apiTx.failureReason || "",
@@ -689,7 +692,7 @@ const BranchTransactions = () => {
     };
 
     fetchTransactions();
-  }, [token]);
+  }, [token, transactionType]);
 
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
@@ -708,12 +711,12 @@ const BranchTransactions = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      completed: {
+      COMPLETED: {
         variant: "default" as const,
         label: "Completed",
         icon: CheckCircle,
       },
-      pending_approval: {
+      PENDING_APPROVAL: {
         variant: "secondary" as const,
         label: "Pending Approval",
         icon: Clock,
@@ -723,34 +726,34 @@ const BranchTransactions = () => {
         label: "Pending Payment",
         icon: Wallet,
       },
-      payment_verification: {
+      APPROVED: {
         variant: "secondary" as const,
-        label: "Payment Verification",
+        label: "Approved",
         icon: Clock,
       },
-      processing: {
+      PROCESSING: {
         variant: "destructive" as const,
         label: "Processing",
         icon: Clock,
       },
-      failed: {
+      FAILED: {
         variant: "destructive" as const,
         label: "Failed",
         icon: AlertCircle,
       },
-      cancelled: {
+      REJECTED: {
         variant: "outline" as const,
-        label: "Cancelled",
+        label: "Rejected",
         icon: AlertCircle,
       },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.processing;
+    return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
   };
 
   const getTypeColor = (type: string) => {
     const colors = {
-      single: "bg-blue-100 text-blue-800",
-      bulk: "bg-purple-100 text-purple-800",
+      SINGLE: "bg-blue-100 text-blue-800",
+      BULK: "bg-purple-100 text-purple-800",
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -763,9 +766,9 @@ const BranchTransactions = () => {
     ).length;
     const pendingTransactions = transactions.filter(
       (tx) =>
-        tx.status === "pending_approval" ||
+        tx.status === "PENDING_APPROVAL" ||
         tx.status === "pending_payment" ||
-        tx.status === "processing",
+        tx.status === "PROCESSING",
     ).length;
     const totalVolume = transactions.reduce(
       (sum, tx) => sum + parseFloat(tx.amount.replace(/,/g, "")),
@@ -917,11 +920,31 @@ const BranchTransactions = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">All Status</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("ALL")}
+                >
+                  All Status
+                </Button>
                 <Button variant="outline">This Month</Button>
-                <Button variant="outline">Completed</Button>
-                <Button variant="outline">Single</Button>
-                <Button variant="outline">Bulk</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("COMPLETED")}
+                >
+                  Completed
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("SINGLE")}
+                >
+                  Single
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("BULK")}
+                >
+                  Bulk
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -998,7 +1021,7 @@ const BranchTransactions = () => {
                                 <span
                                   className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(transaction.type)}`}
                                 >
-                                  {transaction.type === "bulk"
+                                  {transaction.type === "BULK"
                                     ? `Bulk (${transaction.bulkCount})`
                                     : "Single"}
                                 </span>

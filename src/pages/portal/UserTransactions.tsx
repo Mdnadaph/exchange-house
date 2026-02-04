@@ -630,7 +630,7 @@ const UserTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [disableButton, setDisableButton] = useState(false);
-  const [comment, setComment] = useState<Record<string, string>>({});
+  // const [comment, setComment] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
@@ -666,7 +666,7 @@ const UserTransactions = () => {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => ({
-            id: apiTx.transactionId,
+            id: apiTx.reference,
             branchName: apiTx.branchName || "",
             businessId: apiTx.businessId || "",
             beneficiary: apiTx.beneficiaryName || "Beneficiary",
@@ -811,8 +811,8 @@ const UserTransactions = () => {
 
   const getTypeColor = (type: string) => {
     const colors = {
-      single: "bg-blue-100 text-blue-800",
-      bulk: "bg-purple-100 text-purple-800",
+      SINGLE: "bg-blue-100 text-blue-800",
+      BULK: "bg-purple-100 text-purple-800",
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -842,55 +842,55 @@ const UserTransactions = () => {
     };
   };
 
-  const handleReviewAction = async (id: string, reviewActionStatus: string) => {
-    const payload = {
-      status: reviewActionStatus,
-      notes: comment[id],
-    };
-    setDisableButton(true);
-    try {
-      const res = await axios.patch(
-        `${BASE_URL}/api/v1/transactions/${id}/toggle-status`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+  // const handleReviewAction = async (id: string, reviewActionStatus: string) => {
+  //   const payload = {
+  //     status: reviewActionStatus,
+  //     notes: comment[id],
+  //   };
+  //   setDisableButton(true);
+  //   try {
+  //     const res = await axios.patch(
+  //       `${BASE_URL}/api/v1/transactions/${id}/toggle-status`,
+  //       payload,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       },
+  //     );
 
-      if (res?.data?.status == true) {
-        toast({
-          title: "Success",
-          description: res?.data?.message,
-        });
-      } else if (res?.data?.status === false) {
-        toast({
-          title: "Error",
-          description: res?.data?.message,
-          variant: "destructive",
-        });
-      }
-      setComment({});
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error?.message,
-        variant: "destructive",
-      });
-    } finally {
-      setDisableButton(false);
-    }
-  };
+  //     if (res?.data?.status == true) {
+  //       toast({
+  //         title: "Success",
+  //         description: res?.data?.message,
+  //       });
+  //     } else if (res?.data?.status === false) {
+  //       toast({
+  //         title: "Error",
+  //         description: res?.data?.message,
+  //         variant: "destructive",
+  //       });
+  //     }
+  //     setComment({});
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: error?.message,
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setDisableButton(false);
+  //   }
+  // };
 
   const statistics = calculateStatistics();
 
-  const handleCommentChange = (transactionId: string, value: string) => {
-    setComment((prev) => ({
-      ...prev,
-      [transactionId]: value,
-    }));
-  };
+  // const handleCommentChange = (transactionId: string, value: string) => {
+  //   setComment((prev) => ({
+  //     ...prev,
+  //     [transactionId]: value,
+  //   }));
+  // };
 
   if (isLoading) {
     return (
@@ -1211,7 +1211,7 @@ const UserTransactions = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="border-t pt-6">
+                          {/* <div className="border-t pt-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-4">
                                 <Label htmlFor={`comments-${transaction?.id}`}>
@@ -1268,7 +1268,7 @@ const UserTransactions = () => {
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </div> */}
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
