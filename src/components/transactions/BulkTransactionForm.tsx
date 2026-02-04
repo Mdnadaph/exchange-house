@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -53,9 +53,9 @@ import {
 } from "../ui/table";
 import { object } from "yup";
 
-interface BulkTransactionFormProps {
-  trigger?: React.ReactNode;
-}
+// interface BulkTransactionFormProps {
+//   trigger?: React.ReactNode;
+// }
 
 interface BeneficiaryGroup {
   id: string;
@@ -67,7 +67,13 @@ interface BeneficiaryGroup {
   memberCount: number;
 }
 
-const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
+const BulkTransactionForm = ({
+  trigger,
+  refetch,
+}: {
+  trigger?: React.ReactNode;
+  refetch?: () => void;
+}) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedSource, setSelectedSource] = useState("");
@@ -460,6 +466,7 @@ const BulkTransactionForm = ({ trigger }: BulkTransactionFormProps) => {
         description: `Your bulk transaction with ${payload?.beneficiaries?.length} recipients has been submitted for processing.`,
       });
       setOpen(false);
+      refetch?.();
       // Reset form
       setSelectedSource("");
       setTransactionPurpose("");

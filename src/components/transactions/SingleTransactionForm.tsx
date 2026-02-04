@@ -340,7 +340,7 @@ const SingleTransactionForm = ({
                       <SelectValue placeholder="Select transaction purpose" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
-                      {purposeOptions.map((purpose) => (
+                      {purposeOptions?.map((purpose) => (
                         <SelectItem key={purpose.value} value={purpose.value}>
                           <div className="flex items-center justify-between w-full">
                             <span>{purpose.label}</span>
@@ -395,7 +395,7 @@ const SingleTransactionForm = ({
                       <SelectValue placeholder="Choose source account" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
-                      {transactionSources.map((source) => (
+                      {transactionSources?.map((source) => (
                         <SelectItem key={source.id} value={source.id}>
                           <div className="flex flex-col">
                             <span className="font-medium">{source.name}</span>
@@ -459,7 +459,7 @@ const SingleTransactionForm = ({
                       <SelectValue placeholder="Choose beneficiary" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
-                      {beneficiariesList.map((beneficiary: any) => (
+                      {beneficiariesList?.map((beneficiary: any) => (
                         <SelectItem key={beneficiary.id} value={beneficiary.id}>
                           <div className="flex items-center space-x-2">
                             {beneficiary.type === "BUSINESS" ? (
