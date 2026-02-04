@@ -452,9 +452,7 @@ import UserSetupPassword from "./pages/portal/BusinessUser/UserSetupPassword";
 import UserTwoFA from "./pages/portal/BusinessUser/UserTwoFA";
 import UserTwoFALogin from "./pages/portal/BusinessUser/UserVerifyTwoFALogin";
 
-
 // Business User
-import BusinessUserLayout from "./components/layout/BusinnessUserLayout";
 import BussinessUserDashboard from "./pages/user/BussinessUserDashboard";
 import BussinessUserProfile from "./pages/user/BussinessUserProfile";
 import BussinessUserTransaction from "./pages/user/BusinessUserTransaction";
@@ -599,7 +597,6 @@ function App() {
                   </Route>
                 </Route>
 
-
                 {/* Portal – Business User */}
                 <Route element={<ProtectedRoute allowedRoles={BUSINESS_ROLES} />}>
                   <Route path="/user">
@@ -608,7 +605,6 @@ function App() {
                     <Route path="transactions" element={<BussinessUserTransaction />} />
                   </Route>
                 </Route>
-
 
                 {/* Exchange Admin */}
                 <Route

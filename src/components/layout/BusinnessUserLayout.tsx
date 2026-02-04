@@ -79,7 +79,7 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
 
   const navigation = [
     { name: "Dashboard", href: "/user", icon: Home },
-    { name: "Profile", href: `/user/profile/${id}`, icon: UserCircle },
+    { name: "Profile", href: `/user/profile`, icon: UserCircle },
     { name: "Transactions", href: "/user/transactions", icon: CreditCard },
 
     // { name: "Beneficiaries", href: "/user/beneficiaries", icon: Users },
@@ -106,7 +106,7 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <User className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Business Portal
+                  Business User Portal
                 </span>
               </div>
             </div>
@@ -114,7 +114,7 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Portal User)
+                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Business User)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
