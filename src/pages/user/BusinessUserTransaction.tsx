@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
-import BusinessUserLayout from '@/components/layout/BusinnessUserLayout';
+import BusinessUserLayout from "@/components/layout/BusinnessUserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +111,7 @@ const BusinessUserTransaction = () => {
   const [comment, setComment] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
-  const [transactionType, setTransactionType] = useState<string | null>(null);
+  const [transactionType, setTransactionType] = useState<string>("ALL");
   console.log("transaction", transactions);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
@@ -135,7 +135,7 @@ const BusinessUserTransaction = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?${transactionType ? `type=${transactionType}` : "type="} `,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType} `,
         config,
       );
 
@@ -145,7 +145,7 @@ const BusinessUserTransaction = () => {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => ({
-            id: apiTx.transactionId,
+            id: apiTx.reference,
             branchName: apiTx.branchName || "",
             businessId: apiTx.businessId || "",
             beneficiary: apiTx.beneficiaryName || "Beneficiary",
@@ -160,7 +160,7 @@ const BusinessUserTransaction = () => {
               maximumFractionDigits: 2,
             }),
             localCurrency: apiTx.targetCurrency,
-            status: apiTx.status.toLowerCase().replace(" ", "_"),
+            status: apiTx?.status,
             type: apiTx?.type,
             purpose: apiTx.purpose || "Transaction",
             date: new Date(apiTx.createdAt)
@@ -180,6 +180,7 @@ const BusinessUserTransaction = () => {
             branch: apiTx.branchName,
             failureReason: apiTx.failureReason || "",
             documents: apiTx.documents,
+            bulkCount: apiTx?.itemCount,
           }));
 
         setTransactions(transformedTransactions);
@@ -243,12 +244,12 @@ const BusinessUserTransaction = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      completed: {
+      COMPLETED: {
         variant: "default" as const,
         label: "Completed",
         icon: CheckCircle,
       },
-      pending_approval: {
+      PENDING_APPROVAL: {
         variant: "secondary" as const,
         label: "Pending Approval",
         icon: Clock,
@@ -258,34 +259,34 @@ const BusinessUserTransaction = () => {
         label: "Pending Payment",
         icon: Wallet,
       },
-      payment_verification: {
+      APPROVED: {
         variant: "secondary" as const,
-        label: "Payment Verification",
+        label: "Approved",
         icon: Clock,
       },
-      processing: {
+      PROCESSING: {
         variant: "destructive" as const,
         label: "Processing",
         icon: Clock,
       },
-      failed: {
+      FAILED: {
         variant: "destructive" as const,
         label: "Failed",
         icon: AlertCircle,
       },
-      cancelled: {
+      REJECTED: {
         variant: "outline" as const,
-        label: "Cancelled",
+        label: "Rejected",
         icon: AlertCircle,
       },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.processing;
+    return statusMap[status as keyof typeof statusMap] || statusMap?.PROCESSING;
   };
 
   const getTypeColor = (type: string) => {
     const colors = {
-      single: "bg-blue-100 text-blue-800",
-      bulk: "bg-purple-100 text-purple-800",
+      SINGLE: "bg-blue-100 text-blue-800",
+      BULK: "bg-purple-100 text-purple-800",
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -294,13 +295,13 @@ const BusinessUserTransaction = () => {
   const calculateStatistics = () => {
     const totalTransactions = transactions.length;
     const completedTransactions = transactions.filter(
-      (tx) => tx.status === "completed",
+      (tx) => tx.status === "COMPLETED",
     ).length;
     const pendingTransactions = transactions.filter(
       (tx) =>
-        tx.status === "pending_approval" ||
+        tx.status === "PENDING_APPROVAL" ||
         tx.status === "pending_payment" ||
-        tx.status === "processing",
+        tx.status === "PROCESSING",
     ).length;
     const totalVolume = transactions.reduce(
       (sum, tx) => sum + parseFloat(tx.amount.replace(/,/g, "")),
@@ -344,6 +345,7 @@ const BusinessUserTransaction = () => {
           variant: "destructive",
         });
       }
+      fetchTransactions();
       setComment({});
     } catch (error) {
       toast({
@@ -393,8 +395,8 @@ const BusinessUserTransaction = () => {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <BulkTransactionForm />
-            <SingleTransactionForm refetch={fetchTransactions} />
+            {/* <BulkTransactionForm />
+            <SingleTransactionForm refetch={fetchTransactions} /> */}
           </div>
         </div>
 
@@ -501,7 +503,7 @@ const BusinessUserTransaction = () => {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType(null)}
+                  onClick={() => setTransactionType("ALL")}
                 >
                   All Status
                 </Button>

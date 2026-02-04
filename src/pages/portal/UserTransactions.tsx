@@ -920,7 +920,7 @@ const UserTransactions = () => {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <BulkTransactionForm />
+            <BulkTransactionForm refetch={fetchTransactions} />
             <SingleTransactionForm refetch={fetchTransactions} />
           </div>
         </div>
