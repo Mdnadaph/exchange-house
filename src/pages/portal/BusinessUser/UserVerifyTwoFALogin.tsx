@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -6,65 +5,86 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import BASE_URL from "@/config/config";
 
+/* =========================
+    INTERFACES
+========================= */
+
+interface BusinessUser {
+  id: number;
+  displayId: string;
+  fullName: string;
+  email: string;
+  status: string;
+  active: boolean;
+}
+
 interface BusinessAdmin {
   id: number;
   uuid: string;
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
-  designation: string;
   businessId: number;
 }
 
 interface VerifyResponseData {
   accessToken: string;
+  refreshToken: string;
   expiresIn: number;
-  businessAdmin: BusinessAdmin;
+  requiresTwoFactor: boolean;
+  businessAdmin: BusinessAdmin | null;
+  businessUser: BusinessUser | null;
+}
+
+interface VerifyResponse {
+  status: boolean;
+  message: string;
+  statusCode: number;
+  data: VerifyResponseData;
 }
 
 interface JwtPayload {
   roles?: string[];
+  userType?: string;
+  businessAdminId?: number;
+  userId?: number;
   exp: number;
 }
 
-const BusinessTwoFALogin: React.FC = () => {
-  const navigate = useNavigate();
+/* =========================
+    COMPONENT
+========================= */
 
+const UserVerifyTwoFALogin: React.FC = () => {
+  const navigate = useNavigate();
   const [cookies, setCookie] = useCookies([
     "tempToken",
     "token",
+    "refreshToken",
     "role",
-    "businessId",
-    "id",
-    "uuid",
-    "firstName",
-    "lastName",
-    "email",
+    "userType",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [otpError, setOtpError] = useState("");
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   /* =========================
       OTP INPUT HANDLING
   ========================== */
+
   const handleChange = (value: string, index: number) => {
     if (!/^[0-9]?$/.test(value)) return;
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setOtpError("");
+    const updatedOtp = [...otp];
+    updatedOtp[index] = value;
+    setOtp(updatedOtp);
 
     if (value && index < 5) {
       inputsRef.current[index + 1]?.focus();
     }
 
-    const newOtpCode = newOtp.join("");
-    if (newOtpCode.length === 6) {
-      handleVerify(newOtpCode);
+    if (updatedOtp.join("").length === 6) {
+      handleVerify(updatedOtp.join(""));
     }
   };
 
@@ -80,108 +100,118 @@ const BusinessTwoFALogin: React.FC = () => {
   /* =========================
       VERIFY OTP
   ========================== */
-  const handleVerify = async (providedOtpCode?: string) => {
-    const otpCode = providedOtpCode || otp.join("");
+
+  const handleVerify = async (providedOtp?: string) => {
+    const otpCode = providedOtp || otp.join("");
 
     if (otpCode.length !== 6) {
-      setOtpError("Please enter a 6-digit OTP");
       toast.error("Please enter a 6-digit OTP");
       return;
     }
 
     if (!cookies.tempToken) {
       toast.error("Session expired. Please login again.");
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
 
     try {
-      const response = await axios.post<{
-        status: boolean;
-        data: VerifyResponseData;
-        message: string;
-      }>(`${BASE_URL}/api/v3/business-user-auth/verify-2fa-login`, {
-        tempToken: cookies.tempToken,
-        twoFactorCode: otpCode,
-      });
+      const response = await axios.post<VerifyResponse>(
+        `${BASE_URL}/api/v3/business-user-auth/verify-2fa-login`,
+        {
+          tempToken: cookies.tempToken,
+          twoFactorCode: otpCode,
+        }
+      );
 
       if (!response.data.status) {
-        setOtpError(response.data.message || "Invalid OTP");
-        toast.error(response.data.message || "Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
-        inputsRef.current[0]?.focus();
-        return;
+        throw new Error(response.data.message);
       }
 
-      const { accessToken, expiresIn, businessAdmin } = response.data.data;
+      const {
+        accessToken,
+        refreshToken,
+        expiresIn,
+        businessUser,
+        businessAdmin,
+      } = response.data.data;
 
       /* =========================
-          DECODE JWT (CRITICAL FIX)
+          DECODE JWT
       ========================== */
+
       const payload = JSON.parse(
         atob(accessToken.split(".")[1])
       ) as JwtPayload;
 
-      const role = payload.roles?.[0]; // e.g. ROLE_BUSINESS_ADMIN
-      const currentTime = Math.floor(Date.now() / 1000);
-      const maxAge = expiresIn || payload.exp - currentTime;
+      const role = payload.roles?.[0];
+      const maxAge = expiresIn || 10800;
 
       /* =========================
-          STORE AUTH DATA
+          STORE AUTH COOKIES
       ========================== */
-      setCookie("token", accessToken, {
-        path: "/",
-        // sameSite: "lax",
-        maxAge: maxAge > 0 ? maxAge : 10800,
-      });
 
-      setCookie("role", role, { 
+      setCookie("token", accessToken, { path: "/", maxAge });
+      setCookie("refreshToken", refreshToken, {
         path: "/",
-        //  sameSite: "lax" 
-        });
-
-      setCookie("businessId", businessAdmin.businessId, {
-        path: "/",
-        // sameSite: "lax",
+        maxAge: 86400,
       });
-      setCookie("id", businessAdmin.id, {
-         path: "/", 
-        //  sameSite: "lax"
-         });
-      setCookie("uuid", businessAdmin.uuid, {
-         path: "/",
-          // sameSite: "lax" 
-        });
-      setCookie("firstName", businessAdmin.firstName, {
-        path: "/",
-        // sameSite: "lax",
-      });
-      setCookie("lastName", businessAdmin.lastName, {
-        path: "/",
-        // sameSite: "lax",
-      });
-      setCookie("email", businessAdmin.email, {
-        path: "/",
-        // sameSite: "lax",
-      });
+      setCookie("role", role, { path: "/" });
+      setCookie("userType", payload.userType, { path: "/" });
 
       /* =========================
-          CLEANUP
+          USER DATA
       ========================== */
+
+      if (businessUser) {
+        setCookie("userId", businessUser.id, { path: "/" });
+        setCookie("fullName", businessUser.fullName, { path: "/" });
+        setCookie("email", businessUser.email, { path: "/" });
+      }
+
+      if (businessAdmin) {
+        setCookie("businessAdminId", businessAdmin.id, { path: "/" });
+        setCookie("email", businessAdmin.email, { path: "/" });
+      }
+
+      /* =========================
+          CLEAN TEMP TOKEN
+      ========================== */
+
       setCookie("tempToken", "", { path: "/", maxAge: 0 });
 
       toast.success("Login successful");
 
-      // ✅ FINAL REDIRECT
-      navigate("/portal", { replace: true });
+      /* =========================
+          ROLE BASED REDIRECT ✅
+      ========================== */
 
+      if (["ROLE_USER", "ROLE_BUSINESS_USER"].includes(role || "")) {
+        navigate("/portal", { replace: true });
+      } 
+      
+      // else if (role === "ROLE_BUSINESS_ADMIN") {
+      //   navigate("/exchange", { replace: true });
+      // } else if (role === "ROLE_ADMIN") {
+      //   navigate("/admin", { replace: true });
+      // }
+      
+      else {
+        navigate("/login", { replace: true });
+      }
     } catch (error: any) {
-      setOtpError(error.response?.data?.message || "OTP verification failed");
-      toast.error(error.response?.data?.message || "OTP verification failed");
+      console.error("OTP Verification Error:", error);
+      toast.error(
+        error?.response?.data?.message || "OTP verification failed"
+      );
       setOtp(["", "", "", "", "", ""]);
       inputsRef.current[0]?.focus();
     }
   };
+
+  /* =========================
+      UI
+  ========================== */
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -194,7 +224,7 @@ const BusinessTwoFALogin: React.FC = () => {
           Enter the 6-digit code from your authenticator app.
         </p>
 
-        <div className="flex justify-between gap-2 mb-2">
+        <div className="flex justify-between gap-2 mb-4">
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -209,13 +239,9 @@ const BusinessTwoFALogin: React.FC = () => {
           ))}
         </div>
 
-        {otpError && (
-          <p className="text-red-500 text-sm text-center mt-2">{otpError}</p>
-        )}
-
         <button
-          onClick={handleVerify}
-          className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition mt-4"
+          onClick={() => handleVerify()}
+          className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition"
         >
           Verify & Access Portal
         </button>
@@ -224,4 +250,4 @@ const BusinessTwoFALogin: React.FC = () => {
   );
 };
 
-export default BusinessTwoFALogin;
+export default UserVerifyTwoFALogin;
