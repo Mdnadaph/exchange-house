@@ -101,7 +101,6 @@ const UserTwoFA = () => {
 
     try {
       const response = await axios.post(
-        // `${BASE_URL}/api/v3/business-auth/verify-2fa-setup`,
         `${BASE_URL}/api/v3/business-user-auth/verify-2fa-setup`,
         {
           tempToken,
