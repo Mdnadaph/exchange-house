@@ -72,6 +72,9 @@ interface ApiResponse {
   statusCode: number;
   data: {
     transactions: ApiTransaction[];
+    pagination: {
+      totalItems: number;
+    };
   };
 }
 
@@ -112,7 +115,8 @@ const BusinessUserTransaction = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
-  console.log("transaction", transactions);
+  const [totalTransactionsData, setTotalTransactionsData] = useState<number>(0);
+  const [page, setPage] = useState<number>(0);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const { toast } = useToast();
@@ -135,12 +139,12 @@ const BusinessUserTransaction = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType} `,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10 `,
         config,
       );
 
       const data = response.data;
-
+      setTotalTransactionsData(data?.data?.pagination?.totalItems);
       if (data.status && data.data) {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
@@ -225,7 +229,7 @@ const BusinessUserTransaction = () => {
   };
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType]);
+  }, [token, transactionType, page]);
 
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
@@ -560,270 +564,307 @@ const BusinessUserTransaction = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
-                  const status = getStatusBadge(transaction.status);
-                  const StatusIcon = status.icon;
+              <div>
+                <div className="space-y-4">
+                  {filteredTransactions.map((transaction) => {
+                    const status = getStatusBadge(transaction.status);
+                    const StatusIcon = status.icon;
 
-                  return (
-                    <Card
-                      key={transaction.id}
-                      className="hover:shadow-md transition-smooth"
-                    >
-                      <CardContent className="p-6">
-                        <div className="space-y-4">
-                          {/* Transaction Header - Matching ExchangeTransactions layout */}
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-2">
-                              {transaction.branchName && (
-                                <div className="flex items-center gap-3">
-                                  <Building2 className="h-8 w-8 text-primary" />
-                                  <span className="text-primary text-2xl font-bold">
-                                    {transaction.branchName}
-                                  </span>
-                                  {transaction.businessId && (
-                                    <span className="text-xs text-muted-foreground">
-                                      ({transaction.businessId})
+                    return (
+                      <Card
+                        key={transaction.id}
+                        className="hover:shadow-md transition-smooth"
+                      >
+                        <CardContent className="p-6">
+                          <div className="space-y-4">
+                            {/* Transaction Header - Matching ExchangeTransactions layout */}
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-2">
+                                {transaction.branchName && (
+                                  <div className="flex items-center gap-3">
+                                    <Building2 className="h-8 w-8 text-primary" />
+                                    <span className="text-primary text-2xl font-bold">
+                                      {transaction.branchName}
                                     </span>
-                                  )}
+                                    {transaction.businessId && (
+                                      <span className="text-xs text-muted-foreground">
+                                        ({transaction.businessId})
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-3">
+                                  <h3 className="font-semibold text-foreground">
+                                    {transaction.beneficiary}
+                                  </h3>
+                                  <Badge
+                                    variant={status.variant}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <StatusIcon className="h-4 w-4" />
+                                    {status.label}
+                                  </Badge>
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(transaction.type)}`}
+                                  >
+                                    {transaction?.type === "BULK"
+                                      ? `Bulk (${transaction.bulkCount})`
+                                      : "Single"}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {transaction.id}
+                                  {transaction.purpose &&
+                                    ` • ${transaction.purpose}`}
+                                </p>
+                              </div>
+
+                              <div className="text-right space-y-1">
+                                <p className="text-xl font-bold text-foreground">
+                                  {transaction.currency} {transaction.amount}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {transaction.localCurrency}{" "}
+                                  {transaction.localAmount}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Transaction Details */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center text-muted-foreground">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  Submitted:
+                                </div>
+                                <p className="font-medium">
+                                  {transaction.date}
+                                </p>
+                                {transaction.processedDate && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Processed: {transaction.processedDate}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Exchange Rate:
+                                </span>
+                                <p className="font-medium">
+                                  1 {transaction.currency} ={" "}
+                                  {transaction.exchangeRate}{" "}
+                                  {transaction.localCurrency}
+                                </p>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Fee Details:
+                                </span>
+                                <p className="font-medium">
+                                  ${transaction.fees}
+                                </p>
+                                {transaction.feeResponsibility && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Paid by: {transaction.feeResponsibility}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Branch:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.branch}
+                                </p>
+                                {transaction.failureReason && (
+                                  <p className="text-xs text-red-600">
+                                    Reason: {transaction.failureReason}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Reference:
+                                </span>
+                                <p className="font-medium font-mono text-xs">
+                                  {transaction?.referenceNumber}
+                                </p>
+                              </div>
+                            </div>
+                            {transaction?.status !== "APPROVED" &&
+                              transaction?.status !== "REJECTED" && (
+                                <div className="border-t pt-6">
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                      <Label
+                                        htmlFor={`comments-${transaction?.id}`}
+                                      >
+                                        Review Comments
+                                      </Label>
+                                      <Textarea
+                                        id={`comments-${transaction?.id}`}
+                                        placeholder="Add review comments, questions, or requirements..."
+                                        rows={4}
+                                        value={comment[transaction?.id]}
+                                        onChange={(e) =>
+                                          handleCommentChange(
+                                            transaction?.id,
+                                            e?.target?.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                      <Label>Review Actions</Label>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <Button
+                                          type="button"
+                                          variant="default"
+                                          className="w-full"
+                                          disabled={disableButton}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            handleReviewAction(
+                                              transaction?.id,
+                                              "APPROVED",
+                                            );
+                                          }}
+                                        >
+                                          <CheckCircle className="h-4 w-4 mr-2" />
+                                          Approve
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="destructive"
+                                          className="w-full"
+                                          disabled={disableButton}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            handleReviewAction(
+                                              transaction?.id,
+                                              "REJECTED",
+                                            );
+                                          }}
+                                        >
+                                          Reject
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
-                                <h3 className="font-semibold text-foreground">
-                                  {transaction.beneficiary}
-                                </h3>
-                                <Badge
-                                  variant={status.variant}
-                                  className="flex items-center gap-1"
-                                >
-                                  <StatusIcon className="h-4 w-4" />
-                                  {status.label}
-                                </Badge>
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(transaction.type)}`}
-                                >
-                                  {transaction?.type === "BULK"
-                                    ? `Bulk (${transaction.bulkCount})`
-                                    : "Single"}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {transaction.id}
-                                {transaction.purpose &&
-                                  ` • ${transaction.purpose}`}
-                              </p>
-                            </div>
-
-                            <div className="text-right space-y-1">
-                              <p className="text-xl font-bold text-foreground">
-                                {transaction.currency} {transaction.amount}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {transaction.localCurrency}{" "}
-                                {transaction.localAmount}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Transaction Details */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm bg-muted/30 rounded-lg p-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                Submitted:
-                              </div>
-                              <p className="font-medium">{transaction.date}</p>
-                              {transaction.processedDate && (
-                                <p className="text-xs text-muted-foreground">
-                                  Processed: {transaction.processedDate}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Exchange Rate:
-                              </span>
-                              <p className="font-medium">
-                                1 {transaction.currency} ={" "}
-                                {transaction.exchangeRate}{" "}
-                                {transaction.localCurrency}
-                              </p>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Fee Details:
-                              </span>
-                              <p className="font-medium">${transaction.fees}</p>
-                              {transaction.feeResponsibility && (
-                                <p className="text-xs text-muted-foreground">
-                                  Paid by: {transaction.feeResponsibility}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Branch:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.branch}
-                              </p>
-                              {transaction.failureReason && (
-                                <p className="text-xs text-red-600">
-                                  Reason: {transaction.failureReason}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Reference:
-                              </span>
-                              <p className="font-medium font-mono text-xs">
-                                {transaction?.referenceNumber}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="border-t pt-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              <div className="space-y-4">
-                                <Label htmlFor={`comments-${transaction?.id}`}>
-                                  Review Comments
-                                </Label>
-                                <Textarea
-                                  id={`comments-${transaction?.id}`}
-                                  placeholder="Add review comments, questions, or requirements..."
-                                  rows={4}
-                                  value={comment[transaction?.id]}
-                                  onChange={(e) =>
-                                    handleCommentChange(
-                                      transaction?.id,
-                                      e?.target?.value,
+                            {/* Actions */}
+                            <div className="flex items-center justify-between pt-2">
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm">
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Details
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Receipt
+                                </Button>
+                                {transaction.documents &&
+                                  transaction.documents.length > 0 && (
+                                    <Button variant="outline" size="sm">
+                                      <FileText className="h-4 w-4 mr-1" />
+                                      Documents
+                                    </Button>
+                                  )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setExpandedTransaction(
+                                      expandedTransaction === transaction.id
+                                        ? null
+                                        : transaction.id,
                                     )
                                   }
-                                />
-                              </div>
-
-                              <div className="space-y-4">
-                                <Label>Review Actions</Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <Button
-                                    type="button"
-                                    variant="default"
-                                    className="w-full"
-                                    disabled={disableButton}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handleReviewAction(
-                                        transaction?.id,
-                                        "APPROVED",
-                                      );
-                                    }}
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="w-full"
-                                    disabled={disableButton}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handleReviewAction(
-                                        transaction?.id,
-                                        "REJECTED",
-                                      );
-                                    }}
-                                  >
-                                    Reject
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Actions */}
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4 mr-1" />
-                                View Details
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Download className="h-4 w-4 mr-1" />
-                                Receipt
-                              </Button>
-                              {transaction.documents &&
-                                transaction.documents.length > 0 && (
-                                  <Button variant="outline" size="sm">
-                                    <FileText className="h-4 w-4 mr-1" />
-                                    Documents
-                                  </Button>
-                                )}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setExpandedTransaction(
-                                    expandedTransaction === transaction.id
-                                      ? null
-                                      : transaction.id,
-                                  )
-                                }
-                              >
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                Comments
-                                {expandedTransaction === transaction.id ? (
-                                  <ChevronUp className="h-4 w-4 ml-1" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 ml-1" />
-                                )}
-                              </Button>
-                              {transaction.status === "failed" && (
-                                <Button variant="default" size="sm">
-                                  Retry Payment
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Comments
+                                  {expandedTransaction === transaction.id ? (
+                                    <ChevronUp className="h-4 w-4 ml-1" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                  )}
                                 </Button>
-                              )}
-                              {transaction.status === "pending_payment" && (
-                                <PaymentExecutionForm
-                                  transaction={{
-                                    id: transaction.id,
-                                    beneficiary: transaction.beneficiary,
-                                    amount: transaction.amount,
-                                    currency: transaction.currency,
-                                    localAmount: transaction.localAmount,
-                                    localCurrency: transaction.localCurrency,
-                                    purpose: transaction.purpose,
-                                  }}
-                                />
-                              )}
+                                {transaction.status === "failed" && (
+                                  <Button variant="default" size="sm">
+                                    Retry Payment
+                                  </Button>
+                                )}
+                                {transaction.status === "pending_payment" && (
+                                  <PaymentExecutionForm
+                                    transaction={{
+                                      id: transaction.id,
+                                      beneficiary: transaction.beneficiary,
+                                      amount: transaction.amount,
+                                      currency: transaction.currency,
+                                      localAmount: transaction.localAmount,
+                                      localCurrency: transaction.localCurrency,
+                                      purpose: transaction.purpose,
+                                    }}
+                                  />
+                                )}
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Comments Section */}
-                          {expandedTransaction === transaction.id && (
-                            <div className="mt-4 pt-4 border-t space-y-4">
-                              <ProofOfPaymentUpload
-                                transactionId={transaction.id}
-                                userRole="Business"
-                                userName={userName}
-                                branchName={transaction.branchName}
-                              />
-                              <TransactionComments
-                                transactionId={transaction.id}
-                                userRole="Business"
-                                userName={userName}
-                                branchName={transaction.branchName}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                            {/* Comments Section */}
+                            {expandedTransaction === transaction.id && (
+                              <div className="mt-4 pt-4 border-t space-y-4">
+                                <ProofOfPaymentUpload
+                                  transactionId={transaction.id}
+                                  userRole="Business"
+                                  userName={userName}
+                                  branchName={transaction.branchName}
+                                />
+                                <TransactionComments
+                                  transactionId={transaction.id}
+                                  userRole="Business"
+                                  userName={userName}
+                                  branchName={transaction.branchName}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+                {totalTransactionsData > 10 && (
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {transactions?.length} of {totalTransactionsData}{" "}
+                      beneficiaries
+                    </p>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 0}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={(page + 1) * 10 >= totalTransactionsData}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

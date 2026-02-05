@@ -594,6 +594,7 @@ interface ApiResponse {
   statusCode: number;
   data: {
     transactions: ApiTransaction[];
+    pagination: { totalItems: number };
   };
 }
 
@@ -634,6 +635,8 @@ const UserTransactions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
+  const [page, setPage] = useState<number>(0);
+  const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const { toast } = useToast();
@@ -656,12 +659,12 @@ const UserTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&setPage=10`,
         config,
       );
 
       const data = response.data;
-
+      setTotalTransactionData(data?.data?.pagination?.totalItems);
       if (data.status && data.data) {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
@@ -746,7 +749,7 @@ const UserTransactions = () => {
   };
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType]);
+  }, [token, transactionType, page]);
 
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
@@ -1349,6 +1352,32 @@ const UserTransactions = () => {
                     </Card>
                   );
                 })}
+                {totalTransactionData > 10 && (
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {transactions?.length} of {totalTransactionData}{" "}
+                      beneficiaries
+                    </p>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 0}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={(page + 1) * 10 >= totalTransactionData}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
