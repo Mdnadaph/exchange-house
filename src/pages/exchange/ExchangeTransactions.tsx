@@ -72,6 +72,9 @@ interface ApiResponse {
   statusCode: number;
   data: {
     transactions: ApiTransaction[];
+    pagination: {
+      totalItems: number;
+    };
   };
 }
 
@@ -110,6 +113,8 @@ const ExchangeTransactions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [cookies] = useCookies(["token", "email", "fullName"]);
+  const [page, setPage] = useState<number>(0);
+  const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
 
   const token = cookies.token;
   const fullname = cookies.fullName;
@@ -134,11 +139,12 @@ const ExchangeTransactions = () => {
         };
 
         const response = await axios.get<ApiResponse>(
-          `${BASE_URL}/api/v1/transactions?type=${transactionType}`,
+          `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
           config,
         );
 
-        const data = response.data;
+        const data = response?.data;
+        setTotalTransactionData(data?.data?.pagination?.totalItems);
         if (data.status && data.data) {
           // Transform API data to match UI structure
           const transformedTransactions: Transaction[] =
@@ -701,20 +707,32 @@ const ExchangeTransactions = () => {
             )}
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {filteredTransactions.length} of {transactions.length}{" "}
-                transactions
-              </p>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm" disabled>
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm">
-                  Next
-                </Button>
+            {totalTransactionData > 10 && (
+              <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Showing {transactions?.length} of {totalTransactionData}{" "}
+                  beneficiaries
+                </p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={(page + 1) * 10 >= totalTransactionData}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
