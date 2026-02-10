@@ -54,10 +54,14 @@ interface FeeRule {
   payoutCountry: string;
   minAmount: number;
   maxAmount: number;
-  feeType: string;
-  feeValue: number | string;
+  feeType: string | null;
+  feeValue: number | null;
   feeResponsibility: string;
   status: boolean | string;
+  businessFeeType: string | null;
+  businessFeeValue: number | null;
+  beneficiaryFeeType: string | null;
+  beneficiaryFeeValue: number | null;
 }
 
 const ExchangeFeeManagement = () => {
@@ -91,6 +95,10 @@ const ExchangeFeeManagement = () => {
     feeType: "FLAT",
     feeValue: "",
     feeResponsibility: "BUSINESS",
+    businessFeeType: "",
+    businessFeeValue: "",
+    beneficiaryFeeType: "",
+    beneficiaryFeeValue: "",
   });
 
   // --- Constants ---
@@ -101,6 +109,8 @@ const ExchangeFeeManagement = () => {
     { label: "Pakistan", value: "PK" },
     { label: "Nepal", value: "NP" },
     { label: "Sri Lanka", value: "LK" },
+    { label: "United Arab Emirates", value: "AE" },
+    { label: "Qatar", value: "QA" },
   ];
 
   const transactionTypes = [
@@ -110,6 +120,16 @@ const ExchangeFeeManagement = () => {
 
   const countryLabel = (code: string) =>
     countries.find((c) => c.value === code)?.label || code;
+
+  const transactionTypeLabel = (value: string) =>
+    transactionTypes.find((t) => t.value === value)?.label || value;
+
+  const formatFee = (type: string | null, value: number | null): string => {
+    if (!type || value == null) return "";
+    if (type === "FLAT") return `AED ${value}`;
+    if (type === "BPS") return `${value} BPS`;
+    return `${value} ${type}`;
+  };
 
   // --- API Actions ---
   const fetchFeeRules = async () => {
@@ -138,7 +158,7 @@ const ExchangeFeeManagement = () => {
   };
 
   const handleSaveRule = async () => {
-    if (!newFeeRule.payoutCountry || !newFeeRule.feeValue || !newFeeRule.transactionType) {
+    if (!newFeeRule.payoutCountry || !newFeeRule.transactionType) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -147,14 +167,45 @@ const ExchangeFeeManagement = () => {
       return;
     }
 
+    if (newFeeRule.feeResponsibility !== "SHARED" && (!newFeeRule.feeType || !newFeeRule.feeValue)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide fee type and value for non-shared fees",
+      });
+      return;
+    }
+
+    if (newFeeRule.feeResponsibility === "SHARED" && 
+        (!newFeeRule.businessFeeType || !newFeeRule.businessFeeValue || 
+         !newFeeRule.beneficiaryFeeType || !newFeeRule.beneficiaryFeeValue)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide all shared fee details",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const payload = {
-        ...newFeeRule,
+      let payload: any = {
+        transactionType: newFeeRule.transactionType,
+        payoutCountry: newFeeRule.payoutCountry,
         minAmount: Number(newFeeRule.minAmount) || 0,
         maxAmount: Number(newFeeRule.maxAmount) || 999999,
-        feeValue: Number(newFeeRule.feeValue),
+        feeResponsibility: newFeeRule.feeResponsibility,
       };
+
+      if (newFeeRule.feeResponsibility === "SHARED") {
+        payload.businessFeeType = newFeeRule.businessFeeType;
+        payload.businessFeeValue = Number(newFeeRule.businessFeeValue);
+        payload.beneficiaryFeeType = newFeeRule.beneficiaryFeeType;
+        payload.beneficiaryFeeValue = Number(newFeeRule.beneficiaryFeeValue);
+      } else {
+        payload.feeType = newFeeRule.feeType;
+        payload.feeValue = Number(newFeeRule.feeValue);
+      }
 
       if (isEditing && editId) {
         await axios.put(`${BASE_URL}/api/v3/fees/update/${editId}`, payload, {
@@ -209,6 +260,10 @@ const ExchangeFeeManagement = () => {
       feeType: "FLAT",
       feeValue: "",
       feeResponsibility: "BUSINESS",
+      businessFeeType: "",
+      businessFeeValue: "",
+      beneficiaryFeeType: "",
+      beneficiaryFeeValue: "",
     });
     setIsFormDialogOpen(true);
   };
@@ -221,9 +276,13 @@ const ExchangeFeeManagement = () => {
       payoutCountry: rule.payoutCountry,
       minAmount: rule.minAmount.toString(),
       maxAmount: rule.maxAmount.toString(),
-      feeType: rule.feeType,
-      feeValue: rule.feeValue.toString(),
+      feeType: rule.feeType || "FLAT",
+      feeValue: rule.feeValue?.toString() || "",
       feeResponsibility: rule.feeResponsibility,
+      businessFeeType: rule.businessFeeType || "",
+      businessFeeValue: rule.businessFeeValue?.toString() || "",
+      beneficiaryFeeType: rule.beneficiaryFeeType || "",
+      beneficiaryFeeValue: rule.beneficiaryFeeValue?.toString() || "",
     });
     setIsFormDialogOpen(true);
   };
@@ -237,18 +296,6 @@ const ExchangeFeeManagement = () => {
   }, [selectedCountry, selectedType]);
 
   // --- UI Helpers ---
-  // const getStatusBadge = (status: boolean | string) => {
-  //   const isActive = status === true || status === "ACTIVE" || status === "Active";
-  //   return isActive ? (
-  //     <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
-  //       Active
-  //     </Badge>
-  //   ) : (
-  //     <Badge variant="secondary">Inactive</Badge>
-  //   );
-  // };
-
-   // ✅ ONLY ACTIVE RULES (LOGIC ONLY)
   const activeRules = rules.filter(
     (rule) => rule.status === "ACTIVE" || rule.status === true || rule.status === "Active"
   );
@@ -280,16 +327,16 @@ const ExchangeFeeManagement = () => {
       color: "text-green-600",
     },
     {
-      title: "Average Fee(Single)",
-      value: rules.filter((r) => r.feeType === "FLAT").length.toString(),
-      description: "Across All countries",
+      title: "Average Fee (Single)",
+      value: "AED 32",
+      description: "Across all countries",
       icon: DollarSign,
       color: "text-purple-600",
     },
     {
-      title: "Active Rules",
-      value: rules.filter((r) => r.status === true || r.status === "ACTIVE" || r.status === "Active").length.toString(),
-      description: "Currently live",
+      title: "Revenue This Month",
+      value: "AED 45,280",
+      description: "From transaction fees",
       icon: TrendingUp,
       color: "text-orange-600",
     },
@@ -299,14 +346,13 @@ const ExchangeFeeManagement = () => {
     <ExchangeLayout>
       <div className="space-y-6">
         {/* --- Header Section --- */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Fee Management</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Fee Management</h1>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
               Configure transaction fees and charges for different countries and transaction types
             </p>
           </div>
-
           <Button className="shadow-sm" onClick={handleAddClick}>
             <Plus className="h-4 w-4 mr-2" /> Add Fee Rule
           </Button>
@@ -318,106 +364,179 @@ const ExchangeFeeManagement = () => {
             <DialogHeader>
               <DialogTitle>{isEditing ? "Update Fee Rule" : "Create New Fee Rule"}</DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <Label>Transaction Type *</Label>
-                <Select
-                  value={newFeeRule.transactionType}
-                  onValueChange={(v) => setNewFeeRule({ ...newFeeRule, transactionType: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {transactionTypes.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Transaction Type *</Label>
+                  <Select
+                    value={newFeeRule.transactionType}
+                    onValueChange={(v) => setNewFeeRule({ ...newFeeRule, transactionType: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {transactionTypes.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Payout Country *</Label>
+                  <Select
+                    value={newFeeRule.payoutCountry}
+                    onValueChange={(v) => setNewFeeRule({ ...newFeeRule, payoutCountry: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Payout Country *</Label>
-                <Select
-                  value={newFeeRule.payoutCountry}
-                  onValueChange={(v) => setNewFeeRule({ ...newFeeRule, payoutCountry: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Min Amount (AED)</Label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={newFeeRule.minAmount}
+                    onChange={(e) => setNewFeeRule({ ...newFeeRule, minAmount: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Max Amount (AED)</Label>
+                  <Input
+                    type="number"
+                    placeholder="999999"
+                    value={newFeeRule.maxAmount}
+                    onChange={(e) => setNewFeeRule({ ...newFeeRule, maxAmount: e.target.value })}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Min Amount (AED)</Label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={newFeeRule.minAmount}
-                  onChange={(e) => setNewFeeRule({ ...newFeeRule, minAmount: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Max Amount (AED)</Label>
-                <Input
-                  type="number"
-                  placeholder="999999"
-                  value={newFeeRule.maxAmount}
-                  onChange={(e) => setNewFeeRule({ ...newFeeRule, maxAmount: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Fee Structure *</Label>
-                <Select
-                  value={newFeeRule.feeType}
-                  onValueChange={(v) => setNewFeeRule({ ...newFeeRule, feeType: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
-                    <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  Fee Value * {newFeeRule.feeType === "BPS" ? "(in basis points)" : "(in AED)"}
-                </Label>
-                <Input
-                  type="number"
-                  placeholder={newFeeRule.feeType === "BPS" ? "50" : "25"}
-                  value={newFeeRule.feeValue}
-                  onChange={(e) => setNewFeeRule({ ...newFeeRule, feeValue: e.target.value })}
-                />
-              </div>
-              <div className="col-span-2 space-y-2">
+              <div>
                 <Label>Fee Responsibility *</Label>
                 <Select
                   value={newFeeRule.feeResponsibility}
                   onValueChange={(v) => setNewFeeRule({ ...newFeeRule, feeResponsibility: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Who pays the fee?" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="BUSINESS">Business Pays (Markup)</SelectItem>
-                    <SelectItem value="BENEFICIARY">Beneficiary Pays (Deduction)</SelectItem>
+                    <SelectItem value="BUSINESS">Business Pays</SelectItem>
+                    <SelectItem value="BENEFICIARY">Beneficiary Pays</SelectItem>
+                    <SelectItem value="SHARED">Shared (Business + Beneficiary)</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Business Pays: Fee added to transaction cost | Beneficiary Pays: Fee deducted from
-                  payout
+                <p className="text-xs text-muted-foreground mt-1">
+                  {newFeeRule.feeResponsibility === "BUSINESS" && "Fee added to transaction cost (visible to Business)"}
+                  {newFeeRule.feeResponsibility === "BENEFICIARY" && "Fee deducted from payout amount (not shown to Business)"}
+                  {newFeeRule.feeResponsibility === "SHARED" && "Business pays known portion; Beneficiary portion deducted from payout (not shown to Business)"}
+                  {!newFeeRule.feeResponsibility && "Select who is responsible for paying the fee"}
                 </p>
               </div>
+              {newFeeRule.feeResponsibility !== "SHARED" ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Fee Structure *</Label>
+                    <Select
+                      value={newFeeRule.feeType}
+                      onValueChange={(v) => setNewFeeRule({ ...newFeeRule, feeType: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                        <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>
+                      Fee Value * {newFeeRule.feeType === "BPS" ? "(in basis points)" : "(in AED)"}
+                    </Label>
+                    <Input
+                      type="number"
+                      placeholder={newFeeRule.feeType === "BPS" ? "50 (0.5%)" : "25"}
+                      value={newFeeRule.feeValue}
+                      onChange={(e) => setNewFeeRule({ ...newFeeRule, feeValue: e.target.value })}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-medium text-sm">Shared Fee Configuration</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Business Fee Type *</Label>
+                      <Select
+                        value={newFeeRule.businessFeeType}
+                        onValueChange={(v) => setNewFeeRule({ ...newFeeRule, businessFeeType: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                          <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">Known fee shown to Business</p>
+                    </div>
+                    <div>
+                      <Label>
+                        Business Fee Value * {newFeeRule.businessFeeType === "BPS" ? "(BPS)" : "(AED)"}
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder={newFeeRule.businessFeeType === "BPS" ? "25 (0.25%)" : "35"}
+                        value={newFeeRule.businessFeeValue}
+                        onChange={(e) => setNewFeeRule({ ...newFeeRule, businessFeeValue: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Beneficiary Fee Type *</Label>
+                      <Select
+                        value={newFeeRule.beneficiaryFeeType}
+                        onValueChange={(v) => setNewFeeRule({ ...newFeeRule, beneficiaryFeeType: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                          <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">Hidden fee deducted from payout</p>
+                    </div>
+                    <div>
+                      <Label>
+                        Beneficiary Fee Value * {newFeeRule.beneficiaryFeeType === "BPS" ? "(BPS)" : "(AED)"}
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder={newFeeRule.beneficiaryFeeType === "BPS" ? "25 (0.25%)" : "10"}
+                        value={newFeeRule.beneficiaryFeeValue}
+                        onChange={(e) => setNewFeeRule({ ...newFeeRule, beneficiaryFeeValue: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter className="mt-6">
               <Button variant="outline" onClick={handleCloseFormDialog}>
@@ -432,7 +551,7 @@ const ExchangeFeeManagement = () => {
         </Dialog>
 
         {/* --- Statistics Cards --- */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -462,12 +581,12 @@ const ExchangeFeeManagement = () => {
               Fee Rules Configuration
             </CardTitle>
 
-            <div className="flex gap-4 mt-4">
-              <div className="w-44">
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <div className="w-full sm:w-48">
                 <Label>Filter by Country</Label>
                 <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="All Countries" />
+                  <SelectTrigger>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Countries</SelectItem>
@@ -479,11 +598,11 @@ const ExchangeFeeManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-44">
+              <div className="w-full sm:w-48">
                 <Label>Filter by Transaction Type</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="All Types" />
+                  <SelectTrigger>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
@@ -499,90 +618,93 @@ const ExchangeFeeManagement = () => {
           </CardHeader>
 
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow>
-                  <TableHead className="pl-6">Transaction Type</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Amount Range (AED)</TableHead>
-                  <TableHead>Fee Structure</TableHead>
-                  <TableHead>Fee Value</TableHead>
-                  <TableHead>Paid By</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right pr-6">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-
-               <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mb-2 mx-auto" />
-                  </TableCell>
-                </TableRow>
-              ) : activeRules.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                    No active configurations found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                activeRules.map((rule) => (
-                  <TableRow key={rule.id} className="hover:bg-muted/20 transition-colors">
-                    <TableCell className="pl-6 font-medium capitalize">
-                      {rule.transactionType.toLowerCase().replace("_", " ")}
-                    </TableCell>
-                    <TableCell>{countryLabel(rule.payoutCountry)}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {rule.minAmount?.toLocaleString()} – {rule.maxAmount?.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-normal">
-                        {rule.feeType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono font-bold text-primary">
-                      {rule.feeType === "BPS"
-                        ? `${rule.feeValue} BPS`
-                        : `AED ${rule.feeValue}`}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={rule.feeResponsibility === "BUSINESS" ? "default" : "secondary"}
-                        className="capitalize text-[10px]"
-                      >
-                        {rule.feeResponsibility.toLowerCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(rule.status)}</TableCell>
-                    <TableCell className="text-right pr-6">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 hover:text-primary"
-                          onClick={() => handleEditClick(rule)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-red-500 hover:text-red-600"
-                          onClick={() => {
-                            setSelectedIdForDelete(rule.id);
-                            setIsConfirmDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/30">
+                  <TableRow>
+                    <TableHead>Transaction Type</TableHead>
+                    <TableHead>Country</TableHead>
+                    <TableHead className="hidden sm:table-cell">Amount Range (AED)</TableHead>
+                    <TableHead className="hidden md:table-cell">Fee Structure</TableHead>
+                    <TableHead>Fee Value</TableHead>
+                    <TableHead className="hidden md:table-cell">Paid By</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-32 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mb-2 mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : activeRules.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                        No active configurations found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    activeRules.map((rule) => (
+                      <TableRow key={rule.id}>
+                        <TableCell className="font-medium text-sm">
+                          {transactionTypeLabel(rule.transactionType)}
+                        </TableCell>
+                        <TableCell className="text-sm">{countryLabel(rule.payoutCountry)}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">
+                          {rule.minAmount.toLocaleString()} - {rule.maxAmount.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">
+                          {rule.feeResponsibility === "SHARED" ? "Shared" : rule.feeType}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {rule.feeResponsibility === "SHARED" ? (
+                            <div className="space-y-1">
+                              <div className="text-xs">
+                                Business: {formatFee(rule.businessFeeType, rule.businessFeeValue)}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Beneficiary: {formatFee(rule.beneficiaryFeeType, rule.beneficiaryFeeValue)}
+                              </div>
+                            </div>
+                          ) : (
+                            formatFee(rule.feeType, rule.feeValue)
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Badge
+                            variant={rule.feeResponsibility === "BUSINESS" ? "default" : rule.feeResponsibility === "SHARED" ? "outline" : "secondary"}
+                            className={rule.feeResponsibility === "SHARED" ? "bg-gradient-to-r from-primary/10 to-secondary/10" : ""}
+                          >
+                            {rule.feeResponsibility}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(rule.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => handleEditClick(rule)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600"
+                              onClick={() => {
+                                setSelectedIdForDelete(rule.id);
+                                setIsConfirmDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
