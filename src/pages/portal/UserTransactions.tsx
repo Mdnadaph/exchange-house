@@ -621,6 +621,7 @@ interface Transaction {
   bulkCount?: number;
   failureReason?: string;
   documents?: TransactionDocument[];
+  totalDebit:number;
 }
 
 const UserTransactions = () => {
@@ -678,6 +679,8 @@ const UserTransactions = () => {
               maximumFractionDigits: 2,
             }),
             currency: apiTx.sourceCurrency,
+            totalDebit: apiTx.totalDebit,
+            
             exchangeRate: apiTx?.exchangeRate?.toFixed(3),
             localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -806,6 +809,11 @@ const UserTransactions = () => {
       cancelled: {
         variant: "outline" as const,
         label: "Cancelled",
+        icon: AlertCircle,
+      },
+      COMPLIANCE_REVIEW: {
+        variant: "outline" as const,
+        label: "Compliance Review",
         icon: AlertCircle,
       },
     };
@@ -1144,10 +1152,10 @@ const UserTransactions = () => {
 
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction.currency} {transaction.amount}
+                                {transaction.currency.toUpperCase()} {transaction.amount}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {transaction.localCurrency}{" "}
+                                {transaction.localCurrency}
                                 {transaction.localAmount}
                               </p>
                             </div>
@@ -1173,9 +1181,9 @@ const UserTransactions = () => {
                                 Exchange Rate:
                               </span>
                               <p className="font-medium">
-                                1 {transaction.currency} ={" "}
-                                {transaction.exchangeRate}{" "}
-                                {transaction.localCurrency}
+                                1 {transaction.currency.toUpperCase()} =
+                                {transaction.exchangeRate}
+                                {transaction.localCurrency} AED
                               </p>
                             </div>
 
@@ -1183,12 +1191,21 @@ const UserTransactions = () => {
                               <span className="text-muted-foreground">
                                 Fee Details:
                               </span>
-                              <p className="font-medium">${transaction.fees}</p>
+                              <p className="font-medium">AED {transaction.fees}</p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
                                   Paid by: {transaction.feeResponsibility}
                                 </p>
                               )}
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Total Debit:
+                              </span>
+                              <p className="font-medium">
+                                AED {transaction.totalDebit}
+                              </p>
                             </div>
 
                             <div className="space-y-1">
