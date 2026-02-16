@@ -19,12 +19,10 @@ import {
 import { useEffect, useState } from "react";
 
 const BranchBusinessOnboarding = () => {
-
   const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
-    const token = cookies.token;
-    const branchId = cookies.branchId;
-    const userRole = cookies.role;
-
+  const token = cookies.token;
+  const branchId = cookies.branchId;
+  const userRole = cookies.role;
 
   const navigate = useNavigate();
   const { uuid } = useParams();
@@ -51,14 +49,14 @@ const BranchBusinessOnboarding = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const responseData = response?.data;
 
       if (!responseData?.status || !responseData?.data) {
         console.warn(
           "Invalid API response:",
-          responseData?.message || "No data"
+          responseData?.message || "No data",
         );
         setBusinesses([]);
         return;
@@ -101,7 +99,7 @@ const BranchBusinessOnboarding = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const responseData = response?.data;
       if (responseData?.status && responseData?.data) {
@@ -299,8 +297,8 @@ const BranchBusinessOnboarding = () => {
                                     Contact:
                                   </span>
                                   <span className="ml-2 font-medium">
-                                    {business.businessEmail} (
-                                    {business.businessPhone})
+                                    {business.businessEmail}
+                                    {business.businessPhone}
                                   </span>
                                 </div>
                               </div>
