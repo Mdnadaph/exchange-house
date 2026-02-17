@@ -131,11 +131,6 @@
 
 // export default App;
 
-
-
-
-
-
 import {
   BrowserRouter,
   Routes,
@@ -219,6 +214,7 @@ import UserTwoFALogin from "./pages/user/BusinessUser2FA/UserVerifyTwoFALogin";
 import BussinessUserDashboard from "./pages/user/BussinessUserDashboard";
 import BussinessUserProfile from "./pages/user/BussinessUserProfile";
 import BussinessUserTransaction from "./pages/user/BusinessUserTransaction";
+import ChangePassword from "./pages/ChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -230,10 +226,7 @@ const BRANCH_ROLES = [
   "ROLE_BRANCH_MANAGER",
 ];
 
-const BUSINESS_ROLES = [
-  "ROLE_USER",
-  "ROLE_BUSINESS_USER"
-]
+const BUSINESS_ROLES = ["ROLE_USER", "ROLE_BUSINESS_USER"];
 
 // ─── Protected Route with Role + Smart Redirects ──────────────────────────
 interface ProtectedRouteProps {
@@ -292,21 +285,40 @@ function App() {
                 {/* Public routes */}
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Auth />} />
+                <Route path="/change-password" element={<ChangePassword />} />
 
                 {/* Staff / Exchange 2FA & setup – public */}
                 <Route path="/set-password" element={<StaffSetupPassword />} />
                 <Route path="/generateqr" element={<StaffTwoFA />} />
-                <Route path="/verify-2fa-login" element={<StaffVerifyTwoFALogin />} />
+                <Route
+                  path="/verify-2fa-login"
+                  element={<StaffVerifyTwoFALogin />}
+                />
 
                 {/* Business / Branch 2FA & setup – public */}
-                <Route path="/business-auth/set-password" element={<BusinessPasswordSetup />} />
+                <Route
+                  path="/business-auth/set-password"
+                  element={<BusinessPasswordSetup />}
+                />
                 <Route path="/business/2fa/qr" element={<BusinessTwoFA />} />
-                <Route path="/business/2fa/login" element={<BusinessVerifyTwoFALogin />} />
+                <Route
+                  path="/business/2fa/login"
+                  element={<BusinessVerifyTwoFALogin />}
+                />
 
                 {/* Business User for Portal 2FA setup  - public */}
-                <Route path="/business-user-set-password" element={<UserSetupPassword />} />
-                <Route path="/business-user-generateqr" element={<UserTwoFA />} />
-                <Route path="/business-user-2fa-login" element={<UserTwoFALogin />} />
+                <Route
+                  path="/business-user-set-password"
+                  element={<UserSetupPassword />}
+                />
+                <Route
+                  path="/business-user-generateqr"
+                  element={<UserTwoFA />}
+                />
+                <Route
+                  path="/business-user-2fa-login"
+                  element={<UserTwoFALogin />}
+                />
 
                 {/* ─── PROTECTED ROUTES ────────────────────────────────────── */}
 
@@ -318,27 +330,37 @@ function App() {
                 >
                   <Route path="/admin">
                     <Route index element={<AdminDashboard />} />
-                    <Route path="/admin/exchange-houses" element={<AdminExchangeHouses />} />
+                    <Route
+                      path="/admin/exchange-houses"
+                      element={<AdminExchangeHouses />}
+                    />
                     <Route path="onboarding" element={<AdminOnboarding />} />
-                    <Route path="deal-settings" element={<AdminDealSettings />} />
+                    <Route
+                      path="deal-settings"
+                      element={<AdminDealSettings />}
+                    />
                     <Route path="settings" element={<AdminSettings />} />
-                    <Route path="user-management" element={<AdminUserManagement />} />
+                    <Route
+                      path="user-management"
+                      element={<AdminUserManagement />}
+                    />
                   </Route>
                 </Route>
 
                 {/* Portal – Business Admin and Business User */}
                 <Route
                   element={
-                    <ProtectedRoute
-                      allowedRoles={["ROLE_BUSINESS_ADMIN"]}
-                    />
+                    <ProtectedRoute allowedRoles={["ROLE_BUSINESS_ADMIN"]} />
                   }
                 >
                   <Route path="/portal">
                     <Route index element={<UserDashboard />} />
                     <Route path="profile" element={<UserProfile />} />
                     <Route path="profile/:id" element={<UserProfile />} />
-                    <Route path="beneficiaries" element={<UserBeneficiaries />} />
+                    <Route
+                      path="beneficiaries"
+                      element={<UserBeneficiaries />}
+                    />
                     <Route path="transactions" element={<UserTransactions />} />
                     <Route path="deals" element={<UserDealRequests />} />
                     <Route path="users" element={<UserManagement />} />
@@ -349,11 +371,16 @@ function App() {
                 </Route>
 
                 {/* Portal – Business User */}
-                <Route element={<ProtectedRoute allowedRoles={BUSINESS_ROLES} />}>
+                <Route
+                  element={<ProtectedRoute allowedRoles={BUSINESS_ROLES} />}
+                >
                   <Route path="/user">
                     <Route index element={<BussinessUserDashboard />} />
                     <Route path="profile" element={<BussinessUserProfile />} />
-                    <Route path="transactions" element={<BussinessUserTransaction />} />
+                    <Route
+                      path="transactions"
+                      element={<BussinessUserTransaction />}
+                    />
                   </Route>
                 </Route>
 
@@ -366,17 +393,38 @@ function App() {
                   <Route path="/exchange">
                     <Route index element={<ExchangeAdminDashboard />} />
                     <Route path="Details/:uuid" element={<BranchDetails />} />
-                    <Route path="onboard-business" element={<ExchangeBusinessOnboarding />} />
+                    <Route
+                      path="onboard-business"
+                      element={<ExchangeBusinessOnboarding />}
+                    />
                     <Route path="kyb-review" element={<ExchangeKYBReview />} />
                     <Route path="kyb-config" element={<ExchangeKYBConfig />} />
                     <Route path="create-kyb-rule" element={<CreateKybRule />} />
-                    <Route path="transactions" element={<ExchangeTransactions />} />
+                    <Route
+                      path="transactions"
+                      element={<ExchangeTransactions />}
+                    />
                     <Route path="deals" element={<ExchangeDealReview />} />
-                    <Route path="documents" element={<ExchangeBusinessDocuments />} />
-                    <Route path="fee-management" element={<ExchangeFeeManagement />} />
-                    <Route path="payout-config" element={<ExchangePayoutConfig />} />
-                    <Route path="compliance-config" element={<ExchangeComplianceConfig />} />
-                    <Route path="branches" element={<ExchangeBranchManagement />} />
+                    <Route
+                      path="documents"
+                      element={<ExchangeBusinessDocuments />}
+                    />
+                    <Route
+                      path="fee-management"
+                      element={<ExchangeFeeManagement />}
+                    />
+                    <Route
+                      path="payout-config"
+                      element={<ExchangePayoutConfig />}
+                    />
+                    <Route
+                      path="compliance-config"
+                      element={<ExchangeComplianceConfig />}
+                    />
+                    <Route
+                      path="branches"
+                      element={<ExchangeBranchManagement />}
+                    />
                     <Route path="staff" element={<ExchangeStaffManagement />} />
                   </Route>
                 </Route>
@@ -385,11 +433,20 @@ function App() {
                 <Route element={<ProtectedRoute allowedRoles={BRANCH_ROLES} />}>
                   <Route path="/branch">
                     <Route index element={<BranchDashboard />} />
-                    <Route path="onboard-business" element={<BranchBusinessOnboarding />} />
+                    <Route
+                      path="onboard-business"
+                      element={<BranchBusinessOnboarding />}
+                    />
                     <Route path="kyb-queue" element={<BranchKYBQueue />} />
-                    <Route path="transactions" element={<BranchTransactions />} />
+                    <Route
+                      path="transactions"
+                      element={<BranchTransactions />}
+                    />
                     <Route path="deals" element={<BranchDealReview />} />
-                    <Route path="documents" element={<BranchBusinessDocuments />} />
+                    <Route
+                      path="documents"
+                      element={<BranchBusinessDocuments />}
+                    />
                   </Route>
                 </Route>
 

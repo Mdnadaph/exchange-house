@@ -347,13 +347,6 @@
 
 // export default Auth;
 
-
-
-
-
-
-
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -394,7 +387,12 @@ const loginSchema = Yup.object({
 
 /* ================= TYPES ================= */
 
-type LoginType = "SUPER_USER" | "ADMIN" | "STAFF" | "BUSINESS" | "BUSINESS_USER";
+type LoginType =
+  | "SUPER_USER"
+  | "ADMIN"
+  | "STAFF"
+  | "BUSINESS"
+  | "BUSINESS_USER";
 
 interface JwtPayload {
   roles?: string[];
@@ -410,10 +408,7 @@ const BRANCH_ROLES = [
   "ROLE_BRANCH_MANAGER",
 ];
 
-const BUSINESS_ROLES = [
-  "ROLE_USER",
-  "ROLE_BUSINESS_USER"
-]
+const BUSINESS_ROLES = ["ROLE_USER", "ROLE_BUSINESS_USER"];
 
 /* ================= COMPONENT ================= */
 
@@ -468,7 +463,6 @@ const Auth: React.FC = () => {
         setErrorMessage(res.data.message || "email or password do not match!");
         return;
       }
-
       const {
         requiresTwoFactor,
         tempToken,
@@ -499,7 +493,11 @@ const Auth: React.FC = () => {
         }
 
         if (loginType === "BUSINESS_USER") {
-          navigate(requiresTwoFactor ? "/business-user-2fa-login" : "/business-user-generateqr");
+          navigate(
+            requiresTwoFactor
+              ? "/business-user-2fa-login"
+              : "/business-user-generateqr",
+          );
           return;
         }
       }
@@ -532,7 +530,7 @@ const Auth: React.FC = () => {
           case "ROLE_BUSINESS_ADMIN":
             navigate("/portal");
             break;
-          
+
           case "ROLE_BUSINESS_USER":
             navigate("/portal");
             break;
@@ -549,7 +547,12 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || "Invalid email or password");
+      if (err?.response?.data?.statusCode === 428) {
+        navigate(`/change-password?uuid=${err?.response?.data?.data?.uuid}`);
+      }
+      setErrorMessage(
+        err?.response?.data?.message || "Invalid email or password",
+      );
     } finally {
       setSubmitting(false);
     }
