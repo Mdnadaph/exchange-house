@@ -92,7 +92,7 @@ const BulkTransactionForm = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [beneficiaryGroupsList, setBeneficiaryGroupList] = useState(null);
   const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<
-    Record<number, number>
+    Record<number, string>
   >({});
   const [loading, setLoading] = useState<boolean>(false);
   const token = cookie.token;
@@ -430,7 +430,7 @@ const BulkTransactionForm = ({
       beneficiaries: Object.entries(beneficiaryAmounts)?.map(
         ([beneficiaryId, amount]) => ({
           beneficiaryId: Number(beneficiaryId),
-          amount,
+          amount: Number(amount),
         }),
       ),
     };
@@ -461,10 +461,20 @@ const BulkTransactionForm = ({
           variant: "destructive",
         });
       }
-      toast({
-        title: "Bulk Transaction Submitted",
-        description: `Your bulk transaction with ${payload?.beneficiaries?.length} recipients has been submitted for processing.`,
-      });
+      const response = await res?.json();
+      if (response?.status === false) {
+        toast({
+          title: "Error",
+          description: response?.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Bulk Transaction Submitted",
+          description: `Your bulk transaction with ${payload?.beneficiaries?.length} recipients has been submitted for processing.`,
+        });
+      }
+
       setOpen(false);
       refetch?.();
       // Reset form
@@ -488,7 +498,7 @@ const BulkTransactionForm = ({
   const handleAmountChange = (beneficiaryId: number, value: string) => {
     setBeneficiaryAmounts((prev) => ({
       ...prev,
-      [beneficiaryId]: Number(value),
+      [beneficiaryId]: value,
     }));
   };
   const renderStepIndicator = () => (
@@ -737,6 +747,7 @@ const BulkTransactionForm = ({
                                       type="number"
                                       className="max-w-[160px]"
                                       value={beneficiaryAmounts[ben.id] ?? ""}
+                                      step="0.01"
                                       onChange={(e) =>
                                         handleAmountChange(
                                           ben.id,

@@ -232,14 +232,26 @@ const SingleTransactionForm = ({
       formData.append("documents", file);
     });
     try {
-      await axios.post(`${BASE_URL}/api/v1/transactions/single`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // ❌ DO NOT SET Content-Type
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/transactions/single`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // ❌ DO NOT SET Content-Type
+          },
         },
-      });
+      );
+      if (res?.data?.status === false) {
+        toast({
+          variant: "destructive",
+          title: res?.data?.message || "Transaction failed",
+        });
+      } else {
+        toast({ title: "Transaction created successfully" });
+      }
       refetch?.();
-      toast({ title: "Transaction created successfully" });
+
       setOpen(false);
       setShowConfirmation(false);
       setSelectedBeneficiary("");

@@ -50,7 +50,7 @@ interface BusinessProfile {
   monthlyLimit: number;
   dealValidityDays: number;
   supportedCurrencies: string[];
-  createdDate: number[];
+  createdDate: string;
   createdBy: string;
 }
 
@@ -113,7 +113,7 @@ const UserProfile = () => {
     monthlyLimit: 0,
     dealValidityDays: 0,
     supportedCurrencies: [],
-    createdDate: [],
+    createdDate: "",
     createdBy: "",
   });
 
@@ -195,7 +195,6 @@ const UserProfile = () => {
           },
         );
         const data = response?.data?.data;
-
         if (data?.documents) {
           setKybContext(data);
 
@@ -550,12 +549,9 @@ const UserProfile = () => {
     });
   };
 
-  const formatDate = (dateArray: number[]) => {
-    if (!dateArray || dateArray.length < 3) return "";
-    const [year, month, day] = dateArray;
-    return `${year}-${month.toString().padStart(2, "0")}-${day
-      .toString()
-      .padStart(2, "0")}`;
+  const formatDate = (date: string) => {
+    if (!date) return "";
+    return date.split(" ")[0];
   };
 
   if (isLoading) {
@@ -567,7 +563,7 @@ const UserProfile = () => {
       </UserLayout>
     );
   }
-
+  console.log("businessProfile", businessProfile);
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -829,7 +825,7 @@ const UserProfile = () => {
                       Registration Date:
                     </span>
                     <span className="font-medium">
-                      {formatDate(businessProfile.createdDate)}
+                      {formatDate(businessProfile?.createdDate)}
                     </span>
                   </div>
                 </div>
