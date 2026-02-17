@@ -64,6 +64,10 @@ interface ApiTransaction {
   latestComment?: string | null;
   type: "SINGLE" | "BULK";
   itemCount: number;
+  beneficiaryFeeAmount: number;
+  netPayoutAmount: number;
+  complianceStatus: string;
+  // totalDebit: number;
 }
 
 interface ApiResponse {
@@ -101,6 +105,10 @@ interface Transaction {
   bulkCount?: number;
   failureReason?: string;
   documents?: TransactionDocument[];
+  beneficiaryFeeAmount: string;
+  netPayoutAmount: string;
+  complianceStatus: string;
+  totalDebit: number;
 }
 
 const ExchangeTransactions = () => {
@@ -187,6 +195,20 @@ const ExchangeTransactions = () => {
               commentCount: apiTx.commentCount || 0,
               latestComment: apiTx.latestComment || null,
               bulkCount: apiTx?.itemCount,
+
+              complianceStatus: apiTx.complianceStatus || "",
+              totalDebit: apiTx.totalDebit,
+              
+              beneficiaryFeeAmount:
+                apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "0.00",
+              netPayoutAmount:
+                apiTx.netPayoutAmount?.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "0.00",
             }));
           setTransactions(transformedTransactions);
         } else {
@@ -284,6 +306,11 @@ const ExchangeTransactions = () => {
       DRAFT: {
         variant: "outline" as const,
         label: "Draft",
+        icon: AlertCircle,
+      },
+      COMPLIANCE_REVIEW: {
+        variant: "outline" as const,
+        label: "Compliance Review",
         icon: AlertCircle,
       },
     };
@@ -572,17 +599,18 @@ const ExchangeTransactions = () => {
 
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction.currency} {transaction.amount}
+                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.amount}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {transaction.localCurrency}{" "}
+                                {transaction.localCurrency}
                                 {transaction.localAmount}
                               </p>
                             </div>
                           </div>
 
                           {/* Transaction Details */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                             <div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Calendar className="h-3 w-3 mr-1" />
@@ -601,9 +629,9 @@ const ExchangeTransactions = () => {
                                 Exchange Rate:
                               </span>
                               <p className="font-medium">
-                                1 {transaction.currency} ={" "}
-                                {transaction.exchangeRate}{" "}
-                                {transaction.localCurrency}
+                                1 {transaction.currency.toUpperCase()} =
+                                {transaction.exchangeRate}
+                                {transaction.localCurrency} AED
                               </p>
                             </div>
 
@@ -611,7 +639,9 @@ const ExchangeTransactions = () => {
                               <span className="text-muted-foreground">
                                 Fee Details:
                               </span>
-                              <p className="font-medium">${transaction.fees}</p>
+                              <p className="font-medium">
+                                AED {transaction.fees}
+                              </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
                                   Paid by: {transaction.feeResponsibility}
@@ -635,9 +665,45 @@ const ExchangeTransactions = () => {
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
+                                Beneficiary Fee Amount:
+                              </span>
+                              <p className="font-medium">
+                                AED {transaction.beneficiaryFeeAmount}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Net Payout Amount:
+                              </span>
+                              <p className="font-medium">
+                                AED {transaction.netPayoutAmount}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Total Debit:
+                              </span>
+                              <p className="font-medium">
+                                AED {transaction.totalDebit}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Compliance Status:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.complianceStatus.replace(/_/g, ' ')}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
                                 Reference:
                               </span>
-                              <p className="font-medium font-mono text-xs">
+                              <p className="font-medium">
                                 {transaction.referenceNumber}
                               </p>
                             </div>

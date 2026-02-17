@@ -64,6 +64,7 @@ interface ApiTransaction {
   purpose?: string;
   feeResponsibility?: string;
   failureReason?: string;
+  complianceStatus: string;
 }
 
 interface ApiResponse {
@@ -101,6 +102,8 @@ interface Transaction {
   bulkCount?: number;
   failureReason?: string;
   documents?: TransactionDocument[];
+  complianceStatus: string;
+  totalDebit: number;
 }
 
 const BusinessUserTransaction = () => {
@@ -157,7 +160,11 @@ const BusinessUserTransaction = () => {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }),
+
+            complianceStatus: apiTx.complianceStatus || "",
             currency: apiTx.sourceCurrency,
+            totalDebit: apiTx.totalDebit,
+            
             exchangeRate: apiTx?.exchangeRate?.toFixed(3),
             localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -281,6 +288,11 @@ const BusinessUserTransaction = () => {
       REJECTED: {
         variant: "outline" as const,
         label: "Rejected",
+        icon: AlertCircle,
+      },
+      COMPLIANCE_REVIEW: {
+        variant: "outline" as const,
+        label: "Compliance Review",
         icon: AlertCircle,
       },
     };
@@ -621,17 +633,17 @@ const BusinessUserTransaction = () => {
 
                               <div className="text-right space-y-1">
                                 <p className="text-xl font-bold text-foreground">
-                                  {transaction.currency} {transaction.amount}
+                                  {transaction.currency.toUpperCase()} {transaction.amount}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {transaction.localCurrency}{" "}
+                                  {transaction.localCurrency}
                                   {transaction.localAmount}
                                 </p>
                               </div>
                             </div>
 
                             {/* Transaction Details */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                               <div className="space-y-1">
                                 <div className="flex items-center text-muted-foreground">
                                   <Calendar className="h-3 w-3 mr-1" />
@@ -652,9 +664,9 @@ const BusinessUserTransaction = () => {
                                   Exchange Rate:
                                 </span>
                                 <p className="font-medium">
-                                  1 {transaction.currency} ={" "}
-                                  {transaction.exchangeRate}{" "}
-                                  {transaction.localCurrency}
+                                  1 {transaction.currency.toUpperCase()} =
+                                  {transaction.exchangeRate}
+                                  {transaction.localCurrency} AED
                                 </p>
                               </div>
 
@@ -663,13 +675,22 @@ const BusinessUserTransaction = () => {
                                   Fee Details:
                                 </span>
                                 <p className="font-medium">
-                                  ${transaction.fees}
+                                  AED {transaction.fees}
                                 </p>
                                 {transaction.feeResponsibility && (
                                   <p className="text-xs text-muted-foreground">
                                     Paid by: {transaction.feeResponsibility}
                                   </p>
                                 )}
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Total Debit:
+                                </span>
+                                <p className="font-medium">
+                                  AED {transaction.totalDebit}
+                                </p>
                               </div>
 
                               <div className="space-y-1">
@@ -684,6 +705,15 @@ const BusinessUserTransaction = () => {
                                     Reason: {transaction.failureReason}
                                   </p>
                                 )}
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Compliance Status:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.complianceStatus.replace(/_/g, ' ')}
+                                </p>
                               </div>
 
                               <div className="space-y-1">
