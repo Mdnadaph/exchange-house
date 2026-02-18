@@ -141,13 +141,13 @@ const BranchBusinessOnboarding = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    return status === "APPROVED" || status === "ACTIVE" ? (
-      <Badge variant="default">Active</Badge>
-    ) : (
-      <Badge variant="secondary">Pending</Badge>
-    );
-  };
+  // const getStatusBadge = (status) => {
+  //   return status === "APPROVED" || status === "ACTIVE" ? (
+  //     <Badge variant="default">Active</Badge>
+  //   ) : (
+  //     <Badge variant="secondary">Pending</Badge>
+  //   );
+  // };
 
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < pagination.totalPages) {
@@ -269,7 +269,7 @@ const BranchBusinessOnboarding = () => {
                               <h3 className="font-semibold text-foreground">
                                 {business.companyName}
                               </h3>
-                              {getStatusBadge(business.status)}
+                              {/* {getStatusBadge(business.status)} */}
                               {getKYBStatusBadge(business.status)}
                             </div>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -298,7 +298,9 @@ const BranchBusinessOnboarding = () => {
                                   </span>
                                   <span className="ml-2 font-medium">
                                     {business.businessEmail}
-                                    {business.businessPhone}
+                                    <span className="ml-2 font-medium">
+                                      {business.businessPhone}
+                                    </span>
                                   </span>
                                 </div>
                               </div>

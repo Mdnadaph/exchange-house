@@ -252,9 +252,9 @@ const BeneficiaryRegistrationForm = ({
     // 1. Log the final URL to ensure it's correct
     const fullUrl = `${BASE_URL.endsWith("/") ? BASE_URL : BASE_URL + "/"}api/v1/beneficiaries`;
 
-    const countryObj = payoutDestinations.find(
-      (d) => d.code === (residencyType === "uae" ? "AE" : beneficiaryCountry),
-    );
+    // const countryObj = payoutDestinations.find(
+    //   (d) => d.code === (residencyType === "uae" ? "AE" : beneficiaryCountry),
+    // );
 
     const payload: any = {
       name:
@@ -262,7 +262,7 @@ const BeneficiaryRegistrationForm = ({
           ? `${formData.firstName} ${formData.lastName}`
           : formData.companyName,
       type: beneficiaryType.toUpperCase(),
-      countryId: countryObj?.id || 1,
+      countryId: beneficiaryCountry == "AE" ? 1 : beneficiaryCountry,
       relationshipType: formData.relationshipType.toUpperCase() || "OTHER",
       purpose: formData.purpose,
       expectedMonthlyVolume: Number(formData.expectedMonthlyVolume) || 0,
@@ -276,7 +276,7 @@ const BeneficiaryRegistrationForm = ({
       city: formData.city,
       state: formData.state,
       postalCode: formData.postalCode,
-      addressCountryId: countryObj?.id || 1,
+      addressCountryId: beneficiaryCountry == "AE" ? 1 : beneficiaryCountry,
     };
 
     if (beneficiaryType === "individual") {

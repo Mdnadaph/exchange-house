@@ -46,14 +46,14 @@ const ExchangeBusinessOnboarding = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const responseData = response?.data;
 
       if (!responseData?.status || !responseData?.data) {
         console.warn(
           "Invalid API response:",
-          responseData?.message || "No data"
+          responseData?.message || "No data",
         );
         setBusinesses([]);
         return;
@@ -96,7 +96,7 @@ const ExchangeBusinessOnboarding = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const responseData = response?.data;
       if (responseData?.status && responseData?.data) {
@@ -266,7 +266,7 @@ const ExchangeBusinessOnboarding = () => {
                               <h3 className="font-semibold text-foreground">
                                 {business.companyName}
                               </h3>
-                              {getStatusBadge(business.status)}
+                              {/* {getStatusBadge(business.status)} */}
                               {getKYBStatusBadge(business.status)}
                             </div>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -294,8 +294,11 @@ const ExchangeBusinessOnboarding = () => {
                                     Contact:
                                   </span>
                                   <span className="ml-2 font-medium">
-                                    {business.businessEmail} (
-                                    {business.businessPhone})
+                                    {business.businessEmail}
+
+                                    <span className="ml-2 font-medium">
+                                      {business.businessPhone}
+                                    </span>
                                   </span>
                                 </div>
                               </div>

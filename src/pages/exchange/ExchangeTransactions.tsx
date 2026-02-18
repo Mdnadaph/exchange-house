@@ -198,7 +198,7 @@ const ExchangeTransactions = () => {
 
               complianceStatus: apiTx.complianceStatus || "",
               totalDebit: apiTx.totalDebit,
-              
+
               beneficiaryFeeAmount:
                 apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
@@ -695,7 +695,10 @@ const ExchangeTransactions = () => {
                                 Compliance Status:
                               </span>
                               <p className="font-medium">
-                                {transaction.complianceStatus.replace(/_/g, ' ')}
+                                {transaction.complianceStatus.replace(
+                                  /_/g,
+                                  " ",
+                                )}
                               </p>
                             </div>
 

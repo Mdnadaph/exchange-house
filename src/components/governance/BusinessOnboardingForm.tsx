@@ -74,7 +74,8 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
 
   const [branchList, setBranchList] = useState<Branch[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<String>("");
   const [formData, setFormData] = useState({
     // Business Information
     companyName: "",
@@ -175,6 +176,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   };
 
   const confirmOnboarding = async () => {
+    setLoading(true);
     try {
       const business = {
         companyName: formData.companyName,
@@ -204,8 +206,18 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       };
 
       const apiFormData = new FormData();
-      apiFormData.append("business", JSON.stringify(business));
-      apiFormData.append("admin", JSON.stringify(admin));
+      apiFormData.append(
+        "business",
+        new Blob([JSON.stringify(business)], {
+          type: "application/json",
+        }),
+      );
+      apiFormData.append(
+        "admin",
+        new Blob([JSON.stringify(admin)], {
+          type: "application/json",
+        }),
+      );
 
       // idDocuments.forEach((doc) => {
       //   if (doc.file) {
@@ -225,7 +237,6 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           },
         },
       );
-
       if (response.data.status) {
         toast({
           title: "Business Onboarded Successfully",
@@ -274,6 +285,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       });
     } finally {
       setShowConfirmation(false);
+      setLoading(false);
     }
   };
 
@@ -574,7 +586,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       </Card>
 
       {/* ID Documents Section */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -588,7 +600,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             showHeader={false}
           />
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 
@@ -716,14 +728,25 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 id="monthlyLimit"
                 type="number"
                 value={formData.monthlyLimit}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!value) {
+                    setError("Monthly limit is required");
+                  } else if (Number(value) <= 0) {
+                    setError("Monthly limit must be greater than 0");
+                  } else {
+                    setError("");
+                  }
                   setFormData((prev) => ({
                     ...prev,
-                    monthlyLimit: e.target.value,
-                  }))
-                }
+                    monthlyLimit: value,
+                  }));
+                }}
                 placeholder="Enter limit amount"
               />
+              {error && (
+                <p className="text-red-500 font-normal text-sm pt-3">{error}</p>
+              )}
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
@@ -922,7 +945,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSubmit}>Create Business Account</Button>
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? "Creating...." : "Create Business Account"}
+              </Button>
             )}
           </div>
         </DialogContent>

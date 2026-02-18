@@ -336,7 +336,6 @@ const TransactionComments = ({
 
     fetchComments();
   }, [transactionId, cookies.token]);
-
   // Helper function to map API role to our role type
   const mapRoleToType = (role: string): "Business" | "Exchange" | "Branch" => {
     const roleMap: Record<string, "Business" | "Exchange" | "Branch"> = {
@@ -445,11 +444,11 @@ const TransactionComments = ({
       }
     } catch (error: any) {
       console.error("Error adding comment:", error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to add comment",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: error.response?.data?.message || "Failed to add comment",
+      //   variant: "destructive",
+      // });
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);
@@ -501,9 +500,9 @@ const TransactionComments = ({
                     <span className="font-semibold text-foreground">
                       {comment.author}
                     </span>
-                    {comment.branchName && (
+                    {comment?.role && (
                       <span className="text-xs text-muted-foreground">
-                        • {comment.branchName}
+                        • {comment?.role}
                       </span>
                     )}
                     <span className="text-xs text-muted-foreground ml-auto">

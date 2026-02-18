@@ -1123,8 +1123,6 @@
 
 // export default AdminExchangeHouses;
 
-
-
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1214,7 +1212,8 @@ interface ExchangeAdmin {
   licenseExpiryDate: string | null;
   businessAddress: string | null;
   city: string | null;
-  country: Country | null;
+  country: string;
+  countryId: number;
   postalCode: string | null;
   subscriptionPlan: Plan | null;
   subscriptionStartDate: string | null;
@@ -1248,8 +1247,11 @@ const AdminExchangeHouses = () => {
   const [selectedHouseId, setSelectedHouseId] = useState<number | null>(null);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState<ExchangeAdmin | null>(null);
+  const [selectedAdmin, setSelectedAdmin] = useState<ExchangeAdmin | null>(
+    null,
+  );
 
   // Data from APIs
   const [countries, setCountries] = useState<Country[]>([]);
@@ -1347,11 +1349,11 @@ const AdminExchangeHouses = () => {
       }
     } catch (err) {
       console.error("Failed to fetch exchange admins", err);
-      toast({
-        title: "Error",
-        description: "Failed to load exchange houses",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to load exchange houses",
+      //   variant: "destructive",
+      // });
     } finally {
       setLoading(false);
     }
@@ -1421,11 +1423,12 @@ const AdminExchangeHouses = () => {
           },
         );
       }
-
       if (res.data.status) {
         toast({
           title: "Success",
-          description: res.data.message || (isEdit ? "Exchange house updated" : t("exchangeHouseCreated")),
+          description:
+            res.data.message ||
+            (isEdit ? "Exchange house updated" : t("exchangeHouseCreated")),
         });
         setIsOnboardingOpen(false);
         fetchExchangeAdmins(); // refresh list
@@ -1449,13 +1452,22 @@ const AdminExchangeHouses = () => {
         });
         setIsEdit(false);
         setSelectedAdmin(null);
+      } else {
+        toast({
+          title: "Error",
+          description: res.data.message || "Something went wrong",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       console.error(`${isEdit ? "Update" : "Onboarding"} error:`, err);
       toast({
         title: "Error",
         description:
-          err.response?.data?.message || (isEdit ? "Failed to update exchange house" : "Failed to create exchange house"),
+          err.response?.data?.message ||
+          (isEdit
+            ? "Failed to update exchange house"
+            : "Failed to create exchange house"),
         variant: "destructive",
       });
     } finally {
@@ -1467,7 +1479,7 @@ const AdminExchangeHouses = () => {
     if (!selectedHouseId) return;
 
     try {
-      const res = await axios.post(
+      const res = await axios.patch(
         `${BASE_URL}/api/v3/super/exchange-admins/toggle-status/suspend`,
         {
           id: selectedHouseId,
@@ -1492,7 +1504,8 @@ const AdminExchangeHouses = () => {
       console.error("Suspend error:", err);
       toast({
         title: "Error",
-        description: err.response?.data?.message || "Failed to suspend exchange house",
+        description:
+          err.response?.data?.message || "Failed to suspend exchange house",
         variant: "destructive",
       });
     } finally {
@@ -1505,8 +1518,8 @@ const AdminExchangeHouses = () => {
     if (!selectedHouseId) return;
 
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/v3/super/exchange-admins/toggle-status/activate`,
+      const res = await axios.patch(
+        `${BASE_URL}/api/v3/super/exchange-admins/toggle-status/suspend`,
         {
           id: selectedHouseId,
           exchangeStatus: "ACTIVE",
@@ -1530,11 +1543,51 @@ const AdminExchangeHouses = () => {
       console.error("Activate error:", err);
       toast({
         title: "Error",
-        description: err.response?.data?.message || "Failed to activate exchange house",
+        description:
+          err.response?.data?.message || "Failed to activate exchange house",
         variant: "destructive",
       });
     } finally {
       setActivateDialogOpen(false);
+      setSelectedHouseId(null);
+    }
+  };
+
+  const handleDeactive = async () => {
+    if (!selectedHouseId) return;
+
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v3/super/exchange-admins/toggle-status/suspend`,
+        {
+          id: selectedHouseId,
+          exchangeStatus: "DEACTIVATED",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (res.data.status) {
+        toast({
+          title: "Deactive Exchange House",
+          description:
+            res.data.message || "Exchange house has been Deactivated.",
+        });
+        fetchExchangeAdmins();
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description:
+          err.response?.data?.message || "Failed to deactivate exchange house",
+        variant: "destructive",
+      });
+    } finally {
+      setDeactivateDialogOpen(false);
       setSelectedHouseId(null);
     }
   };
@@ -1612,9 +1665,15 @@ const AdminExchangeHouses = () => {
 
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{isEdit ? "Edit Exchange House" : t("exchangeHouseOnboardingForm")}</DialogTitle>
+                <DialogTitle>
+                  {isEdit
+                    ? "Edit Exchange House"
+                    : t("exchangeHouseOnboardingForm")}
+                </DialogTitle>
                 <DialogDescription>
-                  {isEdit ? "Update the details of the exchange house" : "Enter details to onboard new exchange house"}
+                  {isEdit
+                    ? "Update the details of the exchange house"
+                    : "Enter details to onboard new exchange house"}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1856,7 +1915,10 @@ const AdminExchangeHouses = () => {
                       if (nameLower.includes("enterprise"))
                         descKey = "enterprisePlanDesc";
 
-                      const priceDisplay = plan.price === 0 ? "Custom" : `$${plan.price.toFixed(0)}/mo`;
+                      const priceDisplay =
+                        plan.price === 0
+                          ? "Custom"
+                          : `$${plan.price.toFixed(0)}/mo`;
 
                       return (
                         <Card
@@ -1894,6 +1956,22 @@ const AdminExchangeHouses = () => {
                     onClick={() => {
                       setIsOnboardingOpen(false);
                       setIsEdit(false);
+                      setFormData({
+                        fullName: "",
+                        email: "",
+                        primaryContactEmail: "",
+                        phoneNumber: "",
+                        legalBusinessName: "",
+                        tradingName: "",
+                        registrationNumber: "",
+                        centralBankLicense: "",
+                        licenseExpiryDate: "",
+                        businessAddress: "",
+                        city: "",
+                        countryId: 1, // default UAE
+                        postalCode: "",
+                        subscriptionPlanId: 2, // default Professional
+                      });
                       setSelectedAdmin(null);
                     }}
                   >
@@ -1903,7 +1981,11 @@ const AdminExchangeHouses = () => {
                     onClick={handleSubmitOnboarding}
                     disabled={formSubmitting}
                   >
-                    {formSubmitting ? "Submitting..." : isEdit ? "Update Exchange House" : "Submit Onboarding"}
+                    {formSubmitting
+                      ? "Submitting..."
+                      : isEdit
+                        ? "Update Exchange House"
+                        : "Submit Onboarding"}
                   </Button>
                 </div>
               </div>
@@ -2000,7 +2082,9 @@ const AdminExchangeHouses = () => {
               </div>
             ) : (
               exchangeAdmins.map((admin) => {
-                console.log(`Admin ID: ${admin.id}, Status: ${admin.exchangeStatus}`); // Debug log - remove after testing
+                console.log(
+                  `Admin ID: ${admin.id}, Status: ${admin.exchangeStatus}`,
+                ); // Debug log - remove after testing
                 const status = getStatusBadge(admin.exchangeStatus);
                 const plan = getPlanBadge(admin.subscriptionPlan);
                 const StatusIcon = status.icon;
@@ -2053,16 +2137,16 @@ const AdminExchangeHouses = () => {
                                 className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
                               >
                                 <Building2 className="h-3.5 w-3.5" />
-                                {admin.city || "N/A"},{" "}
-                                {admin.country?.name || "N/A"}
+                                {admin.city}, {admin?.country}
                               </span>
-                              <span
+                              {/* <span
                                 className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
                               >
                                 <GitBranch className="h-3.5 w-3.5" />
-                                {admin.subscriptionPlan?.branchLimit ?? "N/A"}{" "}
+                                {admin.subscriptionPlan?.branchLimit ??
+                                  "N/A"}{" "}
                                 Branches
-                              </span>
+                              </span> */}
                               <span
                                 className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
                               >
@@ -2074,13 +2158,13 @@ const AdminExchangeHouses = () => {
                             <div className="flex flex-wrap gap-4 mt-1 text-xs text-muted-foreground">
                               <span>
                                 {t("centralBankLicense")}:{" "}
-                                {admin.centralBankLicense || "N/A"}
+                                {admin.centralBankLicense}
                               </span>
                               <span>
                                 {t("dateOnboarded")}:{" "}
-                                {admin.subscriptionStartDate || "N/A"}
+                                {admin.subscriptionStartDate}
                               </span>
-                              <span>{t("monthlyTransactionVolume")}: N/A</span>
+                              <span>Email: {admin?.email}</span>
                             </div>
                           </div>
                         </div>
@@ -2104,7 +2188,8 @@ const AdminExchangeHouses = () => {
                             <DropdownMenuContent
                               align={isRTL ? "start" : "end"}
                             >
-                              {admin.exchangeStatus?.toLowerCase() === "active" ? (
+                              {admin.exchangeStatus?.toLowerCase() ===
+                              "active" ? (
                                 <DropdownMenuItem
                                   className={`text-orange-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
@@ -2117,7 +2202,10 @@ const AdminExchangeHouses = () => {
                                   />
                                   {t("suspendExchangeHouse")}
                                 </DropdownMenuItem>
-                              ) : admin.exchangeStatus?.toLowerCase() === "suspended" ? (
+                              ) : admin.exchangeStatus?.toLowerCase() ===
+                                  "suspended" ||
+                                admin.exchangeStatus?.toLowerCase() ===
+                                  "pending" ? (
                                 <DropdownMenuItem
                                   className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
@@ -2138,18 +2226,25 @@ const AdminExchangeHouses = () => {
                                   setFormData({
                                     fullName: admin.fullName || "",
                                     email: admin.email || "",
-                                    primaryContactEmail: admin.primaryContactEmail || "",
+                                    primaryContactEmail:
+                                      admin.primaryContactEmail || "",
                                     phoneNumber: admin.phoneNumber || "",
-                                    legalBusinessName: admin.legalBusinessName || "",
+                                    legalBusinessName:
+                                      admin.legalBusinessName || "",
                                     tradingName: admin.tradingName || "",
-                                    registrationNumber: admin.registrationNumber || "",
-                                    centralBankLicense: admin.centralBankLicense || "",
-                                    licenseExpiryDate: admin.licenseExpiryDate || "",
-                                    businessAddress: admin.businessAddress || "",
+                                    registrationNumber:
+                                      admin.registrationNumber || "",
+                                    centralBankLicense:
+                                      admin.centralBankLicense || "",
+                                    licenseExpiryDate:
+                                      admin.licenseExpiryDate || "",
+                                    businessAddress:
+                                      admin.businessAddress || "",
                                     city: admin.city || "",
-                                    countryId: admin.country?.id || 1,
+                                    countryId: admin.countryId || 1,
                                     postalCode: admin.postalCode || "",
-                                    subscriptionPlanId: admin.subscriptionPlan?.id || 2,
+                                    subscriptionPlanId:
+                                      admin.subscriptionPlan?.id || 2,
                                   });
                                   setIsEdit(true);
                                   setIsOnboardingOpen(true);
@@ -2163,6 +2258,10 @@ const AdminExchangeHouses = () => {
 
                               <DropdownMenuItem
                                 className={`text-destructive ${isRTL ? "flex-row-reverse" : ""}`}
+                                onClick={() => {
+                                  setSelectedHouseId(admin.id);
+                                  setDeactivateDialogOpen(true);
+                                }}
                               >
                                 <Trash2
                                   className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
@@ -2193,7 +2292,9 @@ const AdminExchangeHouses = () => {
                     if (currentPage > 0) setCurrentPage(currentPage - 1);
                   }}
                   aria-disabled={currentPage <= 0}
-                  className={currentPage <= 0 ? "pointer-events-none opacity-50" : ""}
+                  className={
+                    currentPage <= 0 ? "pointer-events-none opacity-50" : ""
+                  }
                 />
               </PaginationItem>
               {[...Array(totalPages)].map((_, i) => (
@@ -2215,10 +2316,15 @@ const AdminExchangeHouses = () => {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (currentPage < totalPages - 1) setCurrentPage(currentPage + 1);
+                    if (currentPage < totalPages - 1)
+                      setCurrentPage(currentPage + 1);
                   }}
                   aria-disabled={currentPage >= totalPages - 1}
-                  className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+                  className={
+                    currentPage >= totalPages - 1
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -2233,6 +2339,16 @@ const AdminExchangeHouses = () => {
           description={t("confirmSuspendDesc")}
           confirmText={t("suspendExchangeHouse")}
           onConfirm={handleSuspend}
+          variant="destructive"
+        />
+
+        <ConfirmationDialog
+          open={deactivateDialogOpen}
+          onOpenChange={setDeactivateDialogOpen}
+          title="Confirm Deactive"
+          description="Are you sure you want to deactivate this exchange house?"
+          confirmText="Deactive Action House"
+          onConfirm={handleDeactive}
           variant="destructive"
         />
 

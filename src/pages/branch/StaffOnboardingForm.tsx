@@ -52,14 +52,12 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const branchId = cookies.branchId;
   const userRole = cookies.role;
 
-//   console.log("Branch Id :-", branchId);
-//   console.log("Staff Token:-", Token);
-//   console.log("Current User Role:", userRole);
+  //   console.log("Branch Id :-", branchId);
+  //   console.log("Staff Token:-", Token);
+  //   console.log("Current User Role:", userRole);
 
-//   const [cookies] = useCookies(["Token", "branchId"]);
-//   const Token = cookies.Token;
-  
-  
+  //   const [cookies] = useCookies(["Token", "branchId"]);
+  //   const Token = cookies.Token;
 
   const navigate = useNavigate();
   const uuid = useParams();
@@ -70,7 +68,8 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([
     "AED",
   ]);
-
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
   const [formData, setFormData] = useState({
     // Business Information
     companyName: "",
@@ -162,7 +161,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     setSelectedCurrencies((prev) =>
       prev.includes(currency)
         ? prev.filter((c) => c !== currency)
-        : [...prev, currency]
+        : [...prev, currency],
     );
   };
 
@@ -171,12 +170,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   };
 
   const confirmOnboarding = async () => {
-
-    console.log("DEBUG: Sending request with token:", token);
-  console.log("DEBUG: User Role from cookies:", userRole);
-  console.log("DEBUG: BranchId from cookies:", branchId);
-
-
+    setLoading(true);
     try {
       const business = {
         companyName: formData.companyName,
@@ -206,8 +200,18 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       };
 
       const apiFormData = new FormData();
-      apiFormData.append("business", JSON.stringify(business));
-      apiFormData.append("admin", JSON.stringify(admin));
+      apiFormData.append(
+        "business",
+        new Blob([JSON.stringify(business)], {
+          type: "application/json",
+        }),
+      );
+      apiFormData.append(
+        "admin",
+        new Blob([JSON.stringify(admin)], {
+          type: "application/json",
+        }),
+      );
 
       // idDocuments.forEach((doc) => {
       //   if (doc.file) {
@@ -225,7 +229,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (response.data.status) {
@@ -276,14 +280,15 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       });
     } finally {
       setShowConfirmation(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-  if (branchId) {
-    setFormData(prev => ({ ...prev, branchId: branchId }));
-  }
-}, [branchId]);
+    if (branchId) {
+      setFormData((prev) => ({ ...prev, branchId: branchId }));
+    }
+  }, [branchId]);
 
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
@@ -532,7 +537,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
       </Card>
 
       {/* ID Documents Section */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -546,7 +551,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             showHeader={false}
           />
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 
@@ -674,14 +679,25 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 id="monthlyLimit"
                 type="number"
                 value={formData.monthlyLimit}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!value) {
+                    setError("Monthly limit is required");
+                  } else if (Number(value) <= 0) {
+                    setError("Monthly limit must be greater than 0");
+                  } else {
+                    setError("");
+                  }
                   setFormData((prev) => ({
                     ...prev,
-                    monthlyLimit: e.target.value,
-                  }))
-                }
+                    monthlyLimit: value,
+                  }));
+                }}
                 placeholder="Enter limit amount"
               />
+              {error && (
+                <p className="text-sm font-normal pt-2 text-red-500">{error}</p>
+              )}
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
@@ -884,7 +900,9 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSubmit}>Create Business Account</Button>
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? "Creating" : "Create Business Account"}
+              </Button>
             )}
           </div>
         </DialogContent>
@@ -903,4 +921,3 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
 };
 
 export default StaffOnboardingForm;
-

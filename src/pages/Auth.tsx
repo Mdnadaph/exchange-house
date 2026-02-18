@@ -688,7 +688,7 @@ const Auth: React.FC = () => {
                             variant="link"
                             className="p-0 h-auto text-primary"
                           >
-                            forgot Password
+                            Forgot Password?
                           </Button>
                         </div>
                       </CardContent>
