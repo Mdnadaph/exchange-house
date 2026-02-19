@@ -123,10 +123,9 @@ const ExchangeTransactions = () => {
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const [page, setPage] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
-
+  const [transitionDashboardData, setTransationDashboardData] = useState(null);
   const token = cookies.token;
   const fullname = cookies.fullName;
-
   // Fetch data from API
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -152,6 +151,7 @@ const ExchangeTransactions = () => {
         );
 
         const data = response?.data;
+        setTransationDashboardData(data?.data);
         setTotalTransactionData(data?.data?.pagination?.totalItems);
         if (data.status && data.data) {
           // Transform API data to match UI structure
@@ -249,7 +249,7 @@ const ExchangeTransactions = () => {
     };
 
     fetchTransactions();
-  }, [transactionType]);
+  }, [transactionType, page]);
   // console.log("transitionData", transactions);
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
@@ -412,7 +412,8 @@ const ExchangeTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {statistics.totalTransactions}
+                {/* {statistics.totalTransactions} */}
+                {transitionDashboardData?.dashboard?.totalTransactions}
               </div>
               <p className="text-xs text-muted-foreground">+0 this month</p>
             </CardContent>
@@ -427,11 +428,11 @@ const ExchangeTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {statistics.completedTransactions}
+                {transitionDashboardData?.dashboard?.completedTransactions}
               </div>
               <p className="text-xs text-muted-foreground">
-                {statistics.totalTransactions > 0
-                  ? `${((statistics.completedTransactions / statistics.totalTransactions) * 100).toFixed(1)}% success rate`
+                {transitionDashboardData?.dashboard?.totalTransactions > 0
+                  ? `${transitionDashboardData?.dashboard?.successRate?.toFixed(2)}% success rate`
                   : "No transactions"}
               </p>
             </CardContent>
@@ -446,7 +447,7 @@ const ExchangeTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {statistics.pendingTransactions}
+                {transitionDashboardData?.dashboard?.pendingTransactions}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting processing
@@ -463,7 +464,10 @@ const ExchangeTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${statistics.totalVolume.toLocaleString("en-US")}
+                $
+                {transitionDashboardData?.dashboard?.totalAmount?.toLocaleString(
+                  "en-US",
+                )}
               </div>
               <p className="text-xs text-muted-foreground">This year</p>
             </CardContent>
