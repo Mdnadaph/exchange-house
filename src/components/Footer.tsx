@@ -95,7 +95,7 @@ const Footer = () => {
         <div className="border-t border-background/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-background/60">
-              <span>© 2024 BizPay Axis. {t('allRightsReserved')}</span>
+              <span>© {new Date().getFullYear()} BizPay Axis. {t('allRightsReserved')}</span>
               <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <a href="#" className="hover:text-accent transition-smooth">{t('privacyPolicy')}</a>
                 <a href="#" className="hover:text-accent transition-smooth">{t('termsOfService')}</a>
