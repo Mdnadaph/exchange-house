@@ -347,6 +347,8 @@
 
 // export default Auth;
 
+
+
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -590,12 +592,15 @@ const Auth: React.FC = () => {
 
           <Card className="shadow-xl">
             <Tabs defaultValue="login">
-              <CardHeader>
+              {/* <CardHeader>
                 <TabsList className="grid grid-cols-2">
                   <TabsTrigger value="login">Sign In</TabsTrigger>
                   <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 </TabsList>
-              </CardHeader>
+              </CardHeader> */}
+              <div className="pt-4 tb-2 text-center">
+                <h1 className="text-xl font-bold">Sign In</h1>
+              </div>
 
               {/* ================= LOGIN ================= */}
               <TabsContent value="login">
@@ -751,7 +756,7 @@ const Auth: React.FC = () => {
 
       {/* FOOTER */}
       <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-        © 2026 B2B Remit Portal. All rights reserved.
+        @ {new Date().getFullYear()} TIJARASOFT. All rights reserved.
       </footer>
     </div>
   );
