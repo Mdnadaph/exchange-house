@@ -407,6 +407,7 @@ const ExchangeAdminDashboard = () => {
 
   const [statsData, setStatsData] = useState<any[]>([]);
   const [recentKYBApplications, setRecentKYBApplications] = useState<any[]>([]);
+  console.log("recentKYBApplications", recentKYBApplications);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -636,7 +637,7 @@ const ExchangeAdminDashboard = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 max-h-[400px] overflow-y-auto">
                 {recentKYBApplications.map((application) => {
                   const status = getStatusBadge(application.status);
                   return (
@@ -652,9 +653,9 @@ const ExchangeAdminDashboard = () => {
                           <Badge variant={status.variant} className="text-xs">
                             {status.label}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          {/* <Badge variant="outline" className="text-xs">
                             {application.priority.toUpperCase()}
-                          </Badge>
+                          </Badge> */}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {application.id} • {application.branch}
