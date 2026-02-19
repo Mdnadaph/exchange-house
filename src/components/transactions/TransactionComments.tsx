@@ -295,45 +295,44 @@ const TransactionComments = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch comments from API
-  useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${BASE_URL}/api/v1/transactions/${transactionId}/comments`,
-          {
-            headers: {
-              Authorization: `Bearer ${cookies.token}`,
-            },
+  const fetchComments = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/transactions/${transactionId}/comments`,
+        {
+          headers: {
+            Authorization: `Bearer ${cookies.token}`,
           },
+        },
+      );
+
+      if (response.data.status && response.data.data) {
+        // Transform API data to match our Comment interface
+        const transformedComments: Comment[] = response.data.data.map(
+          (apiComment: ApiComment) => ({
+            id: apiComment.id.toString(),
+            author: apiComment.createdByName || apiComment.createdByEmail,
+            role: mapRoleToType(apiComment.role),
+            message: apiComment.message,
+            timestamp: formatDateTime(apiComment.createdAt),
+            branchName: apiComment.branchName || undefined,
+          }),
         );
-
-        if (response.data.status && response.data.data) {
-          // Transform API data to match our Comment interface
-          const transformedComments: Comment[] = response.data.data.map(
-            (apiComment: ApiComment) => ({
-              id: apiComment.id.toString(),
-              author: apiComment.createdByName || apiComment.createdByEmail,
-              role: mapRoleToType(apiComment.role),
-              message: apiComment.message,
-              timestamp: formatDateTime(apiComment.createdAt),
-              branchName: apiComment.branchName || undefined,
-            }),
-          );
-          setComments(transformedComments);
-        }
-      } catch (error) {
-        console.error("Error fetching comments:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load comments",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+        setComments(transformedComments);
       }
-    };
-
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load comments",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchComments();
   }, [transactionId, cookies.token]);
   // Helper function to map API role to our role type
@@ -417,7 +416,7 @@ const TransactionComments = ({
           },
         },
       );
-
+      console.log("res", response);
       if (response.data.status) {
         // Add the new comment to the list
         const newCommentObj: Comment = {
@@ -436,7 +435,7 @@ const TransactionComments = ({
           title: "Success",
           description: "Comment added successfully",
         });
-
+        fetchComments();
         // Optional: Refetch comments to get the actual server data
         // await refetchComments();
       } else {

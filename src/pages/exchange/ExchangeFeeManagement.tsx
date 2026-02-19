@@ -46,7 +46,6 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
-import { Switch } from "@/components/ui/switch";
 
 // --- Types ---
 interface FeeRule {
@@ -91,7 +90,6 @@ const ExchangeFeeManagement = () => {
   // Edit Mode States
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | number | null>(null);
-  const [filterByStatus, setFilterByStatus] = useState<string>("");
 
   const [newFeeRule, setNewFeeRule] = useState({
     transactionType: "SINGLE",
@@ -117,17 +115,6 @@ const ExchangeFeeManagement = () => {
     { label: "Sri Lanka", value: "LK" },
     { label: "United Arab Emirates", value: "AE" },
     { label: "Qatar", value: "QA" },
-  ];
-
-  const status = [
-    {
-      label: "Active",
-      value: "ACTIVE",
-    },
-    {
-      label: "Inactive",
-      value: "INACTIVE",
-    },
   ];
 
   const transactionTypes = [
@@ -353,9 +340,7 @@ const ExchangeFeeManagement = () => {
   }, [selectedCountry, selectedType]);
 
   // --- UI Helpers ---
-  const activeRules = filterByStatus
-    ? rules.filter((rule) => rule.status === filterByStatus)
-    : rules;
+  const activeRules = rules.filter((rule) => rule.status === "ACTIVE");
 
   const getStatusBadge = (status: boolean | string) => {
     const isActive =
@@ -368,46 +353,7 @@ const ExchangeFeeManagement = () => {
       <Badge variant="secondary">Inactive</Badge>
     );
   };
-  const handleToggleActive = async (id: number | string, value: boolean) => {
-    const payload = {
-      status: value ? "INACTIVE" : "ACTIVE",
-    };
-    try {
-      const res = await axios.put(
-        `${BASE_URL}/api/v3/fees/update/${id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (res?.data?.statusCode === 400) {
-        toast({
-          title: "Error",
-          description: res?.data?.message || "Unable to update status of fee",
-          variant: "destructive",
-        });
-      } else if (res?.data?.statusCode === 500) {
-        toast({
-          title: "Error",
-          description: res?.data?.message || "Unable to update status of fee",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Update Status",
-          description:
-            res?.data?.message || "Fee rule update status successfully",
-        });
-      }
-      fetchFeeRules();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed",
-        description: error?.message || "Failed to update status",
-      });
-    }
-  };
+
   const stats = [
     {
       title: "Total Fee Rules",
@@ -804,24 +750,6 @@ const ExchangeFeeManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-full sm:w-48">
-                <Label>Filter by Status</Label>
-                <Select
-                  value={filterByStatus}
-                  onValueChange={setFilterByStatus}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {status.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </CardHeader>
 
@@ -941,12 +869,6 @@ const ExchangeFeeManagement = () => {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                            <Switch
-                              checked={rule?.status == "ACTIVE" ? true : false}
-                              onCheckedChange={(checked) =>
-                                handleToggleActive(rule.id, checked)
-                              }
-                            />
                           </div>
                         </TableCell>
                       </TableRow>
