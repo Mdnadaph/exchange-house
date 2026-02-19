@@ -19,6 +19,7 @@ import {
   Edit,
   Trash2,
   FileText,
+  XCircle,
 } from "lucide-react";
 
 import {
@@ -43,6 +44,7 @@ import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -58,7 +60,7 @@ const AdminDashboard = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-
+  const { t, isRTL } = useLanguage();
   /* =========================
      AUTH / TOAST
   ========================= */
@@ -73,22 +75,21 @@ const AdminDashboard = () => {
   const fetchExchangeAdmins = async () => {
     try {
       setLoadingAdmins(true);
-      const res = await axios.get(
-        `${BASE_URL}/api/v1/dashboard/super-admin`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.get(`${BASE_URL}/api/v1/dashboard/super-admin`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const admins = res.data.data.exchangeAdmins || [];
       setExchangeAdmins(admins);
-      setDashboardStats(res.data.data.stats || {
-        totalExchangeAdmin: 0,
-        pendingApproval: 0,
-        activeBusinesses: 0,
-        totalBranch: 0,
-      });
+      setDashboardStats(
+        res.data.data.stats || {
+          totalExchangeAdmin: 0,
+          pendingApproval: 0,
+          activeBusinesses: 0,
+          totalBranch: 0,
+        },
+      );
       setTotalElements(admins.length);
       setTotalPages(Math.ceil(admins.length / pageSize));
     } catch (error) {
@@ -108,7 +109,7 @@ const AdminDashboard = () => {
 
   const paginatedAdmins = exchangeAdmins.slice(
     currentPage * pageSize,
-    (currentPage + 1) * pageSize
+    (currentPage + 1) * pageSize,
   );
 
   /* =========================
@@ -190,6 +191,39 @@ const AdminDashboard = () => {
     },
   ];
 
+  const getStatusBadge = (status: string | null) => {
+    const lower = (status || "").toLowerCase();
+    if (lower === "active") {
+      return {
+        variant: "default" as const,
+        label: t("active"),
+        icon: CheckCircle,
+      };
+    }
+    if (lower === "pending") {
+      return {
+        variant: "secondary" as const,
+        label: t("pending"),
+        icon: Clock,
+      };
+    }
+    if (lower === "suspended") {
+      return {
+        variant: "destructive" as const,
+        label: t("suspended"),
+        icon: XCircle,
+      };
+    }
+    if (lower === "deactivated") {
+      return {
+        variant: "destructive" as const,
+        label: "Deactivated",
+        icon: XCircle,
+      };
+    }
+    return { variant: "secondary" as const, label: t("pending"), icon: Clock };
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -210,7 +244,7 @@ const AdminDashboard = () => {
               System Settings
             </Button> */}
 
-            <Button 
+            <Button
               onClick={() => navigate("/admin/exchange-houses")}
               variant="business"
             >
@@ -225,6 +259,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
+
             return (
               <Card
                 key={index}
@@ -285,38 +320,49 @@ const AdminDashboard = () => {
                   </TableRow>
                 )}
 
-                {paginatedAdmins.map((admin) => (
-                  <TableRow key={admin.id}>
-                    <TableCell className="font-medium">
-                      {admin.fullName}
-                    </TableCell>
+                {paginatedAdmins.map((admin) => {
+                  const status = getStatusBadge(admin?.exchangeStatus);
+                  const StatusIcon = status.icon;
+                  return (
+                    <TableRow key={admin.id}>
+                      <TableCell className="font-medium">
+                        {admin.fullName}
+                      </TableCell>
 
-                    <TableCell>{admin.email}</TableCell>
+                      <TableCell>{admin.email}</TableCell>
 
-                    <TableCell>{admin.phoneNumber || "—"}</TableCell>
+                      <TableCell>{admin.phoneNumber || "—"}</TableCell>
 
-                    <TableCell>
-                      <Badge variant={admin.active ? "default" : "destructive"}>
+                      <TableCell>
+                        {/* <Badge variant={admin.active ? "default" : "destructive"}>
                         {admin.active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600"
+                      </Badge> */}
+                        <Badge
+                          variant={status.variant}
+                          className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          <StatusIcon className="h-3 w-3" />
+                          {status.label}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
 
