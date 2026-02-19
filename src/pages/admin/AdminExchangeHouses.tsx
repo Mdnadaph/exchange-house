@@ -1124,6 +1124,7 @@
 // export default AdminExchangeHouses;
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1236,6 +1237,7 @@ interface ListData {
 }
 
 const AdminExchangeHouses = () => {
+  const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
 
@@ -1923,11 +1925,10 @@ const AdminExchangeHouses = () => {
                       return (
                         <Card
                           key={plan.id}
-                          className={`cursor-pointer transition-all ${
-                            isSelected
+                          className={`cursor-pointer transition-all ${isSelected
                               ? "ring-2 ring-primary"
                               : "hover:border-primary/50"
-                          }`}
+                            }`}
                           onClick={() =>
                             setFormData({
                               ...formData,
@@ -2099,9 +2100,8 @@ const AdminExchangeHouses = () => {
                   <Card key={admin.id} className="shadow-card">
                     <CardContent className="p-6">
                       <div
-                        className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
-                          isRTL ? "lg:flex-row-reverse" : ""
-                        }`}
+                        className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${isRTL ? "lg:flex-row-reverse" : ""
+                          }`}
                       >
                         <div
                           className={`flex items-start gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
@@ -2172,7 +2172,9 @@ const AdminExchangeHouses = () => {
                         <div
                           className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
                         >
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm"
+                            onClick={() => navigate(`/admin/exchange-houses/${admin.id}`)}
+                          >
                             <Eye
                               className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                             />
@@ -2189,7 +2191,7 @@ const AdminExchangeHouses = () => {
                               align={isRTL ? "start" : "end"}
                             >
                               {admin.exchangeStatus?.toLowerCase() ===
-                              "active" ? (
+                                "active" ? (
                                 <DropdownMenuItem
                                   className={`text-orange-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
@@ -2203,9 +2205,9 @@ const AdminExchangeHouses = () => {
                                   {t("suspendExchangeHouse")}
                                 </DropdownMenuItem>
                               ) : admin.exchangeStatus?.toLowerCase() ===
-                                  "suspended" ||
+                                "suspended" ||
                                 admin.exchangeStatus?.toLowerCase() ===
-                                  "pending" ? (
+                                "pending" ? (
                                 <DropdownMenuItem
                                   className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
@@ -2271,6 +2273,8 @@ const AdminExchangeHouses = () => {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
+
+
                       </div>
                     </CardContent>
                   </Card>

@@ -160,6 +160,7 @@ import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDealSettings from "./pages/admin/AdminDealSettings";
 import AdminExchangeHouses from "./pages/admin/AdminExchangeHouses";
+import AdminExchangeHouseDetails from "./pages/admin/AdminExchangeHouseDetails";
 
 // Portal / Business Admin
 import UserDashboard from "./pages/portal/UserDashboard";
@@ -334,6 +335,7 @@ function App() {
                       path="/admin/exchange-houses"
                       element={<AdminExchangeHouses />}
                     />
+                    <Route path="/admin/exchange-houses/:id" element={<AdminExchangeHouseDetails />} />
                     <Route path="onboarding" element={<AdminOnboarding />} />
                     <Route
                       path="deal-settings"
