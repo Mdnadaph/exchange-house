@@ -722,8 +722,8 @@ const BranchTransactions = () => {
                                 <Download className="h-4 w-4 mr-1" />
                                 Receipt
                               </Button>
-                              {transaction.documents &&
-                                transaction.documents.length > 0 && (
+                              {transaction?.documents &&
+                                transaction?.documents?.length > 0 && (
                                   <Button variant="outline" size="sm">
                                     <FileText className="h-4 w-4 mr-1" />
                                     Documents
@@ -769,7 +769,7 @@ const BranchTransactions = () => {
                             </div>
                           </div>
 
-                          {expandedTransaction === transaction.id && (
+                          {expandedTransaction === transaction?.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
                               {/*<ProofOfPaymentUpload
                                 transactionId={transaction.id}
@@ -778,12 +778,11 @@ const BranchTransactions = () => {
                               />*/}
                               <ProofOfPaymentUpload
                                 transactionId={transaction.id}
-                                userRole="Branch" // ✅ use role string, not token
+                                userRole="Branch"
                                 userName={fullname}
-                                initialDocuments={transaction.documents} // ✅ pass the documents
+                                initialDocuments={transaction.documents}
                               />
                               <TransactionComments
-                                key={transaction.id} // ← add this
                                 transactionId={transaction.id}
                                 userRole="Branch"
                                 userName={fullname}
