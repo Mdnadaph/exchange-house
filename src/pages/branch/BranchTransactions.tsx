@@ -771,14 +771,21 @@ const BranchTransactions = () => {
 
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
-                              <ProofOfPaymentUpload
+                              {/*<ProofOfPaymentUpload
                                 transactionId={transaction.id}
                                 userRole={token}
                                 userName={fullname}
+                              />*/}
+                              <ProofOfPaymentUpload
+                                transactionId={transaction.id}
+                                userRole="Branch" // ✅ use role string, not token
+                                userName={fullname}
+                                initialDocuments={transaction.documents} // ✅ pass the documents
                               />
                               <TransactionComments
+                                key={transaction.id} // ← add this
                                 transactionId={transaction.id}
-                                userRole={token}
+                                userRole="Branch"
                                 userName={fullname}
                               />
                             </div>

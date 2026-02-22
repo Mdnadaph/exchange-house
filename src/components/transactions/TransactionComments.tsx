@@ -233,6 +233,8 @@
 
 //export default TransactionComments;
 
+
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -307,9 +309,9 @@ const TransactionComments = ({
         },
       );
 
-      if (response.data.status && response.data.data) {
+      if (response?.data?.status && response?.data?.data) {
         // Transform API data to match our Comment interface
-        const transformedComments: Comment[] = response.data.data.map(
+        const transformedComments: Comment[] = response?.data?.data?.map(
           (apiComment: ApiComment) => ({
             id: apiComment.id.toString(),
             author: apiComment.createdByName || apiComment.createdByEmail,
@@ -397,57 +399,58 @@ const TransactionComments = ({
   };
 
   const confirmAddComment = async () => {
+    if (!newComment.trim()) return;
     try {
       setIsSubmitting(true);
-
-      // Prepare the request payload based on your API requirements
-      const payload = {
-        message: newComment.trim(),
-        // Add other required fields if needed by your API
-      };
-
+      const payload = { message: newComment.trim() };
       const response = await axios.post(
         `${BASE_URL}/api/v1/transactions/${transactionId}/comments`,
         payload,
-        {
-          headers: {
-            Authorization: `Bearer ${cookies.token}`,
-            "Content-Type": "application/json",
-          },
-        },
+        { headers: { Authorization: `Bearer ${cookies.token}` } },
       );
-      console.log("res", response);
-      if (response.data.status) {
-        // Add the new comment to the list
+
+      console.log("POST response:", response.data); // check structure
+
+      // Case 1: API returns { status: true, data: { ... } }
+      if (response.data?.status && response.data?.data) {
+        const apiComment = response.data.data;
         const newCommentObj: Comment = {
-          id: Date.now().toString(), // Temporary ID until we refetch
-          author: userName,
-          role: userRole,
-          message: newComment.trim(),
-          timestamp: formatDateTime(new Date().toISOString()),
-          branchName: userRole === "Branch" ? branchName : undefined,
+          id: apiComment.id.toString(),
+          author: apiComment.createdByName || userName,
+          role: mapRoleToType(apiComment.role || userRole),
+          message: apiComment.message,
+          timestamp: formatDateTime(apiComment.createdAt),
+          branchName: apiComment.branchName || branchName,
         };
-
-        setComments([...comments, newCommentObj]);
-        setNewComment("");
-
-        toast({
-          title: "Success",
-          description: "Comment added successfully",
-        });
-        fetchComments();
-        // Optional: Refetch comments to get the actual server data
-        // await refetchComments();
-      } else {
-        throw new Error(response.data.message || "Failed to add comment");
+        setComments((prev) => [...prev, newCommentObj]);
       }
+      // Case 2: API returns the comment directly
+      else if (response.data?.id) {
+        const apiComment = response.data;
+        const newCommentObj: Comment = {
+          id: apiComment.id.toString(),
+          author: apiComment.createdByName || userName,
+          role: mapRoleToType(apiComment.role || userRole),
+          message: apiComment.message,
+          timestamp: formatDateTime(apiComment.createdAt),
+          branchName: apiComment.branchName || branchName,
+        };
+        setComments((prev) => [...prev, newCommentObj]);
+      }
+      // Fallback: refetch all comments
+      else {
+        await fetchComments();
+      }
+
+      setNewComment("");
+      toast({ title: "Success", description: "Comment added" });
     } catch (error: any) {
       console.error("Error adding comment:", error);
-      // toast({
-      //   title: "Error",
-      //   description: error.response?.data?.message || "Failed to add comment",
-      //   variant: "destructive",
-      // });
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to add comment",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);

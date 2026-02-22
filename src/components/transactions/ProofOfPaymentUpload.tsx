@@ -329,6 +329,7 @@ interface ProofOfPaymentUploadProps {
   userName: string;
   branchName?: string;
   onUploadComplete?: () => void;
+  initialDocuments?: any[];
 }
 
 const ProofOfPaymentUpload = ({
@@ -337,6 +338,7 @@ const ProofOfPaymentUpload = ({
   userName,
   branchName,
   onUploadComplete,
+  initialDocuments,
 }: ProofOfPaymentUploadProps) => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
@@ -361,62 +363,99 @@ const ProofOfPaymentUpload = ({
   const [documents, setDocuments] = useState<ProofDocument[]>([]);
 
   // Fetch documents for this transaction
+  //useEffect(() => {
+  //  const fetchDocuments = async () => {
+  //    try {
+  //      setIsLoading(true);
+  //      const response = await axios.get(
+  //        `${BASE_URL}/api/v1/transactions?type=SINGLE`,
+  //        {
+  //          headers: {
+  //            Authorization: `Bearer ${cookies.token}`,
+  //          },
+  //        },
+  //      );
+
+  //      if (response?.data?.status && response?.data?.data) {
+  //        // Find the specific transaction by ID
+  //        //const transaction = response?.data?.data?.transactions.find(
+  //        //  (tx: any) => tx.transactionId === transactionId,
+  //        //);
+  //        const transaction = response?.data?.data?.transactions.find(
+  //          (tx: any) => tx.reference === transactionId,
+  //        );
+
+  //        if (transaction && transaction?.documents) {
+  //          // Transform API documents to ProofDocument format
+  //          const transformedDocuments: ProofDocument[] =
+  //            transaction.documents.map((doc: ApiDocument) => ({
+  //              id: doc.id.toString(),
+  //              name: doc.fileName,
+  //              type: determineDocumentType(doc.fileName),
+  //              uploadDate: formatDateTime(doc.uploadedAt),
+  //              uploadedBy: doc.uploadedBy,
+  //              uploaderRole: determineUploaderRole(doc.uploadedBy),
+  //              size: doc.fileSize
+  //                ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB`
+  //                : "Unknown size",
+  //              fileUrl: doc.fileUrl,
+  //              branchName: branchName,
+  //            }));
+  //          setDocuments(transformedDocuments);
+  //        }
+  //      }
+  //    } catch (error) {
+  //      console.error("Error fetching documents:", error);
+  //      toast({
+  //        title: "Error",
+  //        description: "Failed to load documents",
+  //        variant: "destructive",
+  //      });
+  //    } finally {
+  //      setIsLoading(false);
+  //    }
+  //  };
+
+  //  fetchDocuments();
+  //}, [transactionId, cookies.token, branchName]);
+
   useEffect(() => {
+    // If initialDocuments are passed from parent, use them directly
+    if (initialDocuments && initialDocuments.length > 0) {
+      const transformed = initialDocuments.map((doc: ApiDocument) => ({
+        id: doc.id.toString(),
+        name: doc.fileName,
+        type: determineDocumentType(doc.fileName),
+        uploadDate: formatDateTime(doc.uploadedAt),
+        uploadedBy: doc.uploadedBy,
+        uploaderRole: determineUploaderRole(doc.uploadedBy),
+        size: doc.fileSize
+          ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB`
+          : "Unknown size",
+        fileUrl: doc.fileUrl,
+        branchName: branchName,
+      }));
+      setDocuments(transformed);
+      return; // ✅ no API call needed
+    }
+
+    // Fallback: fetch from API (optional, can be removed if you always pass documents)
     const fetchDocuments = async () => {
       try {
         setIsLoading(true);
         const response = await axios.get(
           `${BASE_URL}/api/v1/transactions?type=SINGLE`,
-          {
-            headers: {
-              Authorization: `Bearer ${cookies.token}`,
-            },
-          },
+          { headers: { Authorization: `Bearer ${cookies.token}` } },
         );
-
-        if (response?.data?.status && response?.data?.data) {
-          // Find the specific transaction by ID
-          //const transaction = response?.data?.data?.transactions.find(
-          //  (tx: any) => tx.transactionId === transactionId,
-          //);
-          const transaction = response?.data?.data?.transactions.find(
-            (tx: any) => tx.reference === transactionId,
-          );
-
-          if (transaction && transaction?.documents) {
-            // Transform API documents to ProofDocument format
-            const transformedDocuments: ProofDocument[] =
-              transaction.documents.map((doc: ApiDocument) => ({
-                id: doc.id.toString(),
-                name: doc.fileName,
-                type: determineDocumentType(doc.fileName),
-                uploadDate: formatDateTime(doc.uploadedAt),
-                uploadedBy: doc.uploadedBy,
-                uploaderRole: determineUploaderRole(doc.uploadedBy),
-                size: doc.fileSize
-                  ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB`
-                  : "Unknown size",
-                fileUrl: doc.fileUrl,
-                branchName: branchName,
-              }));
-            setDocuments(transformedDocuments);
-          }
-        }
+        // ... rest of your existing fetch logic
       } catch (error) {
-        console.error("Error fetching documents:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load documents",
-          variant: "destructive",
-        });
+        // handle error
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchDocuments();
-  }, [transactionId, cookies.token, branchName]);
-
+  }, [transactionId, cookies.token, branchName, initialDocuments]); // 👈 add initialDocuments dependency
   //const handleView = (doc: ProofDocument) => {
   //  setActiveDoc(doc);
   //  setOpenViewer(true);

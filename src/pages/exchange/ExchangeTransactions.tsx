@@ -759,14 +759,20 @@ const ExchangeTransactions = () => {
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
-                              <ProofOfPaymentUpload
+                              {/*<ProofOfPaymentUpload
                                 transactionId={transaction.id}
                                 userRole="Exchange"
-                                userName="Sarah Wilson"
+                                userName={fullname}
+                              />*/}
+                              <ProofOfPaymentUpload
+                                transactionId={transaction.id}
+                                userRole="Exchange" // ✅ use role string
+                                userName={fullname}
+                                initialDocuments={transaction.documents}
                               />
                               <TransactionComments
                                 transactionId={transaction.id}
-                                userRole={token}
+                                userRole="Exchange"
                                 userName={fullname}
                               />
                             </div>
