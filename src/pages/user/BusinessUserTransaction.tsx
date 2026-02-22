@@ -164,7 +164,7 @@ const BusinessUserTransaction = () => {
             complianceStatus: apiTx.complianceStatus || "",
             currency: apiTx.sourceCurrency,
             totalDebit: apiTx.totalDebit,
-            
+
             exchangeRate: apiTx?.exchangeRate?.toFixed(3),
             localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -633,7 +633,8 @@ const BusinessUserTransaction = () => {
 
                               <div className="text-right space-y-1">
                                 <p className="text-xl font-bold text-foreground">
-                                  {transaction.currency.toUpperCase()} {transaction.amount}
+                                  {transaction.currency.toUpperCase()}{" "}
+                                  {transaction.amount}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   {transaction.localCurrency}
@@ -712,7 +713,10 @@ const BusinessUserTransaction = () => {
                                   Compliance Status:
                                 </span>
                                 <p className="font-medium">
-                                  {transaction.complianceStatus.replace(/_/g, ' ')}
+                                  {transaction.complianceStatus.replace(
+                                    /_/g,
+                                    " ",
+                                  )}
                                 </p>
                               </div>
 

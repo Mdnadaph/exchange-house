@@ -16,6 +16,7 @@ import {
   X,
   Building2,
   Calendar,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -63,15 +64,65 @@ const ExchangeBusinessDocuments = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileType, setPreviewFileType] = useState<
+    "image" | "pdf" | "other"
+  >("other");
+  const [previewFileName, setPreviewFileName] = useState("");
 
-  const handleView = (doc: any) => {
-    setActiveDoc(doc);
-    setOpenViewer(true);
+  //const handleView = (doc: any) => {
+  //  setActiveDoc(doc);
+  //  setOpenViewer(true);
+  //};
+  const handleView = async (doc: any) => {
+    try {
+      setPreviewLoading(true);
+      setPreviewFileName(doc.documentName); // ✅ use documentName
+
+      const response = await axios.get(doc.viewUrl, {
+        // ✅ use viewUrl
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${cookies.token}`,
+        },
+      });
+
+      const blob = response.data;
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Detect file type from documentName
+      if (doc.documentName.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+        setPreviewFileType("image");
+      } else if (doc.documentName.match(/\.pdf$/i)) {
+        setPreviewFileType("pdf");
+      } else {
+        setPreviewFileType("other");
+      }
+
+      setPreviewUrl(blobUrl);
+      setPreviewOpen(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Preview failed",
+        description: "Unable to load document preview.",
+      });
+    } finally {
+      setPreviewLoading(false);
+    }
   };
-
+  const handleClosePreview = (open: boolean) => {
+    if (!open && previewUrl) {
+      URL.revokeObjectURL(previewUrl); // free memory
+      setPreviewUrl(null);
+    }
+    setPreviewOpen(open);
+  };
   const handleDownload = async (doc: any) => {
     try {
-      const response = await axios.get(doc.fileUrl, {
+      const response = await axios.get(doc.viewUrl, {
         responseType: "blob",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -79,10 +130,11 @@ const ExchangeBusinessDocuments = () => {
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
+
       const link = document.createElement("a");
 
       link.href = url;
-      link.setAttribute("download", doc.documentName || "document");
+      link.setAttribute("download", doc.documentName);
       document.body.appendChild(link);
       link.click();
 
@@ -108,7 +160,7 @@ const ExchangeBusinessDocuments = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (res.data?.status) {
@@ -312,7 +364,7 @@ const ExchangeBusinessDocuments = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleView(doc.viewUrl)}
+                        onClick={() => handleView(doc)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View
@@ -385,39 +437,52 @@ const ExchangeBusinessDocuments = () => {
         )}
 
         {/* ============= Modal for View Documents =========== */}
-        <Dialog open={openViewer} onOpenChange={setOpenViewer}>
-          <DialogContent className="max-w-4xl h-[80vh]">
-            <DialogHeader>
-              <DialogTitle>{activeDoc?.documentName}</DialogTitle>
+        <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0">
+            {/* Fixed Header */}
+            <DialogHeader className="p-4 border-b">
+              <DialogTitle className="truncate">{previewFileName}</DialogTitle>
             </DialogHeader>
 
-            {activeDoc && (
-              <>
-                {/* IMAGE */}
-                {activeDoc.fileUrl?.match(/\.(jpg|jpeg|png|webp)$/i) && (
-                  <img
-                    src={activeDoc.fileUrl}
-                    alt="Document Preview"
-                    className="w-full h-full object-contain"
-                  />
-                )}
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-auto p-4 bg-muted/10">
+              {previewLoading && (
+                <div className="flex justify-center items-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
 
-                {/* PDF */}
-                {activeDoc.fileUrl?.match(/\.pdf$/i) && (
-                  <iframe
-                    src={activeDoc.fileUrl}
-                    className="w-full h-full border rounded"
-                  />
-                )}
+              {!previewLoading && previewUrl && (
+                <>
+                  {/* Image Preview */}
+                  {previewFileType === "image" && (
+                    <div className="flex justify-center items-center h-full">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  )}
 
-                {/* OTHER FILES */}
-                {!activeDoc.fileUrl?.match(/\.(jpg|jpeg|png|webp|pdf)$/i) && (
-                  <div className="text-center text-muted-foreground">
-                    Preview not available. Please download the file.
-                  </div>
-                )}
-              </>
-            )}
+                  {/* PDF Preview */}
+                  {previewFileType === "pdf" && (
+                    <iframe
+                      src={previewUrl}
+                      className="w-full h-full min-h-[500px] border rounded"
+                      title="PDF Preview"
+                    />
+                  )}
+
+                  {/* Unsupported File Type */}
+                  {previewFileType === "other" && (
+                    <div className="text-center text-muted-foreground py-8">
+                      Preview not available for this file type.
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>

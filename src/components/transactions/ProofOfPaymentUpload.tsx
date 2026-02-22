@@ -300,6 +300,7 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 interface ApiDocument {
   id: number;
@@ -346,6 +347,15 @@ const ProofOfPaymentUpload = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [openViewer, setOpenViewer] = useState(false);
+  const [activeDoc, setActiveDoc] = useState<ProofDocument | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileType, setPreviewFileType] = useState<
+    "image" | "pdf" | "other"
+  >("other");
+  const [previewFileName, setPreviewFileName] = useState("");
 
   // Load documents from API
   const [documents, setDocuments] = useState<ProofDocument[]>([]);
@@ -364,13 +374,16 @@ const ProofOfPaymentUpload = ({
           },
         );
 
-        if (response.data.status && response.data.data) {
+        if (response?.data?.status && response?.data?.data) {
           // Find the specific transaction by ID
+          //const transaction = response?.data?.data?.transactions.find(
+          //  (tx: any) => tx.transactionId === transactionId,
+          //);
           const transaction = response?.data?.data?.transactions.find(
-            (tx: any) => tx.transactionId === transactionId,
+            (tx: any) => tx.reference === transactionId,
           );
 
-          if (transaction && transaction.documents) {
+          if (transaction && transaction?.documents) {
             // Transform API documents to ProofDocument format
             const transformedDocuments: ProofDocument[] =
               transaction.documents.map((doc: ApiDocument) => ({
@@ -403,6 +416,82 @@ const ProofOfPaymentUpload = ({
 
     fetchDocuments();
   }, [transactionId, cookies.token, branchName]);
+
+  //const handleView = (doc: ProofDocument) => {
+  //  setActiveDoc(doc);
+  //  setOpenViewer(true);
+  //};
+  const handleView = async (doc: ProofDocument) => {
+    try {
+      setPreviewLoading(true);
+      setPreviewFileName(doc.name);
+
+      const response = await axios.get(doc.fileUrl, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${cookies.token}`,
+        },
+      });
+
+      const blob = response.data;
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Determine file type for the viewer
+      if (doc.name.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+        setPreviewFileType("image");
+      } else if (doc.name.match(/\.pdf$/i)) {
+        setPreviewFileType("pdf");
+      } else {
+        setPreviewFileType("other");
+      }
+
+      setPreviewUrl(blobUrl);
+      setPreviewOpen(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Preview failed",
+        description: "Unable to load document preview.",
+      });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+  const handleClosePreview = (open: boolean) => {
+    if (!open && previewUrl) {
+      URL.revokeObjectURL(previewUrl); // free memory
+      setPreviewUrl(null);
+    }
+    setPreviewOpen(open);
+  };
+  const handleDownload = async (doc: ProofDocument) => {
+    try {
+      const response = await axios.get(doc.fileUrl, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${cookies.token}`,
+        },
+      });
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", doc.name); // or extract filename from doc
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: "Unable to download document",
+      });
+    }
+  };
 
   // Helper function to determine document type from file name
   const determineDocumentType = (
@@ -522,7 +611,7 @@ const ProofOfPaymentUpload = ({
         },
       );
 
-      if (response.data.status) {
+      if (response?.data?.status) {
         // Create new document object
         const newDocument: ProofDocument = {
           id: Date.now().toString(),
@@ -592,6 +681,54 @@ const ProofOfPaymentUpload = ({
 
   return (
     <Card className="shadow-card">
+      <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0">
+          {/* Fixed Header */}
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle className="truncate">{previewFileName}</DialogTitle>
+          </DialogHeader>
+
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-auto p-4 bg-muted/10">
+            {previewLoading && (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+
+            {!previewLoading && previewUrl && (
+              <>
+                {/* Image Preview */}
+                {previewFileType === "image" && (
+                  <div className="flex justify-center items-center h-full">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                )}
+
+                {/* PDF Preview */}
+                {previewFileType === "pdf" && (
+                  <iframe
+                    src={previewUrl}
+                    className="w-full h-full min-h-[500px] border rounded"
+                    title="PDF Preview"
+                  />
+                )}
+
+                {/* Unsupported File Type */}
+                {previewFileType === "other" && (
+                  <div className="text-center text-muted-foreground py-8">
+                    Preview not available for this file type.
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <ShieldCheck className="h-5 w-5 text-primary" />
@@ -600,7 +737,7 @@ const ProofOfPaymentUpload = ({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Upload Section - Only for Exchange/Branch */}
-        {canUpload && (
+        {/*{canUpload && (
           <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
             <h4 className="font-semibold text-foreground">
               Upload New Document
@@ -681,7 +818,7 @@ const ProofOfPaymentUpload = ({
               PDF, JPG, PNG. Max size: 20MB
             </p>
           </div>
-        )}
+        )}*/}
 
         {/* Existing Documents */}
         <div className="space-y-3">
@@ -741,11 +878,19 @@ const ProofOfPaymentUpload = ({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleView(doc)}
+                        >
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(doc)}
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
