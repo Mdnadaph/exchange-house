@@ -79,7 +79,7 @@ const BranchBusinessDocuments = () => {
       setError(null);
       let allDocuments: any[] = [];
       let page = 0;
-      const size = 100;
+      const size = 10;
       let fetchedDashboard: Dashboard | null = null;
       while (true) {
         try {
