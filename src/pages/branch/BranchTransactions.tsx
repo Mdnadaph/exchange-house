@@ -594,7 +594,7 @@ const BranchTransactions = () => {
                               <p className="text-sm text-muted-foreground">
                                 {transaction.id}
                                 {transaction.purpose &&
-                                  ` • ${transaction.purpose}`}
+                                  ` • ${transaction.purpose}`} 
                               </p>
                             </div>
 
