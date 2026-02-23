@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import SingleTransactionForm from "@/components/transactions/SingleTransactionForm";
 import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
 import PaymentExecutionForm from "@/components/transactions/PaymentExecutionForm";
+
 import TransactionComments from "@/components/transactions/TransactionComments";
 import ProofOfPaymentUpload from "@/components/transactions/ProofOfPaymentUpload";
 import {
@@ -594,7 +595,7 @@ const BranchTransactions = () => {
                               <p className="text-sm text-muted-foreground">
                                 {transaction.id}
                                 {transaction.purpose &&
-                                  ` • ${transaction.purpose}`} 
+                                  ` • ${transaction.purpose}`}
                               </p>
                             </div>
 
@@ -786,7 +787,13 @@ const BranchTransactions = () => {
                                 transactionId={transaction.id}
                                 userRole="Branch"
                                 userName={fullname}
+                                // token={token}     // optional – only if you change component to accept it
                               />
+                              {/* <TransactionComments
+                                transactionId={transaction.id}
+                                userName={fullname}
+                                branchName={transaction.branchName}   // ← optional – only if component really needs it for display
+                              /> */}
                             </div>
                           )}
                         </div>

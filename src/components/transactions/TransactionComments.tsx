@@ -1,3 +1,5 @@
+// Previous Code
+
 //import { useState } from "react";
 //import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 //import { Button } from "@/components/ui/button";
@@ -233,12 +235,20 @@
 
 //export default TransactionComments;
 
+
+
+
+
+
+// Code of Shambhu
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 import {
   MessageSquare,
   Send,
@@ -568,3 +578,400 @@ const TransactionComments = ({
 };
 
 export default TransactionComments;
+
+
+
+
+
+
+
+// Just For Test Code
+
+// import { useState, useEffect } from "react";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Textarea } from "@/components/ui/textarea";
+// import { Badge } from "@/components/ui/badge";
+// import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+// import {
+//   MessageSquare,
+//   Send,
+//   Building2,
+//   Landmark,
+//   MapPin,
+//   Loader2,
+// } from "lucide-react";
+// import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+// import { useToast } from "@/hooks/use-toast";
+// import axios from "axios";
+// import BASE_URL from "@/config/config";
+// import { useCookies } from "react-cookie";
+
+// interface Comment {
+//   id: string;
+//   author: string;
+//   role: "Business" | "Exchange" | "Branch";
+//   message: string;
+//   timestamp: string;
+//   branchName?: string;
+//   isOptimistic?: boolean;
+// }
+
+// interface ApiComment {
+//   id: number;
+//   message: string;
+//   createdByName: string;
+//   createdByEmail: string;
+//   role: string;
+//   branchId: number | null;
+//   branchName: string | null;
+//   createdAt: string;
+// }
+
+// interface TransactionCommentsProps {
+//   transactionId: string;
+//   userRole: "Business" | "Exchange" | "Branch";
+//   userName: string;
+//   branchName?: string;
+// }
+
+// const TransactionComments = ({
+//   transactionId,
+//   userRole,
+//   userName,
+//   branchName,
+// }: TransactionCommentsProps) => {
+//   const { toast } = useToast();
+//   const [cookies] = useCookies(["token"]);
+//   const [newComment, setNewComment] = useState("");
+//   const [showConfirmation, setShowConfirmation] = useState(false);
+//   const [comments, setComments] = useState<Comment[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+
+//   const token = cookies.token;
+
+//   // Debug: show in console which token & id are being used
+//   useEffect(() => {
+//     console.log("TransactionComments mounted", {
+//       transactionId,
+//       tokenPresent: !!token,
+//       tokenFirstChars: token ? token.substring(0, 10) + "..." : "no token",
+//     });
+//   }, [transactionId, token]);
+
+//   const fetchComments = async () => {
+//     if (!token) {
+//       toast({
+//         title: "Authentication error",
+//         description: "No token found. Please log in again.",
+//         variant: "destructive",
+//       });
+//       setIsLoading(false);
+//       return;
+//     }
+
+//     try {
+//       setIsLoading(true);
+//       console.log(`Fetching comments for ID: ${transactionId}`);
+
+//       const response = await axios.get(
+//         `${BASE_URL}/api/v1/transactions/${transactionId}/comments`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+
+//       console.log("GET comments response:", response.status, response.data);
+
+//       if (response?.data?.status && Array.isArray(response?.data?.data)) {
+//         const transformed: Comment[] = response.data.data.map(
+//           (api: ApiComment) => ({
+//             id: api.id.toString(),
+//             author: api.createdByName || api.createdByEmail || "Unknown",
+//             role: mapRoleToType(api.role),
+//             message: api.message,
+//             timestamp: formatDateTime(api.createdAt),
+//             branchName: api.branchName || undefined,
+//           })
+//         );
+
+//         setComments((prev) => {
+//           const realIds = new Set(transformed.map((c) => c.id));
+//           const optimisticOnly = prev.filter(
+//             (c) => c.isOptimistic && !realIds.has(c.id)
+//           );
+//           return [...optimisticOnly, ...transformed];
+//         });
+//       }
+//     } catch (error: any) {
+//       console.error("GET comments failed:", error);
+//       toast({
+//         title: "Error",
+//         description: "Failed to load comments",
+//         variant: "destructive",
+//       });
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchComments();
+//   }, [transactionId, token]);
+
+//   const mapRoleToType = (role: string): "Business" | "Exchange" | "Branch" => {
+//     const upper = (role || "").toUpperCase();
+//     if (upper.includes("BUSINESS")) return "Business";
+//     if (upper.includes("EXCHANGE") || upper.includes("ADMIN")) return "Exchange";
+//     if (upper.includes("BRANCH") || upper.includes("STAFF")) return "Branch";
+//     return "Business";
+//   };
+
+//   const formatDateTime = (dateString: string): string => {
+//     try {
+//       const date = new Date(dateString);
+//       return date.toLocaleString("en-US", {
+//         year: "numeric",
+//         month: "2-digit",
+//         day: "2-digit",
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: false,
+//       });
+//     } catch {
+//       return "Invalid date";
+//     }
+//   };
+
+//   const handleAddComment = () => {
+//     if (!newComment.trim()) {
+//       toast({
+//         title: "Error",
+//         description: "Comment cannot be empty",
+//         variant: "destructive",
+//       });
+//       return;
+//     }
+//     setShowConfirmation(true);
+//   };
+
+//   const confirmAddComment = async () => {
+//     if (!newComment.trim()) return;
+
+//     if (!token) {
+//       toast({
+//         title: "Error",
+//         description: "No authentication token. Please log in again.",
+//         variant: "destructive",
+//       });
+//       return;
+//     }
+
+//     const optimisticComment: Comment = {
+//       id: `optimistic-${Date.now()}`,
+//       author: userName || "You",
+//       role: userRole,
+//       message: newComment.trim(),
+//       timestamp: new Date().toLocaleString("en-US", {
+//         year: "numeric",
+//         month: "2-digit",
+//         day: "2-digit",
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: false,
+//       }),
+//       branchName: branchName,
+//       isOptimistic: true,
+//     };
+
+//     // Show comment immediately (optimistic update)
+//     setComments((prev) => [...prev, optimisticComment]);
+//     setNewComment("");
+//     toast({ title: "Success", description: "Comment added (local)" });
+
+//     try {
+//       setIsSubmitting(true);
+
+//       console.log("POST → using transactionId:", transactionId);
+//       console.log("POST → using token:", token.substring(0, 15) + "...");
+
+//       const response = await axios.post(
+//         `${BASE_URL}/api/v1/transactions/${transactionId}/comments`,
+//         { message: optimisticComment.message },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//           validateStatus: () => true, // do not throw on non-2xx
+//         }
+//       );
+
+//       console.log("POST response:", {
+//         status: response.status,
+//         data: response.data,
+//       });
+
+//       if (response.status >= 200 && response.status < 300) {
+//         // Success – try to sync real data after delay
+//         setTimeout(() => {
+//           fetchComments();
+//         }, 1800);
+//       } else {
+//         throw new Error(`Server returned status ${response.status}`);
+//       }
+//     } catch (error: any) {
+//       console.error("POST failed:", error);
+
+//       // Remove optimistic comment on failure
+//       setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id));
+
+//       const errMsg =
+//         error.response?.data?.message ||
+//         error.message ||
+//         "Could not send comment – check network/console";
+
+//       toast({
+//         title: "Failed to send comment",
+//         description: errMsg,
+//         variant: "destructive",
+//       });
+//     } finally {
+//       setIsSubmitting(false);
+//       setShowConfirmation(false);
+//     }
+//   };
+
+//   const getInitials = (name: string) => {
+//     return name
+//       .split(" ")
+//       .map((n) => n[0])
+//       .join("")
+//       .toUpperCase()
+//       .substring(0, 2) || "?";
+//   };
+
+//   return (
+//     <Card className="shadow-card">
+//       <CardHeader>
+//         <CardTitle className="flex items-center gap-2 text-lg">
+//           <MessageSquare className="h-5 w-5 text-primary" />
+//           Transaction Comments ({comments.length})
+//         </CardTitle>
+//       </CardHeader>
+
+//       <CardContent className="space-y-6">
+//         {/* Comments list */}
+//         <div className="space-y-4 max-h-96 overflow-y-auto">
+//           {isLoading ? (
+//             <div className="flex justify-center py-8">
+//               <Loader2 className="h-8 w-8 animate-spin text-primary" />
+//             </div>
+//           ) : comments.length === 0 ? (
+//             <div className="text-center py-8 text-muted-foreground">
+//               <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+//               <p>No comments yet. Be the first to comment!</p>
+//             </div>
+//           ) : (
+//             comments.map((comment) => (
+//               <div
+//                 key={comment.id}
+//                 className={`flex gap-3 p-4 bg-muted/30 rounded-lg ${
+//                   comment.isOptimistic ? "opacity-70 border border-dashed border-amber-400" : ""
+//                 }`}
+//               >
+//                 <Avatar className="h-10 w-10">
+//                   <AvatarFallback className="bg-primary text-primary-foreground">
+//                     {getInitials(comment.author)}
+//                   </AvatarFallback>
+//                 </Avatar>
+//                 <div className="flex-1 space-y-2">
+//                   <div className="flex items-center gap-2 flex-wrap">
+//                     <span className="font-semibold text-foreground">
+//                       {comment.author}
+//                       {comment.isOptimistic && (
+//                         <span className="text-xs text-amber-600 ml-2">(sending...)</span>
+//                       )}
+//                     </span>
+//                     {comment?.role && (
+//                       <span className="text-xs text-muted-foreground">
+//                         • {comment.role}
+//                       </span>
+//                     )}
+//                     {comment.branchName && (
+//                       <span className="text-xs text-muted-foreground italic">
+//                         ({comment.branchName})
+//                       </span>
+//                     )}
+//                     <span className="text-xs text-muted-foreground ml-auto">
+//                       {comment.timestamp}
+//                     </span>
+//                   </div>
+//                   <p className="text-sm text-foreground">{comment.message}</p>
+//                 </div>
+//               </div>
+//             ))
+//           )}
+//         </div>
+
+//         {/* Add comment form */}
+//         <div className="space-y-3 pt-4 border-t">
+//           <div className="flex items-center gap-2">
+//             {userRole === "Branch" && branchName && (
+//               <span className="text-xs text-muted-foreground">
+//                 ({branchName})
+//               </span>
+//             )}
+//           </div>
+
+//           <Textarea
+//             placeholder="Add a comment to this transaction..."
+//             value={newComment}
+//             onChange={(e) => setNewComment(e.target.value)}
+//             rows={3}
+//             className="resize-none"
+//             maxLength={500}
+//             disabled={isSubmitting}
+//           />
+
+//           <div className="flex justify-between items-center text-xs text-muted-foreground">
+//             <span>{newComment.length}/500 characters</span>
+
+//             <Button
+//               onClick={handleAddComment}
+//               disabled={!newComment.trim() || isSubmitting}
+//               variant="default"
+//             >
+//               {isSubmitting ? (
+//                 <>
+//                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+//                   Sending...
+//                 </>
+//               ) : (
+//                 <>
+//                   <Send className="h-4 w-4 mr-2" />
+//                   Add Comment
+//                 </>
+//               )}
+//             </Button>
+//           </div>
+//         </div>
+//       </CardContent>
+
+//       <ConfirmationDialog
+//         open={showConfirmation}
+//         onOpenChange={setShowConfirmation}
+//         onConfirm={confirmAddComment}
+//         title="Confirm Comment Submission"
+//         description="Are you sure you want to add this comment to the transaction? All parties will be able to see this comment."
+//         confirmText={isSubmitting ? "Sending..." : "Add Comment"}
+//         isConfirming={isSubmitting}
+//       />
+//     </Card>
+//   );
+// };
+
+// export default TransactionComments;
