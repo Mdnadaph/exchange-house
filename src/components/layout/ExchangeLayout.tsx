@@ -17,6 +17,7 @@ import {
   Files,
   Handshake,
   GitBranch,
+  BadgePercent,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -63,6 +64,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
     { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
     { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
+    { name: "Discounts", href: "/exchange/discount", icon: BadgePercent },
     { name: "Rate Deals", href: "/exchange/deals", icon: Handshake },
     { name: "Documents", href: "/exchange/documents", icon: Files },
     { name: "Fee Management", href: "/exchange/fee-management", icon: Calculator },

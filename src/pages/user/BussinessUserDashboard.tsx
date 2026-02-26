@@ -295,7 +295,7 @@ const BussinessUserDashboard = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto overscroll-contain">
                 {recentActivities.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">
                     No recent activities

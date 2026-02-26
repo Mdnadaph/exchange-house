@@ -139,7 +139,7 @@ const ExchangeStaffManagement = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       // ✅ Now response EXISTS
@@ -201,7 +201,6 @@ const ExchangeStaffManagement = () => {
     }
   };
 
-
   useEffect(() => {
     if (isCreateModalOpen && cookies.token) {
       fetchBranches();
@@ -248,12 +247,12 @@ const ExchangeStaffManagement = () => {
   // Calculate real statistics from the branches data
   const totalStaff = branches.reduce(
     (acc, branch) => acc + (branch.staff?.length || 0),
-    0
+    0,
   );
   const activeStaff = branches.reduce(
     (acc, branch) =>
       acc + (branch.staff?.filter((s: any) => s.active)?.length || 0),
-    0
+    0,
   );
   const totalBranches = branches.length;
   return (
@@ -314,7 +313,7 @@ const ExchangeStaffManagement = () => {
               <p className="text-xs text-muted-foreground">
                 {totalStaff > 0
                   ? `${Math.round(
-                      (activeStaff / totalStaff) * 100
+                      (activeStaff / totalStaff) * 100,
                     )}% availability`
                   : "No staff"}
               </p>
@@ -395,7 +394,6 @@ const ExchangeStaffManagement = () => {
                   placeholder="9800000002"
                 />
               </div>
-
 
               <div>
                 <Label>Select Branch</Label>
@@ -565,7 +563,7 @@ const ExchangeStaffManagement = () => {
                         <div className="space-y-4">
                           {branch.staff.map((staff: any) => {
                             const status = getStatusBadge(
-                              mapStatus(staff.status)
+                              mapStatus(staff.status),
                             );
                             const StatusIcon = status.icon;
 
@@ -603,7 +601,7 @@ const ExchangeStaffManagement = () => {
                                           <div className="flex items-center gap-2">
                                             <span
                                               className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(
-                                                getRoleLabel(staff.roleName)
+                                                getRoleLabel(staff.roleName),
                                               )}`}
                                             >
                                               {getRoleLabel(staff.roleName)}

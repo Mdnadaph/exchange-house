@@ -216,6 +216,7 @@ import BussinessUserDashboard from "./pages/user/BussinessUserDashboard";
 import BussinessUserProfile from "./pages/user/BussinessUserProfile";
 import BussinessUserTransaction from "./pages/user/BusinessUserTransaction";
 import ChangePassword from "./pages/ChangePassword";
+import ExchangeDiscount from "./pages/exchange/ExchangeDiscount";
 
 const queryClient = new QueryClient();
 
@@ -406,6 +407,7 @@ function App() {
                       path="transactions"
                       element={<ExchangeTransactions />}
                     />
+                    <Route path="discount" element={<ExchangeDiscount />} />
                     <Route path="deals" element={<ExchangeDealReview />} />
                     <Route
                       path="documents"

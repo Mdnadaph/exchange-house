@@ -149,7 +149,7 @@ const ExchangeKYBReview = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data?.status) {
@@ -277,7 +277,7 @@ const ExchangeKYBReview = () => {
     if (!documents || documents.length === 0) return false;
 
     return documents.every(
-      (doc) => doc.originalStatus === "APPROVED" || doc.status === "approved"
+      (doc) => doc.originalStatus === "APPROVED" || doc.status === "approved",
     );
   };
 
@@ -297,7 +297,7 @@ const ExchangeKYBReview = () => {
     if (!documents || documents.length === 0) return 0;
 
     const approvedDocs = documents.filter(
-      (doc) => doc.status === "APPROVED"
+      (doc) => doc.status === "APPROVED",
     ).length;
 
     return Math.round((approvedDocs / documents.length) * 100);
@@ -306,7 +306,7 @@ const ExchangeKYBReview = () => {
   // Determine risk score based on business type and country
   const determineRiskScore = (
     businessType: string,
-    country: string
+    country: string,
   ): string => {
     const highRiskCountries = ["HighRiskCountry1", "HighRiskCountry2"];
     const highRiskBusinessTypes = ["GAMBLING", "CRYPTOCURRENCY", "CASINO"];
@@ -379,7 +379,7 @@ const ExchangeKYBReview = () => {
       app.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.branch.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase())
+      app.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleViewDocument = async (document: any, application: any) => {
@@ -475,7 +475,7 @@ const ExchangeKYBReview = () => {
 
   const handleDownloadDocument = async (
     viewUrl: string,
-    documentName: string
+    documentName: string,
   ) => {
     try {
       if (!token) {
@@ -540,7 +540,7 @@ const ExchangeKYBReview = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // console.log("Approval response:", response.data);
@@ -598,7 +598,7 @@ const ExchangeKYBReview = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // console.log("Rejection response:", response.data);
@@ -641,7 +641,7 @@ const ExchangeKYBReview = () => {
     const extension = fileName.split(".").pop()?.toLowerCase();
     if (
       ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(
-        extension || ""
+        extension || "",
       )
     ) {
       return <FileImage className="h-6 w-6 text-blue-500" />;
@@ -659,7 +659,7 @@ const ExchangeKYBReview = () => {
     if (!fileName) return false;
     const extension = fileName.split(".").pop()?.toLowerCase();
     return ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(
-      extension || ""
+      extension || "",
     );
   };
 
@@ -674,7 +674,7 @@ const ExchangeKYBReview = () => {
   const handleKybAction = async (
     businessId: number,
     action: "approve" | "reject",
-    comment: string
+    comment: string,
   ) => {
     try {
       if (!token) {
@@ -684,7 +684,7 @@ const ExchangeKYBReview = () => {
 
       // Find the application to check document statuses
       const application = kybApplications.find(
-        (app) => app.originalData.id === businessId
+        (app) => app.originalData.id === businessId,
       );
 
       // If approving, check if all documents are approved
@@ -692,18 +692,18 @@ const ExchangeKYBReview = () => {
         const hasPendingDocuments = application?.documents?.some(
           (doc: any) =>
             doc.originalStatus !== "APPROVED" &&
-            doc.originalStatus !== "APPROVED"
+            doc.originalStatus !== "APPROVED",
         );
 
         // More accurate check:
         const unapprovedDocuments = application?.documents?.filter(
           (doc: any) =>
-            doc.originalStatus !== "APPROVED" && doc.status !== "approved"
+            doc.originalStatus !== "APPROVED" && doc.status !== "approved",
         );
 
         if (unapprovedDocuments && unapprovedDocuments.length > 0) {
           setError(
-            `Cannot approve business. ${unapprovedDocuments.length} document(s) are not approved yet.`
+            `Cannot approve business. ${unapprovedDocuments.length} document(s) are not approved yet.`,
           );
           return;
         }
@@ -897,7 +897,7 @@ const ExchangeKYBReview = () => {
               const status = getStatusBadge(application.status);
               const StatusIcon = status.icon;
               const allDocumentsApproved = checkAllDocumentsApproved(
-                application.documents
+                application.documents,
               );
 
               return (
@@ -930,7 +930,7 @@ const ExchangeKYBReview = () => {
                         </Badge>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
-                            application.riskScore
+                            application.riskScore,
                           )}`}
                         >
                           {application.riskScore.toUpperCase()} RISK
@@ -1032,7 +1032,7 @@ const ExchangeKYBReview = () => {
                             {application.transactionProfile.destinations
                               .length > 0
                               ? application.transactionProfile.destinations.join(
-                                  ", "
+                                  ", ",
                                 )
                               : "Not specified"}
                           </p>
@@ -1051,7 +1051,7 @@ const ExchangeKYBReview = () => {
                           {application.documents.map(
                             (doc: any, index: number) => {
                               const docStatus = getDocumentStatusBadge(
-                                doc.status
+                                doc.status,
                               );
                               return (
                                 <div
@@ -1097,7 +1097,7 @@ const ExchangeKYBReview = () => {
                                         doc.viewUrl &&
                                         handleDownloadDocument(
                                           doc.viewUrl,
-                                          doc.documentName
+                                          doc.documentName,
                                         )
                                       }
                                       disabled={!doc.viewUrl}
@@ -1108,7 +1108,7 @@ const ExchangeKYBReview = () => {
                                   </div>
                                 </div>
                               );
-                            }
+                            },
                           )}
                         </div>
                       ) : (
@@ -1168,7 +1168,7 @@ const ExchangeKYBReview = () => {
                                   application.originalData.id,
                                   "approve",
                                   comments[application.uuid] ||
-                                    "Application approved"
+                                    "Application approved",
                                 );
                               }}
                             >
@@ -1186,7 +1186,7 @@ const ExchangeKYBReview = () => {
                                   application.originalData.id,
                                   "reject",
                                   comments[application.uuid] ||
-                                    "Application rejected"
+                                    "Application rejected",
                                 );
                               }}
                             >
@@ -1356,7 +1356,7 @@ const ExchangeKYBReview = () => {
                                   onClick={() =>
                                     viewerData.document.viewUrl &&
                                     loadImageWithAuth(
-                                      viewerData.document.viewUrl
+                                      viewerData.document.viewUrl,
                                     )
                                   }
                                 >
@@ -1423,7 +1423,7 @@ const ExchangeKYBReview = () => {
                               onClick={() =>
                                 handleDownloadDocument(
                                   viewerData.document.viewUrl,
-                                  viewerData.document.documentName
+                                  viewerData.document.documentName,
                                 )
                               }
                             >
