@@ -67,6 +67,10 @@ interface ApiTransaction {
   beneficiaryFeeAmount: number;
   netPayoutAmount: number;
   complianceStatus: string;
+
+  discountValue: string;
+  // discountAmount
+  discountAmount: string;
   // totalDebit: number;
 }
 
@@ -109,6 +113,10 @@ interface Transaction {
   netPayoutAmount: string;
   complianceStatus: string;
   totalDebit: number;
+
+  discountValue: string;
+
+  discountAmount: String;
 }
 
 const ExchangeTransactions = () => {
@@ -158,6 +166,7 @@ const ExchangeTransactions = () => {
           const transformedTransactions: Transaction[] =
             data?.data?.transactions?.map((apiTx) => ({
               id: apiTx.reference,
+              discountAmount: apiTx.discountAmount || "",
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "",
@@ -209,6 +218,14 @@ const ExchangeTransactions = () => {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 }) || "0.00",
+
+              discountValue:
+              apiTx.discountValue?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }) || "0.00",
+
+
             }));
           setTransactions(transformedTransactions);
         } else {
@@ -603,7 +620,7 @@ const ExchangeTransactions = () => {
 
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.currency.toUpperCase()}
                                 {transaction.amount}
                               </p>
                               <p className="text-sm text-muted-foreground">
@@ -703,6 +720,22 @@ const ExchangeTransactions = () => {
                                   /_/g,
                                   " ",
                                 )}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">Discount Value:</span>
+                              <p className="font-medium">
+                                {transaction.discountValue === "0.00" ? "—"
+                                  : `AED ${transaction.discountValue}`}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">Discount Amount:</span>
+                              <p className="font-medium">
+                                {transaction.discountAmount === "0.00" ? "—"
+                                  : `AED ${transaction.discountAmount}`}
                               </p>
                             </div>
 
