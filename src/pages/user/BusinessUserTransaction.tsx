@@ -68,6 +68,18 @@ interface ApiTransaction {
   reference?: string;
   type?: "SINGLE" | "BULK";
   itemCount?: number;
+  discountAmount: number;
+  discounts: Array<{
+    id: number;
+    name: string;
+    discountCode: string;
+    description: string;
+    type: "FIXED_AMOUNT" | "PERCENTAGE";
+    discountValue: number;
+    status: string;
+    expiryDate: string;
+    createdAt: string;
+  }>;
 }
 
 interface ApiResponse {
@@ -117,10 +129,16 @@ interface Transaction {
   documents?: TransactionDocument[];
   complianceStatus: string;
   totalDebit: number;
+
+  discountValue: string;
+
+  discountAmount: String;
 }
 
 const BusinessUserTransaction = () => {
-  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(
+    null,
+  );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dashboardStats, setDashboardStats] = useState<{
     totalTransactions: number;
@@ -178,46 +196,67 @@ const BusinessUserTransaction = () => {
 
         setTotalTransactionsData(data.data.pagination.totalItems);
 
-        const transformedTransactions: Transaction[] = data.data.transactions.map((apiTx: any) => ({
-          id: apiTx.reference,
-          branchName: apiTx.branchName || "",
-          businessId: apiTx.businessId || "",
-          beneficiary: apiTx.beneficiaryName || "Beneficiary",
-          amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-          complianceStatus: apiTx.complianceStatus || "",
-          currency: apiTx.sourceCurrency,
-          totalDebit: apiTx.totalDebit,
-          exchangeRate: apiTx?.exchangeRate?.toFixed(3),
-          localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-          localCurrency: apiTx.targetCurrency,
-          status: apiTx?.status,
-          type: apiTx?.type,
-          purpose: apiTx.purpose || "Transaction",
-          date: new Date(apiTx.createdAt)
-            .toLocaleString("en-US", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
-            .replace(",", ""),
-          processedDate: null,
-          referenceNumber: apiTx.reference,
-          fees: apiTx?.feeAmount?.toFixed(2),
-          feeResponsibility: apiTx.feeResponsibility || "",
-          branch: apiTx.branchName,
-          failureReason: apiTx.failureReason || "",
-          documents: apiTx.documents,
-          bulkCount: apiTx?.itemCount,
-        }));
+        const transformedTransactions: Transaction[] =
+          data.data.transactions.map((apiTx: any) => {
+            // --- Discount logic ---
+            let discountValueDisplay = "—";
+            let discountAmountDisplay = "0.00";
+
+            if (apiTx.discounts && apiTx.discounts.length > 0) {
+              const firstDiscount = apiTx.discounts[0];
+              const totalDiscountAmount = apiTx.discountAmount || 0;
+              discountAmountDisplay = totalDiscountAmount.toFixed(2);
+
+              if (firstDiscount.type === "PERCENTAGE") {
+                discountValueDisplay = `${firstDiscount.discountValue}%`;
+              }
+              // For FIXED_AMOUNT, discountValueDisplay stays "—"
+            }
+
+            return {
+              id: apiTx.reference,
+              branchName: apiTx.branchName || "",
+              businessId: apiTx.businessId || "",
+              beneficiary: apiTx.beneficiaryName || "Beneficiary",
+              amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+              complianceStatus: apiTx.complianceStatus || "",
+              currency: apiTx.sourceCurrency,
+              totalDebit: apiTx.totalDebit,
+              exchangeRate: apiTx?.exchangeRate?.toFixed(3),
+              localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+              localCurrency: apiTx.targetCurrency,
+              status: apiTx?.status,
+              type: apiTx?.type,
+              purpose: apiTx.purpose || "Transaction",
+              date: new Date(apiTx.createdAt)
+                .toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+                .replace(",", ""),
+              processedDate: null,
+              referenceNumber: apiTx.reference,
+              fees: apiTx?.feeAmount?.toFixed(2),
+              feeResponsibility: apiTx.feeResponsibility || "",
+              branch: apiTx.branchName,
+              failureReason: apiTx.failureReason || "",
+              documents: apiTx.documents,
+              bulkCount: apiTx?.itemCount,
+              // New discount fields
+              discountValue: discountValueDisplay,
+              discountAmount: discountAmountDisplay,
+            };
+          });
 
         setTransactions(transformedTransactions);
       } else {
@@ -233,7 +272,9 @@ const BusinessUserTransaction = () => {
         if (err.response?.status === 401) {
           setError("Unauthorized: Please log in again.");
         } else if (err.response?.status === 403) {
-          setError("Forbidden: You don't have permission to view transactions.");
+          setError(
+            "Forbidden: You don't have permission to view transactions.",
+          );
         } else if (err.response?.status === 404) {
           setError("API endpoint not found. Please check the URL.");
         } else if (err.code === "ECONNABORTED") {
@@ -248,7 +289,9 @@ const BusinessUserTransaction = () => {
           setError(`Error: ${err.message}`);
         }
       } else {
-        setError(err instanceof Error ? err.message : "Failed to fetch transactions");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch transactions",
+        );
       }
       setTransactions([]);
     } finally {
@@ -265,21 +308,57 @@ const BusinessUserTransaction = () => {
       searchTerm === "" ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      transaction.beneficiary
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.referenceNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
     );
   });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      COMPLETED: { variant: "default" as const, label: "Completed", icon: CheckCircle },
-      PENDING_APPROVAL: { variant: "secondary" as const, label: "Pending Approval", icon: Clock },
-      pending_payment: { variant: "destructive" as const, label: "Pending Payment", icon: Wallet },
-      APPROVED: { variant: "secondary" as const, label: "Approved", icon: Clock },
-      PROCESSING: { variant: "destructive" as const, label: "Processing", icon: Clock },
-      FAILED: { variant: "destructive" as const, label: "Failed", icon: AlertCircle },
-      REJECTED: { variant: "outline" as const, label: "Rejected", icon: AlertCircle },
-      COMPLIANCE_REVIEW: { variant: "outline" as const, label: "Compliance Review", icon: AlertCircle },
+      COMPLETED: {
+        variant: "default" as const,
+        label: "Completed",
+        icon: CheckCircle,
+      },
+      PENDING_APPROVAL: {
+        variant: "secondary" as const,
+        label: "Pending Approval",
+        icon: Clock,
+      },
+      pending_payment: {
+        variant: "destructive" as const,
+        label: "Pending Payment",
+        icon: Wallet,
+      },
+      APPROVED: {
+        variant: "secondary" as const,
+        label: "Approved",
+        icon: Clock,
+      },
+      PROCESSING: {
+        variant: "destructive" as const,
+        label: "Processing",
+        icon: Clock,
+      },
+      FAILED: {
+        variant: "destructive" as const,
+        label: "Failed",
+        icon: AlertCircle,
+      },
+      REJECTED: {
+        variant: "outline" as const,
+        label: "Rejected",
+        icon: AlertCircle,
+      },
+      COMPLIANCE_REVIEW: {
+        variant: "outline" as const,
+        label: "Compliance Review",
+        icon: AlertCircle,
+      },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
   };
@@ -361,7 +440,9 @@ const BusinessUserTransaction = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
-            <p className="text-muted-foreground">View and manage your payment transactions</p>
+            <p className="text-muted-foreground">
+              View and manage your payment transactions
+            </p>
           </div>
           <div className="flex space-x-3">
             <Button variant="outline" disabled={transactions.length === 0}>
@@ -395,7 +476,9 @@ const BusinessUserTransaction = () => {
               <CreditCard className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardStats.totalTransactions}</div>
+              <div className="text-2xl font-bold">
+                {dashboardStats.totalTransactions}
+              </div>
               <p className="text-xs text-muted-foreground">+0 this month</p>
             </CardContent>
           </Card>
@@ -443,7 +526,8 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${dashboardStats.totalAmount.toLocaleString("en-US", {
+                $
+                {dashboardStats.totalAmount.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -472,17 +556,29 @@ const BusinessUserTransaction = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setTransactionType("ALL")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("ALL")}
+                >
                   All Status
                 </Button>
                 <Button variant="outline">This Month</Button>
-                <Button variant="outline" onClick={() => setTransactionType("COMPLETED")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("COMPLETED")}
+                >
                   Completed
                 </Button>
-                <Button variant="outline" onClick={() => setTransactionType("SINGLE")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("SINGLE")}
+                >
                   Single
                 </Button>
-                <Button variant="outline" onClick={() => setTransactionType("BULK")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("BULK")}
+                >
                   Bulk
                 </Button>
               </div>
@@ -508,7 +604,9 @@ const BusinessUserTransaction = () => {
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
-                  {transactions.length === 0 ? "No transactions found" : "No matching transactions"}
+                  {transactions.length === 0
+                    ? "No transactions found"
+                    : "No matching transactions"}
                 </h3>
                 <p className="text-muted-foreground">
                   {searchTerm
@@ -566,13 +664,15 @@ const BusinessUserTransaction = () => {
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {transaction.id}
-                                  {transaction.purpose && ` • ${transaction.purpose}`}
+                                  {transaction.purpose &&
+                                    ` • ${transaction.purpose}`}
                                 </p>
                               </div>
 
                               <div className="text-right space-y-1">
                                 <p className="text-xl font-bold text-foreground">
-                                  {transaction.currency.toUpperCase()} {transaction.amount}
+                                  {transaction.currency.toUpperCase()}{" "}
+                                  {transaction.amount}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   {transaction.localCurrency}
@@ -587,7 +687,9 @@ const BusinessUserTransaction = () => {
                                   <Calendar className="h-3 w-3 mr-1" />
                                   Submitted:
                                 </div>
-                                <p className="font-medium">{transaction.date}</p>
+                                <p className="font-medium">
+                                  {transaction.date}
+                                </p>
                                 {transaction.processedDate && (
                                   <p className="text-xs text-muted-foreground">
                                     Processed: {transaction.processedDate}
@@ -596,17 +698,23 @@ const BusinessUserTransaction = () => {
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-muted-foreground">Exchange Rate:</span>
+                                <span className="text-muted-foreground">
+                                  Exchange Rate:
+                                </span>
                                 <p className="font-medium">
-                                  1 {transaction.currency.toUpperCase()} = 
+                                  1 {transaction.currency.toUpperCase()} =
                                   {transaction.exchangeRate}
                                   {transaction.localCurrency} AED
                                 </p>
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-muted-foreground">Fee Details:</span>
-                                <p className="font-medium">AED {transaction.fees}</p>
+                                <span className="text-muted-foreground">
+                                  Fee Details:
+                                </span>
+                                <p className="font-medium">
+                                  AED {transaction.fees}
+                                </p>
                                 {transaction.feeResponsibility && (
                                   <p className="text-xs text-muted-foreground">
                                     Paid by: {transaction.feeResponsibility}
@@ -615,13 +723,21 @@ const BusinessUserTransaction = () => {
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-muted-foreground">Total Debit:</span>
-                                <p className="font-medium">AED {transaction.totalDebit}</p>
+                                <span className="text-muted-foreground">
+                                  Total Debit:
+                                </span>
+                                <p className="font-medium">
+                                  AED {transaction.totalDebit}
+                                </p>
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-muted-foreground">Branch:</span>
-                                <p className="font-medium">{transaction.branch}</p>
+                                <span className="text-muted-foreground">
+                                  Branch:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.branch}
+                                </p>
                                 {transaction.failureReason && (
                                   <p className="text-xs text-red-600">
                                     Reason: {transaction.failureReason}
@@ -630,16 +746,41 @@ const BusinessUserTransaction = () => {
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-muted-foreground">Compliance Status:</span>
+                                <span className="text-muted-foreground">
+                                  Compliance Status:
+                                </span>
                                 <p className="font-medium">
-                                  {transaction.complianceStatus.replace(/_/g, " ")}
+                                  {transaction.complianceStatus.replace(
+                                    /_/g,
+                                    " ",
+                                  )}
                                 </p>
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-muted-foreground">Reference:</span>
+                                <span className="text-muted-foreground">
+                                  Reference:
+                                </span>
                                 <p className="font-medium font-mono text-xs">
                                   {transaction?.referenceNumber}
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Value:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.discountValue}
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Amount:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.discountAmount === "0.00"
+                                    ? "—"
+                                    : `AED ${transaction.discountAmount}`}
                                 </p>
                               </div>
                             </div>
@@ -649,7 +790,9 @@ const BusinessUserTransaction = () => {
                                 <div className="border-t pt-6">
                                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <div className="space-y-4">
-                                      <Label htmlFor={`comments-${transaction?.id}`}>
+                                      <Label
+                                        htmlFor={`comments-${transaction?.id}`}
+                                      >
                                         Review Comments
                                       </Label>
                                       <Textarea
@@ -658,7 +801,10 @@ const BusinessUserTransaction = () => {
                                         rows={4}
                                         value={comment[transaction?.id] || ""}
                                         onChange={(e) =>
-                                          handleCommentChange(transaction?.id, e.target.value)
+                                          handleCommentChange(
+                                            transaction?.id,
+                                            e.target.value,
+                                          )
                                         }
                                       />
                                     </div>
@@ -673,7 +819,10 @@ const BusinessUserTransaction = () => {
                                           disabled={disableButton}
                                           onClick={(e) => {
                                             e.preventDefault();
-                                            handleReviewAction(transaction?.id, "APPROVED");
+                                            handleReviewAction(
+                                              transaction?.id,
+                                              "APPROVED",
+                                            );
                                           }}
                                         >
                                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -686,7 +835,10 @@ const BusinessUserTransaction = () => {
                                           disabled={disableButton}
                                           onClick={(e) => {
                                             e.preventDefault();
-                                            handleReviewAction(transaction?.id, "REJECTED");
+                                            handleReviewAction(
+                                              transaction?.id,
+                                              "REJECTED",
+                                            );
                                           }}
                                         >
                                           Reject
@@ -707,18 +859,21 @@ const BusinessUserTransaction = () => {
                                   <Download className="h-4 w-4 mr-1" />
                                   Receipt
                                 </Button>
-                                {transaction.documents && transaction.documents.length > 0 && (
-                                  <Button variant="outline" size="sm">
-                                    <FileText className="h-4 w-4 mr-1" />
-                                    Documents
-                                  </Button>
-                                )}
+                                {transaction.documents &&
+                                  transaction.documents.length > 0 && (
+                                    <Button variant="outline" size="sm">
+                                      <FileText className="h-4 w-4 mr-1" />
+                                      Documents
+                                    </Button>
+                                  )}
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
                                     setExpandedTransaction(
-                                      expandedTransaction === transaction.id ? null : transaction.id
+                                      expandedTransaction === transaction.id
+                                        ? null
+                                        : transaction.id,
                                     )
                                   }
                                 >
@@ -777,7 +932,8 @@ const BusinessUserTransaction = () => {
                 {totalTransactionsData > 10 && (
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionsData} beneficiaries
+                      Showing {transactions?.length} of {totalTransactionsData}{" "}
+                      beneficiaries
                     </p>
                     <div className="flex space-x-2">
                       <Button

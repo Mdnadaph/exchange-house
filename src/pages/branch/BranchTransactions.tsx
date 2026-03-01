@@ -70,6 +70,18 @@ interface ApiTransaction {
   beneficiaryFeeAmount: number;
   netPayoutAmount: number;
   complianceStatus: string;
+  discountAmount: number;
+  discounts: Array<{
+    id: number;
+    name: string;
+    discountCode: string;
+    description: string;
+    type: "FIXED_AMOUNT" | "PERCENTAGE";
+    discountValue: number;
+    status: string;
+    expiryDate: string;
+    createdAt: string;
+  }>;
 }
 
 interface ApiResponse {
@@ -122,6 +134,10 @@ interface Transaction {
   netPayoutAmount: string;
   complianceStatus: string;
   totalDebit: number;
+
+  discountValue: string;
+
+  discountAmount: String;
 }
 
 const BranchTransactions = () => {
@@ -186,57 +202,78 @@ const BranchTransactions = () => {
 
           // Transform transactions (unchanged)
           const transformedTransactions: Transaction[] =
-            data.data.transactions.map((apiTx) => ({
-              id: apiTx.reference,
-              bulkCount: apiTx?.itemCount,
-              branchName: apiTx.branchName || "",
-              businessId: apiTx.businessId || "",
-              beneficiary: apiTx.beneficiaryName || "Beneficiary",
-              amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-              currency: apiTx.sourceCurrency,
-              exchangeRate: apiTx?.exchangeRate?.toFixed(3),
-              localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-              localCurrency: apiTx.targetCurrency,
-              status: apiTx?.status,
-              type: apiTx?.type,
-              purpose: apiTx.purpose || "Transaction",
-              date: new Date(apiTx.createdAt)
-                .toLocaleString("en-US", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-                .replace(",", ""),
-              processedDate: null,
-              referenceNumber: apiTx?.reference,
-              fees: apiTx?.feeAmount?.toFixed(2),
-              feeResponsibility: apiTx.feeResponsibility || "",
-              branch: apiTx.branchName,
-              failureReason: apiTx.failureReason || "",
-              documents: apiTx.documents,
+            data?.data?.transactions?.map((apiTx: any) => {
+              // --- Discount logic ---
+              let discountValueDisplay = "—";
+              let discountAmountDisplay = "0.00";
 
-              complianceStatus: apiTx.complianceStatus || "",
-              totalDebit: apiTx.totalDebit,
-              beneficiaryFeeAmount:
-                apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
+              if (apiTx.discounts && apiTx.discounts.length > 0) {
+                const firstDiscount = apiTx.discounts[0];
+                const totalDiscountAmount = apiTx.discountAmount || 0;
+                discountAmountDisplay = totalDiscountAmount.toFixed(2);
+
+                if (firstDiscount.type === "PERCENTAGE") {
+                  discountValueDisplay = `${firstDiscount.discountValue}%`;
+                }
+                // For FIXED_AMOUNT, discountValueDisplay stays "—"
+              }
+
+              return {
+                id: apiTx.reference,
+                bulkCount: apiTx?.itemCount,
+                branchName: apiTx.branchName || "",
+                businessId: apiTx.businessId || "",
+                beneficiary: apiTx.beneficiaryName || "Beneficiary",
+                amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                }) || "0.00",
-              netPayoutAmount:
-                apiTx.netPayoutAmount?.toLocaleString("en-US", {
+                }),
+                currency: apiTx.sourceCurrency,
+                exchangeRate: apiTx?.exchangeRate?.toFixed(3),
+                localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                }) || "0.00",
-            }));
+                }),
+                localCurrency: apiTx.targetCurrency,
+                status: apiTx?.status,
+                type: apiTx?.type,
+                purpose: apiTx.purpose || "Transaction",
+                date: new Date(apiTx.createdAt)
+                  .toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })
+                  .replace(",", ""),
+                processedDate: null,
+                referenceNumber: apiTx?.reference,
+                fees: apiTx?.feeAmount?.toFixed(2),
+                feeResponsibility: apiTx.feeResponsibility || "",
+                branch: apiTx.branchName,
+                failureReason: apiTx.failureReason || "",
+                documents: apiTx.documents,
+
+                complianceStatus: apiTx.complianceStatus || "",
+                totalDebit: apiTx.totalDebit,
+                beneficiaryFeeAmount:
+                  apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }) || "0.00",
+                netPayoutAmount:
+                  apiTx.netPayoutAmount?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }) || "0.00",
+
+                // Add the discount fields
+                discountValue: discountValueDisplay,
+                discountAmount: discountAmountDisplay,
+              };
+            });
 
           setTransactions(transformedTransactions);
         } else {
@@ -709,6 +746,25 @@ const BranchTransactions = () => {
                               </span>
                               <p className="font-medium font-mono text-xs">
                                 {transaction.referenceNumber}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Discount Value:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.discountValue}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Discount Amount:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.discountAmount === "0.00"
+                                  ? "—"
+                                  : `AED ${transaction.discountAmount}`}
                               </p>
                             </div>
                           </div>

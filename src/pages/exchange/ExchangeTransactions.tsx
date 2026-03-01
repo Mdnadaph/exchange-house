@@ -67,11 +67,18 @@ interface ApiTransaction {
   beneficiaryFeeAmount: number;
   netPayoutAmount: number;
   complianceStatus: string;
-
-  discountValue: string;
-  // discountAmount
-  discountAmount: string;
-  // totalDebit: number;
+  discountAmount: number;
+  discounts: Array<{
+    id: number;
+    name: string;
+    discountCode: string;
+    description: string;
+    type: "FIXED_AMOUNT" | "PERCENTAGE";
+    discountValue: number;
+    status: string;
+    expiryDate: string;
+    createdAt: string;
+  }>;
 }
 
 interface ApiResponse {
@@ -164,69 +171,77 @@ const ExchangeTransactions = () => {
         if (data.status && data.data) {
           // Transform API data to match UI structure
           const transformedTransactions: Transaction[] =
-            data?.data?.transactions?.map((apiTx) => ({
-              id: apiTx.reference,
-              discountAmount: apiTx.discountAmount || "",
-              branchName: apiTx.branchName || "",
-              businessId: apiTx.businessId || "",
-              beneficiary: apiTx.beneficiaryName || "",
-              amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-              currency: apiTx.sourceCurrency,
-              exchangeRate: apiTx.exchangeRate?.toFixed(3),
-              localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-              localCurrency: apiTx.targetCurrency,
-              status: apiTx?.status,
-              type: apiTx?.type,
-              purpose: apiTx.purpose || "",
-              date: new Date(apiTx.createdAt)
-                .toLocaleString("en-US", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-                .replace(",", ""),
-              processedDate: null,
-              referenceNumber: apiTx?.reference,
-              fees: apiTx.feeAmount?.toFixed(2),
-              feeResponsibility: apiTx.feeResponsibility || "",
-              branch: apiTx.branchName,
-              failureReason: apiTx.failureReason || "",
-              documents: apiTx.documents,
-              commentCount: apiTx.commentCount || 0,
-              latestComment: apiTx.latestComment || null,
-              bulkCount: apiTx?.itemCount,
+            data?.data?.transactions?.map((apiTx: any) => {
+              // --- Discount logic ---
+              let discountValueDisplay = "—";
+              let discountAmountDisplay = "0.00";
 
-              complianceStatus: apiTx.complianceStatus || "",
-              totalDebit: apiTx.totalDebit,
+              if (apiTx.discounts && apiTx.discounts.length > 0) {
+                const firstDiscount = apiTx.discounts[0];
+                const totalDiscountAmount = apiTx.discountAmount || 0;
+                discountAmountDisplay = totalDiscountAmount.toFixed(2);
 
-              beneficiaryFeeAmount:
-                apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
+                if (firstDiscount.type === "PERCENTAGE") {
+                  discountValueDisplay = `${firstDiscount.discountValue}%`;
+                }
+                // For FIXED_AMOUNT, discountValueDisplay stays "—"
+              }
+
+              return {
+                id: apiTx.reference,
+                branchName: apiTx.branchName || "",
+                businessId: apiTx.businessId || "",
+                beneficiary: apiTx.beneficiaryName || "",
+                amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                }) || "0.00",
-              netPayoutAmount:
-                apiTx.netPayoutAmount?.toLocaleString("en-US", {
+                }),
+                currency: apiTx.sourceCurrency,
+                exchangeRate: apiTx.exchangeRate?.toFixed(3),
+                localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                }) || "0.00",
-
-              discountValue:
-              apiTx.discountValue?.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "0.00",
-
-
-            }));
+                }),
+                localCurrency: apiTx.targetCurrency,
+                status: apiTx?.status,
+                type: apiTx?.type,
+                purpose: apiTx.purpose || "",
+                date: new Date(apiTx.createdAt)
+                  .toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })
+                  .replace(",", ""),
+                processedDate: null,
+                referenceNumber: apiTx?.reference,
+                fees: apiTx.feeAmount?.toFixed(2),
+                feeResponsibility: apiTx.feeResponsibility || "",
+                branch: apiTx.branchName,
+                failureReason: apiTx.failureReason || "",
+                documents: apiTx.documents,
+                commentCount: apiTx.commentCount || 0,
+                latestComment: apiTx.latestComment || null,
+                bulkCount: apiTx?.itemCount,
+                complianceStatus: apiTx.complianceStatus || "",
+                totalDebit: apiTx.totalDebit,
+                beneficiaryFeeAmount:
+                  apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }) || "0.00",
+                netPayoutAmount:
+                  apiTx.netPayoutAmount?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }) || "0.00",
+                discountValue: discountValueDisplay,
+                discountAmount: discountAmountDisplay,
+              };
+            });
           setTransactions(transformedTransactions);
         } else {
           throw new Error(data.message || "Failed to fetch transactions");
@@ -724,17 +739,20 @@ const ExchangeTransactions = () => {
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Discount Value:</span>
+                              <span className="text-muted-foreground">
+                                Discount Value:
+                              </span>
                               <p className="font-medium">
-                                {transaction.discountValue === "0.00" ? "—"
-                                  : `AED ${transaction.discountValue}`}
+                                {transaction.discountValue}
                               </p>
                             </div>
-
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Discount Amount:</span>
+                              <span className="text-muted-foreground">
+                                Discount Amount:
+                              </span>
                               <p className="font-medium">
-                                {transaction.discountAmount === "0.00" ? "—"
+                                {transaction.discountAmount === "0.00"
+                                  ? "—"
                                   : `AED ${transaction.discountAmount}`}
                               </p>
                             </div>

@@ -64,6 +64,18 @@ interface ApiTransaction {
   purpose?: string;
   feeResponsibility?: string;
   failureReason?: string;
+  discountAmount: number;
+  discounts: Array<{
+    id: number;
+    name: string;
+    discountCode: string;
+    description: string;
+    type: "FIXED_AMOUNT" | "PERCENTAGE";
+    discountValue: number;
+    status: string;
+    expiryDate: string;
+    createdAt: string;
+  }>;
 }
 
 interface ApiResponse {
@@ -107,7 +119,11 @@ interface Transaction {
   bulkCount?: number;
   failureReason?: string;
   documents?: TransactionDocument[];
-  totalDebit:number;
+  totalDebit: number;
+
+  discountValue: string;
+
+  discountAmount: String;
 }
 
 const UserTransactions = () => {
@@ -115,7 +131,7 @@ const UserTransactions = () => {
     null,
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [dashboardData, setDashboardData] = useState<any>(null);   // ← added
+  const [dashboardData, setDashboardData] = useState<any>(null); // ← added
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [disableButton, setDisableButton] = useState(false);
@@ -156,52 +172,74 @@ const UserTransactions = () => {
 
       // ← added: save dashboard data from backend
       if (data?.data?.dashboard) {
-        setDashboardData(data.data.dashboard);
+        setDashboardData(data?.data?.dashboard);
       }
 
       if (data.status && data.data) {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
-          data?.data?.transactions?.map((apiTx: any) => ({
-            id: apiTx.reference,
-            branchName: apiTx.branchName || "",
-            businessId: apiTx.businessId || "",
-            beneficiary: apiTx.beneficiaryName || "Beneficiary",
-            amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
-            currency: apiTx.sourceCurrency,
-            totalDebit: apiTx.totalDebit,
-            
-            exchangeRate: apiTx?.exchangeRate?.toFixed(3),
-            localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
-            localCurrency: apiTx.targetCurrency,
-            status: apiTx.status,
-            type: apiTx?.type,
-            bulkCount: apiTx?.itemCount,
-            purpose: apiTx.purpose || "Transaction",
-            date: new Date(apiTx.createdAt)
-              .toLocaleString("en-US", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-              })
-              .replace(",", ""),
-            processedDate: null,
-            referenceNumber: apiTx.reference,
-            fees: apiTx?.feeAmount?.toFixed(2),
-            feeResponsibility: apiTx.feeResponsibility || "",
-            branch: apiTx.branchName,
-            failureReason: apiTx.failureReason || "",
-            documents: apiTx.documents,
-          }));
+          data?.data?.transactions?.map((apiTx: any) => {
+            // --- Determine what to show in the "Discount Value" field ---
+            let discountValueDisplay = "—";
+            let discountAmountDisplay = "0.00";
+
+            if (apiTx.discounts && apiTx.discounts.length > 0) {
+              const firstDiscount = apiTx.discounts[0];
+              const totalDiscountAmount = apiTx.discountAmount || 0;
+              discountAmountDisplay = totalDiscountAmount.toFixed(2);
+
+              if (firstDiscount.type === "PERCENTAGE") {
+                // For percentage, show the percentage in Discount Value
+                discountValueDisplay = `${firstDiscount.discountValue}%`;
+              } else if (firstDiscount.type === "FIXED_AMOUNT") {
+                // For fixed amount, keep Discount Value as "—"
+                discountValueDisplay = "—";
+              }
+              // (If type is unknown, you could fallback to "—")
+            }
+
+            return {
+              id: apiTx.reference,
+              branchName: apiTx.branchName || "",
+              businessId: apiTx.businessId || "",
+              beneficiary: apiTx.beneficiaryName || "Beneficiary",
+              amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+              currency: apiTx.sourceCurrency,
+              totalDebit: apiTx.totalDebit,
+              exchangeRate: apiTx?.exchangeRate?.toFixed(3),
+              localAmount: apiTx?.convertedAmount?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+              localCurrency: apiTx.targetCurrency,
+              status: apiTx.status,
+              type: apiTx?.type,
+              bulkCount: apiTx?.itemCount,
+              purpose: apiTx.purpose || "Transaction",
+              date: new Date(apiTx.createdAt)
+                .toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+                .replace(",", ""),
+              processedDate: null,
+              referenceNumber: apiTx.reference,
+              fees: apiTx?.feeAmount?.toFixed(2),
+              feeResponsibility: apiTx.feeResponsibility || "",
+              branch: apiTx.branchName,
+              failureReason: apiTx.failureReason || "",
+              documents: apiTx.documents,
+              discountValue: discountValueDisplay,
+              discountAmount: discountAmountDisplay,
+            };
+          });
 
         setTransactions(transformedTransactions);
       } else {
@@ -455,7 +493,8 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboardData?.totalTransactions ?? statistics.totalTransactions}
+                {dashboardData?.totalTransactions ??
+                  statistics.totalTransactions}
               </div>
               <p className="text-xs text-muted-foreground">+0 this month</p>
             </CardContent>
@@ -470,14 +509,15 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {dashboardData?.completedTransactions ?? statistics.completedTransactions}
+                {dashboardData?.completedTransactions ??
+                  statistics.completedTransactions}
               </div>
               <p className="text-xs text-muted-foreground">
                 {dashboardData?.successRate != null
                   ? `${dashboardData.successRate.toFixed(1)}%`
                   : statistics.totalTransactions > 0
-                  ? `${((statistics.completedTransactions / statistics.totalTransactions) * 100).toFixed(1)}% success rate`
-                  : "No transactions"}
+                    ? `${((statistics.completedTransactions / statistics.totalTransactions) * 100).toFixed(1)}% success rate`
+                    : "No transactions"}
               </p>
             </CardContent>
           </Card>
@@ -491,7 +531,8 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-500">
-                {dashboardData?.pendingTransactions ?? statistics.pendingTransactions}
+                {dashboardData?.pendingTransactions ??
+                  statistics.pendingTransactions}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting approval</p>
             </CardContent>
@@ -506,7 +547,9 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${dashboardData?.totalAmount?.toLocaleString("en-US") ?? statistics.totalVolume.toLocaleString("en-US")}
+                $
+                {dashboardData?.totalAmount?.toLocaleString("en-US") ??
+                  statistics.totalVolume.toLocaleString("en-US")}
               </div>
               <p className="text-xs text-muted-foreground">This year</p>
             </CardContent>
@@ -647,7 +690,8 @@ const UserTransactions = () => {
 
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction.currency.toUpperCase()} {transaction.amount}
+                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.amount}
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 {transaction.localCurrency}
@@ -686,7 +730,9 @@ const UserTransactions = () => {
                               <span className="text-muted-foreground">
                                 Fee Details:
                               </span>
-                              <p className="font-medium">AED {transaction.fees}</p>
+                              <p className="font-medium">
+                                AED {transaction.fees}
+                              </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
                                   Paid by: {transaction.feeResponsibility}
@@ -723,6 +769,24 @@ const UserTransactions = () => {
                               </span>
                               <p className="font-medium font-mono text-xs">
                                 {transaction?.referenceNumber}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Discount Value:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.discountValue}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Discount Amount:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.discountAmount === "0.00"
+                                  ? "—"
+                                  : `AED ${transaction.discountAmount}`}
                               </p>
                             </div>
                           </div>
