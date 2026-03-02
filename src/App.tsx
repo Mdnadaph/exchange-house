@@ -217,6 +217,7 @@ import BussinessUserProfile from "./pages/user/BussinessUserProfile";
 import BussinessUserTransaction from "./pages/user/BusinessUserTransaction";
 import ChangePassword from "./pages/ChangePassword";
 import ExchangeDiscount from "./pages/exchange/ExchangeDiscount";
+import ExchangeAdminUser from "./pages/exchange/ExchangeAdminUser";
 
 const queryClient = new QueryClient();
 
@@ -336,7 +337,10 @@ function App() {
                       path="/admin/exchange-houses"
                       element={<AdminExchangeHouses />}
                     />
-                    <Route path="/admin/exchange-houses/:id" element={<AdminExchangeHouseDetails />} />
+                    <Route
+                      path="/admin/exchange-houses/:id"
+                      element={<AdminExchangeHouseDetails />}
+                    />
                     <Route path="onboarding" element={<AdminOnboarding />} />
                     <Route
                       path="deal-settings"
@@ -430,6 +434,7 @@ function App() {
                       element={<ExchangeBranchManagement />}
                     />
                     <Route path="staff" element={<ExchangeStaffManagement />} />
+                    <Route path="user" element={<ExchangeAdminUser />} />
                   </Route>
                 </Route>
 

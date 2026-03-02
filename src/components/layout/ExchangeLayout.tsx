@@ -60,18 +60,31 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
 
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home },
-    { name: "Onboard Business", href: "/exchange/onboard-business", icon: Building2 },
+    {
+      name: "Onboard Business",
+      href: "/exchange/onboard-business",
+      icon: Building2,
+    },
     { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
     { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
     { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
     { name: "Discounts", href: "/exchange/discount", icon: BadgePercent },
     { name: "Rate Deals", href: "/exchange/deals", icon: Handshake },
     { name: "Documents", href: "/exchange/documents", icon: Files },
-    { name: "Fee Management", href: "/exchange/fee-management", icon: Calculator },
-    { name: "Payout Config", href: "/exchange/payout-config", icon: DollarSign },
+    {
+      name: "Fee Management",
+      href: "/exchange/fee-management",
+      icon: Calculator,
+    },
+    {
+      name: "Payout Config",
+      href: "/exchange/payout-config",
+      icon: DollarSign,
+    },
     { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
     { name: "Branch Management", href: "/exchange/branches", icon: GitBranch },
     { name: "Staff Management", href: "/exchange/staff", icon: Users },
+    { name: "Exchange Admin User", href: "/exchange/user", icon: Users },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -137,9 +150,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
 
         {/* Main Content (Scrollable) */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-6 py-2 mb-4">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-2 mb-4">{children}</div>
         </main>
       </div>
     </div>

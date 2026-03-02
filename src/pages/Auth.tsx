@@ -347,8 +347,6 @@
 
 // export default Auth;
 
-
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -392,6 +390,7 @@ const loginSchema = Yup.object({
 type LoginType =
   | "SUPER_USER"
   | "ADMIN"
+  | "ROLE_EXCHANGE_USER"
   | "STAFF"
   | "BUSINESS"
   | "BUSINESS_USER";
@@ -447,6 +446,9 @@ const Auth: React.FC = () => {
         break;
       case "SUPER_USER":
         apiUrl = `${BASE_URL}/api/v3/auth/login`;
+        break;
+      case "ROLE_EXCHANGE_USER":
+        apiUrl = `${BASE_URL}/api/v3/auth/user-login`;
         break;
       case "BUSINESS_USER":
         apiUrl = `${BASE_URL}/api/v3/business-user-auth/login`;
@@ -507,10 +509,10 @@ const Auth: React.FC = () => {
       /* ===== NORMAL LOGIN ===== */
       const payload = JSON.parse(atob(accessToken.split(".")[1])) as JwtPayload;
       const role = payload.roles?.[0];
-      const maxAge = payload.exp - Math.floor(Date.now() / 10800);
+      const maxAge = payload.exp - Math.floor(Date.now() / 1000);
 
       setCookie("token", accessToken, { path: "/", maxAge });
-      setCookie("role", role, { path: "/" });
+      setCookie("role", role, { path: "/", maxAge });
       setCookie("fullName", fullName, { path: "/", maxAge });
 
       if (refreshToken) {
@@ -518,15 +520,23 @@ const Auth: React.FC = () => {
       }
 
       toast.success("Login successful");
-
+      console.log("Detected Role from JWT:", role);
+      console.log("Current Login Type:", loginType);
       if (from) {
         navigate(from, { replace: true });
       } else {
+        console.log("Detected Role from JWT:", role);
+        console.log("Current Login Type:", loginType);
+        console.log(JSON.parse(atob(accessToken.split(".")[1])));
+
         switch (role) {
           case "ROLE_SUPER_USER":
             navigate("/admin");
             break;
           case "ROLE_EXCHANGE_ADMIN":
+            navigate("/exchange");
+            break;
+          case "ROLE_EXCHANGE_USER":
             navigate("/exchange");
             break;
           case "ROLE_BUSINESS_ADMIN":
@@ -666,8 +676,12 @@ const Auth: React.FC = () => {
                               <SelectItem value="SUPER_USER">
                                 Super Admin Portal
                               </SelectItem>
+
                               <SelectItem value="ADMIN">
                                 Exchange Admin Portal
+                              </SelectItem>
+                              <SelectItem value="ROLE_EXCHANGE_USER">
+                                Exchange User Portal
                               </SelectItem>
                               <SelectItem value="STAFF">
                                 Branch Admin Portal
