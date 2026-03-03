@@ -253,7 +253,10 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   }
 
   // Smart fallback redirects based on role
-  if (currentRole === "ROLE_EXCHANGE_ADMIN") {
+  if (
+    currentRole === "ROLE_EXCHANGE_ADMIN" ||
+    currentRole === "ROLE_EXCHANGE_USER"
+  ) {
     return <Navigate to="/exchange" replace />;
   }
 
@@ -394,7 +397,12 @@ function App() {
                 {/* Exchange Admin */}
                 <Route
                   element={
-                    <ProtectedRoute allowedRoles={["ROLE_EXCHANGE_ADMIN"]} />
+                    <ProtectedRoute
+                      allowedRoles={[
+                        "ROLE_EXCHANGE_ADMIN",
+                        "ROLE_EXCHANGE_USER",
+                      ]}
+                    />
                   }
                 >
                   <Route path="/exchange">

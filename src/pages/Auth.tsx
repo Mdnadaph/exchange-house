@@ -390,7 +390,7 @@ const loginSchema = Yup.object({
 type LoginType =
   | "SUPER_USER"
   | "ADMIN"
-  | "ROLE_EXCHANGE_USER"
+  | "EXCHANGE_USER"
   | "STAFF"
   | "BUSINESS"
   | "BUSINESS_USER";
@@ -447,7 +447,7 @@ const Auth: React.FC = () => {
       case "SUPER_USER":
         apiUrl = `${BASE_URL}/api/v3/auth/login`;
         break;
-      case "ROLE_EXCHANGE_USER":
+      case "EXCHANGE_USER":
         apiUrl = `${BASE_URL}/api/v3/auth/user-login`;
         break;
       case "BUSINESS_USER":
@@ -680,7 +680,7 @@ const Auth: React.FC = () => {
                               <SelectItem value="ADMIN">
                                 Exchange Admin Portal
                               </SelectItem>
-                              <SelectItem value="ROLE_EXCHANGE_USER">
+                              <SelectItem value="EXCHANGE_USER">
                                 Exchange User Portal
                               </SelectItem>
                               <SelectItem value="STAFF">
