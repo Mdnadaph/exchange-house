@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { usePermission } from "@/hooks/usePermission";
 import {
   Building2,
   Home,
@@ -28,7 +29,7 @@ interface ExchangeLayoutProps {
 const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const { can } = usePermission();
   const [cookies, , removeCookie] = useCookies([
     "token",
     "email",
@@ -58,35 +59,116 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     navigate("/");
   };
 
+  //const navigation = [
+  //  { name: "Dashboard", href: "/exchange", icon: Home },
+  //  {
+  //    name: "Onboard Business",
+  //    href: "/exchange/onboard-business",
+  //    icon: Building2,
+  //  },
+  //  { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
+  //  { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
+  //  { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
+  //  { name: "Discounts", href: "/exchange/discount", icon: BadgePercent },
+  //  { name: "Rate Deals", href: "/exchange/deals", icon: Handshake },
+  //  { name: "Documents", href: "/exchange/documents", icon: Files },
+  //  {
+  //    name: "Fee Management",
+  //    href: "/exchange/fee-management",
+  //    icon: Calculator,
+  //  },
+  //  {
+  //    name: "Payout Config",
+  //    href: "/exchange/payout-config",
+  //    icon: DollarSign,
+  //  },
+  //  { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
+  //  { name: "Branch Management", href: "/exchange/branches", icon: GitBranch },
+  //  { name: "Staff Management", href: "/exchange/staff", icon: Users },
+  //  { name: "Exchange Admin User", href: "/exchange/user", icon: Users },
+  //];
+
   const navigation = [
-    { name: "Dashboard", href: "/exchange", icon: Home },
+    { name: "Dashboard", href: "/exchange", icon: Home, code: "NAV_DASHBOARD" },
     {
       name: "Onboard Business",
       href: "/exchange/onboard-business",
       icon: Building2,
+      code: "NAV_ONBOARD_BUSINESS",
     },
-    { name: "KYB Review", href: "/exchange/kyb-review", icon: FileCheck },
-    { name: "KYB Config", href: "/exchange/kyb-config", icon: Settings },
-    { name: "Transactions", href: "/exchange/transactions", icon: CreditCard },
-    { name: "Discounts", href: "/exchange/discount", icon: BadgePercent },
-    { name: "Rate Deals", href: "/exchange/deals", icon: Handshake },
-    { name: "Documents", href: "/exchange/documents", icon: Files },
+    {
+      name: "KYB Review",
+      href: "/exchange/kyb-review",
+      icon: FileCheck,
+      code: "NAV_KYB_REVIEW",
+    },
+    {
+      name: "KYB Config",
+      href: "/exchange/kyb-config",
+      icon: Settings,
+      code: "NAV_KYB_CONFIG",
+    },
+    {
+      name: "Transactions",
+      href: "/exchange/transactions",
+      icon: CreditCard,
+      code: "NAV_TRANSACTIONS",
+    },
+    {
+      name: "Discounts",
+      href: "/exchange/discount",
+      icon: BadgePercent,
+      code: "NAV_DISCOUNT",
+    },
+    {
+      name: "Rate Deals",
+      href: "/exchange/deals",
+      icon: Handshake,
+      code: "NAV_RATE_DEALS",
+    },
+    {
+      name: "Documents",
+      href: "/exchange/documents",
+      icon: Files,
+      code: "NAV_DOCUMENTS",
+    },
     {
       name: "Fee Management",
       href: "/exchange/fee-management",
       icon: Calculator,
+      code: "NAV_FEE_MANAGEMENT",
     },
     {
       name: "Payout Config",
       href: "/exchange/payout-config",
       icon: DollarSign,
+      code: "NAV_PAYOUT_CONFIG",
     },
-    { name: "Compliance", href: "/exchange/compliance-config", icon: Shield },
-    { name: "Branch Management", href: "/exchange/branches", icon: GitBranch },
-    { name: "Staff Management", href: "/exchange/staff", icon: Users },
-    { name: "Exchange Admin User", href: "/exchange/user", icon: Users },
+    {
+      name: "Compliance",
+      href: "/exchange/compliance-config",
+      icon: Shield,
+      code: "NAV_COMPLIANCE",
+    },
+    {
+      name: "Branch Management",
+      href: "/exchange/branches",
+      icon: GitBranch,
+      code: "NAV_BRANCH",
+    },
+    {
+      name: "Staff Management",
+      href: "/exchange/staff",
+      icon: Users,
+      code: "NAV_STAFF",
+    },
+    {
+      name: "Exchange Admin User",
+      href: "/exchange/user",
+      icon: Users,
+      code: "NAV_EXCHANGE_USER",
+    },
   ];
-
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -127,24 +209,51 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
         <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+          {/*<nav className="p-4 space-y-2">
+            {navigation
+              .filter((item) => can(item.code))
+              .map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all ${
+                      isActive(item.href)
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+          </nav>*/}
           <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all ${
-                    isActive(item.href)
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
+            {navigation
+              .filter(
+                (item) =>
+                  role === "ROLE_EXCHANGE_ADMIN" ||
+                  (role === "ROLE_EXCHANGE_USER" && can(item.code)),
+              )
+              .map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all ${
+                      isActive(item.href)
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
           </nav>
         </aside>
 
