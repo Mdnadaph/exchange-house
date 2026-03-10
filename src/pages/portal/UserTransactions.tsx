@@ -773,7 +773,7 @@ const UserTransactions = () => {
                             </div>
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
-                                Discount Value:
+                                Discount %:
                               </span>
                               <p className="font-medium">
                                 {transaction.discountValue}
