@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css"; // choose a theme if desired
 import {
   Select,
   SelectContent,
@@ -439,11 +441,11 @@ const AdminExchangeHouses = () => {
 
         setErrors(formattedErrors);
 
-        toast({
-          title: "Validation Error",
-          description: "Please check the highlighted fields",
-          variant: "destructive",
-        });
+        //toast({
+        //  title: "Validation Error",
+        //  description: "Please check the highlighted fields",
+        //  variant: "destructive",
+        //});
       } else {
         toast({
           title: "Error",
@@ -755,7 +757,31 @@ const AdminExchangeHouses = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="phoneNumber">Phone Number *</Label>
-                      <Input
+                      <PhoneInput
+                        country={"us"}
+                        value={formData.phoneNumber}
+                        onChange={(value, country) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            phoneNumber: value,
+                          }));
+
+                          // Optionally store country data if needed later
+                        }}
+                        inputProps={{
+                          name: "phoneNumber",
+                          id: "phoneNumber",
+                          required: true,
+                        }}
+                        containerClass="phone-input-container" // optional custom class
+                        //inputClass="!pl-12" // adjust padding for the flag button
+                        buttonClass="phone-flag-button"
+                        enableSearch={true}
+                        searchPlaceholder="Search country"
+                        //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                        preferredCountries={["ae", "in"]} // show these at top
+                      />
+                      {/*<Input
                         id="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={(e) => {
@@ -770,10 +796,10 @@ const AdminExchangeHouses = () => {
                           });
                         }}
                         placeholder="971501234567"
-                      />
+                      />*/}
                       {errors.phoneNumber?.map((msg, i) => (
                         <p key={i} className="text-sm text-destructive mt-1">
-                          • {msg}
+                          {msg}
                         </p>
                       ))}
                     </div>
@@ -870,7 +896,7 @@ const AdminExchangeHouses = () => {
                       />
                       {errors.legalBusinessName?.map((msg, i) => (
                         <p key={i} className="text-sm text-destructive mt-1">
-                          • {msg}
+                          {msg}
                         </p>
                       ))}
                     </div>

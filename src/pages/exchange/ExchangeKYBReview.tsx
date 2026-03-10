@@ -826,9 +826,9 @@ const ExchangeKYBReview = () => {
                 />
                 {loading ? "Refreshing..." : "Refresh"}
               </Button>
-              <Button type="button" variant="business">
+              {/*<Button type="button" variant="business">
                 Assign Reviewer
-              </Button>
+              </Button>*/}
             </div>
           </div>
 
@@ -1216,7 +1216,7 @@ const ExchangeKYBReview = () => {
                             >
                               Reject
                             </Button>
-                            <Button
+                            {/*<Button
                               type="button"
                               variant="outline"
                               className="w-full"
@@ -1231,7 +1231,7 @@ const ExchangeKYBReview = () => {
                             >
                               <User className="h-4 w-4 mr-2" />
                               Assign Reviewer
-                            </Button>
+                            </Button>*/}
                           </div>
                         </div>
                       </div>
