@@ -295,11 +295,14 @@ const AdminDashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  
+                  <TableHead>Legal Business Name</TableHead>
+                  <TableHead>Trade Name</TableHead>
+                  <TableHead>Admin Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {/* <TableHead className="text-right">Actions</TableHead> */}
                 </TableRow>
               </TableHeader>
 
@@ -325,14 +328,17 @@ const AdminDashboard = () => {
                   const StatusIcon = status.icon;
                   return (
                     <TableRow key={admin.id}>
-                      <TableCell className="font-medium">
+                      <TableCell>
+                        {admin.legalBusinessName}
+                      </TableCell>
+                      <TableCell>
+                        {admin.tradingName}
+                      </TableCell>
+                      <TableCell>
                         {admin.fullName}
                       </TableCell>
-
                       <TableCell>{admin.email}</TableCell>
-
                       <TableCell>{admin.phoneNumber || "—"}</TableCell>
-
                       <TableCell>
                         {/* <Badge variant={admin.active ? "default" : "destructive"}>
                         {admin.active ? "Active" : "Inactive"}
@@ -346,7 +352,7 @@ const AdminDashboard = () => {
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-right">
+                      {/* <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
@@ -359,7 +365,7 @@ const AdminDashboard = () => {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   );
                 })}
