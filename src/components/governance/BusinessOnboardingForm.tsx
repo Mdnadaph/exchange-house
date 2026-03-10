@@ -1210,7 +1210,8 @@ import {
 interface BusinessOnboardingFormProps {
   trigger?: React.ReactNode;
 }
-
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css"; // choose a theme if desired
 import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -1718,7 +1719,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <Label htmlFor="companyName">Company Name *</Label>
+              <Label htmlFor="companyName">
+                Company Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="companyName"
                 value={formData.companyName}
@@ -1739,7 +1742,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="legalForm">Legal Form *</Label>
+              <Label htmlFor="legalForm">
+                Legal Form <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.legalForm}
                 onValueChange={(value) => {
@@ -1764,7 +1769,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="businessType">Type of Business *</Label>
+              <Label htmlFor="businessType">
+                Type of Business <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.businessType}
                 onValueChange={(value) => {
@@ -1791,7 +1798,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="tradeLicense">Trade License Number *</Label>
+              <Label htmlFor="tradeLicense">
+                Trade License Number <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="tradeLicense"
                 value={formData.tradeLicense}
@@ -1812,7 +1821,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="taxNumber">Tax Registration Number *</Label>
+              <Label htmlFor="taxNumber">
+                Tax Registration Number <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="taxNumber"
                 value={formData.taxNumber}
@@ -1831,7 +1842,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="countryOfTrade">Country of Trade *</Label>
+              <Label htmlFor="countryOfTrade">
+                Country of Trade <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.countryName}
                 onValueChange={(value) => {
@@ -1858,7 +1871,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="branchId">Registered Branch *</Label>
+              <Label htmlFor="branchId">
+                Registered Branch <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.branchId}
                 onValueChange={(value) => {
@@ -1890,7 +1905,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="businessEmail">Business Email *</Label>
+              <Label htmlFor="businessEmail">
+                Business Email <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -1916,23 +1933,34 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="businessPhone">Business Phone *</Label>
+              <Label htmlFor="businessPhone">
+                Business Phone <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="businessPhone"
+                <PhoneInput
+                  country={"us"}
                   value={formData.businessPhone}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      businessPhone: e.target.value,
-                    }));
+                  onChange={(value, country) => {
+                    setFormData((prev) => ({ ...prev, businessPhone: value }));
                     clearError("businessPhone");
+                    // Optionally store country data if needed later
                   }}
-                  placeholder="+971 4 XXX XXXX"
-                  className="pl-9"
+                  inputProps={{
+                    name: "businessPhone",
+                    id: "businessPhone",
+                    required: true,
+                  }}
+                  containerClass="phone-input-container" // optional custom class
+                  //inputClass="!pl-12" // adjust padding for the flag button
+                  buttonClass="phone-flag-button"
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                  preferredCountries={["ae", "in"]} // show these at top
                 />
               </div>
+
               {errors.businessPhone && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.businessPhone}
@@ -1944,24 +1972,34 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               <Label htmlFor="alternatePhone">Alternate Phone</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="alternatePhone"
+                <PhoneInput
+                  country={"us"}
                   value={formData.alternatePhone}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      alternatePhone: e.target.value,
-                    }));
-                    clearError("alternatePhone");
+                  onChange={(value, country) => {
+                    setFormData((prev) => ({ ...prev, alternatePhone: value }));
+                    clearError("businessPhone");
+                    // Optionally store country data if needed later
                   }}
-                  placeholder="+971 5X XXX XXXX"
-                  className="pl-9"
+                  inputProps={{
+                    name: "alternatePhone",
+                    id: "alternatePhone",
+                    required: true,
+                  }}
+                  containerClass="phone-input-container" // optional custom class
+                  //inputClass="!pl-12" // adjust padding for the flag button
+                  buttonClass="phone-flag-button"
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                  preferredCountries={["ae", "in"]} // show these at top
                 />
               </div>
             </div>
 
             <div className="md:col-span-2">
-              <Label htmlFor="businessAddress">Business Address Line 1 *</Label>
+              <Label htmlFor="businessAddress">
+                Business Address Line 1 <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -2020,7 +2058,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="adminFirstName">First Name *</Label>
+              <Label htmlFor="adminFirstName">
+                First Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="adminFirstName"
                 value={formData.adminFirstName}
@@ -2040,7 +2080,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               )}
             </div>
             <div>
-              <Label htmlFor="adminLastName">Last Name *</Label>
+              <Label htmlFor="adminLastName">
+                Last Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="adminLastName"
                 value={formData.adminLastName}
@@ -2060,7 +2102,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               )}
             </div>
             <div>
-              <Label htmlFor="adminEmail">Email Address *</Label>
+              <Label htmlFor="adminEmail">
+                Email Address <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -2083,21 +2127,31 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               )}
             </div>
             <div>
-              <Label htmlFor="adminPhone">Phone Number *</Label>
+              <Label htmlFor="adminPhone">
+                Phone Number <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="adminPhone"
+                <PhoneInput
+                  country={"us"}
                   value={formData.adminPhone}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      adminPhone: e.target.value,
-                    }));
+                  onChange={(value, country) => {
+                    setFormData((prev) => ({ ...prev, adminPhone: value }));
                     clearError("adminPhone");
+                    // Optionally store country data if needed later
                   }}
-                  placeholder="+971 5X XXX XXXX"
-                  className="pl-9"
+                  inputProps={{
+                    name: "adminPhone",
+                    id: "adminPhone",
+                    required: true,
+                  }}
+                  containerClass="phone-input-container" // optional custom class
+                  //inputClass="!pl-12" // adjust padding for the flag button
+                  buttonClass="phone-flag-button"
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                  preferredCountries={["ae", "in"]} // show these at top
                 />
               </div>
               {errors.adminPhone && (
@@ -2105,7 +2159,9 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               )}
             </div>
             <div className="md:col-span-2">
-              <Label htmlFor="adminDesignation">Designation *</Label>
+              <Label htmlFor="adminDesignation">
+                Designation <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="adminDesignation"
                 value={formData.adminDesignation}
@@ -2153,7 +2209,10 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="monthlyLimit">Monthly Transaction Limit *</Label>
+              <Label htmlFor="monthlyLimit">
+                Monthly Transaction Limit{" "}
+                <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="monthlyLimit"
                 type="number"
@@ -2173,7 +2232,8 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
-                Deal Validity Period (Days) *
+                Deal Validity Period (Days){" "}
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="dealValidityDays"
@@ -2202,7 +2262,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
-              Supported Currencies *
+              Supported Currencies <span className="text-red-500">*</span>
             </Label>
             <p className="text-xs text-muted-foreground">
               Select all currencies this business will transact in
