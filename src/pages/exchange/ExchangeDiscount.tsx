@@ -36,6 +36,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { number } from "yup";
 
 type Discount = {
   id: number;
@@ -47,6 +48,7 @@ type Discount = {
   status: "ACTIVE" | "INACTIVE";
   expiryDate: string;
   createdAt: string;
+  limit:number;
 };
 
 type Stats = {
@@ -82,6 +84,7 @@ const ExchangeDiscount = () => {
     discountValue: "",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
     expiryDate: "",
+    limit: number,
   });
 
   const discountTypes = ["PERCENTAGE", "FIXED_AMOUNT"];
@@ -127,6 +130,7 @@ const ExchangeDiscount = () => {
       discountValue: "",
       status: "ACTIVE",
       expiryDate: "",
+      limit : number,
     });
     setIsModalOpen(true);
   };
@@ -143,6 +147,7 @@ const ExchangeDiscount = () => {
       status: form.status,
       expiryDate: form.expiryDate,
       createdAt: new Date().toISOString(),
+      limit: number,
     };
 
     // Optimistic update
@@ -383,6 +388,23 @@ const ExchangeDiscount = () => {
                   </div>
                 </div>
 
+
+                <div>
+                    <Label htmlFor="limit">Discount Limits*</Label>
+                    <Input
+                      id="limit"
+                      // type="date"
+                      type="number"
+                      value={form.limit}
+                      onChange={(e) =>
+                        setForm({ ...form, limit: e.target.value })
+                      }
+                    />
+                  </div>
+
+
+
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="status">Status *</Label>
@@ -585,13 +607,13 @@ const ExchangeDiscount = () => {
 
                           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
                             <div>
-                              Type:{" "}
+                              Type:
                               <span className="font-mono">
                                 {discount.type?.replace(/_/g, " ") || "—"}
                               </span>
                             </div>
                             <div>
-                              Discount Code:{" "}
+                              Discount Code:
                               <span className="font-mono">
                                 {discount.discountCode || "—"}
                               </span>
@@ -614,13 +636,17 @@ const ExchangeDiscount = () => {
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-4 w-4" />
                           <span>
-                            Created:{" "}
+                            Created:
                             {new Date(discount.createdAt).toLocaleDateString()}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
                           <span>Expires: {discount.expiryDate}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Tag className="h-4 w-4" />
+                          <span>Discount Limits: {discount.limit}</span>
                         </div>
                       </div>
                     </div>
@@ -675,3 +701,6 @@ const ExchangeDiscount = () => {
 };
 
 export default ExchangeDiscount;
+
+
+
