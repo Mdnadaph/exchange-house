@@ -548,7 +548,6 @@ const SingleTransactionForm = ({
                     />
                   </div>
 
-
                  {/* ← New: Discount Code */}
                   <div>
                     <Label htmlFor="discountCode">Discount Code</Label>
@@ -560,8 +559,6 @@ const SingleTransactionForm = ({
                       maxLength={12}
                     />
                   </div>
-
-
 
                   <div>
                     <Label htmlFor="currency">Currency *</Label>
