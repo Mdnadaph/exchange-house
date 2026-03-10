@@ -816,6 +816,8 @@ import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const ExchangeAdminUser = () => {
   const [cookies] = useCookies(["token", "email"]);
@@ -860,7 +862,53 @@ const ExchangeAdminUser = () => {
     phoneNumber: "",
     address: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const clearError = (field: string) => {
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
+  const validateAll = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Full Name
+    if (!userForm.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    } else if (userForm.fullName.trim().length < 2) {
+      newErrors.fullName = "Full name must be at least 2 characters";
+    }
+
+    // Email
+    if (!userForm.email.trim()) {
+      newErrors.email = "Email is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userForm.email)) {
+        newErrors.email = "Enter a valid email address";
+      }
+    }
+
+    // Phone Number
+    const digits = userForm.phoneNumber
+      ? userForm.phoneNumber.replace(/\D/g, "")
+      : "";
+    if (!digits) {
+      newErrors.phoneNumber = "Phone number is required";
+    } else if (digits.length < 5) {
+      newErrors.phoneNumber = "Phone number must be at least 5 digits";
+    }
+
+    // Address
+    if (!userForm.address.trim()) {
+      newErrors.address = "Address is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   // ---------- Permission Helpers ----------
   const handleToggleNode = (nodeId) => {
     setRawSelectedIds((prev) => {
@@ -1040,6 +1088,15 @@ const ExchangeAdminUser = () => {
   }, [token, currentPage]);
 
   const createUser = async () => {
+    if (!validateAll()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await axios.post(
         `${BASE_URL}/api/v1/exchange-users/create`,
@@ -1239,52 +1296,90 @@ const ExchangeAdminUser = () => {
             </DialogHeader>
             <div className="grid grid-cols-1 gap-4 py-4">
               <div>
-                <Label className="text-lg">Full Name</Label>
+                <Label className="text-lg">
+                  Full Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   value={userForm.fullName}
-                  onChange={(e) =>
-                    setUserForm({ ...userForm, fullName: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setUserForm({ ...userForm, fullName: e.target.value });
+                    clearError("fullName");
+                  }}
                   className="mt-2 py-2 text-lg"
                   placeholder="Full Name"
                 />
+                {errors.fullName && (
+                  <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>
+                )}
               </div>
               <div>
-                <Label className="text-lg">Email Address</Label>
+                <Label className="text-lg">
+                  Email Address <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   type="email"
                   value={userForm.email}
-                  onChange={(e) =>
-                    setUserForm({ ...userForm, email: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setUserForm({ ...userForm, email: e.target.value });
+                    clearError("email");
+                  }}
                   className="mt-2 py-2 text-lg"
                   placeholder="example@gmail.com"
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                )}
               </div>
               <div>
-                <Label className="text-lg">Phone Number</Label>
-                <Input
+                <Label className="text-lg">
+                  Phone Number <span className="text-red-500">*</span>
+                </Label>
+                <PhoneInput
+                  country={"ae"}
                   value={userForm.phoneNumber}
-                  onChange={(e) =>
-                    setUserForm({ ...userForm, phoneNumber: e.target.value })
-                  }
-                  className="mt-2 py-2 text-lg"
-                  placeholder="9800000002"
+                  onChange={(value) => {
+                    setUserForm({ ...userForm, phoneNumber: value });
+                    clearError("phoneNumber");
+                  }}
+                  inputProps={{
+                    name: "phone",
+                    id: "phone",
+                  }}
+                  containerClass="w-full mt-1"
+                  inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                  buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                  dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                  enableSearch
+                  searchPlaceholder="Search country..."
+                  preferredCountries={["ae", "in"]}
                 />
+                {errors.phoneNumber && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.phoneNumber}
+                  </p>
+                )}
               </div>
               <div>
-                <Label className="text-lg">Address</Label>
+                <Label className="text-lg">
+                  Address <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   value={userForm.address}
-                  onChange={(e) =>
-                    setUserForm({ ...userForm, address: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setUserForm({ ...userForm, address: e.target.value });
+                    clearError("address");
+                  }}
                   className="mt-2 py-2 text-lg"
                   placeholder="Enter address"
                 />
+                {errors.address && (
+                  <p className="text-sm text-red-500 mt-1">{errors.address}</p>
+                )}
               </div>
               <div className="flex flex-col items-start">
-                <Label className="text-lg pr-4 mt-2">Permissions:</Label>
+                <Label className="text-lg pr-4 mt-2">
+                  Permissions <span className="text-red-500">*</span>
+                </Label>
                 <Button
                   onClick={async () => {
                     await fetchAllPermissions();

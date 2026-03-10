@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 import {
   Dialog,
@@ -59,7 +61,7 @@ const ExchangeBranchManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
-
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: "",
     emirate: "",
@@ -82,6 +84,49 @@ const ExchangeBranchManagement = () => {
   /* =========================
      FETCH BRANCHES
   ========================= */
+  const clearError = (field: string) => {
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
+  const validateAll = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Name
+    if (!form.name.trim()) newErrors.name = "Branch name is required";
+    else if (form.name.trim().length < 2)
+      newErrors.name = "Branch name must be at least 2 characters";
+
+    // Emirate
+    if (!form.emirate) newErrors.emirate = "Emirate is required";
+
+    // Location
+    if (!form.location.trim()) newErrors.location = "Location is required";
+
+    // Address
+    if (!form.address.trim()) newErrors.address = "Address is required";
+
+    // Email
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email))
+        newErrors.email = "Enter a valid email address";
+    }
+
+    // Phone
+    const phoneDigits = form.phone ? form.phone.replace(/\D/g, "") : "";
+    if (!phoneDigits) {
+      newErrors.phone = "Phone number is required";
+    } else if (phoneDigits.length < 5) {
+      newErrors.phone = "Phone number must be at least 5 digits";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const fetchBranches = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
@@ -146,6 +191,7 @@ const ExchangeBranchManagement = () => {
       phone: "",
       email: "",
     });
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -163,6 +209,7 @@ const ExchangeBranchManagement = () => {
       phone: branch.phone || "",
       email: branch.email || "",
     });
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -185,7 +232,7 @@ const ExchangeBranchManagement = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       toast({
@@ -224,7 +271,7 @@ const ExchangeBranchManagement = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       toast({
@@ -248,11 +295,28 @@ const ExchangeBranchManagement = () => {
   /* =========================
      HANDLE SUBMIT (ADD/EDIT)
   ========================= */
+  //const handleSubmit = async () => {
+  //  if (!form.name || !form.emirate || !form.location) {
+  //    toast({
+  //      title: "Error",
+  //      description: "Please fill in all required fields",
+  //      variant: "destructive",
+  //    });
+  //    return;
+  //  }
+
+  //  if (isEditMode) {
+  //    await updateBranch();
+  //  } else {
+  //    await createBranch();
+  //  }
+  //};
+
   const handleSubmit = async () => {
-    if (!form.name || !form.emirate || !form.location) {
+    if (!validateAll()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Validation Error",
+        description: "Please fix the errors before submitting.",
         variant: "destructive",
       });
       return;
@@ -264,7 +328,6 @@ const ExchangeBranchManagement = () => {
       await createBranch();
     }
   };
-
   const getStatusBadge = (status: string) => {
     const statusMap = {
       active: {
@@ -345,20 +408,33 @@ const ExchangeBranchManagement = () => {
 
               <div className="space-y-4 py-4">
                 <div>
-                  <Label htmlFor="branchName">Branch Name *</Label>
+                  <Label htmlFor="branchName">
+                    Branch Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="branchName"
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => {
+                      setForm({ ...form, name: e.target.value });
+                      clearError("name");
+                    }}
                     placeholder="e.g., Dubai Marina Branch"
                   />
+                  {errors.name && (
+                    <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="emirate">Emirate *</Label>
+                  <Label htmlFor="emirate">
+                    Emirate <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={form.emirate}
-                    onValueChange={(v) => setForm({ ...form, emirate: v })}
+                    onValueChange={(v) => {
+                      setForm({ ...form, emirate: v });
+                      clearError("emirate");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select emirate" />
@@ -371,57 +447,103 @@ const ExchangeBranchManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.emirate && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.emirate}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="location">Location *</Label>
+                  <Label htmlFor="location">
+                    Location <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="location"
                     value={form.location}
-                    onChange={(e) =>
-                      setForm({ ...form, location: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setForm({ ...form, location: e.target.value });
+                      clearError("location");
+                    }}
                     placeholder="e.g., Dubai Marina Mall"
                   />
+                  {errors.location && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.location}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Full Address</Label>
-                  <Textarea
+                  <Label htmlFor="address">
+                    Full Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
                     id="address"
                     value={form.address}
-                    onChange={(e) =>
-                      setForm({ ...form, address: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setForm({ ...form, address: e.target.value });
+                      clearError("address");
+                    }}
                     placeholder="Complete branch address"
-                    rows={2}
                   />
+                  {errors.address && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
+                    <Label htmlFor="phone">
+                      Phone <span className="text-red-500">*</span>
+                    </Label>
+                    <PhoneInput
+                      country={"ae"} // default country (UAE)
                       value={form.phone}
-                      onChange={(e) =>
-                        setForm({ ...form, phone: e.target.value })
-                      }
-                      placeholder="+971 4 XXX XXXX"
+                      onChange={(value) => {
+                        setForm({ ...form, phone: value });
+                        clearError("phone");
+                      }}
+                      inputProps={{
+                        name: "phone",
+                        id: "phone",
+                      }}
+                      containerClass="w-full mt-1"
+                      inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                      buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                      dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                      enableSearch
+                      searchPlaceholder="Search country..."
+                      preferredCountries={["ae", "in"]} // optional
                     />
+                    {errors.phone && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">
+                      Email <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="email"
                       type="email"
                       value={form.email}
-                      onChange={(e) =>
-                        setForm({ ...form, email: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setForm({ ...form, email: e.target.value });
+                        clearError("email");
+                      }}
                       placeholder="branch@bizpayaxis.ae"
                     />
+                    {errors.email && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -472,7 +594,7 @@ const ExchangeBranchManagement = () => {
               <p className="text-xs text-muted-foreground">
                 {Math.round(
                   (totalStats.activeBranches / totalStats.totalBranches) *
-                    100 || 0
+                    100 || 0,
                 )}
                 % operational
               </p>
@@ -666,7 +788,7 @@ const ExchangeBranchManagement = () => {
                         <div className="text-center p-3 bg-muted rounded-lg">
                           <p
                             className={`font-semibold text-lg ${getEfficiencyColor(
-                              branch.efficiency
+                              branch.efficiency,
                             )}`}
                           >
                             {branch.efficiency > 0

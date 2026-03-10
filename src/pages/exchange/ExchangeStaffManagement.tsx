@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import {
   Users,
   Plus,
@@ -69,6 +71,59 @@ const ExchangeStaffManagement = () => {
     branchId: "",
     roleId: "",
   });
+  const [staffErrors, setStaffErrors] = useState<Record<string, string>>({});
+
+  const clearStaffError = (field: string) => {
+    setStaffErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
+
+  const validateAllStaff = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Full Name
+    if (!staffForm.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    } else if (staffForm.fullName.trim().length < 2) {
+      newErrors.fullName = "Full name must be at least 2 characters";
+    }
+
+    // Email
+    if (!staffForm.email.trim()) {
+      newErrors.email = "Email is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(staffForm.email)) {
+        newErrors.email = "Enter a valid email address";
+      }
+    }
+
+    // Contact Number
+    const digits = staffForm.contactNumber
+      ? staffForm.contactNumber.replace(/\D/g, "")
+      : "";
+    if (!digits) {
+      newErrors.contactNumber = "Contact number is required";
+    } else if (digits.length < 5) {
+      newErrors.contactNumber = "Contact number must be at least 5 digits";
+    }
+
+    // Branch
+    if (!staffForm.branchId) {
+      newErrors.branchId = "Branch is required";
+    }
+
+    // Role
+    if (!staffForm.roleId) {
+      newErrors.roleId = "Role is required";
+    }
+
+    setStaffErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const ROLE_OPTIONS = [
     {
@@ -125,6 +180,15 @@ const ExchangeStaffManagement = () => {
     }
   }, [token, currentPage]);
   const createStaff = async () => {
+    if (!validateAllStaff()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${BASE_URL}/api/v3/admin/staff/create`,
@@ -142,9 +206,6 @@ const ExchangeStaffManagement = () => {
         },
       );
 
-      // ✅ Now response EXISTS
-      // console.log("Staff Create API Response:", response.data);
-
       toast({
         title: "Success",
         description:
@@ -159,11 +220,11 @@ const ExchangeStaffManagement = () => {
         branchId: "",
         roleId: "",
       });
+      setStaffErrors({}); // clear errors on success
       setCurrentPage(0);
       fetchBranchWithStaff(0);
     } catch (error: any) {
       console.error("Create Staff Error:", error?.response?.data || error);
-
       toast({
         title: "Error",
         description: error?.response?.data?.message || "Failed to create staff",
@@ -359,50 +420,85 @@ const ExchangeStaffManagement = () => {
 
             <div className="grid grid-cols-1 gap-4 py-4">
               <div>
-                <Label>Full Name</Label>
+                <Label>
+                  Full Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   value={staffForm.fullName}
-                  onChange={(e) =>
-                    setStaffForm({ ...staffForm, fullName: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setStaffForm({ ...staffForm, fullName: e.target.value });
+                    clearStaffError("fullName");
+                  }}
                   placeholder="full name"
                 />
+                {staffErrors.fullName && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.fullName}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label>Email Address</Label>
+                <Label>
+                  Email Address <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   type="email"
                   value={staffForm.email}
-                  onChange={(e) =>
-                    setStaffForm({ ...staffForm, email: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setStaffForm({ ...staffForm, email: e.target.value });
+                    clearStaffError("email");
+                  }}
                   placeholder="example@gmail.com"
                 />
+                {staffErrors.email && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label>Contact Number</Label>
-                <Input
+                <Label>
+                  Contact Number <span className="text-red-500">*</span>
+                </Label>
+                <PhoneInput
+                  country={"ae"} // default country (UAE)
                   value={staffForm.contactNumber}
-                  onChange={(e) =>
-                    setStaffForm({
-                      ...staffForm,
-                      contactNumber: e.target.value,
-                    })
-                  }
-                  placeholder="9800000002"
+                  onChange={(value) => {
+                    setStaffForm({ ...staffForm, contactNumber: value });
+                    clearStaffError("contactNumber");
+                  }}
+                  inputProps={{
+                    name: "phone",
+                    id: "phone",
+                  }}
+                  containerClass="w-full mt-1"
+                  inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                  buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                  dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                  enableSearch
+                  searchPlaceholder="Search country..."
+                  preferredCountries={["ae", "in"]}
                 />
+                {staffErrors.contactNumber && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.contactNumber}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label>Select Branch</Label>
+                <Label>
+                  Select Branch <span className="text-red-500">*</span>
+                </Label>
 
                 <Select
                   value={staffForm.branchId}
-                  onValueChange={(value) =>
-                    setStaffForm({ ...staffForm, branchId: value })
-                  }
+                  onValueChange={(value) => {
+                    setStaffForm({ ...staffForm, branchId: value });
+                    clearStaffError("branchId");
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue
@@ -423,15 +519,23 @@ const ExchangeStaffManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {staffErrors.branchId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.branchId}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label>Staff Role</Label>
+                <Label>
+                  Staff Role <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={staffForm.roleId}
-                  onValueChange={(value) =>
-                    setStaffForm({ ...staffForm, roleId: value })
-                  }
+                  onValueChange={(value) => {
+                    setStaffForm({ ...staffForm, roleId: value });
+                    clearStaffError("roleId");
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Role" />
@@ -445,6 +549,11 @@ const ExchangeStaffManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {staffErrors.roleId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.roleId}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -467,7 +576,9 @@ const ExchangeStaffManagement = () => {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <Label htmlFor="search">Search Staff</Label>
+                <Label htmlFor="search">
+                  Search Staff <span className="text-red-500">*</span>
+                </Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input

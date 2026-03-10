@@ -64,7 +64,9 @@ const ExchangeDiscount = () => {
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("ALL");
 
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -108,7 +110,8 @@ const ExchangeDiscount = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.response?.data?.message || "Failed to fetch discounts",
+        description:
+          error?.response?.data?.message || "Failed to fetch discounts",
         variant: "destructive",
       });
     }
@@ -147,7 +150,7 @@ const ExchangeDiscount = () => {
           expiryDate: form.expiryDate,
           status: "ACTIVE",
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       toast({ title: "Success", description: "Discount created successfully" });
@@ -158,17 +161,24 @@ const ExchangeDiscount = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.response?.data?.message || "Failed to create discount",
+        description:
+          error?.response?.data?.message || "Failed to create discount",
         variant: "destructive",
       });
     }
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.discountValue || !form.startDate || !form.expiryDate) {
+    if (
+      !form.name ||
+      !form.discountValue ||
+      !form.startDate ||
+      !form.expiryDate
+    ) {
       toast({
         title: "Error",
-        description: "Please fill required fields (name, value, start date, expiry)",
+        description:
+          "Please fill required fields (name, value, start date, expiry)",
         variant: "destructive",
       });
       return;
@@ -237,8 +247,12 @@ const ExchangeDiscount = () => {
     .filter(
       (d) =>
         d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (d.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (d.discountCode || "").toLowerCase().includes(searchQuery.toLowerCase())
+        (d.description || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        (d.discountCode || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
     )
     .filter((d) => {
       if (statusFilter === "ALL") return true;
@@ -251,8 +265,12 @@ const ExchangeDiscount = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Discount Management</h1>
-            <p className="text-muted-foreground">Create and manage promotional offers</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Discount Management
+            </h1>
+            <p className="text-muted-foreground">
+              Create and manage promotional offers
+            </p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -287,7 +305,9 @@ const ExchangeDiscount = () => {
                   <Textarea
                     id="description"
                     value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
                     placeholder="Who it's for, conditions, exclusions..."
                     rows={3}
                   />
@@ -299,7 +319,10 @@ const ExchangeDiscount = () => {
                     <Select
                       value={form.type}
                       onValueChange={(v) =>
-                        setForm({ ...form, type: v as "PERCENTAGE" | "FIXED_AMOUNT" })
+                        setForm({
+                          ...form,
+                          type: v as "PERCENTAGE" | "FIXED_AMOUNT",
+                        })
                       }
                     >
                       <SelectTrigger>
@@ -325,7 +348,9 @@ const ExchangeDiscount = () => {
                       step="0.01"
                       min="0.01"
                       value={form.discountValue}
-                      onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, discountValue: e.target.value })
+                      }
                       placeholder={form.type === "PERCENTAGE" ? "25" : "50"}
                     />
                   </div>
@@ -338,7 +363,9 @@ const ExchangeDiscount = () => {
                     type="number"
                     min="0"
                     value={form.limit}
-                    onChange={(e) => setForm({ ...form, limit: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, limit: e.target.value })
+                    }
                     placeholder="e.g. 100, 500, 0"
                   />
                 </div>
@@ -350,7 +377,9 @@ const ExchangeDiscount = () => {
                       id="startDate"
                       type="date"
                       value={form.startDate}
-                      onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, startDate: e.target.value })
+                      }
                     />
                   </div>
 
@@ -360,13 +389,18 @@ const ExchangeDiscount = () => {
                       id="expiryDate"
                       type="date"
                       value={form.expiryDate}
-                      onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, expiryDate: e.target.value })
+                      }
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsModalOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button onClick={handleSubmit}>Create Discount</Button>
@@ -396,7 +430,9 @@ const ExchangeDiscount = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-success">{stats.activeCount}</div>
+                <div className="text-2xl font-bold text-success">
+                  {stats.activeCount}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -406,7 +442,9 @@ const ExchangeDiscount = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-destructive">{stats.expiredCount}</div>
+                <div className="text-2xl font-bold text-destructive">
+                  {stats.expiredCount}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -416,7 +454,9 @@ const ExchangeDiscount = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-destructive">{stats.pendingCount}</div>
+                <div className="text-2xl font-bold text-destructive">
+                  {stats.pendingCount}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -491,7 +531,10 @@ const ExchangeDiscount = () => {
             filteredDiscounts.map((discount) => {
               const status = getStatus(discount);
               return (
-                <Card key={discount.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={discount.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-6">
                       <div className="flex-1 space-y-3">
@@ -501,9 +544,13 @@ const ExchangeDiscount = () => {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-1">
-                              <h3 className="text-lg font-semibold">{discount.name}</h3>
+                              <h3 className="text-lg font-semibold">
+                                {discount.name}
+                              </h3>
                               <Badge
-                                variant={status === "ACTIVE" ? "default" : "secondary"}
+                                variant={
+                                  status === "ACTIVE" ? "default" : "secondary"
+                                }
                                 className={
                                   status === "ACTIVE"
                                     ? "bg-green-600 hover:bg-green-600 text-white"
@@ -531,7 +578,10 @@ const ExchangeDiscount = () => {
                           </div>
 
                           <div className="text-base font-medium text-foreground">
-                            {getTypeLabel(discount.type, discount.discountValue)}
+                            {getTypeLabel(
+                              discount.type,
+                              discount.discountValue,
+                            )}
                           </div>
                         </div>
 
@@ -543,7 +593,10 @@ const ExchangeDiscount = () => {
                           <div className="flex items-center gap-1.5">
                             <Tag className="h-4 w-4" />
                             <span>
-                              Limit: {discount.limit === 0 ? "Unlimited" : discount.limit}
+                              Limit:{" "}
+                              {discount.limit === 0
+                                ? "Unlimited"
+                                : discount.limit}
                             </span>
                           </div>
 
@@ -560,7 +613,10 @@ const ExchangeDiscount = () => {
                           <div className="flex items-center gap-1.5">
                             <Clock className="h-4 w-4" />
                             <span>
-                              Created: {new Date(discount.createdAt).toLocaleDateString()}
+                              Created:{" "}
+                              {new Date(
+                                discount.createdAt,
+                              ).toLocaleDateString()}
                             </span>
                           </div>
 
