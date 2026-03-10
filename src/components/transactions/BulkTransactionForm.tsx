@@ -1,1297 +1,3 @@
-// import React, { useEffect, useRef, useState } from "react";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Textarea } from "@/components/ui/textarea";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import { Separator } from "@/components/ui/separator";
-// import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-// import BulkTransactionFeeDisplay from "./BulkTransactionFeeDisplay";
-// import { useToast } from "@/hooks/use-toast";
-// import {
-//   Plus,
-//   DollarSign,
-//   FileText,
-//   Upload,
-//   Users,
-//   Building,
-//   AlertCircle,
-//   Info,
-//   CheckCircle,
-//   CreditCard,
-//   TrendingUp,
-//   Calendar,
-//   Trash2,
-//   Download,
-//   Eye,
-//   Edit,
-// } from "lucide-react";
-// import BASE_URL from "@/config/config";
-// import { useCookies } from "react-cookie";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "../ui/table";
-// import { object } from "yup";
-
-// // interface BulkTransactionFormProps {
-// //   trigger?: React.ReactNode;
-// // }
-
-// interface BeneficiaryGroup {
-//   id: string;
-//   name: string;
-//   description: string;
-//   beneficiaryIds: string[];
-//   beneficiaries: any[];
-//   createdAt: string;
-//   memberCount: number;
-//   discountCode: string;
-// }
-
-// const BulkTransactionForm = ({
-//   trigger,
-//   refetch,
-// }: {
-//   trigger?: React.ReactNode;
-//   refetch?: () => void;
-// }) => {
-//   const { toast } = useToast();
-//   const fileInputRef = useRef<HTMLInputElement>(null);
-//   const [selectedSource, setSelectedSource] = useState("");
-//   const [transactionPurpose, setTransactionPurpose] = useState("");
-//   const [currency, setCurrency] = useState("");
-//   // const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
-
-//   const [discountCode, setDiscountCode] = useState("");
-
-//   const [document, setDocument] = useState<File | null>(null);
-//   const [bulkData, setBulkData] = useState<any[]>([]);
-//   const [notes, setNotes] = useState("");
-//   const [currentStep, setCurrentStep] = useState(1);
-//   const [showConfirmation, setShowConfirmation] = useState(false);
-//   const [open, setOpen] = useState(false);
-//   const [selectedGroup, setSelectedGroup] = useState<string>("");
-//   const [currencyListData, setCurrencyListData] = useState(null);
-//   const [cookie] = useCookies(["token"]);
-//   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-//   const [beneficiaryGroupsList, setBeneficiaryGroupList] = useState(null);
-//   const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<
-//     Record<number, string>
-//   >({});
-//   const [loading, setLoading] = useState<boolean>(false);
-//   const token = cookie.token;
-//   // Get beneficiary groups from window (set by UserBeneficiaries)
-//   // const getBeneficiaryGroups = (): BeneficiaryGroup[] => {
-//   //   if (typeof window !== "undefined" && (window as any).__beneficiaryGroups) {
-//   //     return (window as any).__beneficiaryGroups;
-//   //   }
-//   //   // Fallback mock data
-//   //   return [
-//   //     {
-//   //       id: "GRP-001",
-//   //       name: "Monthly Payroll",
-//   //       description: "Regular monthly salary payments",
-//   //       beneficiaryIds: ["BEN-001", "BEN-003"],
-//   //       beneficiaries: [
-//   //         {
-//   //           id: "BEN-001",
-//   //           name: "Global Suppliers Inc",
-//   //           type: "corporate",
-//   //           bankDetails: [
-//   //             {
-//   //               bankName: "Emirates NBD",
-//   //               accountNumber: "1234567890",
-//   //               accountName: "Global Suppliers Inc",
-//   //               currency: "USD",
-//   //             },
-//   //           ],
-//   //         },
-//   //         {
-//   //           id: "BEN-003",
-//   //           name: "Office Supplies Co",
-//   //           type: "corporate",
-//   //           bankDetails: [
-//   //             {
-//   //               bankName: "HSBC UAE",
-//   //               accountNumber: "5555666677",
-//   //               accountName: "Office Supplies Co",
-//   //               currency: "USD",
-//   //             },
-//   //           ],
-//   //         },
-//   //       ],
-//   //       createdAt: "2024-01-01",
-//   //       memberCount: 2,
-//   //     },
-//   //     {
-//   //       id: "GRP-002",
-//   //       name: "Vendor Payments Q1",
-//   //       description: "Q1 vendor and supplier payments",
-//   //       beneficiaryIds: ["BEN-001", "BEN-002"],
-//   //       beneficiaries: [
-//   //         {
-//   //           id: "BEN-001",
-//   //           name: "Global Suppliers Inc",
-//   //           type: "corporate",
-//   //           bankDetails: [
-//   //             {
-//   //               bankName: "Emirates NBD",
-//   //               accountNumber: "1234567890",
-//   //               accountName: "Global Suppliers Inc",
-//   //               currency: "USD",
-//   //             },
-//   //           ],
-//   //         },
-//   //         {
-//   //           id: "BEN-002",
-//   //           name: "Tech Solutions Ltd",
-//   //           type: "corporate",
-//   //           bankDetails: [
-//   //             {
-//   //               bankName: "ADCB Bank",
-//   //               accountNumber: "9876543210",
-//   //               accountName: "Tech Solutions Ltd",
-//   //               currency: "AED",
-//   //             },
-//   //           ],
-//   //         },
-//   //       ],
-//   //       createdAt: "2024-01-10",
-//   //       memberCount: 2,
-//   //     },
-//   //   ];
-//   // };
-
-//   // const beneficiaryGroups = getBeneficiaryGroups();
-
-//   // Mock data
-//   const transactionSources = [
-//     {
-//       id: "1",
-//       name: "Emirates NBD Business Account",
-//       accountNumber: "AE070331234567890123456",
-//       balance: "245,000",
-//       currency: "AED",
-//       type: "current_account",
-//     },
-//     {
-//       id: "2",
-//       name: "FAB USD Account",
-//       accountNumber: "AE070331987654321098765",
-//       balance: "85,000",
-//       currency: "USD",
-//       type: "foreign_currency",
-//     },
-//   ];
-
-//   // const purposeOptions = [
-//   //   { value: "salary_payment", label: "Salary Payment", requiresDoc: true, template: "payroll" },
-//   //   { value: "vendor_payment", label: "Vendor Payment", requiresDoc: true, template: "vendor" },
-//   //   { value: "supplier_payment", label: "Supplier Payment", requiresDoc: true, template: "supplier" },
-//   //   { value: "bonus_payment", label: "Bonus Payment", requiresDoc: true, template: "payroll" },
-//   //   { value: "commission_payment", label: "Commission Payment", requiresDoc: false, template: "commission" },
-//   //   { value: "refund_payment", label: "Refund Payment", requiresDoc: true, template: "refund" }
-//   // ];
-
-//   const purposeOptions = [
-//     { value: "INVOICE_PAYMENT", label: "Invoice Payment", requiresDoc: true },
-//     { value: "SALARY_PAYMENT", label: "Salary Payment", requiresDoc: false },
-//     { value: "VENDOR_PAYMENT", label: "Vendor Payment", requiresDoc: true },
-//     { value: "SUPPLIER_PAYMENT", label: "Supplier Payment", requiresDoc: true },
-//     { value: "SERVICE_PAYMENT", label: "Service Payment", requiresDoc: true },
-//     { value: "RENT_PAYMENT", label: "Rent Payment", requiresDoc: true },
-//     { value: "UTILITY_PAYMENT", label: "Utility Payment", requiresDoc: false },
-//     { value: "LOAN_REPAYMENT", label: "Loan Repayment", requiresDoc: false },
-//     { value: "OTHER", label: "Other", requiresDoc: false },
-//   ];
-
-//   const exchangeRates = {
-//     USD: { rate: "3.673", fees: "15.00" },
-//     EUR: { rate: "3.985", fees: "18.00" },
-//     GBP: { rate: "4.651", fees: "20.00" },
-//     INR: { rate: "0.044", fees: "12.00" },
-//   };
-
-//   const handleCardClick = () => {
-//     fileInputRef.current?.click();
-//   };
-
-//   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const file = e.target.files?.[0];
-//     if (!file) return;
-
-//     const allowedTypes = [
-//       "text/csv",
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//       "application/vnd.ms-excel",
-//     ];
-
-//     if (!allowedTypes.includes(file.type)) {
-//       alert("Only CSV or Excel files are allowed");
-//       e.target.value = "";
-//       return;
-//     }
-
-//     setSelectedFile(file);
-//     setCurrentStep(2);
-//   };
-
-//   const getCurrency = async () => {
-//     try {
-//       const res = await fetch(`${BASE_URL}/api/v1/exchange_rate`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-//       const json = await res.json();
-//       if (json?.status !== true || !json.data) {
-//         throw new Error("Unexpected response format");
-//       }
-//       setCurrencyListData(json);
-//     } catch (error) {
-//       const msg = error.message || "Failed to fetch currency";
-//       toast({ title: "Error", description: msg, variant: "destructive" });
-//     }
-//   };
-
-//   const getBeneficiaryGroups = async () => {
-//     try {
-//       const res = await fetch(`${BASE_URL}/api/v1/beneficiary-groups`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-//       const json = await res.json();
-//       if (json?.status !== true || !json.data) {
-//         throw new Error("Unexpected response format");
-//       }
-//       setBeneficiaryGroupList(json);
-//     } catch (error) {
-//       const msg = error.message || "Failed to fetch currency";
-//       toast({ title: "Error", description: msg, variant: "destructive" });
-//     }
-//   };
-
-//   useEffect(() => {
-//     getBeneficiaryGroups();
-//     getCurrency();
-//   }, []);
-
-//   // Sample bulk data structure
-//   const sampleBulkData = [
-//     {
-//       beneficiaryName: "John Smith",
-//       beneficiaryId: "BEN-001",
-//       accountNumber: "1234567890",
-//       bankName: "Emirates NBD",
-//       amount: "2500.00",
-//       purpose: "Monthly Salary",
-//       employeeId: "EMP-001",
-//     },
-//     {
-//       beneficiaryName: "Sarah Johnson",
-//       beneficiaryId: "BEN-002",
-//       accountNumber: "9876543210",
-//       bankName: "ADCB Bank",
-//       amount: "3200.00",
-//       purpose: "Monthly Salary",
-//       employeeId: "EMP-002",
-//     },
-//     {
-//       beneficiaryName: "Ahmed Al-Rashid",
-//       beneficiaryId: "BEN-003",
-//       accountNumber: "5555666677",
-//       bankName: "FAB Bank",
-//       amount: "2800.00",
-//       purpose: "Monthly Salary",
-//       employeeId: "EMP-003",
-//     },
-//   ];
-
-//   const getSelectedSourceDetails = () => {
-//     return transactionSources.find((s) => s.id === selectedSource);
-//   };
-
-//   const getSelectedPurposeDetails = () => {
-//     return purposeOptions.find((p) => p.value === transactionPurpose);
-//   };
-
-//   const calculateTotalAmount = () => {
-//     if (bulkData.length === 0) return null;
-
-//     const totalAmount = bulkData.reduce(
-//       (sum, item) => sum + parseFloat(item.amount || 0),
-//       0,
-//     );
-//     const exchangeRate = parseFloat(
-//       exchangeRates[currency as keyof typeof exchangeRates]?.rate || "1",
-//     );
-//     const baseFees = parseFloat(
-//       exchangeRates[currency as keyof typeof exchangeRates]?.fees || "0",
-//     );
-//     const bulkFees = baseFees * bulkData.length;
-
-//     return {
-//       originalAmount: totalAmount,
-//       aedAmount: totalAmount * exchangeRate,
-//       fees: bulkFees,
-//       total: totalAmount * exchangeRate + bulkFees,
-//       count: bulkData.length,
-//     };
-//   };
-
-//   // const handleDocumentUpload = (file: string) => {
-//   //   setUploadedDocuments([...uploadedDocuments, file]);
-//   // };
-
-//   const handleTemplateUpload = () => {
-//     // Simulate uploading CSV/Excel file
-//     setBulkData(sampleBulkData);
-//     setCurrentStep(2);
-//   };
-
-//   const getSelectedGroup = () => {
-//     return beneficiaryGroupsList?.data?.groups?.find(
-//       (g: { id: number }) => g.id.toString() === selectedGroup,
-//     );
-//   };
-
-//   // const downloadTemplate = () => {
-//   //   const group = getSelectedGroup();
-//   //   const purposeDetails = getSelectedPurposeDetails();
-
-//   //   // Create CSV content with beneficiary data if group is selected
-//   //   let csvContent = "";
-
-//   //   if (group && group.beneficiaries.length > 0) {
-//   //     // Header row
-//   //     csvContent =
-//   //       "Beneficiary Name,Account Number,Account Holder Name,Bank Name,Amount,Purpose,Reference\n";
-
-//   //     // Data rows pre-populated from selected group
-//   //     group.beneficiaries.forEach((ben) => {
-//   //       const bankDetails = ben.bankDetails?.[0] || {};
-//   //       csvContent += `"${ben.name}","${bankDetails.accountNumber || ""}","${bankDetails.accountName || ben.name}","${bankDetails.bankName || ""}","","${purposeDetails?.label || ""}",""\n`;
-//   //     });
-//   //   } else {
-//   //     // Empty template
-//   //     csvContent =
-//   //       "Beneficiary Name,Account Number,Account Holder Name,Bank Name,Amount,Purpose,Reference\n";
-//   //     csvContent += '"",,,"","","",""\n';
-//   //   }
-
-//   //   // Create and download the file
-//   //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-//   //   const link = document.createElement("a");
-//   //   const url = URL.createObjectURL(blob);
-//   //   link.setAttribute("href", url);
-//   //   link.setAttribute(
-//   //     "download",
-//   //     `bulk_transaction_template_${group?.name?.replace(/\s+/g, "_") || "empty"}.csv`,
-//   //   );
-//   //   link.style.visibility = "hidden";
-//   //   document.body.appendChild(link);
-//   //   link.click();
-//   //   document.body.removeChild(link);
-
-//   //   toast({
-//   //     title: "Template Downloaded",
-//   //     description: group
-//   //       ? `Template with ${group.beneficiaries.length} beneficiaries from "${group.name}" has been downloaded.`
-//   //       : "Empty template has been downloaded.",
-//   //   });
-//   // };
-
-//   const totals = calculateTotalAmount();
-
-//   const handleSubmit = async () => {
-//     setLoading(true);
-//     const payload = {
-//       groupId: Number(selectedGroup),
-//       purposeCode: transactionPurpose,
-//       currencyId: Number(currency),
-//       sourceAccountId: Number(selectedSource),
-//       beneficiaries: Object.entries(beneficiaryAmounts)?.map(
-//         ([beneficiaryId, amount]) => ({
-//           beneficiaryId: Number(beneficiaryId),
-//           amount: Number(amount),
-//         }),
-//       ),
-//       discountCode: discountCode.trim() || "",
-//     };
-//     const formData = new FormData();
-//     formData.append(
-//       "data",
-//       new Blob([JSON.stringify(payload)], {
-//         type: "application/json",
-//       }),
-//     );
-//     if (document) {
-//       formData.append("documents", document);
-//     }
-//     try {
-//       const res = await fetch(`${BASE_URL}/api/v1/bulk-transactions`, {
-//         method: "POST",
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: formData,
-//       });
-
-//       if (!res.ok) {
-//         const errorData = await res.json();
-//         toast({
-//           title: "Error",
-//           description: errorData?.message,
-//           variant: "destructive",
-//         });
-//       }
-//       const response = await res?.json();
-//       if (response?.status === false) {
-//         toast({
-//           title: "Error",
-//           description: response?.message,
-//           variant: "destructive",
-//         });
-//       } else {
-//         toast({
-//           title: "Bulk Transaction Submitted",
-//           description: `Your bulk transaction with ${payload?.beneficiaries?.length} recipients has been submitted for processing.`,
-//         });
-//       }
-
-//       setOpen(false);
-//       refetch?.();
-//       // Reset form
-//       setSelectedSource("");
-//       setTransactionPurpose("");
-//       setCurrency("");
-//       setSelectedGroup("");
-//       setBeneficiaryAmounts({});
-//       // setUploadedDocuments([]);
-//       setDocument(null);
-//       setNotes("");
-//       setCurrentStep(1);
-//     } catch (error) {
-//       const msg = error.message || "Failed to Bulk Transition";
-//       toast({ title: "Error", description: msg, variant: "destructive" });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleAmountChange = (beneficiaryId: number, value: string) => {
-//     setBeneficiaryAmounts((prev) => ({
-//       ...prev,
-//       [beneficiaryId]: value,
-//     }));
-//   };
-//   const renderStepIndicator = () => (
-//     <div className="flex items-center space-x-4 mb-6">
-//       {[1, 2].map((step) => (
-//         <div key={step} className="flex items-center">
-//           <div
-//             className={`
-//             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-//             ${currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
-//           `}
-//           >
-//             {step}
-//           </div>
-//           {step < 2 && (
-//             <div
-//               className={`
-//               w-16 h-0.5 mx-2
-//               ${currentStep > step ? "bg-primary" : "bg-muted"}
-//             `}
-//             />
-//           )}
-//         </div>
-//       ))}
-//     </div>
-//   );
-
-//   const renderStep1 = () => (
-//     <div className="space-y-6">
-//       {/* Transaction Purpose */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle className="text-lg flex items-center gap-2">
-//             <FileText className="h-5 w-5" />
-//             Bulk Transaction Setup
-//           </CardTitle>
-//         </CardHeader>
-//         <CardContent className="space-y-4">
-//           <div>
-//             <Label htmlFor="purpose">Purpose of Transaction *</Label>
-//             <Select
-//               value={transactionPurpose}
-//               onValueChange={setTransactionPurpose}
-//             >
-//               <SelectTrigger>
-//                 <SelectValue placeholder="Select transaction purpose" />
-//               </SelectTrigger>
-//               <SelectContent className="bg-background border border-border z-50">
-//                 {purposeOptions.map((purpose) => (
-//                   <SelectItem key={purpose.value} value={purpose.value}>
-//                     <div className="flex items-center justify-between w-full">
-//                       <span>{purpose.label}</span>
-//                       {purpose?.requiresDoc && (
-//                         <Badge variant="outline" className="ml-2 text-xs">
-//                           Bulk
-//                         </Badge>
-//                       )}
-//                     </div>
-//                   </SelectItem>
-//                 ))}
-//               </SelectContent>
-//             </Select>
-//           </div>
-
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//             <div>
-//               <Label htmlFor="currency">Currency *</Label>
-//               <Select value={currency} onValueChange={setCurrency}>
-//                 <SelectTrigger>
-//                   <SelectValue placeholder="Select currency" />
-//                 </SelectTrigger>
-//                 <SelectContent className="bg-background border border-border z-50">
-//                   {/* {Object.keys(exchangeRates).map((curr) => (
-//                     <SelectItem key={curr} value={curr}>
-//                       {curr}
-//                     </SelectItem>
-//                   ))} */}
-//                   {currencyListData?.data?.map(
-//                     (curr: { id: number; name: string }) => (
-//                       <SelectItem key={curr?.id} value={curr?.id.toString()}>
-//                         {curr?.name.toUpperCase()}
-//                       </SelectItem>
-//                     ),
-//                   )}
-//                 </SelectContent>
-//               </Select>
-//             </div>
-
-//             {/* <div>
-//               <Label htmlFor="discountCode">Discount Code *</Label>
-//               <Input
-//                 id="discountCode"
-//                 value={discountCode}
-//                 onChange={(e) => setDiscountCode(e.target.value.trim())}
-//                 placeholder="e.g. S43U3ZSC"
-//                 maxLength={12}
-//               />
-//             </div> */}
-
-
-//           </div>
-//         </CardContent>
-//       </Card>
-
-//       {/* Source of Transaction */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle className="text-lg flex items-center gap-2">
-//             <CreditCard className="h-5 w-5" />
-//             Source of Transaction
-//           </CardTitle>
-//         </CardHeader>
-//         <CardContent className="space-y-4">
-//           <div>
-//             <Label htmlFor="source">Select Source Account *</Label>
-//             <Select value={selectedSource} onValueChange={setSelectedSource}>
-//               <SelectTrigger>
-//                 <SelectValue placeholder="Choose source account" />
-//               </SelectTrigger>
-//               <SelectContent className="bg-background border border-border z-50">
-//                 {transactionSources.map((source) => (
-//                   <SelectItem key={source.id} value={source.id}>
-//                     <div className="flex flex-col">
-//                       <span className="font-medium">{source.name}</span>
-//                       <span className="text-xs text-muted-foreground">
-//                         Balance: {source.currency} {source.balance}
-//                       </span>
-//                     </div>
-//                   </SelectItem>
-//                 ))}
-//               </SelectContent>
-//             </Select>
-//           </div>
-
-//           {getSelectedSourceDetails() && (
-//             <Card className="border-l-4 border-l-primary">
-//               <CardContent className="p-3">
-//                 <div className="grid grid-cols-2 gap-4 text-sm">
-//                   <div>
-//                     <span className="text-muted-foreground">
-//                       Account Number:
-//                     </span>
-//                     <p className="font-medium font-mono">
-//                       {getSelectedSourceDetails()?.accountNumber}
-//                     </p>
-//                   </div>
-//                   <div>
-//                     <span className="text-muted-foreground">
-//                       Available Balance:
-//                     </span>
-//                     <p className="font-medium text-success">
-//                       {getSelectedSourceDetails()?.currency}{" "}
-//                       {getSelectedSourceDetails()?.balance}
-//                     </p>
-//                   </div>
-//                 </div>
-//               </CardContent>
-//             </Card>
-//           )}
-//         </CardContent>
-//       </Card>
-
-//       {/* Beneficiary Group Selection */}
-//       {transactionPurpose && (
-//         <Card>
-//           <CardHeader>
-//             <CardTitle className="text-lg flex items-center gap-2">
-//               <Users className="h-5 w-5" />
-//               Select Beneficiary Group
-//             </CardTitle>
-//           </CardHeader>
-//           <CardContent className="space-y-4">
-//             <div>
-//               <Label htmlFor="group">Beneficiary Group (Optional)</Label>
-//               <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-//                 <SelectTrigger>
-//                   <SelectValue placeholder="Select a beneficiary group for bulk payment" />
-//                 </SelectTrigger>
-//                 <SelectContent className="bg-background border border-border z-50">
-//                   <SelectItem value="none">
-//                     <span className="text-muted-foreground">
-//                       No group - Use empty template
-//                     </span>
-//                   </SelectItem>
-//                   {beneficiaryGroupsList?.data?.groups?.map(
-//                     (group: {
-//                       id: number;
-//                       groupName: string;
-//                       beneficiaries: { id: number; name: string }[];
-//                     }) => (
-//                       <SelectItem key={group?.id} value={group?.id.toString()}>
-//                         <div className="flex flex-col">
-//                           <span className="font-medium">
-//                             {group?.groupName}
-//                           </span>
-//                           <span className="text-xs text-muted-foreground">
-//                             {group?.beneficiaries?.length ?? 0} beneficiaries
-//                           </span>
-//                         </div>
-//                       </SelectItem>
-//                     ),
-//                   )}
-//                 </SelectContent>
-//               </Select>
-
-
-
-
-
-
-//             </div>
-
-//             {selectedGroup &&
-//               selectedGroup !== "none" &&
-//               getSelectedGroup() && (
-//                 <Card className="border-l-4 border-l-primary bg-primary/5">
-//                   <CardContent className="p-4">
-//                     <div className="flex items-center justify-between mb-3">
-//                       <h4 className="font-medium flex items-center gap-2">
-//                         <Users className="h-4 w-4" />
-//                         {getSelectedGroup()?.groupName}
-//                       </h4>
-//                       <Badge variant="secondary">
-//                         {getSelectedGroup()?.beneficiaries?.length ?? 0} members
-//                       </Badge>
-//                     </div>
-//                     <div className="">
-//                       {getSelectedGroup()?.beneficiaries?.length > 0 && (
-//                         <Table className="mt-4">
-//                           <TableHeader>
-//                             <TableRow>
-//                               <TableHead>Beneficiary</TableHead>
-//                               <TableHead>Type</TableHead>
-//                               <TableHead>Value</TableHead>
-//                               <TableHead>Discount Code</TableHead>
-//                             </TableRow>
-//                           </TableHeader>
-//                           <TableBody>
-//                             {getSelectedGroup()?.beneficiaries.map(
-//                               (ben: any) => (
-//                                 <TableRow key={ben.id}>
-//                                   {/* Name as Badge */}
-//                                   <TableCell>
-//                                     <Badge
-//                                       variant="outline"
-//                                       className="flex w-fit items-center gap-1"
-//                                     >
-//                                       {ben.type === "BUSINESS" ? (
-//                                         <Building className="h-3 w-3" />
-//                                       ) : (
-//                                         <Users className="h-3 w-3" />
-//                                       )}
-//                                       {ben.name}
-//                                     </Badge>
-//                                   </TableCell>
-
-//                                   {/* Type */}
-//                                   <TableCell className="capitalize">
-//                                     {ben?.type}
-//                                   </TableCell>
-
-//                                   {/* Input Field */}
-//                                   <TableCell>
-//                                     <Input
-//                                       placeholder="Enter amount"
-//                                       type="number"
-//                                       className="max-w-[160px]"
-//                                       value={beneficiaryAmounts[ben.id] ?? ""}
-//                                       step="0.01"
-//                                       onChange={(e) =>
-//                                         handleAmountChange(
-//                                           ben.id,
-//                                           e.target.value,
-//                                         )
-//                                       }
-//                                     />
-//                                   </TableCell>
-
-
-//                                   <TableCell>
-//                                     <Input
-//                                       placeholder="Enter code"
-//                                       type="number"
-//                                       className="max-w-[160px]"
-//                                       value={discountCode[ben.id] ?? ""}
-//                                       step="0.01"
-//                                       onChange={(e) =>
-//                                         handleAmountChange(
-//                                           ben.id,
-//                                           e.target.value,
-//                                         )
-//                                       }
-//                                     />
-//                                   </TableCell>
-
-
-
-//                                 </TableRow>
-//                               ),
-//                             )}
-//                           </TableBody>
-//                         </Table>
-//                       )}
-//                       {/* {(getSelectedGroup()?.beneficiaries.length || 0) > 5 && (
-//                         <Badge variant="outline">
-//                           +{(getSelectedGroup()?.beneficiaries.length || 0) - 5}{" "}
-//                           more
-//                         </Badge>
-//                       )} */}
-//                     </div>
-//                   </CardContent>
-//                 </Card>
-//               )}
-//           </CardContent>
-//         </Card>
-//       )}
-
-//       {/* Bulk Data Upload */}
-//       {/* {getSelectedPurposeDetails()?.requiresDoc && (
-//         <Card>
-//           <CardHeader>
-//             <CardTitle className="text-lg flex items-center gap-2">
-//               <Upload className="h-5 w-5" />
-//               Upload Beneficiary Data
-//             </CardTitle>
-//           </CardHeader>
-//           <CardContent className="space-y-4">
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//               <Card className="border-2 border-dashed border-primary bg-primary/5">
-//                 <CardContent className="p-6 text-center">
-//                   <Button
-//                     variant="outline"
-//                     className="mb-3"
-//                     onClick={downloadTemplate}
-//                   >
-//                     <Download className="h-4 w-4 mr-2" />
-//                     Download Template
-//                   </Button>
-//                   <p className="text-sm font-medium">
-//                     Step 1: Download Template
-//                   </p>
-//                   <p className="text-xs text-muted-foreground">
-//                     {selectedGroup && selectedGroup !== "none"
-//                       ? `Pre-filled with ${getSelectedGroup()?.memberCount || 0} beneficiaries`
-//                       : `Get the ${getSelectedPurposeDetails()?.label} template`}
-//                   </p>
-//                 </CardContent>
-//               </Card>
-//               <input
-//                 type="file"
-//                 ref={fileInputRef}
-//                 accept=".csv, .xlsx, .xls"
-//                 className="hidden"
-//                 onChange={handleFileChange}
-//               />
-//               <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-//                 <CardContent
-//                   className="p-6 text-center"
-//                   onClick={handleCardClick}
-//                 >
-//                   <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-//                   <p className="text-sm font-medium">
-//                     Step 2: Upload Filled Template
-//                   </p>
-//                   <p className="text-xs text-muted-foreground">
-//                     Excel (.xlsx) or CSV files
-//                   </p>
-//                 </CardContent>
-//               </Card>
-//             </div>
-
-//             <div className="bg-accent-muted/20 rounded-lg p-3">
-//               <div className="flex items-start space-x-2">
-//                 <Info className="h-4 w-4 text-accent mt-0.5" />
-//                 <div className="text-sm">
-//                   <p className="font-medium text-foreground">
-//                     {selectedGroup && selectedGroup !== "none"
-//                       ? "Template Pre-filled with Group Beneficiaries"
-//                       : "Required Information"}
-//                   </p>
-//                   <ul className="text-muted-foreground mt-1 space-y-1">
-//                     {selectedGroup && selectedGroup !== "none" ? (
-//                       <>
-//                         <li>
-//                           • Beneficiary names and account details are pre-filled
-//                         </li>
-//                         <li>
-//                           • Fill in the Amount column for each beneficiary
-//                         </li>
-//                         <li>• Add purpose/reference as needed</li>
-//                       </>
-//                     ) : (
-//                       <>
-//                         <li>• Beneficiary Name and Account Details</li>
-//                         <li>• Individual Transaction Amounts</li>
-//                         <li>• Purpose/Description for each payment</li>
-//                         <li>• Employee ID (for salary payments)</li>
-//                       </>
-//                     )}
-//                   </ul>
-//                 </div>
-//               </div>
-//             </div>
-//           </CardContent>
-//         </Card>
-//       )} */}
-//     </div>
-//   );
-
-//   const renderStep2 = () => (
-//     <div className="space-y-6">
-//       {/* Fee Display */}
-//       {bulkData.length > 0 && (
-//         <BulkTransactionFeeDisplay bulkData={bulkData} currency={currency} />
-//       )}
-
-//       <Card>
-//         <CardHeader>
-//           <div className="flex items-center justify-between">
-//             <CardTitle className="text-lg flex items-center gap-2">
-//               <Users className="h-5 w-5" />
-//               Review Bulk Transaction Data
-//             </CardTitle>
-//             <Badge variant="secondary">{bulkData.length} Recipients</Badge>
-//           </div>
-//         </CardHeader>
-//         <CardContent>
-//           <div className="space-y-4">
-//             <div className="max-h-96 overflow-y-auto border rounded-lg">
-//               <div className="grid grid-cols-5 gap-2 p-3 bg-muted font-medium text-sm border-b">
-//                 <div>Beneficiary</div>
-//                 <div>Account Number</div>
-//                 <div>Bank</div>
-//                 <div>Amount</div>
-//                 <div>Actions</div>
-//               </div>
-//               {bulkData.map((item, index) => (
-//                 <div
-//                   key={index}
-//                   className="grid grid-cols-5 gap-2 p-3 border-b text-sm hover:bg-muted/50"
-//                 >
-//                   <div>
-//                     <p className="font-medium">{item.beneficiaryName}</p>
-//                     {item.employeeId && (
-//                       <p className="text-xs text-muted-foreground">
-//                         {item.employeeId}
-//                       </p>
-//                     )}
-//                   </div>
-//                   <div className="font-mono text-xs">{item.accountNumber}</div>
-//                   <div>{item.bankName}</div>
-//                   <div className="font-medium">
-//                     {currency} {Number(item.amount).toLocaleString()}
-//                   </div>
-//                   <div className="flex space-x-1">
-//                     <Button variant="outline" size="sm">
-//                       <Eye className="h-3 w-3" />
-//                     </Button>
-//                     <Button variant="outline" size="sm">
-//                       <Edit className="h-3 w-3" />
-//                     </Button>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-
-//             {totals && (
-//               <Card className="bg-accent-muted/10 border-accent/20">
-//                 <CardContent className="p-4">
-//                   <div className="flex items-center space-x-2 mb-3">
-//                     <TrendingUp className="h-4 w-4 text-accent" />
-//                     <span className="font-medium text-foreground">
-//                       Bulk Transaction Summary
-//                     </span>
-//                   </div>
-//                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-//                     <div>
-//                       <span className="text-muted-foreground">Recipients:</span>
-//                       <p className="font-medium">{totals.count}</p>
-//                     </div>
-//                     <div>
-//                       <span className="text-muted-foreground">
-//                         Total Amount:
-//                       </span>
-//                       <p className="font-medium">
-//                         {currency} {totals.originalAmount.toLocaleString()}
-//                       </p>
-//                     </div>
-//                     <div>
-//                       <span className="text-muted-foreground">
-//                         Exchange Rate:
-//                       </span>
-//                       <p className="font-medium">
-//                         1 {currency} ={" "}
-//                         {
-//                           exchangeRates[currency as keyof typeof exchangeRates]
-//                             ?.rate
-//                         }{" "}
-//                         AED
-//                       </p>
-//                     </div>
-//                     <div>
-//                       <span className="text-muted-foreground">
-//                         Processing Fees:
-//                       </span>
-//                       <p className="font-medium">
-//                         AED {totals.fees.toLocaleString()}
-//                       </p>
-//                     </div>
-//                     <div>
-//                       <span className="text-muted-foreground">
-//                         Total Debit:
-//                       </span>
-//                       <p className="font-medium text-lg">
-//                         AED {totals.total.toLocaleString()}
-//                       </p>
-//                     </div>
-//                   </div>
-//                 </CardContent>
-//               </Card>
-//             )}
-//           </div>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-
-//   const renderStep3 = () => (
-//     <div className="space-y-6">
-//       {/* Document Upload */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle className="text-lg flex items-center gap-2">
-//             <Upload className="h-5 w-5" />
-//             Supporting Documents
-//             <Badge variant="destructive" className="text-xs">
-//               Required
-//             </Badge>
-//           </CardTitle>
-//         </CardHeader>
-//         <CardContent className="space-y-4">
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//             {/* <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-//               <CardContent
-//                 className="p-6 text-center"
-//                 onClick={() => handleDocumentUpload("payroll_summary.pdf")}
-//               >
-//                 <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-//                 <p className="text-sm font-medium">Upload Documents</p>
-//                 <p className="text-xs text-muted-foreground">
-//                   {transactionPurpose === "salary_payment"
-//                     ? "Payroll reports, HR approvals"
-//                     : "Vendor invoices, purchase orders"}
-//                 </p>
-//                 <input
-//                   type="file"
-//                   className="hidden"
-//                   onChange={(e) => {
-//                     const file = e.target.files?.[0];
-//                     if (file) {
-//                       console.log("Selected file:", file);
-//                     }
-//                   }}
-//                 />
-//               </CardContent>
-//             </Card> */}
-//             <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-//               <CardContent className="p-6 text-center">
-//                 <label
-//                   htmlFor="document-upload"
-//                   className="cursor-pointer block"
-//                 >
-//                   <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-
-//                   <p className="text-sm font-medium">Upload Documents</p>
-
-//                   <p className="text-xs text-muted-foreground">
-//                     {transactionPurpose === "salary_payment"
-//                       ? "Payroll reports, HR approvals"
-//                       : "Vendor invoices, purchase orders"}
-//                   </p>
-//                 </label>
-
-//                 {/* Hidden File Input */}
-//                 <input
-//                   id="document-upload"
-//                   type="file"
-//                   className="hidden"
-//                   onChange={(e) => {
-//                     const file = e.target.files?.[0];
-//                     if (file) {
-//                       setDocument(file);
-//                     }
-//                   }}
-//                 />
-//               </CardContent>
-//             </Card>
-//             {/* <div className="space-y-2">
-//               <h4 className="font-medium text-foreground">
-//                 Uploaded Documents
-//               </h4>
-//               {uploadedDocuments.length === 0 ? (
-//                 <p className="text-sm text-muted-foreground">
-//                   No documents uploaded
-//                 </p>
-//               ) : (
-//                 <div className="space-y-2">
-//                   {uploadedDocuments.map((doc, index) => (
-//                     <div
-//                       key={index}
-//                       className="flex items-center justify-between p-2 bg-muted rounded-lg"
-//                     >
-//                       <div className="flex items-center space-x-2">
-//                         <FileText className="h-4 w-4 text-primary" />
-//                         <span className="text-sm">{doc}</span>
-//                       </div>
-//                       <Button
-//                         variant="outline"
-//                         size="sm"
-//                         onClick={() =>
-//                           setUploadedDocuments(
-//                             uploadedDocuments.filter((_, i) => i !== index),
-//                           )
-//                         }
-//                       >
-//                         <Trash2 className="h-3 w-3" />
-//                       </Button>
-//                     </div>
-//                   ))}
-//                 </div>
-//               )}
-//             </div> */}
-//             <div className="space-y-2">
-//               <h4 className="font-medium text-foreground">
-//                 Uploaded Documents
-//               </h4>
-//               {document ? (
-//                 <div className="space-y-2">
-//                   <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-//                     <div className="flex items-center space-x-2">
-//                       <FileText className="h-4 w-4 text-primary" />
-//                       <span className="text-sm">{document?.name}</span>
-//                     </div>
-//                     <Button
-//                       variant="outline"
-//                       size="sm"
-//                       onClick={() => setDocument(null)}
-//                     >
-//                       <Trash2 className="h-3 w-3" />
-//                     </Button>
-//                   </div>
-//                 </div>
-//               ) : (
-//                 <p className="text-sm text-muted-foreground">
-//                   No documents uploaded
-//                 </p>
-//               )}
-//             </div>
-//           </div>
-//         </CardContent>
-//       </Card>
-
-//       {/* Additional Notes */}
-//       {/* <Card>
-//         <CardHeader>
-//           <CardTitle className="text-lg">Additional Information</CardTitle>
-//         </CardHeader>
-//         <CardContent>
-//           <div>
-//             <Label htmlFor="notes">Bulk Transaction Notes (Optional)</Label>
-//             <Textarea
-//               id="notes"
-//               value={notes}
-//               onChange={(e) => setNotes(e.target.value)}
-//               placeholder="Add any additional information about this bulk transaction..."
-//               rows={3}
-//             />
-//           </div>
-//         </CardContent>
-//       </Card> */}
-
-//       {/* Approval Workflow Info */}
-//       <Card className="border-accent/20 bg-accent-muted/10">
-//         <CardContent className="p-4">
-//           <div className="flex items-start space-x-3">
-//             <Info className="h-5 w-5 text-accent mt-0.5" />
-//             <div className="text-sm">
-//               <p className="font-medium text-foreground">
-//                 Bulk Transaction Approval
-//               </p>
-//               <p className="text-muted-foreground">
-//                 {totals && totals.originalAmount > 100000
-//                   ? "This bulk transaction requires executive approval (CEO + CFO approval required)."
-//                   : "This bulk transaction will require senior management approval."}
-//               </p>
-//               <p className="text-muted-foreground mt-1">
-//                 Expected processing time: 24-48 hours after approval.
-//               </p>
-//             </div>
-//           </div>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-
-//   return (
-//     <>
-//       <Dialog open={open} onOpenChange={setOpen}>
-//         <DialogTrigger asChild>
-//           {trigger || (
-//             <Button variant="outline">
-//               <TrendingUp className="h-4 w-4 mr-2" />
-//               Bulk Payment
-//             </Button>
-//           )}
-//         </DialogTrigger>
-//         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-//           <DialogHeader>
-//             <DialogTitle className="text-xl">
-//               Create Bulk Transaction
-//             </DialogTitle>
-//           </DialogHeader>
-
-//           <div className="mt-6">
-//             {renderStepIndicator()}
-
-//             {currentStep === 1 && renderStep1()}
-//             {/* {currentStep === 2 && renderStep2()} */}
-//             {currentStep === 2 && renderStep3()}
-
-//             <div className="flex justify-between pt-6 border-t">
-//               <Button
-//                 variant="outline"
-//                 onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
-//                 disabled={currentStep === 1}
-//               >
-//                 Previous
-//               </Button>
-
-//               {currentStep < 2 ? (
-//                 <Button
-//                   onClick={() =>
-//                     setCurrentStep((prev) => Math.min(3, prev + 1))
-//                   }
-//                   variant="business"
-//                   // disabled={
-//                   //   currentStep === 1 &&
-//                   //   (!transactionPurpose ||
-//                   //     !selectedSource ||
-//                   //     bulkData.length === 0)
-//                   // }
-//                   disabled={selectedGroup == ""}
-//                 >
-//                   Next
-//                 </Button>
-//               ) : (
-//                 <div className="space-x-3">
-//                   <Button variant="outline">Save as Draft</Button>
-//                   <Button
-//                     variant="business"
-//                     disabled={document === null}
-//                     onClick={() => setShowConfirmation(true)}
-//                   >
-//                     Submit for Processing
-//                   </Button>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-
-//       <ConfirmationDialog
-//         isConfirming={loading}
-//         open={showConfirmation}
-//         onOpenChange={setShowConfirmation}
-//         onConfirm={handleSubmit}
-//         title="Confirm Bulk Transaction Submission"
-//         description={`Are you sure you want to submit this bulk transaction with ${bulkData.length} recipients for a total of ${currency} ${totals?.originalAmount.toLocaleString()}? This will route through the executive approval workflow.`}
-//         confirmText="Submit Transaction"
-//       />
-//     </>
-//   );
-// };
-
-// export default BulkTransactionForm;
-
-
 import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
@@ -1303,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -1313,27 +18,17 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import BulkTransactionFeeDisplay from "./BulkTransactionFeeDisplay";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus,
-  DollarSign,
   FileText,
   Upload,
   Users,
   Building,
-  AlertCircle,
-  Info,
-  CheckCircle,
   CreditCard,
   TrendingUp,
-  Calendar,
+  Info,
   Trash2,
-  Download,
-  Eye,
-  Edit,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -1345,22 +40,6 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { object } from "yup";
-
-// interface BulkTransactionFormProps {
-//   trigger?: React.ReactNode;
-// }
-
-interface BeneficiaryGroup {
-  id: string;
-  name: string;
-  description: string;
-  beneficiaryIds: string[];
-  beneficiaries: any[];
-  createdAt: string;
-  memberCount: number;
-  discountCode: string;
-}
 
 const BulkTransactionForm = ({
   trigger,
@@ -1370,115 +49,30 @@ const BulkTransactionForm = ({
   refetch?: () => void;
 }) => {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cookie] = useCookies(["token"]);
+  const token = cookie.token;
+
+  const [open, setOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Form fields
   const [selectedSource, setSelectedSource] = useState("");
   const [transactionPurpose, setTransactionPurpose] = useState("");
   const [currency, setCurrency] = useState("");
-  // const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
-
-  const [discountCode, setDiscountCode] = useState("");
-
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [document, setDocument] = useState<File | null>(null);
-  const [bulkData, setBulkData] = useState<any[]>([]);
-  const [notes, setNotes] = useState("");
-  const [currentStep, setCurrentStep] = useState(1);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<string>("");
-  const [currencyListData, setCurrencyListData] = useState(null);
-  const [cookie] = useCookies(["token"]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [beneficiaryGroupsList, setBeneficiaryGroupList] = useState(null);
-  const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<
-    Record<number, string>
-  >({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const token = cookie.token;
-  // Get beneficiary groups from window (set by UserBeneficiaries)
-  // const getBeneficiaryGroups = (): BeneficiaryGroup[] => {
-  //   if (typeof window !== "undefined" && (window as any).__beneficiaryGroups) {
-  //     return (window as any).__beneficiaryGroups;
-  //   }
-  //   // Fallback mock data
-  //   return [
-  //     {
-  //       id: "GRP-001",
-  //       name: "Monthly Payroll",
-  //       description: "Regular monthly salary payments",
-  //       beneficiaryIds: ["BEN-001", "BEN-003"],
-  //       beneficiaries: [
-  //         {
-  //           id: "BEN-001",
-  //           name: "Global Suppliers Inc",
-  //           type: "corporate",
-  //           bankDetails: [
-  //             {
-  //               bankName: "Emirates NBD",
-  //               accountNumber: "1234567890",
-  //               accountName: "Global Suppliers Inc",
-  //               currency: "USD",
-  //             },
-  //           ],
-  //         },
-  //         {
-  //           id: "BEN-003",
-  //           name: "Office Supplies Co",
-  //           type: "corporate",
-  //           bankDetails: [
-  //             {
-  //               bankName: "HSBC UAE",
-  //               accountNumber: "5555666677",
-  //               accountName: "Office Supplies Co",
-  //               currency: "USD",
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //       createdAt: "2024-01-01",
-  //       memberCount: 2,
-  //     },
-  //     {
-  //       id: "GRP-002",
-  //       name: "Vendor Payments Q1",
-  //       description: "Q1 vendor and supplier payments",
-  //       beneficiaryIds: ["BEN-001", "BEN-002"],
-  //       beneficiaries: [
-  //         {
-  //           id: "BEN-001",
-  //           name: "Global Suppliers Inc",
-  //           type: "corporate",
-  //           bankDetails: [
-  //             {
-  //               bankName: "Emirates NBD",
-  //               accountNumber: "1234567890",
-  //               accountName: "Global Suppliers Inc",
-  //               currency: "USD",
-  //             },
-  //           ],
-  //         },
-  //         {
-  //           id: "BEN-002",
-  //           name: "Tech Solutions Ltd",
-  //           type: "corporate",
-  //           bankDetails: [
-  //             {
-  //               bankName: "ADCB Bank",
-  //               accountNumber: "9876543210",
-  //               accountName: "Tech Solutions Ltd",
-  //               currency: "AED",
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //       createdAt: "2024-01-10",
-  //       memberCount: 2,
-  //     },
-  //   ];
-  // };
 
-  // const beneficiaryGroups = getBeneficiaryGroups();
+  // Data
+  const [currencyListData, setCurrencyListData] = useState<any>(null);
+  const [beneficiaryGroupsList, setBeneficiaryGroupList] = useState<any>(null);
 
-  // Mock data
+  // Per-beneficiary inputs
+  const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<Record<number, string>>({});
+  const [beneficiaryDiscounts, setBeneficiaryDiscounts] = useState<Record<number, string>>({});
+
+  // Mock sources (replace with real fetch if needed)
   const transactionSources = [
     {
       id: "1",
@@ -1486,7 +80,6 @@ const BulkTransactionForm = ({
       accountNumber: "AE070331234567890123456",
       balance: "245,000",
       currency: "AED",
-      type: "current_account",
     },
     {
       id: "2",
@@ -1494,18 +87,8 @@ const BulkTransactionForm = ({
       accountNumber: "AE070331987654321098765",
       balance: "85,000",
       currency: "USD",
-      type: "foreign_currency",
     },
   ];
-
-  // const purposeOptions = [
-  //   { value: "salary_payment", label: "Salary Payment", requiresDoc: true, template: "payroll" },
-  //   { value: "vendor_payment", label: "Vendor Payment", requiresDoc: true, template: "vendor" },
-  //   { value: "supplier_payment", label: "Supplier Payment", requiresDoc: true, template: "supplier" },
-  //   { value: "bonus_payment", label: "Bonus Payment", requiresDoc: true, template: "payroll" },
-  //   { value: "commission_payment", label: "Commission Payment", requiresDoc: false, template: "commission" },
-  //   { value: "refund_payment", label: "Refund Payment", requiresDoc: true, template: "refund" }
-  // ];
 
   const purposeOptions = [
     { value: "INVOICE_PAYMENT", label: "Invoice Payment", requiresDoc: true },
@@ -1519,52 +102,17 @@ const BulkTransactionForm = ({
     { value: "OTHER", label: "Other", requiresDoc: false },
   ];
 
-  const exchangeRates = {
-    USD: { rate: "3.673", fees: "15.00" },
-    EUR: { rate: "3.985", fees: "18.00" },
-    GBP: { rate: "4.651", fees: "20.00" },
-    INR: { rate: "0.044", fees: "12.00" },
-  };
-
-  const handleCardClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = [
-      "text/csv",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.ms-excel",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only CSV or Excel files are allowed");
-      e.target.value = "";
-      return;
-    }
-
-    setSelectedFile(file);
-    setCurrentStep(2);
-  };
-
+  // ─── Fetch data ────────────────────────────────────────
   const getCurrency = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v1/exchange_rate`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+      if (!res.ok) throw new Error();
       const json = await res.json();
-      if (json?.status !== true || !json.data) {
-        throw new Error("Unexpected response format");
-      }
       setCurrencyListData(json);
-    } catch (error) {
-      const msg = error.message || "Failed to fetch currency";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+    } catch {
+      toast({ variant: "destructive", title: "Failed to load currencies" });
     }
   };
 
@@ -1573,16 +121,11 @@ const BulkTransactionForm = ({
       const res = await fetch(`${BASE_URL}/api/v1/beneficiary-groups`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+      if (!res.ok) throw new Error();
       const json = await res.json();
-      if (json?.status !== true || !json.data) {
-        throw new Error("Unexpected response format");
-      }
       setBeneficiaryGroupList(json);
-    } catch (error) {
-      const msg = error.message || "Failed to fetch currency";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+    } catch {
+      toast({ variant: "destructive", title: "Failed to load groups" });
     }
   };
 
@@ -1591,243 +134,143 @@ const BulkTransactionForm = ({
     getCurrency();
   }, []);
 
-  // Sample bulk data structure
-  const sampleBulkData = [
-    {
-      beneficiaryName: "John Smith",
-      beneficiaryId: "BEN-001",
-      accountNumber: "1234567890",
-      bankName: "Emirates NBD",
-      amount: "2500.00",
-      purpose: "Monthly Salary",
-      employeeId: "EMP-001",
-    },
-    {
-      beneficiaryName: "Sarah Johnson",
-      beneficiaryId: "BEN-002",
-      accountNumber: "9876543210",
-      bankName: "ADCB Bank",
-      amount: "3200.00",
-      purpose: "Monthly Salary",
-      employeeId: "EMP-002",
-    },
-    {
-      beneficiaryName: "Ahmed Al-Rashid",
-      beneficiaryId: "BEN-003",
-      accountNumber: "5555666677",
-      bankName: "FAB Bank",
-      amount: "2800.00",
-      purpose: "Monthly Salary",
-      employeeId: "EMP-003",
-    },
-  ];
+  // Helpers
+  const getSelectedGroup = () =>
+    beneficiaryGroupsList?.data?.groups?.find(
+      (g: any) => g.id.toString() === selectedGroup
+    ) ?? null;
 
-  const getSelectedSourceDetails = () => {
-    return transactionSources.find((s) => s.id === selectedSource);
+  const getSelectedSourceDetails = () =>
+    transactionSources.find((s) => s.id === selectedSource);
+
+  // Change handlers
+  const handleAmountChange = (id: number, value: string) => {
+    setBeneficiaryAmounts((prev) => ({ ...prev, [id]: value }));
   };
 
-  const getSelectedPurposeDetails = () => {
-    return purposeOptions.find((p) => p.value === transactionPurpose);
+  const handleDiscountChange = (id: number, value: string) => {
+    setBeneficiaryDiscounts((prev) => ({ ...prev, [id]: value.trim() }));
   };
 
-  const calculateTotalAmount = () => {
-    if (bulkData.length === 0) return null;
-
-    const totalAmount = bulkData.reduce(
-      (sum, item) => sum + parseFloat(item.amount || 0),
-      0,
-    );
-    const exchangeRate = parseFloat(
-      exchangeRates[currency as keyof typeof exchangeRates]?.rate || "1",
-    );
-    const baseFees = parseFloat(
-      exchangeRates[currency as keyof typeof exchangeRates]?.fees || "0",
-    );
-    const bulkFees = baseFees * bulkData.length;
-
-    return {
-      originalAmount: totalAmount,
-      aedAmount: totalAmount * exchangeRate,
-      fees: bulkFees,
-      total: totalAmount * exchangeRate + bulkFees,
-      count: bulkData.length,
-    };
-  };
-
-  // const handleDocumentUpload = (file: string) => {
-  //   setUploadedDocuments([...uploadedDocuments, file]);
-  // };
-
-  const handleTemplateUpload = () => {
-    // Simulate uploading CSV/Excel file
-    setBulkData(sampleBulkData);
-    setCurrentStep(2);
-  };
-
-  const getSelectedGroup = () => {
-    return beneficiaryGroupsList?.data?.groups?.find(
-      (g: { id: number }) => g.id.toString() === selectedGroup,
-    );
-  };
-
-  // const downloadTemplate = () => {
-  //   const group = getSelectedGroup();
-  //   const purposeDetails = getSelectedPurposeDetails();
-
-  //   // Create CSV content with beneficiary data if group is selected
-  //   let csvContent = "";
-
-  //   if (group && group.beneficiaries.length > 0) {
-  //     // Header row
-  //     csvContent =
-  //       "Beneficiary Name,Account Number,Account Holder Name,Bank Name,Amount,Purpose,Reference\n";
-
-  //     // Data rows pre-populated from selected group
-  //     group.beneficiaries.forEach((ben) => {
-  //       const bankDetails = ben.bankDetails?.[0] || {};
-  //       csvContent += `"${ben.name}","${bankDetails.accountNumber || ""}","${bankDetails.accountName || ben.name}","${bankDetails.bankName || ""}","","${purposeDetails?.label || ""}",""\n`;
-  //     });
-  //   } else {
-  //     // Empty template
-  //     csvContent =
-  //       "Beneficiary Name,Account Number,Account Holder Name,Bank Name,Amount,Purpose,Reference\n";
-  //     csvContent += '"",,,"","","",""\n';
-  //   }
-
-  //   // Create and download the file
-  //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  //   const link = document.createElement("a");
-  //   const url = URL.createObjectURL(blob);
-  //   link.setAttribute("href", url);
-  //   link.setAttribute(
-  //     "download",
-  //     `bulk_transaction_template_${group?.name?.replace(/\s+/g, "_") || "empty"}.csv`,
-  //   );
-  //   link.style.visibility = "hidden";
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-
-  //   toast({
-  //     title: "Template Downloaded",
-  //     description: group
-  //       ? `Template with ${group.beneficiaries.length} beneficiaries from "${group.name}" has been downloaded.`
-  //       : "Empty template has been downloaded.",
-  //   });
-  // };
-
-  const totals = calculateTotalAmount();
-
+  // Submit
   const handleSubmit = async () => {
     setLoading(true);
+
+    const group = getSelectedGroup();
+    if (!group) {
+      toast({ variant: "destructive", title: "No group selected" });
+      setLoading(false);
+      return;
+    }
+
+    const validBeneficiaries = group.beneficiaries
+      .map((ben: any) => {
+        const amountStr = beneficiaryAmounts[ben.id];
+        const amount = amountStr ? Number(amountStr) : NaN;
+        if (!amountStr || isNaN(amount) || amount <= 0) return null;
+
+        return {
+          beneficiaryId: Number(ben.id),
+          amount,
+          discountCode: beneficiaryDiscounts[ben.id] || "",
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => !!item);
+
+    if (validBeneficiaries.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Enter valid amount for at least one beneficiary",
+      });
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       groupId: Number(selectedGroup),
       purposeCode: transactionPurpose,
       currencyId: Number(currency),
       sourceAccountId: Number(selectedSource),
-      beneficiaries: Object.entries(beneficiaryAmounts)?.map(
-        ([beneficiaryId, amount]) => ({
-          beneficiaryId: Number(beneficiaryId),
-          amount: Number(amount),
-        }),
-      ),
-      discountCode: discountCode.trim() || "",
+      beneficiaries: validBeneficiaries,
+      discountCode: "", // global one – can be removed or kept
     };
+
     const formData = new FormData();
-    formData.append(
-      "data",
-      new Blob([JSON.stringify(payload)], {
-        type: "application/json",
-      }),
-    );
-    if (document) {
-      formData.append("documents", document);
-    }
+    formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+    if (document) formData.append("documents", document);
+
     try {
       const res = await fetch(`${BASE_URL}/api/v1/bulk-transactions`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || data?.status === false) {
         toast({
-          title: "Error",
-          description: errorData?.message,
           variant: "destructive",
+          title: "Submission Failed",
+          description: data?.message || "Please try again",
         });
+        return;
       }
-      const response = await res?.json();
-      if (response?.status === false) {
-        toast({
-          title: "Error",
-          description: response?.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Bulk Transaction Submitted",
-          description: `Your bulk transaction with ${payload?.beneficiaries?.length} recipients has been submitted for processing.`,
-        });
-      }
+
+      toast({
+        title: "Success",
+        description: `Submitted ${validBeneficiaries.length} payments for approval`,
+      });
 
       setOpen(false);
       refetch?.();
+
       // Reset form
       setSelectedSource("");
       setTransactionPurpose("");
       setCurrency("");
       setSelectedGroup("");
       setBeneficiaryAmounts({});
-      // setUploadedDocuments([]);
+      setBeneficiaryDiscounts({});
       setDocument(null);
-      setNotes("");
       setCurrentStep(1);
-    } catch (error) {
-      const msg = error.message || "Failed to Bulk Transition";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+    } catch (err) {
+      toast({ variant: "destructive", title: "Network error" });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAmountChange = (beneficiaryId: number, value: string) => {
-    setBeneficiaryAmounts((prev) => ({
-      ...prev,
-      [beneficiaryId]: value,
-    }));
-  };
+  // ─── UI ─────────────────────────────────────────────
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
       {[1, 2].map((step) => (
-        <div key={step} className="flex items-center">
+        <React.Fragment key={step}>
           <div
-            className={`
-            w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
-          `}
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              currentStep >= step
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            }`}
           >
             {step}
           </div>
           {step < 2 && (
             <div
-              className={`
-              w-16 h-0.5 mx-2
-              ${currentStep > step ? "bg-primary" : "bg-muted"}
-            `}
+              className={`w-16 h-0.5 ${
+                currentStep > step ? "bg-primary" : "bg-muted"
+              }`}
             />
           )}
-        </div>
+        </React.Fragment>
       ))}
     </div>
   );
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      {/* Transaction Purpose */}
+      {/* Purpose */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -1837,22 +280,19 @@ const BulkTransactionForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="purpose">Purpose of Transaction *</Label>
-            <Select
-              value={transactionPurpose}
-              onValueChange={setTransactionPurpose}
-            >
+            <Label>Purpose of Transaction *</Label>
+            <Select value={transactionPurpose} onValueChange={setTransactionPurpose}>
               <SelectTrigger>
-                <SelectValue placeholder="Select transaction purpose" />
+                <SelectValue placeholder="Select purpose" />
               </SelectTrigger>
-              <SelectContent className="bg-background border border-border z-50">
-                {purposeOptions.map((purpose) => (
-                  <SelectItem key={purpose.value} value={purpose.value}>
-                    <div className="flex items-center justify-between w-full">
-                      <span>{purpose.label}</span>
-                      {purpose?.requiresDoc && (
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          Bulk
+              <SelectContent>
+                {purposeOptions.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    <div className="flex items-center gap-2">
+                      {p.label}
+                      {p.requiresDoc && (
+                        <Badge variant="outline" className="text-xs ml-2">
+                          Doc
                         </Badge>
                       )}
                     </div>
@@ -1862,47 +302,27 @@ const BulkTransactionForm = ({
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="currency">Currency *</Label>
+              <Label>Currency *</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border border-border z-50">
-                  {/* {Object.keys(exchangeRates).map((curr) => (
-                    <SelectItem key={curr} value={curr}>
-                      {curr}
+                <SelectContent>
+                  {currencyListData?.data?.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name.toUpperCase()}
                     </SelectItem>
-                  ))} */}
-                  {currencyListData?.data?.map(
-                    (curr: { id: number; name: string }) => (
-                      <SelectItem key={curr?.id} value={curr?.id.toString()}>
-                        {curr?.name.toUpperCase()}
-                      </SelectItem>
-                    ),
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
-            {/* <div>
-              <Label htmlFor="discountCode">Discount Code *</Label>
-              <Input
-                id="discountCode"
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value.trim())}
-                placeholder="e.g. S43U3ZSC"
-                maxLength={12}
-              />
-            </div> */}
-
-
           </div>
         </CardContent>
       </Card>
 
-      {/* Source of Transaction */}
+      {/* Source */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -1912,18 +332,18 @@ const BulkTransactionForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="source">Select Source Account *</Label>
+            <Label>Select Source Account *</Label>
             <Select value={selectedSource} onValueChange={setSelectedSource}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose source account" />
+                <SelectValue placeholder="Choose account" />
               </SelectTrigger>
-              <SelectContent className="bg-background border border-border z-50">
-                {transactionSources.map((source) => (
-                  <SelectItem key={source.id} value={source.id}>
+              <SelectContent>
+                {transactionSources.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
                     <div className="flex flex-col">
-                      <span className="font-medium">{source.name}</span>
+                      <span className="font-medium">{s.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        Balance: {source.currency} {source.balance}
+                        {s.currency} {s.balance}
                       </span>
                     </div>
                   </SelectItem>
@@ -1937,18 +357,14 @@ const BulkTransactionForm = ({
               <CardContent className="p-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">
-                      Account Number:
-                    </span>
+                    <span className="text-muted-foreground">Account Number:</span>
                     <p className="font-medium font-mono">
                       {getSelectedSourceDetails()?.accountNumber}
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">
-                      Available Balance:
-                    </span>
-                    <p className="font-medium text-success">
+                    <span className="text-muted-foreground">Available Balance:</span>
+                    <p className="font-medium text-green-600">
                       {getSelectedSourceDetails()?.currency}{" "}
                       {getSelectedSourceDetails()?.balance}
                     </p>
@@ -1960,7 +376,7 @@ const BulkTransactionForm = ({
         </CardContent>
       </Card>
 
-      {/* Beneficiary Group Selection */}
+      {/* Group + Amounts */}
       {transactionPurpose && (
         <Card>
           <CardHeader>
@@ -1970,531 +386,159 @@ const BulkTransactionForm = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="group">Beneficiary Group (Optional)</Label>
-              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a beneficiary group for bulk payment" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border border-border z-50">
-                  <SelectItem value="none">
-                    <span className="text-muted-foreground">
-                      No group - Use empty template
-                    </span>
+            <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a beneficiary group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <span className="text-muted-foreground">No group selected</span>
+                </SelectItem>
+                {beneficiaryGroupsList?.data?.groups?.map((g: any) => (
+                  <SelectItem key={g.id} value={g.id.toString()}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{g.groupName}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {g.beneficiaries?.length || 0} beneficiaries
+                      </span>
+                    </div>
                   </SelectItem>
-                  {beneficiaryGroupsList?.data?.groups?.map(
-                    (group: {
-                      id: number;
-                      groupName: string;
-                      beneficiaries: { id: number; name: string }[];
-                    }) => (
-                      <SelectItem key={group?.id} value={group?.id.toString()}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">
-                            {group?.groupName}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {group?.beneficiaries?.length ?? 0} beneficiaries
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
+                ))}
+              </SelectContent>
+            </Select>
 
+            {selectedGroup && selectedGroup !== "none" && getSelectedGroup() && (
+              <Card className="border-l-4 border-l-primary bg-primary/5">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {getSelectedGroup().groupName}
+                    </h4>
+                    <Badge variant="secondary">
+                      {getSelectedGroup().beneficiaries.length} members
+                    </Badge>
+                  </div>
 
-
-
-
-
-            </div>
-
-            {selectedGroup &&
-              selectedGroup !== "none" &&
-              getSelectedGroup() && (
-                <Card className="border-l-4 border-l-primary bg-primary/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        {getSelectedGroup()?.groupName}
-                      </h4>
-                      <Badge variant="secondary">
-                        {getSelectedGroup()?.beneficiaries?.length ?? 0} members
-                      </Badge>
-                    </div>
-                    <div className="">
-                      {getSelectedGroup()?.beneficiaries?.length > 0 && (
-                        <Table className="mt-4">
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Beneficiary</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Value</TableHead>
-                              <TableHead>Discount Code</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {getSelectedGroup()?.beneficiaries.map(
-                              (ben: any) => (
-                                <TableRow key={ben.id}>
-                                  {/* Name as Badge */}
-                                  <TableCell>
-                                    <Badge
-                                      variant="outline"
-                                      className="flex w-fit items-center gap-1"
-                                    >
-                                      {ben.type === "BUSINESS" ? (
-                                        <Building className="h-3 w-3" />
-                                      ) : (
-                                        <Users className="h-3 w-3" />
-                                      )}
-                                      {ben.name}
-                                    </Badge>
-                                  </TableCell>
-
-                                  {/* Type */}
-                                  <TableCell className="capitalize">
-                                    {ben?.type}
-                                  </TableCell>
-
-                                  {/* Input Field */}
-                                  <TableCell>
-                                    <Input
-                                      placeholder="Enter amount"
-                                      type="number"
-                                      className="max-w-[160px]"
-                                      value={beneficiaryAmounts[ben.id] ?? ""}
-                                      step="0.01"
-                                      onChange={(e) =>
-                                        handleAmountChange(
-                                          ben.id,
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </TableCell>
-
-
-                                  <TableCell>
-                                    <Input
-                                      placeholder="Enter code"
-                                      type="text"
-                                      className="max-w-[160px]"
-                                      // value={discountCode[ben.id] ?? ""}
-                                      onChange={(e) =>
-                                        handleAmountChange(
-                                          ben.discountCode,
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </TableCell>
-
-                                </TableRow>
-                              ),
-                            )}
-                          </TableBody>
-                        </Table>
-                      )}
-                      {/* {(getSelectedGroup()?.beneficiaries.length || 0) > 5 && (
-                        <Badge variant="outline">
-                          +{(getSelectedGroup()?.beneficiaries.length || 0) - 5}{" "}
-                          more
-                        </Badge>
-                      )} */}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Beneficiary</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Value (Amount)</TableHead>
+                        <TableHead>Discount Code</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getSelectedGroup().beneficiaries.map((ben: any) => (
+                        <TableRow key={ben.id}>
+                          <TableCell>
+                            <Badge variant="outline" className="flex w-fit items-center gap-1">
+                              {ben.type === "BUSINESS" ? (
+                                <Building className="h-3 w-3" />
+                              ) : (
+                                <Users className="h-3 w-3" />
+                              )}
+                              {ben.name}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="capitalize">{ben.type?.toLowerCase()}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              className="max-w-[160px]"
+                              value={beneficiaryAmounts[ben.id] ?? ""}
+                              onChange={(e) => handleAmountChange(ben.id, e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              placeholder="e.g. VKLXPD57"
+                              className="max-w-[160px] font-mono"
+                              value={beneficiaryDiscounts[ben.id] ?? ""}
+                              onChange={(e) => handleDiscountChange(ben.id, e.target.value)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
         </Card>
       )}
-
-      {/* Bulk Data Upload */}
-      {/* {getSelectedPurposeDetails()?.requiresDoc && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Upload Beneficiary Data
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="border-2 border-dashed border-primary bg-primary/5">
-                <CardContent className="p-6 text-center">
-                  <Button
-                    variant="outline"
-                    className="mb-3"
-                    onClick={downloadTemplate}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Template
-                  </Button>
-                  <p className="text-sm font-medium">
-                    Step 1: Download Template
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedGroup && selectedGroup !== "none"
-                      ? `Pre-filled with ${getSelectedGroup()?.memberCount || 0} beneficiaries`
-                      : `Get the ${getSelectedPurposeDetails()?.label} template`}
-                  </p>
-                </CardContent>
-              </Card>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept=".csv, .xlsx, .xls"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-                <CardContent
-                  className="p-6 text-center"
-                  onClick={handleCardClick}
-                >
-                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-medium">
-                    Step 2: Upload Filled Template
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Excel (.xlsx) or CSV files
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="bg-accent-muted/20 rounded-lg p-3">
-              <div className="flex items-start space-x-2">
-                <Info className="h-4 w-4 text-accent mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">
-                    {selectedGroup && selectedGroup !== "none"
-                      ? "Template Pre-filled with Group Beneficiaries"
-                      : "Required Information"}
-                  </p>
-                  <ul className="text-muted-foreground mt-1 space-y-1">
-                    {selectedGroup && selectedGroup !== "none" ? (
-                      <>
-                        <li>
-                          • Beneficiary names and account details are pre-filled
-                        </li>
-                        <li>
-                          • Fill in the Amount column for each beneficiary
-                        </li>
-                        <li>• Add purpose/reference as needed</li>
-                      </>
-                    ) : (
-                      <>
-                        <li>• Beneficiary Name and Account Details</li>
-                        <li>• Individual Transaction Amounts</li>
-                        <li>• Purpose/Description for each payment</li>
-                        <li>• Employee ID (for salary payments)</li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )} */}
     </div>
   );
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      {/* Fee Display */}
-      {bulkData.length > 0 && (
-        <BulkTransactionFeeDisplay bulkData={bulkData} currency={currency} />
-      )}
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Review Bulk Transaction Data
-            </CardTitle>
-            <Badge variant="secondary">{bulkData.length} Recipients</Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="max-h-96 overflow-y-auto border rounded-lg">
-              <div className="grid grid-cols-5 gap-2 p-3 bg-muted font-medium text-sm border-b">
-                <div>Beneficiary</div>
-                <div>Account Number</div>
-                <div>Bank</div>
-                <div>Amount</div>
-                <div>Actions</div>
-              </div>
-              {bulkData.map((item, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-5 gap-2 p-3 border-b text-sm hover:bg-muted/50"
-                >
-                  <div>
-                    <p className="font-medium">{item.beneficiaryName}</p>
-                    {item.employeeId && (
-                      <p className="text-xs text-muted-foreground">
-                        {item.employeeId}
-                      </p>
-                    )}
-                  </div>
-                  <div className="font-mono text-xs">{item.accountNumber}</div>
-                  <div>{item.bankName}</div>
-                  <div className="font-medium">
-                    {currency} {Number(item.amount).toLocaleString()}
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-3 w-3" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {totals && (
-              <Card className="bg-accent-muted/10 border-accent/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <TrendingUp className="h-4 w-4 text-accent" />
-                    <span className="font-medium text-foreground">
-                      Bulk Transaction Summary
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Recipients:</span>
-                      <p className="font-medium">{totals.count}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Total Amount:
-                      </span>
-                      <p className="font-medium">
-                        {currency} {totals.originalAmount.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Exchange Rate:
-                      </span>
-                      <p className="font-medium">
-                        1 {currency} ={" "}
-                        {
-                          exchangeRates[currency as keyof typeof exchangeRates]
-                            ?.rate
-                        }{" "}
-                        AED
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Processing Fees:
-                      </span>
-                      <p className="font-medium">
-                        AED {totals.fees.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Total Debit:
-                      </span>
-                      <p className="font-medium text-lg">
-                        AED {totals.total.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      {/* Document Upload */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Upload className="h-5 w-5" />
             Supporting Documents
-            <Badge variant="destructive" className="text-xs">
-              Required
+            <Badge variant="destructive" className="text-xs ml-2">
+              Required for some purposes
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-              <CardContent
-                className="p-6 text-center"
-                onClick={() => handleDocumentUpload("payroll_summary.pdf")}
-              >
-                <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-medium">Upload Documents</p>
-                <p className="text-xs text-muted-foreground">
-                  {transactionPurpose === "salary_payment"
-                    ? "Payroll reports, HR approvals"
-                    : "Vendor invoices, purchase orders"}
-                </p>
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      console.log("Selected file:", file);
-                    }
-                  }}
-                />
-              </CardContent>
-            </Card> */}
+        <CardContent className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <Card className="border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <label
-                  htmlFor="document-upload"
-                  className="cursor-pointer block"
-                >
-                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-
-                  <p className="text-sm font-medium">Upload Documents</p>
-
-                  <p className="text-xs text-muted-foreground">
-                    {transactionPurpose === "salary_payment"
-                      ? "Payroll reports, HR approvals"
-                      : "Vendor invoices, purchase orders"}
+              <CardContent className="p-8 text-center">
+                <label htmlFor="doc-upload" className="cursor-pointer block">
+                  <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
+                  <p className="font-medium">Click to upload or drag & drop</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    PDF, PNG, JPG up to 10MB
                   </p>
                 </label>
-
-                {/* Hidden File Input */}
                 <input
-                  id="document-upload"
+                  id="doc-upload"
                   type="file"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      setDocument(file);
-                    }
+                    if (file) setDocument(file);
                   }}
                 />
               </CardContent>
             </Card>
-            {/* <div className="space-y-2">
-              <h4 className="font-medium text-foreground">
-                Uploaded Documents
-              </h4>
-              {uploadedDocuments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No documents uploaded
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {uploadedDocuments.map((doc, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 bg-muted rounded-lg"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-primary" />
-                        <span className="text-sm">{doc}</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setUploadedDocuments(
-                            uploadedDocuments.filter((_, i) => i !== index),
-                          )
-                        }
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div> */}
-            <div className="space-y-2">
-              <h4 className="font-medium text-foreground">
-                Uploaded Documents
-              </h4>
-              {document ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <span className="text-sm">{document?.name}</span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDocument(null)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+
+            {document && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Uploaded Document</h4>
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="text-sm truncate max-w-[220px]">{document.name}</span>
                   </div>
+                  <Button variant="ghost" size="icon" onClick={() => setDocument(null)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No documents uploaded
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Additional Notes */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Additional Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label htmlFor="notes">Bulk Transaction Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any additional information about this bulk transaction..."
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card> */}
-
-      {/* Approval Workflow Info */}
-      <Card className="border-accent/20 bg-accent-muted/10">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            <Info className="h-5 w-5 text-accent mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-foreground">
-                Bulk Transaction Approval
-              </p>
-              <p className="text-muted-foreground">
-                {totals && totals.originalAmount > 100000
-                  ? "This bulk transaction requires executive approval (CEO + CFO approval required)."
-                  : "This bulk transaction will require senior management approval."}
-              </p>
-              <p className="text-muted-foreground mt-1">
-                Expected processing time: 24-48 hours after approval.
-              </p>
-            </div>
-          </div>
+          <Card className="bg-muted/50 border-none">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="text-sm space-y-1">
+                  <p className="font-medium">Approval & Processing</p>
+                  <p className="text-muted-foreground">
+                    Transactions will be routed for approval. Expected processing time: 24-48 hours.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
     </div>
@@ -2506,59 +550,55 @@ const BulkTransactionForm = ({
         <DialogTrigger asChild>
           {trigger || (
             <Button variant="outline">
-              <TrendingUp className="h-4 w-4 mr-2" />
+              <TrendingUp className="mr-2 h-4 w-4" />
               Bulk Payment
             </Button>
           )}
         </DialogTrigger>
+
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              Create Bulk Transaction
-            </DialogTitle>
+            <DialogTitle className="text-xl">Create Bulk Transaction</DialogTitle>
           </DialogHeader>
 
           <div className="mt-6">
             {renderStepIndicator()}
 
             {currentStep === 1 && renderStep1()}
-            {/* {currentStep === 2 && renderStep2()} */}
-            {currentStep === 2 && renderStep3()}
+            {currentStep === 2 && renderStep2()}
 
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-8 border-t mt-8">
               <Button
                 variant="outline"
-                onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
+                onClick={() => setCurrentStep((p) => Math.max(1, p - 1))}
                 disabled={currentStep === 1}
               >
                 Previous
               </Button>
 
-              {currentStep < 2 ? (
+              {currentStep === 1 ? (
                 <Button
-                  onClick={() =>
-                    setCurrentStep((prev) => Math.min(3, prev + 1))
+                  onClick={() => setCurrentStep(2)}
+                  disabled={
+                    !selectedGroup ||
+                    selectedGroup === "none" ||
+                    !transactionPurpose ||
+                    !currency ||
+                    !selectedSource
                   }
-                  variant="business"
-                  // disabled={
-                  //   currentStep === 1 &&
-                  //   (!transactionPurpose ||
-                  //     !selectedSource ||
-                  //     bulkData.length === 0)
-                  // }
-                  disabled={selectedGroup == ""}
                 >
-                  Next
+                  Next – Documents & Submit
                 </Button>
               ) : (
                 <div className="space-x-3">
-                  <Button variant="outline">Save as Draft</Button>
+                  <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                    Back to Setup
+                  </Button>
                   <Button
-                    variant="business"
-                    disabled={document === null}
+                    disabled={loading || !document}
                     onClick={() => setShowConfirmation(true)}
                   >
-                    Submit for Processing
+                    {loading ? "Submitting…" : "Submit for Approval"}
                   </Button>
                 </div>
               )}
@@ -2572,9 +612,9 @@ const BulkTransactionForm = ({
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
         onConfirm={handleSubmit}
-        title="Confirm Bulk Transaction Submission"
-        description={`Are you sure you want to submit this bulk transaction with ${bulkData.length} recipients for a total of ${currency} ${totals?.originalAmount.toLocaleString()}? This will route through the executive approval workflow.`}
-        confirmText="Submit Transaction"
+        title="Confirm Bulk Transaction"
+        description="This will submit the payments for approval. Continue?"
+        confirmText="Yes, Submit"
       />
     </>
   );
