@@ -394,7 +394,7 @@ function App() {
                   </Route>
                 </Route>
 
-                {/* Exchange Admin */}
+                {/* Exchange Admin  and Exchange User */}
                 <Route
                   element={
                     <ProtectedRoute

@@ -64,6 +64,9 @@ const SingleTransactionForm = ({
   const [open, setOpen] = useState(false);
   const [currencyListData, setCurrencyListData] = useState(null);
   const [beneficiariesList, setBeneficiariesList] = useState([]);
+
+  const [discountCode, setDiscountCode] = useState("");
+
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -214,9 +217,12 @@ const SingleTransactionForm = ({
       sourceAccountId: selectedSource,
       beneficiaryId: selectedBeneficiary,
       amount: Number(amount),
+      // discountCode: "",
       currencyId: currency,
       notes,
+      discountCode: discountCode.trim() || "",
     };
+    
     const formData = new FormData();
 
     // ✅ REQUIRED: data as JSON blob
@@ -541,6 +547,22 @@ const SingleTransactionForm = ({
                       step="0.01"
                     />
                   </div>
+
+
+                 {/* ← New: Discount Code */}
+                  <div>
+                    <Label htmlFor="discountCode">Discount Code</Label>
+                    <Input
+                      id="discountCode"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value.trim())}
+                      placeholder="e.g. S43U3ZSC"
+                      maxLength={12}
+                    />
+                  </div>
+
+
+
                   <div>
                     <Label htmlFor="currency">Currency *</Label>
                     <Select value={currency} onValueChange={setCurrency}>
@@ -804,6 +826,10 @@ const SingleTransactionForm = ({
 };
 
 export default SingleTransactionForm;
+
+
+
+
 
 // import { useEffect, useState } from "react";
 // import axios from "axios";
