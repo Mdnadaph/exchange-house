@@ -104,6 +104,81 @@ const ExchangeFeeManagement = () => {
     beneficiaryFeeType: "",
     beneficiaryFeeValue: "",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const clearFormError = (field: string) => {
+    setFormErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Transaction Type
+    if (!newFeeRule.transactionType) {
+      errors.transactionType = "Transaction type is required";
+    }
+
+    // Payout Country
+    if (!newFeeRule.payoutCountry) {
+      errors.payoutCountry = "Payout country is required";
+    }
+
+    // Min Amount
+    if (!newFeeRule.minAmount) {
+      errors.minAmount = "Min amount is required";
+    } else if (Number(newFeeRule.minAmount) < 0) {
+      errors.minAmount = "Min amount cannot be negative";
+    }
+
+    // Max Amount
+    if (!newFeeRule.maxAmount) {
+      errors.maxAmount = "Max amount is required";
+    } else if (Number(newFeeRule.maxAmount) <= 0) {
+      errors.maxAmount = "Max amount must be greater than 0";
+    }
+
+    // Fee Responsibility
+    if (!newFeeRule.feeResponsibility) {
+      errors.feeResponsibility = "Fee responsibility is required";
+    } else {
+      if (newFeeRule.feeResponsibility !== "SHARED") {
+        // Fee Type and Fee Value required for non-shared
+        if (!newFeeRule.feeType) {
+          errors.feeType = "Fee type is required";
+        }
+        if (!newFeeRule.feeValue) {
+          errors.feeValue = "Fee value is required";
+        } else if (Number(newFeeRule.feeValue) <= 0) {
+          errors.feeValue = "Fee value must be greater than 0";
+        }
+      } else {
+        // Shared: business and beneficiary fields required
+        if (!newFeeRule.businessFeeType) {
+          errors.businessFeeType = "Business fee type is required";
+        }
+        if (!newFeeRule.businessFeeValue) {
+          errors.businessFeeValue = "Business fee value is required";
+        } else if (Number(newFeeRule.businessFeeValue) <= 0) {
+          errors.businessFeeValue = "Business fee value must be greater than 0";
+        }
+        if (!newFeeRule.beneficiaryFeeType) {
+          errors.beneficiaryFeeType = "Beneficiary fee type is required";
+        }
+        if (!newFeeRule.beneficiaryFeeValue) {
+          errors.beneficiaryFeeValue = "Beneficiary fee value is required";
+        } else if (Number(newFeeRule.beneficiaryFeeValue) <= 0) {
+          errors.beneficiaryFeeValue =
+            "Beneficiary fee value must be greater than 0";
+        }
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // --- Constants ---
   const countries = [
@@ -182,38 +257,11 @@ const ExchangeFeeManagement = () => {
     getPayoutCountryList();
   }, []);
   const handleSaveRule = async () => {
-    if (!newFeeRule.payoutCountry || !newFeeRule.transactionType) {
+    if (!validateForm()) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Please fill all required (*) fields",
-      });
-      return;
-    }
-
-    if (
-      newFeeRule.feeResponsibility !== "SHARED" &&
-      (!newFeeRule.feeType || !newFeeRule.feeValue)
-    ) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please provide fee type and value for non-shared fees",
-      });
-      return;
-    }
-
-    if (
-      newFeeRule.feeResponsibility === "SHARED" &&
-      (!newFeeRule.businessFeeType ||
-        !newFeeRule.businessFeeValue ||
-        !newFeeRule.beneficiaryFeeType ||
-        !newFeeRule.beneficiaryFeeValue)
-    ) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please provide all shared fee details",
+        title: "Validation Error",
+        description: "Please fix the errors before submitting.",
       });
       return;
     }
@@ -415,13 +463,22 @@ const ExchangeFeeManagement = () => {
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Transaction Type *</Label>
+                  <Label>
+                    Transaction Type <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={newFeeRule.transactionType}
-                    onValueChange={(v) =>
-                      setNewFeeRule({ ...newFeeRule, transactionType: v })
-                    }
+                    onValueChange={(v) => {
+                      setNewFeeRule({ ...newFeeRule, transactionType: v });
+                      clearFormError("transactionType");
+                    }}
                   >
+                    {" "}
+                    {formErrors.transactionType && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.transactionType}
+                      </p>
+                    )}
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -435,12 +492,15 @@ const ExchangeFeeManagement = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Payout Country *</Label>
+                  <Label>
+                    Payout Country <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={newFeeRule.payoutCountry}
-                    onValueChange={(v) =>
-                      setNewFeeRule({ ...newFeeRule, payoutCountry: v })
-                    }
+                    onValueChange={(v) => {
+                      setNewFeeRule({ ...newFeeRule, payoutCountry: v });
+                      clearFormError("payoutCountry");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select Country" />
@@ -453,45 +513,67 @@ const ExchangeFeeManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.payoutCountry && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors.payoutCountry}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Min Amount (AED)</Label>
+                  <Label>Min Amount (AED)</Label>{" "}
+                  <span className="text-red-500">*</span>
                   <Input
                     type="number"
                     placeholder="0"
                     value={newFeeRule.minAmount}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewFeeRule({
                         ...newFeeRule,
                         minAmount: e.target.value,
-                      })
-                    }
+                      });
+                      clearFormError("minAmount");
+                    }}
                   />
+                  {formErrors.minAmount && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors.minAmount}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <Label>Max Amount (AED)</Label>
+                  <Label>Max Amount (AED)</Label>{" "}
+                  <span className="text-red-500">*</span>
                   <Input
                     type="number"
                     placeholder="999999"
                     value={newFeeRule.maxAmount}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewFeeRule({
                         ...newFeeRule,
                         maxAmount: e.target.value,
-                      })
-                    }
+                      });
+                      clearFormError("maxAmount");
+                    }}
                   />
+                  {formErrors.maxAmount && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors.maxAmount}
+                    </p>
+                  )}
                 </div>
               </div>
               <div>
-                <Label>Fee Responsibility *</Label>
+                <Label>
+                  Fee Responsibility <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={newFeeRule.feeResponsibility}
-                  onValueChange={(v) =>
-                    setNewFeeRule({ ...newFeeRule, feeResponsibility: v })
-                  }
+                  onValueChange={(v) => {
+                    setNewFeeRule({ ...newFeeRule, feeResponsibility: v });
+                    clearFormError("feeResponsibility");
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Who pays the fee?" />
@@ -506,6 +588,11 @@ const ExchangeFeeManagement = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.feeType && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.feeType}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground mt-1">
                   {newFeeRule.feeResponsibility === "BUSINESS" &&
                     "Fee added to transaction cost (visible to Business)"}
@@ -520,12 +607,14 @@ const ExchangeFeeManagement = () => {
               {newFeeRule.feeResponsibility !== "SHARED" ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Fee Structure *</Label>
+                    <Label>Fee Structure </Label>
+                    <span className="text-red-500">*</span>
                     <Select
                       value={newFeeRule.feeType}
-                      onValueChange={(v) =>
-                        setNewFeeRule({ ...newFeeRule, feeType: v })
-                      }
+                      onValueChange={(v) => {
+                        setNewFeeRule({ ...newFeeRule, feeType: v });
+                        clearFormError("feeResponsibility");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -540,7 +629,7 @@ const ExchangeFeeManagement = () => {
                   </div>
                   <div>
                     <Label>
-                      Fee Value *{" "}
+                      Fee Value <span className="text-red-500">*</span>
                       {newFeeRule.feeType === "BPS"
                         ? "(in basis points)"
                         : "(in AED)"}
@@ -558,6 +647,11 @@ const ExchangeFeeManagement = () => {
                         })
                       }
                     />
+                    {formErrors.feeValue && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.feeValue}
+                      </p>
+                    )}
                   </div>
                 </div>
               ) : (

@@ -664,9 +664,9 @@ const ExchangeAdminDashboard = () => {
                           Assigned to: {application.assignedTo} • {application.submittedDate}
                         </p> */}
                       </div>
-                      <Button variant="outline" size="sm">
+                      {/*<Button variant="outline" size="sm">
                         Review
-                      </Button>
+                      </Button>*/}
                     </div>
                   );
                 })}

@@ -1175,10 +1175,34 @@ const ExchangeKYBReview = () => {
                               <CheckCircle className="h-4 w-4 mr-2" />
                               Approve
                             </Button>
+                            {/*<Button
+                              type="button"
+                              variant="destructive"
+                              className="w-full"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleKybAction(
+                                  application.originalData.id,
+                                  "reject",
+                                  comments[application.uuid] ||
+                                    "Application rejected",
+                                );
+                              }}
+                            >
+                              Reject
+                            </Button>*/}
+
                             <Button
                               type="button"
                               variant="destructive"
                               className="w-full"
+                              disabled={application.documents.length === 0} // <-- added
+                              title={
+                                application.documents.length === 0
+                                  ? "No documents uploaded"
+                                  : ""
+                              }
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
