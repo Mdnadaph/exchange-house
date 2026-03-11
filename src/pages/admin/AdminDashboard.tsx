@@ -124,14 +124,14 @@ const AdminDashboard = () => {
       color: "text-blue-600",
     },
     {
-      title: "Pending Approvals",
+      title: "Pending Exchange Admins",
       value: dashboardStats.pendingApproval.toString(),
       change: "2 due today",
       icon: FileCheck,
       color: "text-orange-600",
     },
     {
-      title: "Active Businesses",
+      title: "Total Active Businesses",
       value: dashboardStats.activeBusinesses.toString(),
       change: "+12 this week",
       icon: Building,
@@ -275,7 +275,9 @@ const AdminDashboard = () => {
                   <div className="text-2xl font-bold text-foreground">
                     {stat.value}
                   </div>
-                  <p className="text-xs text-muted-foreground">{stat.change}</p>
+                  {/* <p className="text-xs text-muted-foreground">
+                    {stat.change}
+                  </p> */}
                 </CardContent>
               </Card>
             );
@@ -295,7 +297,6 @@ const AdminDashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  
                   <TableHead>Legal Business Name</TableHead>
                   <TableHead>Trade Name</TableHead>
                   <TableHead>Admin Name</TableHead>
@@ -328,15 +329,9 @@ const AdminDashboard = () => {
                   const StatusIcon = status.icon;
                   return (
                     <TableRow key={admin.id}>
-                      <TableCell>
-                        {admin.legalBusinessName}
-                      </TableCell>
-                      <TableCell>
-                        {admin.tradingName}
-                      </TableCell>
-                      <TableCell>
-                        {admin.fullName}
-                      </TableCell>
+                      <TableCell>{admin.legalBusinessName}</TableCell>
+                      <TableCell>{admin.tradingName}</TableCell>
+                      <TableCell>{admin.fullName}</TableCell>
                       <TableCell>{admin.email}</TableCell>
                       <TableCell>{admin.phoneNumber || "—"}</TableCell>
                       <TableCell>
