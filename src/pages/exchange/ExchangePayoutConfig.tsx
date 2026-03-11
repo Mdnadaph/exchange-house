@@ -648,7 +648,7 @@ const ExchangePayoutConfig = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               className="sm:size-default"
@@ -658,7 +658,7 @@ const ExchangePayoutConfig = () => {
               <span className="hidden sm:inline">
                 {t("globalSettings") || "Global Settings"}
               </span>
-            </Button>
+            </Button> */}
             <Button
               variant="business"
               size="sm"
@@ -940,7 +940,7 @@ const ExchangePayoutConfig = () => {
         </Card>
 
         {/* Payout Mechanisms */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Banknote className="h-5 w-5 text-primary" />
@@ -988,7 +988,7 @@ const ExchangePayoutConfig = () => {
               })}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Add Destination Dialog */}
         {/* <Dialog open={addDestinationOpen} onOpenChange={setAddDestinationOpen}>
