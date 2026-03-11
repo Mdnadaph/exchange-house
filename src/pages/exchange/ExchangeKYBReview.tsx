@@ -99,7 +99,7 @@ const ExchangeKYBReview = () => {
   const [viewerData, setViewerData] = useState<DocumentViewerData | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   // Image preview state
   const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
@@ -375,11 +375,12 @@ const ExchangeKYBReview = () => {
   // Filter applications based on search term
   const filteredApplications = kybApplications.filter(
     (app) =>
-      app.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.branch.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      (app.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.branch.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (filterStatus === null || app.status === filterStatus),
   );
 
   const handleViewDocument = async (document: any, application: any) => {
@@ -872,19 +873,55 @@ const ExchangeKYBReview = () => {
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 items-end">
+                {/*<div className="flex gap-2 items-end">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setSearchTerm("")}
                   >
-                    Clear Filters
+                    Rejected
                   </Button>
                   <Button type="button" variant="outline">
-                    High Priority
+                    Approved
                   </Button>
                   <Button type="button" variant="outline">
                     Pending Review
+                  </Button>
+                </div>*/}
+                <div className="flex gap-2 items-end">
+                  <Button
+                    type="button"
+                    variant={filterStatus === null ? "default" : "outline"}
+                    onClick={() => setFilterStatus(null)}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      filterStatus === "pending_review" ? "default" : "outline"
+                    }
+                    onClick={() => setFilterStatus("pending_review")}
+                  >
+                    Pending Review
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      filterStatus === "approved" ? "default" : "outline"
+                    }
+                    onClick={() => setFilterStatus("approved")}
+                  >
+                    Approved
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      filterStatus === "rejected" ? "default" : "outline"
+                    }
+                    onClick={() => setFilterStatus("rejected")}
+                  >
+                    Rejected
                   </Button>
                 </div>
               </div>
@@ -1479,7 +1516,7 @@ const ExchangeKYBReview = () => {
                           htmlFor="rejection-reason"
                           className="text-sm font-medium"
                         >
-                          Rejection Reason (Optional)
+                          Rejection Reason
                         </Label>
                         <Textarea
                           id="rejection-reason"

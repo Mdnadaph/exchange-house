@@ -261,7 +261,7 @@ const ExchangeKYBConfig = () => {
         </div>
 
         {/* Global KYB Settings */}
-        <Card className="shadow-card">
+        {/*<Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-primary" />
@@ -315,7 +315,7 @@ const ExchangeKYBConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card>*/}
 
         {/* Business Type Rules */}
         {/*<Card className="shadow-card">
@@ -610,7 +610,7 @@ const ExchangeKYBConfig = () => {
                             </div>
                           </div>
 
-                          <div className="flex justify-end space-x-2">
+                          {/*<div className="flex justify-end space-x-2">
                             <Button variant="outline" size="sm">
                               <Edit className="h-3 w-3 mr-1" />
                               Edit
@@ -619,7 +619,7 @@ const ExchangeKYBConfig = () => {
                               <Trash2 className="h-3 w-3 mr-1" />
                               Delete
                             </Button>
-                          </div>
+                          </div>*/}
                         </CardContent>
                       </Card>
                     );
@@ -701,7 +701,7 @@ const ExchangeKYBConfig = () => {
           </CardContent>
         </Card>
         {/* Document Configuration */}
-        <Card className="shadow-card">
+        {/*<Card className="shadow-card">
           <CardHeader>
             <CardTitle>Document Type Configuration</CardTitle>
           </CardHeader>
@@ -726,10 +726,10 @@ const ExchangeKYBConfig = () => {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card>*/}
 
         {/* Risk Assessment Rules */}
-        <Card className="shadow-card">
+        {/*<Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
@@ -805,7 +805,7 @@ const ExchangeKYBConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card>*/}
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3">
