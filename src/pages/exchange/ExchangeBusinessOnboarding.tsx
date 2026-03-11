@@ -120,6 +120,11 @@ const ExchangeBusinessOnboarding = () => {
     }
   };
 
+  const refreshData = () => {
+    fetchBusinesses(pagination.pageNumber, pagination.pageSize);
+    fetchStats();
+  };
+
   useEffect(() => {
     fetchBusinesses(pagination.pageNumber, pagination.pageSize);
     fetchStats();
@@ -179,8 +184,9 @@ const ExchangeBusinessOnboarding = () => {
               Register and manage new business accounts
             </p>
           </div>
-          {/*<BusinessOnboardingForm />*/}
-          {can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm />}
+          <BusinessOnboardingForm onSuccess={refreshData} />
+          {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm onSuccess={refreshData} />}*/}
+          {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm />}*/}
           {/*{can("BTN_ONBOARD_BUSINESS") ? (
             <BusinessOnboardingForm />
           ) : (
@@ -324,8 +330,11 @@ const ExchangeBusinessOnboarding = () => {
                                   <span className="text-muted-foreground">
                                     Country of Trade:
                                   </span>
+
                                   <span className="ml-2 font-medium">
-                                    {business.country}
+                                    {Array.isArray(business.country)
+                                      ? business.country.join(", ")
+                                      : business.country || "-"}
                                   </span>
                                 </div>
 

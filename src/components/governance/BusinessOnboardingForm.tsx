@@ -1209,7 +1209,7 @@ import {
 
 interface BusinessOnboardingFormProps {
   trigger?: React.ReactNode;
-   onSuccess?: () => void;
+  onSuccess?: () => void;
 }
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css"; // choose a theme if desired
@@ -1232,7 +1232,10 @@ import {
 } from "@/components/ui/command";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils"; // adjust path as needed
-const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
+const BusinessOnboardingForm = ({
+  trigger,
+  onSuccess,
+}: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
@@ -1515,7 +1518,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         toast({
           title: "Business Onboarded Successfully",
         });
-        
+        onSuccess?.();
         setOpen(false);
         setCurrentStep(1);
         setIdDocuments([]);
