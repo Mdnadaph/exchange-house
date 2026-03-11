@@ -241,10 +241,10 @@ const ExchangeBusinessDocuments = () => {
               View and manage all business documents across all branches
             </p>
           </div>
-          <Button variant="outline">
+          {/* <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export Report
-          </Button>
+          </Button> */}
         </div>
 
         {/* ================= DASHBOARD ================= */}

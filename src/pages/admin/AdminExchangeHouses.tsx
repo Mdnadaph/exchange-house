@@ -415,6 +415,20 @@ const AdminExchangeHouses = () => {
         // Reset everything
         setFormData({
           /* your reset object */
+          fullName: "",
+          email: "",
+          primaryContactEmail: "",
+          phoneNumber: "",
+          legalBusinessName: "",
+          tradingName: "",
+          registrationNumber: "",
+          centralBankLicense: "",
+          licenseExpiryDate: "",
+          businessAddress: "",
+          city: "",
+          countryId: 1,
+          postalCode: "",
+          subscriptionPlanId: 2,
         });
         setErrors({});
         setIsEdit(false);
@@ -755,7 +769,7 @@ const AdminExchangeHouses = () => {
                       />
                     </div> */}
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="phoneNumber">Phone Number *</Label>
                       <PhoneInput
                         country={"us"}
@@ -781,24 +795,61 @@ const AdminExchangeHouses = () => {
                         //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
                         preferredCountries={["ae", "in"]} // show these at top
                       />
-                      {/*<Input
-                        id="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            phoneNumber: e.target.value,
-                          });
-                          setErrors((prev) => {
-                            const next = { ...prev };
-                            delete next.phoneNumber;
-                            return next;
-                          });
-                        }}
-                        placeholder="971501234567"
-                      />*/}
+                      
                       {errors.phoneNumber?.map((msg, i) => (
                         <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
+                    </div> */}
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="phoneNumber"
+                        className={errors.phoneNumber ? "text-destructive" : ""}
+                      >
+                        {/* {t("phoneNumber")} * */}
+                        phone Number *
+                      </Label>
+                      <PhoneInput
+                        country={"ae"} // Defaulting to UAE based on your preferredCountries
+                        value={formData.phoneNumber}
+                        onChange={(value) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            phoneNumber: value,
+                          }));
+
+                          // Clear validation errors when user types
+                          if (errors.phoneNumber) {
+                            setErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.phoneNumber;
+                              return next;
+                            });
+                          }
+                        }}
+                        inputProps={{
+                          name: "phoneNumber",
+                          id: "phoneNumber",
+                          required: true,
+                        }}
+                        containerClass="phone-input-container"
+                        inputClass={`!w-full !h-10 !bg-transparent !border-input !text-sm !transition-smooth ${
+                          errors.phoneNumber ? "!border-destructive" : ""
+                        }`}
+                        buttonClass="phone-flag-button"
+                        dropdownClass="phone-dropdown-custom"
+                        enableSearch={true}
+                        searchPlaceholder={t("searchCountry") || "Search..."}
+                        preferredCountries={["ae", "in"]}
+                      />
+
+                      {errors.phoneNumber?.map((msg, i) => (
+                        <p
+                          key={i}
+                          className="text-sm text-destructive mt-1 font-medium"
+                        >
                           {msg}
                         </p>
                       ))}
@@ -1076,7 +1127,7 @@ const AdminExchangeHouses = () => {
                           <CardContent className="p-4 text-center">
                             <h4 className="font-semibold">{plan.name}</h4>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {t(descKey)}
+                              {t(descKey as any)}
                             </p>
                             <p className="text-lg font-bold mt-2">
                               {priceDisplay}

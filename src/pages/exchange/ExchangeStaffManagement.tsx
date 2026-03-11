@@ -330,10 +330,10 @@ const ExchangeStaffManagement = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline">
+            {/* <Button variant="outline">
               <TrendingUp className="h-4 w-4 mr-2" />
               Performance Reports
-            </Button>
+            </Button> */}
             <Button
               variant="business"
               onClick={() => setIsCreateModalOpen(true)}
@@ -770,7 +770,7 @@ const ExchangeStaffManagement = () => {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex flex-col space-y-2 ml-4">
+                                    {/* <div className="flex flex-col space-y-2 ml-4">
                                       <Button variant="outline" size="sm">
                                         <Edit className="h-4 w-4 mr-1" />
                                         Edit Details
@@ -782,7 +782,7 @@ const ExchangeStaffManagement = () => {
                                       <Button variant="business" size="sm">
                                         Assign KYB
                                       </Button>
-                                    </div>
+                                    </div> */}
                                   </div>
                                 </CardContent>
                               </Card>

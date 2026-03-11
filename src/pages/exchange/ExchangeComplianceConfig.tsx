@@ -675,7 +675,7 @@ const ExchangeComplianceConfig = () => {
         </Dialog>
 
         {/* AML Configuration */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
@@ -765,10 +765,10 @@ const ExchangeComplianceConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Country Risk Configuration */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" />
@@ -814,10 +814,10 @@ const ExchangeComplianceConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Reporting Configuration */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -881,17 +881,19 @@ const ExchangeComplianceConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
+
+
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3">
+        {/* <div className="flex justify-end space-x-3">
           <Button variant="outline">Test Configuration</Button>
           <Button variant="outline">Reset to Defaults</Button>
           <Button variant="business">
             <Save className="h-4 w-4 mr-2" />
             Save Configuration
           </Button>
-        </div>
+        </div> */}
       </div>
     </ExchangeLayout>
   );
