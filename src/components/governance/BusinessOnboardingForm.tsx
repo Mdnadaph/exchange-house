@@ -1209,6 +1209,7 @@ import {
 
 interface BusinessOnboardingFormProps {
   trigger?: React.ReactNode;
+   onSuccess?: () => void;
 }
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css"; // choose a theme if desired
@@ -1514,6 +1515,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         toast({
           title: "Business Onboarded Successfully",
         });
+        
         setOpen(false);
         setCurrentStep(1);
         setIdDocuments([]);
