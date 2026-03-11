@@ -291,7 +291,9 @@ const ExchangeDiscount = () => {
 
               <div className="space-y-4 py-4">
                 <div>
-                  <Label htmlFor="name">Discount Name *</Label>
+                  <Label htmlFor="name">
+                    Discount Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="name"
                     value={form.name}
@@ -315,7 +317,9 @@ const ExchangeDiscount = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="type">Discount Type *</Label>
+                    <Label htmlFor="type">
+                      Discount Type <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={form.type}
                       onValueChange={(v) =>
@@ -357,7 +361,10 @@ const ExchangeDiscount = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="limit">Usage Limit (0 = unlimited) *</Label>
+                  <Label htmlFor="limit">
+                    Usage Limit (0 = unlimited){" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="limit"
                     type="number"
@@ -372,7 +379,9 @@ const ExchangeDiscount = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="startDate">Start Date *</Label>
+                    <Label htmlFor="startDate">
+                      Start Date <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="startDate"
                       type="date"
@@ -384,7 +393,9 @@ const ExchangeDiscount = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="expiryDate">Expiry Date *</Label>
+                    <Label htmlFor="expiryDate">
+                      Expiry Date <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="expiryDate"
                       type="date"
