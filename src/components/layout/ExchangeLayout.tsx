@@ -112,13 +112,13 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       name: "Transactions",
       href: "/exchange/transactions",
       icon: CreditCard,
-      code: "NAV_TRANSACTIONS",
+      code: "NAV_TRANSACTION",
     },
     {
       name: "Discounts",
       href: "/exchange/discount",
       icon: BadgePercent,
-      code: "NAV_DISCOUNT",
+      code: "NAV_DISCOUNTS",
     },
     {
       name: "Rate Deals",
@@ -142,7 +142,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       name: "Payout Config",
       href: "/exchange/payout-config",
       icon: DollarSign,
-      code: "NAV_PAYOUT_CONFIG",
+      code: "NAV_PAYMENT_CONFIG",
     },
     {
       name: "Compliance",
@@ -154,19 +154,19 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       name: "Branch Management",
       href: "/exchange/branches",
       icon: GitBranch,
-      code: "NAV_BRANCH",
+      code: "NAV_BRANCH_MANAGEMENT",
     },
     {
       name: "Staff Management",
       href: "/exchange/staff",
       icon: Users,
-      code: "NAV_STAFF",
+      code: "NAV_STAFF_MANAGEMENT",
     },
     {
       name: "Exchange Admin User",
       href: "/exchange/user",
       icon: Users,
-      code: "NAV_EXCHANGE_USER",
+      code: "NAV_EXCHANGE_ADMIN_USER",
     },
   ];
   const isActive = (path: string) => location.pathname === path;

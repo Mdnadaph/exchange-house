@@ -361,9 +361,11 @@ const ExchangeBranchManagement = () => {
 
   const filteredBranches = branches.filter((branch) => {
     const matchesSearch =
-      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.manager.toLowerCase().includes(searchQuery.toLowerCase());
+      (branch.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (branch.location?.toLowerCase() || "").includes(
+        searchQuery.toLowerCase(),
+      ) ||
+      (branch.manager?.toLowerCase() || "").includes(searchQuery.toLowerCase());
     const matchesStatus =
       filterStatus === "all" || branch.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -406,157 +408,159 @@ const ExchangeBranchManagement = () => {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label htmlFor="branchName">
-                    Branch Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="branchName"
-                    value={form.name}
-                    onChange={(e) => {
-                      setForm({ ...form, name: e.target.value });
-                      clearError("name");
-                    }}
-                    placeholder="e.g., Dubai Marina Branch"
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="emirate">
-                    Emirate <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={form.emirate}
-                    onValueChange={(v) => {
-                      setForm({ ...form, emirate: v });
-                      clearError("emirate");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select emirate" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {emirates.map((e) => (
-                        <SelectItem key={e} value={e}>
-                          {e}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.emirate && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.emirate}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="location">
-                    Location <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="location"
-                    value={form.location}
-                    onChange={(e) => {
-                      setForm({ ...form, location: e.target.value });
-                      clearError("location");
-                    }}
-                    placeholder="e.g., Dubai Marina Mall"
-                  />
-                  {errors.location && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.location}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="address">
-                    Full Address <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="address"
-                    value={form.address}
-                    onChange={(e) => {
-                      setForm({ ...form, address: e.target.value });
-                      clearError("address");
-                    }}
-                    placeholder="Complete branch address"
-                  />
-                  {errors.address && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.address}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <div className="max-h-[70vh] overflow-y-auto pr-2">
+                <div className="space-y-4 py-4 ">
                   <div>
-                    <Label htmlFor="phone">
-                      Phone <span className="text-red-500">*</span>
-                    </Label>
-                    <PhoneInput
-                      country={"ae"} // default country (UAE)
-                      value={form.phone}
-                      onChange={(value) => {
-                        setForm({ ...form, phone: value });
-                        clearError("phone");
-                      }}
-                      inputProps={{
-                        name: "phone",
-                        id: "phone",
-                      }}
-                      containerClass="w-full mt-1"
-                      inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
-                      buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
-                      dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
-                      enableSearch
-                      searchPlaceholder="Search country..."
-                      preferredCountries={["ae", "in"]} // optional
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {errors.phone}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">
-                      Email <span className="text-red-500">*</span>
+                    <Label htmlFor="branchName">
+                      Branch Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="email"
-                      type="email"
-                      value={form.email}
+                      id="branchName"
+                      value={form.name}
                       onChange={(e) => {
-                        setForm({ ...form, email: e.target.value });
-                        clearError("email");
+                        setForm({ ...form, name: e.target.value });
+                        clearError("name");
                       }}
-                      placeholder="branch@bizpayaxis.ae"
+                      placeholder="e.g., Dubai Marina Branch"
                     />
-                    {errors.email && (
+                    {errors.name && (
+                      <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="emirate">
+                      Emirate <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={form.emirate}
+                      onValueChange={(v) => {
+                        setForm({ ...form, emirate: v });
+                        clearError("emirate");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select emirate" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {emirates.map((e) => (
+                          <SelectItem key={e} value={e}>
+                            {e}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.emirate && (
                       <p className="text-sm text-red-500 mt-1">
-                        {errors.email}
+                        {errors.emirate}
                       </p>
                     )}
                   </div>
-                </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSubmit}>
-                    {isEditMode ? "Update Branch" : "Create Branch"}
-                  </Button>
+                  <div>
+                    <Label htmlFor="location">
+                      Location <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="location"
+                      value={form.location}
+                      onChange={(e) => {
+                        setForm({ ...form, location: e.target.value });
+                        clearError("location");
+                      }}
+                      placeholder="e.g., Dubai Marina Mall"
+                    />
+                    {errors.location && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.location}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="address">
+                      Full Address <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="address"
+                      value={form.address}
+                      onChange={(e) => {
+                        setForm({ ...form, address: e.target.value });
+                        clearError("address");
+                      }}
+                      placeholder="Complete branch address"
+                    />
+                    {errors.address && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.address}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="phone">
+                        Phone <span className="text-red-500">*</span>
+                      </Label>
+                      <PhoneInput
+                        country={"ae"} // default country (UAE)
+                        value={form.phone}
+                        onChange={(value) => {
+                          setForm({ ...form, phone: value });
+                          clearError("phone");
+                        }}
+                        inputProps={{
+                          name: "phone",
+                          id: "phone",
+                        }}
+                        containerClass="w-full mt-1"
+                        inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                        buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                        dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                        enableSearch
+                        searchPlaceholder="Search country..."
+                        preferredCountries={["ae", "in"]} // optional
+                      />
+                      {errors.phone && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email">
+                        Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => {
+                          setForm({ ...form, email: e.target.value });
+                          clearError("email");
+                        }}
+                        placeholder="branch@bizpayaxis.ae"
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSubmit}>
+                      {isEditMode ? "Update Branch" : "Create Branch"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -616,7 +620,7 @@ const ExchangeBranchManagement = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          {/*<Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total KYB Completed
@@ -627,7 +631,7 @@ const ExchangeBranchManagement = () => {
               <div className="text-2xl font-bold">{totalStats.totalKYB}</div>
               <p className="text-xs text-muted-foreground">All time</p>
             </CardContent>
-          </Card>
+          </Card>*/}
         </div>
 
         {/* Search and Filters */}
@@ -648,13 +652,13 @@ const ExchangeBranchManagement = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
+                {/*<Button
                   variant={filterStatus === "all" ? "default" : "outline"}
                   onClick={() => setFilterStatus("all")}
                 >
                   All Branches
-                </Button>
-                <Button
+                </Button>*/}
+                {/*<Button
                   variant={filterStatus === "active" ? "default" : "outline"}
                   onClick={() => setFilterStatus("active")}
                 >
@@ -671,7 +675,7 @@ const ExchangeBranchManagement = () => {
                   onClick={() => setFilterStatus("pending")}
                 >
                   Pending
-                </Button>
+                </Button>*/}
               </div>
             </div>
           </CardContent>
@@ -831,7 +835,7 @@ const ExchangeBranchManagement = () => {
                         <Edit className="h-4 w-4 mr-1" />
                         Edit Branch
                       </Button>
-                      <Button variant="outline" size="sm">
+                      {/*<Button variant="outline" size="sm">
                         <Users className="h-4 w-4 mr-1" />
                         Manage Staff
                       </Button>
@@ -850,7 +854,7 @@ const ExchangeBranchManagement = () => {
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Complete Setup
                         </Button>
-                      )}
+                      )}*/}
                     </div>
                   </div>
                 </CardContent>

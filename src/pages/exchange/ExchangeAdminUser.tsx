@@ -818,7 +818,8 @@ import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-
+import { Loader2 } from "lucide-react";
+const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 const ExchangeAdminUser = () => {
   const [cookies] = useCookies(["token", "email"]);
   const [users, setUsers] = useState<any[]>([]);
@@ -835,7 +836,10 @@ const ExchangeAdminUser = () => {
   const uuid = useParams();
 
   const [userLoading, setUserLoading] = useState(false);
-
+  const [dashboardPermissionId, setDashboardPermissionId] = useState<
+    string | null
+  >(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [permissionTree, setPermissionTree] = useState<any[]>([]);
@@ -919,7 +923,30 @@ const ExchangeAdminUser = () => {
       }
     });
   };
+  const filterOutDashboard = (
+    nodes: any[],
+  ): { filtered: any[]; dashboardId: string | null } => {
+    let dashboardId: string | null = null;
 
+    const filterNodes = (items: any[]): any[] => {
+      return items.reduce((acc, node) => {
+        if (node.code === DASHBOARD_PERMISSION_CODE) {
+          dashboardId = String(node.id); // capture the ID
+          return acc; // skip this node entirely
+        }
+        // Process children recursively
+        const newNode = { ...node };
+        if (node.children?.length) {
+          newNode.children = filterNodes(node.children);
+        }
+        acc.push(newNode);
+        return acc;
+      }, []);
+    };
+
+    const filtered = filterNodes(nodes);
+    return { filtered, dashboardId };
+  };
   const fetchAllPermissions = async () => {
     try {
       setLoadingPermissions(true);
@@ -927,8 +954,10 @@ const ExchangeAdminUser = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const treeData = res.data?.data || [];
-      setPermissionTree(treeData);
-
+      const { filtered: treeDataFiltered, dashboardId } =
+        filterOutDashboard(treeData);
+      setPermissionTree(treeDataFiltered);
+      setDashboardPermissionId(dashboardId);
       // Build parent map: id -> parentId (or null for roots)
       const buildParentMap = (nodes, parentId = null) => {
         let map = {};
@@ -1089,14 +1118,21 @@ const ExchangeAdminUser = () => {
 
   const createUser = async () => {
     if (!validateAll()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
+      //toast({
+      //  title: "Validation Error",
+      //  description: "Please fix the errors before submitting.",
+      //  variant: "destructive",
+      //});
       return;
     }
-
+    setIsCreating(true);
+    let permissionIds = newUserPermissionIds.map(Number);
+    if (
+      dashboardPermissionId &&
+      !permissionIds.includes(Number(dashboardPermissionId))
+    ) {
+      permissionIds.push(Number(dashboardPermissionId));
+    }
     try {
       await axios.post(
         `${BASE_URL}/api/v1/exchange-users/create`,
@@ -1105,7 +1141,7 @@ const ExchangeAdminUser = () => {
           email: userForm.email,
           phoneNumber: userForm.phoneNumber,
           address: userForm.address,
-          permissionIds: newUserPermissionIds.map(Number),
+          permissionIds,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -1121,6 +1157,8 @@ const ExchangeAdminUser = () => {
         description: error?.response?.data?.message || "Failed to create user",
         variant: "destructive",
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -1256,10 +1294,19 @@ const ExchangeAdminUser = () => {
                 variant="business"
                 onClick={async () => {
                   if (!selectedUserForPermissions) return;
+                  let permissionIds = assignedPermissionIds.map(Number);
+
+                  // Always include dashboard
+                  if (
+                    dashboardPermissionId &&
+                    !permissionIds.includes(Number(dashboardPermissionId))
+                  ) {
+                    permissionIds.push(Number(dashboardPermissionId));
+                  }
                   try {
                     await axios.put(
                       `${BASE_URL}/api/v3/admin/staff/${selectedUserForPermissions.uuid}/permissions`,
-                      { permissionIds: assignedPermissionIds.map(Number) },
+                      { permissionIds },
                       { headers: { Authorization: `Bearer ${token}` } },
                     );
                     toast({
@@ -1294,101 +1341,107 @@ const ExchangeAdminUser = () => {
             <DialogHeader>
               <DialogTitle className="text-xl">Create Staff Member</DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-1 gap-4 py-4">
-              <div>
-                <Label className="text-lg">
-                  Full Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={userForm.fullName}
-                  onChange={(e) => {
-                    setUserForm({ ...userForm, fullName: e.target.value });
-                    clearError("fullName");
-                  }}
-                  className="mt-2 py-2 text-lg"
-                  placeholder="Full Name"
-                />
-                {errors.fullName && (
-                  <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>
-                )}
-              </div>
-              <div>
-                <Label className="text-lg">
-                  Email Address <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="email"
-                  value={userForm.email}
-                  onChange={(e) => {
-                    setUserForm({ ...userForm, email: e.target.value });
-                    clearError("email");
-                  }}
-                  className="mt-2 py-2 text-lg"
-                  placeholder="example@gmail.com"
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-                )}
-              </div>
-              <div>
-                <Label className="text-lg">
-                  Phone Number <span className="text-red-500">*</span>
-                </Label>
-                <PhoneInput
-                  country={"ae"}
-                  value={userForm.phoneNumber}
-                  onChange={(value) => {
-                    setUserForm({ ...userForm, phoneNumber: value });
-                    clearError("phoneNumber");
-                  }}
-                  inputProps={{
-                    name: "phone",
-                    id: "phone",
-                  }}
-                  containerClass="w-full mt-1"
-                  inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
-                  buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
-                  dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
-                  enableSearch
-                  searchPlaceholder="Search country..."
-                  preferredCountries={["ae", "in"]}
-                />
-                {errors.phoneNumber && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.phoneNumber}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label className="text-lg">
-                  Address <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={userForm.address}
-                  onChange={(e) => {
-                    setUserForm({ ...userForm, address: e.target.value });
-                    clearError("address");
-                  }}
-                  className="mt-2 py-2 text-lg"
-                  placeholder="Enter address"
-                />
-                {errors.address && (
-                  <p className="text-sm text-red-500 mt-1">{errors.address}</p>
-                )}
-              </div>
-              <div className="flex flex-col items-start">
-                <Label className="text-lg pr-4 mt-2">
-                  Permissions <span className="text-red-500">*</span>
-                </Label>
-                <Button
-                  onClick={async () => {
-                    await fetchAllPermissions();
-                    setRawSelectedIds(newUserPermissionIds);
-                    setIsPermissionSelectionModalOpen(true);
-                  }}
-                >
-                  Choose Permission
-                </Button>
+            <div className="max-h-[70vh] overflow-y-auto pr-2">
+              <div className="grid grid-cols-1 gap-4 py-4 px-4">
+                <div>
+                  <Label className="text-lg">
+                    Full Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={userForm.fullName}
+                    onChange={(e) => {
+                      setUserForm({ ...userForm, fullName: e.target.value });
+                      clearError("fullName");
+                    }}
+                    className="mt-2 py-2 text-lg"
+                    placeholder="Full Name"
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.fullName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-lg">
+                    Email Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="email"
+                    value={userForm.email}
+                    onChange={(e) => {
+                      setUserForm({ ...userForm, email: e.target.value });
+                      clearError("email");
+                    }}
+                    className="mt-2 py-2 text-lg"
+                    placeholder="example@gmail.com"
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-lg">
+                    Phone Number <span className="text-red-500">*</span>
+                  </Label>
+                  <PhoneInput
+                    country={"ae"}
+                    value={userForm.phoneNumber}
+                    onChange={(value) => {
+                      setUserForm({ ...userForm, phoneNumber: value });
+                      clearError("phoneNumber");
+                    }}
+                    inputProps={{
+                      name: "phone",
+                      id: "phone",
+                    }}
+                    containerClass="w-full mt-1"
+                    inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                    buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                    dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                    enableSearch
+                    searchPlaceholder="Search country..."
+                    preferredCountries={["ae", "in"]}
+                  />
+                  {errors.phoneNumber && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.phoneNumber}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-lg">
+                    Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={userForm.address}
+                    onChange={(e) => {
+                      setUserForm({ ...userForm, address: e.target.value });
+                      clearError("address");
+                    }}
+                    className="mt-2 py-2 text-lg"
+                    placeholder="Enter address"
+                  />
+                  {errors.address && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.address}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col items-start">
+                  <Label className="text-lg pr-4 mt-2">
+                    Permissions <span className="text-red-500">*</span>
+                  </Label>
+                  <Button
+                    onClick={async () => {
+                      await fetchAllPermissions();
+                      setRawSelectedIds(newUserPermissionIds);
+                      setIsPermissionSelectionModalOpen(true);
+                    }}
+                  >
+                    Choose Permission
+                  </Button>
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -1403,8 +1456,16 @@ const ExchangeAdminUser = () => {
                 variant="business"
                 onClick={createUser}
                 className="text-lg"
+                disabled={isCreating}
               >
-                Create user
+                {isCreating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create user"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

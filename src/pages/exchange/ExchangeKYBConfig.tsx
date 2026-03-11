@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-
+import { usePermission } from "@/hooks/usePermission";
 import {
   Settings,
   Shield,
@@ -35,7 +35,7 @@ const ExchangeKYBConfig = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const token = cookie.token;
-
+  const { can } = usePermission();
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
@@ -70,7 +70,7 @@ const ExchangeKYBConfig = () => {
       setError(
         error.response?.data?.message ||
           error.message ||
-          "Failed to load KYB rules"
+          "Failed to load KYB rules",
       );
     } finally {
       setLoading(false);
@@ -248,14 +248,15 @@ const ExchangeKYBConfig = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline">
+            {/*<Button variant="outline">
               <FileCheck className="h-4 w-4 mr-2" />
               Import Template
-            </Button>
+            </Button>*/}
             <Button variant="business" onClick={() => setShowPopup(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create New Rule
             </Button>
+            {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm />}*/}
           </div>
         </div>
 
@@ -599,7 +600,7 @@ const ExchangeKYBConfig = () => {
                                     >
                                       {doc}
                                     </Badge>
-                                  )
+                                  ),
                                 )
                               ) : (
                                 <p className="text-sm text-muted-foreground">

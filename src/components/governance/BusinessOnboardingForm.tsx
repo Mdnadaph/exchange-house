@@ -1216,7 +1216,21 @@ import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
-
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils"; // adjust path as needed
 const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
@@ -1264,7 +1278,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
     // WorkerAppz API Fields
     legalForm: "",
     businessType: "",
-    countryName: "",
+    countryName: [] as string[],
     alternatePhone: "",
 
     // Admin User Details
@@ -1515,7 +1529,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
           branchId: "",
           legalForm: "",
           businessType: "",
-          countryName: "",
+          countryName: [],
           alternatePhone: "",
           adminFirstName: "",
           adminLastName: "",
@@ -1841,7 +1855,7 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
               )}
             </div>
 
-            <div>
+            {/*<div>
               <Label htmlFor="countryOfTrade">
                 Country of Trade <span className="text-red-500">*</span>
               </Label>
@@ -1868,8 +1882,70 @@ const BusinessOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
                   {errors.countryName}
                 </p>
               )}
+            </div>*/}
+            {/* Country of Trade Multi-Select */}
+            <div className="md:col-span-2">
+              <Label htmlFor="countryOfTrade">
+                Country of Trade <span className="text-red-500">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <Globe className="mr-2 h-4 w-4 shrink-0" />
+                    {formData.countryName.length > 0
+                      ? `${formData.countryName.length} country(s) selected`
+                      : "Select countries..."}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search countries..." />
+                    <CommandList>
+                      <CommandEmpty>No country found.</CommandEmpty>
+                      <CommandGroup>
+                        {countries.map((country) => {
+                          const isSelected =
+                            formData.countryName.includes(country);
+                          return (
+                            <CommandItem
+                              key={country}
+                              onSelect={() => {
+                                setFormData((prev) => {
+                                  const newCountries = isSelected
+                                    ? prev.countryName.filter(
+                                        (c) => c !== country,
+                                      )
+                                    : [...prev.countryName, country];
+                                  return { ...prev, countryName: newCountries };
+                                });
+                                clearError("countryName");
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                              {country}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {errors.countryName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.countryName}
+                </p>
+              )}
             </div>
-
             <div>
               <Label htmlFor="branchId">
                 Registered Branch <span className="text-red-500">*</span>
