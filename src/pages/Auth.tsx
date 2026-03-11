@@ -559,9 +559,18 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
-      if (err?.response?.data?.statusCode === 428) {
-        navigate(`/change-password?uuid=${err?.response?.data?.data?.uuid}`);
+      const statusCode = err?.response?.data?.statusCode;
+      const uuid = err?.response?.data?.data?.uuid;
+
+      if (statusCode === 428) {
+        if (loginType === "EXCHANGE_USER") {
+          navigate(`/ExchangeUser-ChangePassword?uuid=${uuid}`);
+        } else {
+          navigate(`/change-password?uuid=${uuid}`);
+        }
+        return;
       }
+
       setErrorMessage(
         err?.response?.data?.message || "Invalid email or password",
       );

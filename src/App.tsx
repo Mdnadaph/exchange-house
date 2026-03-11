@@ -219,6 +219,8 @@ import ChangePassword from "./pages/ChangePassword";
 import ExchangeDiscount from "./pages/exchange/ExchangeDiscount";
 import ExchangeAdminUser from "./pages/exchange/ExchangeAdminUser";
 
+import ExchangeUserChangePassword from "./pages/ExchangeUserChangePassword";
+
 const queryClient = new QueryClient();
 
 // ─── Role Constants ───────────────────────────────────────────────────────
@@ -292,6 +294,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/ExchangeUser-ChangePassword" element={<ExchangeUserChangePassword />} />
 
                 {/* Staff / Exchange 2FA & setup – public */}
                 <Route path="/set-password" element={<StaffSetupPassword />} />
