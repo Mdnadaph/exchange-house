@@ -417,20 +417,20 @@ const ExchangeFeeManagement = () => {
       icon: Globe,
       color: "text-green-600",
     },
-    {
-      title: "Average Fee (Single)",
-      value: "AED 32",
-      description: "Across all countries",
-      icon: DollarSign,
-      color: "text-purple-600",
-    },
-    {
-      title: "Revenue This Month",
-      value: "AED 45,280",
-      description: "From transaction fees",
-      icon: TrendingUp,
-      color: "text-orange-600",
-    },
+    //{
+    //  title: "Average Fee (Single)",
+    //  value: "AED 32",
+    //  description: "Across all countries",
+    //  icon: DollarSign,
+    //  color: "text-purple-600",
+    //},
+    //{
+    //  title: "Revenue This Month",
+    //  value: "AED 45,280",
+    //  description: "From transaction fees",
+    //  icon: TrendingUp,
+    //  color: "text-orange-600",
+    //},
   ];
 
   return (
