@@ -27,8 +27,11 @@ import { useEffect, useState } from "react";
 import { Button } from "react-day-picker";
 
 const ExchangeBusinessOnboarding = () => {
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "role"]);
   const token = cookies.token;
+  const role = cookies.role;
+  console.log("role", role);
+
   const navigate = useNavigate();
   const { uuid } = useParams();
   const { can } = usePermission();
