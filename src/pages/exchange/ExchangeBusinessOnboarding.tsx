@@ -188,6 +188,12 @@ const ExchangeBusinessOnboarding = () => {
             </p>
           </div>
           <BusinessOnboardingForm onSuccess={refreshData} />
+
+          {/*{role === "ROLE_EXCHANGE_USER" && can("BTN_ONBOARD_BUSINESS") ? (
+            <BusinessOnboardingForm />
+          ) : (
+            <BusinessOnboardingForm />
+          )}*/}
           {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm onSuccess={refreshData} />}*/}
           {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm />}*/}
           {/*{can("BTN_ONBOARD_BUSINESS") ? (
