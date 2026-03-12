@@ -260,18 +260,18 @@ const UserManagement = () => {
                               <h3 className="font-semibold text-foreground">
                                 {user.fullName || "N/A"}
                               </h3>
-                              <p className="text-sm text-muted-foreground">
+                              {/*<p className="text-sm text-muted-foreground">
                                 ID: {user.id}
-                              </p>
+                              </p>*/}
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Badge
+                              {/*<Badge
                                 variant={status.variant}
                                 className="flex items-center gap-1"
                               >
                                 <StatusIcon className="h-3 w-3" />
                                 {status.label}
-                              </Badge>
+                              </Badge>*/}
                               <span
                                 className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}
                               >
