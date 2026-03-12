@@ -32,6 +32,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
@@ -128,10 +129,10 @@ const UserBeneficiaries = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
-
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const [beneficiariesPage, setBeneficiariesPage] = useState(0);
   const [beneficiariesSize] = useState(10);
@@ -144,6 +145,7 @@ const UserBeneficiaries = () => {
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
   const [payOutConfigData, setPayOutConfigData] = useState(null);
   const [page, setPage] = useState(0);
+
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
     if (!active) return "inactive";
@@ -167,8 +169,8 @@ const UserBeneficiaries = () => {
     try {
       setLoading(true);
       let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}`;
-      if (searchQuery) {
-        url += `&search=${encodeURIComponent(searchQuery)}`;
+      if (appliedSearch) {
+        url += `&search=${encodeURIComponent(appliedSearch)}`;
       }
       let approvalStatus = "";
       if (filterStatus === "active") approvalStatus = "APPROVED";
@@ -264,7 +266,12 @@ const UserBeneficiaries = () => {
   // Fetch groups from API
   const fetchGroups = async () => {
     try {
-      const url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
+      // Use the correct endpoint: beneficiary-groups
+      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
+
+      // If groups also support search, you can add &search=... here
+      // if (appliedSearch) url += `&search=${encodeURIComponent(appliedSearch)}`;
+
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -275,24 +282,21 @@ const UserBeneficiaries = () => {
       if (json.status !== true || !json.data?.groups) {
         throw new Error("Unexpected response format");
       }
-      // Map to your design shape (mock beneficiaries from names since API doesn't give full info)
-      const mappedGroups = json?.data?.groups?.map((group: any) => ({
+
+      const mappedGroups = json.data.groups.map((group: any) => ({
         id: group.id.toString(),
         name: group.groupName,
         description: group.description,
-        beneficiaryIds: [], // API doesn't provide IDs
-        beneficiaries: group?.beneficiaries?.map(
-          (item: { id: number; name: string; type: string }) => ({
-            id: item?.id, // Mock ID
-            name: item?.name,
-            type: item?.type, // Default, since API doesn't provide type
-            // Mock other fields for display
-            bankDetails: [{ bankName: "", accountNumber: "", currency: "" }],
-          }),
-        ),
-        createdAt: "", // API doesn't provide
+        beneficiaryIds: group.beneficiaryIds || [],
+        beneficiaries: group.beneficiaries?.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          bankDetails: [{ bankName: "", accountNumber: "", currency: "" }],
+        })),
         memberCount: group.totalBeneficiaries,
       }));
+
       setBeneficiaryGroups(mappedGroups);
       setGroupsTotalPages(json.data.pagination.totalPages);
       setGroupsTotalItems(json.data.pagination.totalItems);
@@ -307,12 +311,15 @@ const UserBeneficiaries = () => {
 
   useEffect(() => {
     fetchBeneficiaries();
-  }, [token, beneficiariesPage, searchQuery, filterStatus]);
-
+  }, [token, beneficiariesPage, appliedSearch, filterStatus]);
   useEffect(() => {
     fetchGroups();
   }, [token, groupsPage]);
 
+  const handleSearch = () => {
+    setAppliedSearch(searchInput);
+    setBeneficiariesPage(0); // reset to first page
+  };
   // Filter beneficiaries based on status and search - now server-side, so filteredBeneficiaries = beneficiaries
   const filteredBeneficiaries = beneficiaries;
 
@@ -857,18 +864,27 @@ const UserBeneficiaries = () => {
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1">
                       <Label htmlFor="search">Search Beneficiaries</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="search"
-                          placeholder="Search by name, account, bank, or country..."
-                          className="pl-9"
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setBeneficiariesPage(0);
-                          }}
-                        />
+                      <div className="relative flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="search"
+                            placeholder="Search by name, account, bank, or country..."
+                            className="pl-9"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleSearch()
+                            }
+                          />
+                        </div>
+                        <Button
+                          onClick={handleSearch}
+                          className="mt-auto"
+                          disabled={!searchInput.trim()}
+                        >
+                          Search
+                        </Button>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -905,10 +921,10 @@ const UserBeneficiaries = () => {
                       >
                         Pending
                       </Button>
-                      <Button variant="outline">
+                      {/*<Button variant="outline">
                         <Filter className="h-4 w-4 mr-2" />
                         More Filters
-                      </Button>
+                      </Button>*/}
                     </div>
                   </div>
                 </CardContent>
@@ -923,11 +939,6 @@ const UserBeneficiaries = () => {
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No beneficiaries found</p>
-                      <p className="text-sm">
-                        {searchQuery
-                          ? "Try a different search"
-                          : "Register your first beneficiary"}
-                      </p>
                     </div>
                   ) : (
                     <div className="space-y-4">

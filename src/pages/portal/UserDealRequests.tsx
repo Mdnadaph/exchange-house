@@ -33,19 +33,48 @@ const UserDealRequests = () => {
   const token = cookies?.token;
   const { toast } = useToast();
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
-  const [page, setPage] = useState<number>(0);
+
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
   const [showDeclineConfirmation, setShowDeclineConfirmation] = useState(false);
   const [counterDeal, setCounterDeal] = useState<any>(null);
   const [rateDealsData, setRateDealsData] = useState(null);
-  const [searchValue, setSearchValue] = useState<string>("");
+
   const [id, setId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const getRateDeals = async () => {
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>(""); // "" means all
+  const [page, setPage] = useState<number>(0);
+
+  // Add a function to fetch data with explicit parameters
+  const getRateDeals = async (options?: {
+    page?: number;
+    search?: string;
+    status?: string;
+    reset?: boolean;
+  }) => {
+    const {
+      page: targetPage = page,
+      search = searchValue,
+      status = statusFilter,
+      reset = false,
+    } = options || {};
+
+    // If resetting, we want page 0 for the API call
+    const effectivePage = reset ? 0 : targetPage;
+    if (reset) {
+      setPage(0); // Update state for UI consistency
+    }
+
     setLoading(true);
     try {
+      const params = new URLSearchParams();
+      if (search) params.append("query", search);
+      if (status) params.append("status", status);
+      params.append("page", effectivePage.toString());
+      params.append("size", "10");
+
       const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
+        `${BASE_URL}/api/v1/rate-deals?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -64,9 +93,35 @@ const UserDealRequests = () => {
       setLoading(false);
     }
   };
+
+  // Remove the useEffect that depended on page, and add an initial fetch on mount
   useEffect(() => {
-    getRateDeals();
-  }, [searchValue, page]);
+    getRateDeals(); // initial load
+  }, []); // empty dependency – run once
+
+  // Handlers
+  const handleSearch = () => {
+    getRateDeals({ search: searchValue, status: statusFilter, reset: true });
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status);
+    // Immediately fetch with the new status
+    getRateDeals({ search: searchValue, status: status, reset: true });
+  };
+
+  // Pagination handlers
+  const goToPrevPage = () => {
+    const newPage = page - 1;
+    setPage(newPage);
+    getRateDeals({ page: newPage });
+  };
+
+  const goToNextPage = () => {
+    const newPage = page + 1;
+    setPage(newPage);
+    getRateDeals({ page: newPage });
+  };
   const businessAdminstates = rateDealsData?.businessAdminStats;
 
   const deals = [
@@ -438,21 +493,47 @@ const UserDealRequests = () => {
             <div className="flex gap-4">
               <div className="flex-1">
                 <Label htmlFor="search">Search Deals</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by ID, currency, or purpose..."
-                    className="pl-9"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e?.target?.value)}
-                  />
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, currency, or purpose..."
+                      className="pl-9"
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleSearch}
+                    className="mt-auto"
+                    disabled={!searchValue.trim()}
+                  >
+                    Search
+                  </Button>
                 </div>
               </div>
               <div className="flex gap-2 items-end">
-                <Button variant="outline">All Status</Button>
-                <Button variant="outline">Pending</Button>
-                <Button variant="outline">Approved</Button>
+                <Button
+                  variant={statusFilter === "" ? "default" : "outline"}
+                  onClick={() => handleStatusFilter("")}
+                >
+                  All Status
+                </Button>
+                <Button
+                  variant={
+                    statusFilter === "PENDING_REVIEW" ? "default" : "outline"
+                  }
+                  onClick={() => handleStatusFilter("PENDING_REVIEW")}
+                >
+                  Pending
+                </Button>
+                <Button
+                  variant={statusFilter === "APPROVED" ? "default" : "outline"}
+                  onClick={() => handleStatusFilter("APPROVED")}
+                >
+                  Approved
+                </Button>
               </div>
             </div>
           </CardContent>

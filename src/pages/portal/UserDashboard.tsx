@@ -376,7 +376,7 @@ const UserDashboard = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-semibold text-foreground">
-                              {transaction?.sourceCurrency}
+                              {transaction?.sourceCurrency.toLocaleUpperCase()}{" "}
                               {transaction?.sourceAmount}
                             </p>
                           </div>

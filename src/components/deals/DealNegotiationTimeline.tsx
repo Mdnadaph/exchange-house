@@ -23,6 +23,7 @@ interface TimelineEvent {
   rate?: string;
   message?: string;
   createdAt: string;
+  performedByRole: string;
 }
 
 interface DealNegotiationTimelineProps {
@@ -151,7 +152,7 @@ const DealNegotiationTimeline = ({
                     variant={getRoleBadgeVariant("Business")}
                     className="text-xs"
                   >
-                    {"Business"}
+                    {event?.performedByRole}
                   </Badge>
                   {event?.rate && (
                     <Badge variant="outline" className="text-xs">

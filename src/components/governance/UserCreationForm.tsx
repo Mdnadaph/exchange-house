@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import {
   Select,
   SelectContent,
@@ -38,9 +40,13 @@ import {
 
 interface UserCreationFormProps {
   trigger?: React.ReactNode;
+  onUserCreated?: () => void;
 }
 
-const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
+const UserCreationForm = ({
+  trigger,
+  onUserCreated,
+}: UserCreationFormProps) => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
@@ -77,6 +83,70 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
     temporaryAccess: false,
     accessExpiryDate: "",
   });
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+
+  const clearFieldError = (field: string) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+  // Add this validation function inside the component
+  const validateStep = (step: number): boolean => {
+    const newErrors: Record<string, string[]> = {};
+
+    if (step === 1) {
+      if (!formData.firstName.trim()) {
+        newErrors.firstName = ["First name is required"];
+      }
+      if (!formData.lastName.trim()) {
+        newErrors.lastName = ["Last name is required"];
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = ["Email is required"];
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = ["Invalid email format"];
+      }
+      if (!formData.phone.trim()) {
+        newErrors.phoneNumber = ["Phone number is required"];
+      }
+      if (!formData.employeeId.trim()) {
+        newErrors.employeeId = ["Employee ID is required"];
+      }
+    } else if (step === 2) {
+      if (!formData.role) {
+        newErrors.role = ["Role is required"];
+      }
+      if (!formData.department) {
+        newErrors.department = ["Department is required"];
+      }
+      if (!formData.tier) {
+        newErrors.tier = ["Tier is required"];
+      }
+      if (!formData.transactionLimit) {
+        newErrors.singleTransactionLimit = [
+          "Single transaction limit is required",
+        ];
+      } else if (Number(formData.transactionLimit) <= 0) {
+        newErrors.singleTransactionLimit = ["Limit must be greater than 0"];
+      }
+      if (!formData.currency) {
+        newErrors.currency = ["Currency is required"];
+      }
+    }
+    // step 3 is optional, no validation needed
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Modify the Next button click handler
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(3, prev + 1));
+    }
+  };
 
   const roles = [
     {
@@ -199,8 +269,8 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
       role: roleValue,
       permissions: selectedRole ? selectedRole.permissions : [],
     }));
+    clearFieldError("role");
   };
-
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
@@ -244,6 +314,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
           title: "Success",
           description: data.message,
         });
+        onUserCreated?.();
         // Reset form and go back to step 1
         setFormData({
           firstName: "",
@@ -266,6 +337,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
           temporaryAccess: false,
           accessExpiryDate: "",
         });
+
         setCurrentStep(1);
         setIsOpen(false); // Close the modal
       } else {
@@ -324,74 +396,129 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="firstName">First Name *</Label>
+              <Label htmlFor="firstName">
+                First Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) =>
+                onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
                     firstName: e.target.value,
-                  }))
-                }
+                  }));
+                  clearFieldError("firstName");
+                }}
                 placeholder="Enter first name"
               />
+              {errors.firstName?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
-              <Label htmlFor="lastName">Last Name *</Label>
+              <Label htmlFor="lastName">
+                Last Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, lastName: e.target.value }))
-                }
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    lastName: e.target.value,
+                  }));
+                  clearFieldError("lastName");
+                }}
                 placeholder="Enter last name"
               />
+              {errors.lastName?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
-              <Label htmlFor="email">Email Address *</Label>
+              <Label htmlFor="email">
+                Email Address <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, email: e.target.value }));
+                    clearFieldError("email");
+                  }}
                   placeholder="user@company.ae"
                   className="pl-9"
                 />
+                {errors.email?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
             </div>
             <div>
-              <Label htmlFor="phone">Phone Number *</Label>
+              <Label htmlFor="phone">
+                Phone Number <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="phone"
+                <PhoneInput
+                  country={"us"}
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                  }
-                  placeholder="+971 X XXX XXXX"
-                  className="pl-9"
+                  onChange={(value, country) => {
+                    setFormData((prev) => ({ ...prev, phone: value }));
+                    clearFieldError("phoneNumber");
+                    // Optionally store country data if needed later
+                  }}
+                  inputProps={{
+                    name: "phone",
+                    id: "phone",
+                    required: true,
+                  }}
+                  containerClass="phone-input-container" // optional custom class
+                  //inputClass="!pl-12" // adjust padding for the flag button
+                  buttonClass="phone-flag-button"
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                  preferredCountries={["ae", "in"]} // show these at top
                 />
+
+                {errors.phoneNumber?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
             </div>
             <div className="md:col-span-2">
-              <Label htmlFor="employeeId">Employee ID *</Label>
+              <Label htmlFor="employeeId">
+                Employee ID <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="employeeId"
                 value={formData.employeeId}
-                onChange={(e) =>
+                onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
                     employeeId: e.target.value,
-                  }))
-                }
+                  }));
+                  clearFieldError("employeeId");
+                }}
                 placeholder="Enter employee ID"
               />
+              {errors.employeeId?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -411,7 +538,9 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="role">Role *</Label>
+              <Label htmlFor="role">
+                Role <span className="text-red-500">*</span>
+              </Label>
               <Select value={formData.role} onValueChange={handleRoleChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -429,14 +558,22 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.role?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
-              <Label htmlFor="department">Department *</Label>
+              <Label htmlFor="department">
+                Department <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.department}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, department: value }))
-                }
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, department: value }));
+                  clearFieldError("department");
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select department" />
@@ -449,6 +586,11 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.department?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
               <Label htmlFor="reportingManager">Reporting Manager</Label>
@@ -465,12 +607,15 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
               />
             </div>
             <div>
-              <Label htmlFor="tier">Select Tiers</Label>
+              <Label htmlFor="tier">
+                Select Tiers <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.tier}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, tier: value }))
-                }
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, tier: value }));
+                  clearFieldError("tier");
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Tiers" />
@@ -483,6 +628,11 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.tier?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
           </div>
 
@@ -525,28 +675,37 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="transactionLimit">
-                Single Transaction Limit *
+                Single Transaction Limit <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="transactionLimit"
                 type="number"
                 value={formData.transactionLimit}
-                onChange={(e) =>
+                onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
                     transactionLimit: e.target.value,
-                  }))
-                }
+                  }));
+                  clearFieldError("singleTransactionLimit");
+                }}
                 placeholder="Enter limit amount"
               />
+              {errors.singleTransactionLimit?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
-              <Label htmlFor="currency">Currency *</Label>
+              <Label htmlFor="currency">
+                Currency <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.currency}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, currency: value }))
-                }
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, currency: value }));
+                  clearFieldError("currency");
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
@@ -559,6 +718,11 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.currency?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
               <Label htmlFor="dailyLimit">Daily Limit</Label>
@@ -805,10 +969,7 @@ const UserCreationForm = ({ trigger }: UserCreationFormProps) => {
             </Button>
 
             {currentStep < 3 ? (
-              <Button
-                onClick={() => setCurrentStep((prev) => Math.min(3, prev + 1))}
-                variant="business"
-              >
+              <Button onClick={handleNext} variant="business">
                 Next
               </Button>
             ) : (

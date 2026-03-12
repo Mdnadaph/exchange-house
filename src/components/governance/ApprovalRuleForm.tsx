@@ -64,7 +64,45 @@ const ApprovalRuleForm = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
 
+  const clearFieldError = (field: string) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string[]> = {};
+
+    // Rule name
+    if (!formData.name.trim()) {
+      newErrors.ruleName = ["Rule name is required"];
+    }
+
+    // At least one transaction type
+    if (formData.transactionTypes.length === 0) {
+      newErrors.transactionTypes = ["Select at least one transaction type"];
+    }
+
+    // Tiers validation
+    formData.tiers.forEach((tier, index) => {
+      if (!tier.threshold || Number(tier.threshold) <= 0) {
+        newErrors[`tier-${index}-threshold`] = [
+          "Threshold must be greater than 0",
+        ];
+      }
+      if (tier.roles.length === 0) {
+        newErrors[`tier-${index}-roles`] = [
+          "Select at least one approver role",
+        ];
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const currencies = ["USD", "AED", "EUR", "GBP", "INR", "PKR", "PHP", "ANY"];
   const departments = [
     "All",
@@ -148,6 +186,7 @@ const ApprovalRuleForm = ({
         ? [...prev.transactionTypes, type]
         : prev.transactionTypes.filter((t) => t !== type),
     }));
+    clearFieldError("transactionTypes");
   };
 
   const handleRoleChange = (
@@ -165,6 +204,10 @@ const ApprovalRuleForm = ({
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      setLoading(false); // ensure loading is reset if validation fails
+      return;
+    }
     setError(null);
     setSuccess(false);
     setLoading(true);
@@ -207,18 +250,21 @@ const ApprovalRuleForm = ({
       return;
     }
 
+    // Determine method and URL based on edit mode
+    const method = editRule ? "PUT" : "POST";
+    const url = editRule
+      ? `${BASE_URL}/api/v1/business/governance-rules/${editRule.id}`
+      : `${BASE_URL}/api/v1/business/governance-rules`;
+
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/v1/business/governance-rules`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -233,14 +279,13 @@ const ApprovalRuleForm = ({
         setOpen(false);
         resetForm();
         onSuccess?.();
-      }, 1200); // 1.2 seconds — adjust as needed (800–1500ms usually feels good)
+      }, 1200);
     } catch (err: any) {
       setError(err.message || "Failed to create approval rule");
     } finally {
       setLoading(false);
     }
   };
-
   // Optional: reset error/success when dialog is opened again
   useEffect(() => {
     if (open) {
@@ -282,18 +327,31 @@ const ApprovalRuleForm = ({
               {/* ... same as before ... */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="ruleName">Rule Name *</Label>
+                  <Label htmlFor="ruleName">
+                    Rule Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="ruleName"
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, name: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }));
+                      clearFieldError("ruleName");
+                    }}
                     placeholder="e.g., High Value USD Transactions"
                   />
+                  {errors.ruleName?.map((msg, i) => (
+                    <p key={i} className="text-sm text-destructive mt-1">
+                      {msg}
+                    </p>
+                  ))}
                 </div>
                 <div>
-                  <Label htmlFor="currency">Currency *</Label>
+                  <Label htmlFor="currency">
+                    Currency <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={formData.currency}
                     onValueChange={(value) =>
@@ -387,8 +445,14 @@ const ApprovalRuleForm = ({
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Applicable Transaction Types
+                Applicable Transaction Types{" "}
+                <span className="text-red-500">*</span>
               </CardTitle>
+              {errors.transactionTypes && (
+                <p className="text-sm text-destructive mt-2">
+                  {errors.transactionTypes[0]}
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -459,15 +523,32 @@ const ApprovalRuleForm = ({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <Label>Amount Threshold</Label>
+                          <Label>
+                            Amount Threshold{" "}
+                            <span className="text-red-500">*</span>
+                          </Label>
                           <Input
                             type="number"
                             value={tier.threshold}
-                            onChange={(e) =>
-                              updateTier(index, "threshold", e.target.value)
+                            onChange={(e) => {
+                              updateTier(index, "threshold", e.target.value);
+                              clearFieldError(`tier-${index}-threshold`);
+                            }}
+                            className={
+                              errors[`tier-${index}-threshold`]
+                                ? "border-destructive"
+                                : ""
                             }
                             placeholder="Enter threshold amount"
                           />
+                          {errors[`tier-${index}-threshold`]?.map((msg, i) => (
+                            <p
+                              key={i}
+                              className="text-sm text-destructive mt-1"
+                            >
+                              {msg}
+                            </p>
+                          ))}
                         </div>
                         <div>
                           <Label>Number of Approvers Required</Label>
@@ -504,9 +585,9 @@ const ApprovalRuleForm = ({
                               <Checkbox
                                 id={`tier-${index}-role-${role}`}
                                 checked={tier.roles.includes(role)}
-                                onCheckedChange={(checked) =>
-                                  handleRoleChange(index, role, !!checked)
-                                }
+                                onCheckedChange={(checked) => {
+                                  handleRoleChange(index, role, !!checked);
+                                }}
                               />
                               <Label
                                 htmlFor={`tier-${index}-role-${role}`}
@@ -517,6 +598,12 @@ const ApprovalRuleForm = ({
                             </div>
                           ))}
                         </div>
+                        {/* Add error message here */}
+                        {errors[`tier-${index}-roles`] && (
+                          <p className="text-sm text-destructive mt-2">
+                            {errors[`tier-${index}-roles`][0]}
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

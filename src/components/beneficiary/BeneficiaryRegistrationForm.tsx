@@ -77,6 +77,15 @@ const BeneficiaryRegistrationForm = ({
   const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(
     undefined,
   );
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+
+  const clearFieldError = (field: string) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
   // Input States for API
   const [formData, setFormData] = useState({
@@ -110,11 +119,78 @@ const BeneficiaryRegistrationForm = ({
     correspondentAccountNumber: "",
     correspondentBankAddress: "",
   });
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string[]> = {};
 
+    // Basic common fields
+    if (!formData.email.trim()) newErrors.email = ["Email is required"];
+    if (!formData.phoneNumber.trim())
+      newErrors.phoneNumber = ["Phone number is required"];
+    if (!formData.addressLine1.trim())
+      newErrors.addressLine1 = ["Address line 1 is required"];
+    if (!formData.city.trim()) newErrors.city = ["City is required"];
+
+    // Beneficiary type specific
+    if (beneficiaryType === "individual") {
+      if (!formData.firstName.trim())
+        newErrors.firstName = ["First name is required"];
+      if (!formData.lastName.trim())
+        newErrors.lastName = ["Last name is required"];
+      if (!formData.nationality.trim())
+        newErrors.nationality = ["Nationality is required"];
+      if (!formData.dateOfBirth)
+        newErrors.dateOfBirth = ["Date of birth is required"];
+    } else {
+      if (!formData.companyName.trim())
+        newErrors.companyName = ["Company name is required"];
+      if (!formData.registrationNumber.trim())
+        newErrors.registrationNumber = ["Registration number is required"];
+      if (!formData.businessType.trim())
+        newErrors.businessType = ["Business type is required"];
+    }
+
+    // Residency / country
+    if (residencyType === "foreign") {
+      if (!beneficiaryCountry)
+        newErrors.beneficiaryCountry = ["Beneficiary country is required"];
+    }
+
+    // Payout mechanism
+    if (!beneficiaryCountry && residencyType !== "uae") {
+      // wait until country is selected
+    } else {
+      if (!payoutMechanism) {
+        newErrors.payoutMechanism = ["Please select a payout mechanism"];
+      } else {
+        if (payoutMechanism === "bank_account") {
+          if (!selectedBank) newErrors.selectedBank = ["Bank is required"];
+          if (!formData.accountNumber.trim())
+            newErrors.accountNumber = ["Account number is required"];
+          if (!formData.accountHolderName.trim())
+            newErrors.accountHolderName = ["Account holder name is required"];
+          if (!formData.bankAddress.trim())
+            newErrors.bankAddress = ["Bank address is required"];
+        } else if (payoutMechanism === "wallet") {
+          if (!walletProvider)
+            newErrors.walletProvider = ["Wallet provider is required"];
+          if (!formData.walletId.trim())
+            newErrors.walletId = ["Wallet ID is required"];
+        }
+      }
+    }
+
+    // Relationship
+    if (!formData.relationshipType)
+      newErrors.relationshipType = ["Relationship type is required"];
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+    clearFieldError(e.target.id);
   };
 
   // Mock data - would come from Core API
@@ -247,6 +323,9 @@ const BeneficiaryRegistrationForm = ({
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
 
     // 1. Log the final URL to ensure it's correct
@@ -519,10 +598,15 @@ const BeneficiaryRegistrationForm = ({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-1">
-                <Label htmlFor="country">Beneficiary Country *</Label>
+                <Label htmlFor="country">
+                  Beneficiary Country <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={beneficiaryCountry}
-                  onValueChange={setBeneficiaryCountry}
+                  onValueChange={(value) => {
+                    setBeneficiaryCountry(value);
+                    clearFieldError("beneficiaryCountry");
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select destination country" />
@@ -537,6 +621,11 @@ const BeneficiaryRegistrationForm = ({
                       ))}
                   </SelectContent>
                 </Select>
+                {errors.beneficiaryCountry?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
 
               {beneficiaryCountry && getExchangeInfo() && (
@@ -591,26 +680,43 @@ const BeneficiaryRegistrationForm = ({
           {beneficiaryType === "individual" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">
+                  First Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
                   placeholder="Enter first name"
                 />
+
+                {errors.firstName?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">
+                  Last Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Enter last name"
                 />
+                {errors.lastName?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-                <Popover>
+                <Label htmlFor="dateOfBirth">
+                  Date of Birth <span className="text-red-500">*</span>
+                </Label>
+                {/*<Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -647,32 +753,89 @@ const BeneficiaryRegistrationForm = ({
                       className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
+                </Popover>*/}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateOfBirth ? (
+                        format(dateOfBirth, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateOfBirth}
+                      onSelect={(date) => {
+                        setDateOfBirth(date);
+                        if (date) {
+                          setFormData({
+                            ...formData,
+                            dateOfBirth: format(date, "yyyy-MM-dd"),
+                          });
+                        }
+                        clearFieldError("dateOfBirth");
+                      }}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
                 </Popover>
+                {errors.dateOfBirth?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nationality">Nationality *</Label>
+                <Label htmlFor="nationality">
+                  Nationality <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="nationality"
                   value={formData.nationality}
                   onChange={handleInputChange}
                   placeholder="Enter nationality"
                 />
+                {errors.nationality?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name *</Label>
+                <Label htmlFor="companyName">
+                  Company Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
                   placeholder="Enter company name"
                 />
+                {errors.companyName?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="registrationNumber">
-                  Registration Number *
+                  Registration Number <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="registrationNumber"
@@ -680,15 +843,27 @@ const BeneficiaryRegistrationForm = ({
                   onChange={handleInputChange}
                   placeholder="Enter registration number"
                 />
+                {errors.registration?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="businessType">Business Type *</Label>
+                <Label htmlFor="businessType">
+                  Business Type <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="businessType"
                   value={formData.businessType}
                   onChange={handleInputChange}
                   placeholder="e.g., Trading, Manufacturing, Services"
                 />
+                {errors.businessType?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="incorporationDate">Incorporation Date</Label>
@@ -736,7 +911,9 @@ const BeneficiaryRegistrationForm = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
+              <Label htmlFor="email">
+                Email Address <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -747,10 +924,17 @@ const BeneficiaryRegistrationForm = ({
                   className="pl-9"
                   placeholder="Enter email address"
                 />
+                {errors.email?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number *</Label>
+              <Label htmlFor="phoneNumber">
+                Phone Number <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -760,6 +944,11 @@ const BeneficiaryRegistrationForm = ({
                   className="pl-9"
                   placeholder="971501234567"
                 />
+                {errors.phoneNumber?.map((msg, i) => (
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
+                ))}
               </div>
             </div>
           </div>
@@ -776,13 +965,20 @@ const BeneficiaryRegistrationForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="addressLine1">Address Line 1 *</Label>
+            <Label htmlFor="addressLine1">
+              Address Line 1 <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="addressLine1"
               value={formData.addressLine1}
               onChange={handleInputChange}
               placeholder="Street address, building name, etc."
             />
+            {errors.addressLine1?.map((msg, i) => (
+              <p key={i} className="text-sm text-destructive mt-1">
+                {msg}
+              </p>
+            ))}
           </div>
           <div className="space-y-2">
             <Label htmlFor="addressLine2">Address Line 2</Label>
@@ -795,13 +991,20 @@ const BeneficiaryRegistrationForm = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="city">City *</Label>
+              <Label htmlFor="city">
+                City <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="city"
                 value={formData.city}
                 onChange={handleInputChange}
                 placeholder="Enter city"
               />
+              {errors.city?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div className="space-y-2">
               <Label htmlFor="state">State/Province</Label>
@@ -813,7 +1016,9 @@ const BeneficiaryRegistrationForm = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="country">Country *</Label>
+              <Label htmlFor="country">
+                Country <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="country"
                 value={
@@ -828,6 +1033,11 @@ const BeneficiaryRegistrationForm = ({
                 disabled
                 placeholder="Select country from residency section above"
               />
+              {errors.country?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -918,10 +1128,15 @@ const BeneficiaryRegistrationForm = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Select Bank *</Label>
+                      <Label>
+                        Select Bank <span className="text-red-500">*</span>
+                      </Label>
                       <Select
                         value={selectedBank}
-                        onValueChange={setSelectedBank}
+                        onValueChange={(value) => {
+                          setSelectedBank(value);
+                          clearFieldError("selectedBank");
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose bank" />
@@ -934,6 +1149,11 @@ const BeneficiaryRegistrationForm = ({
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.selectedBank?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
 
                     {selectedBank && getSelectedBankDetails() && (
@@ -950,7 +1170,9 @@ const BeneficiaryRegistrationForm = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="accountNumber">Account Number *</Label>
+                      <Label htmlFor="accountNumber">
+                        Account Number <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="accountNumber"
                         value={formData.accountNumber}
@@ -961,10 +1183,16 @@ const BeneficiaryRegistrationForm = ({
                             : "Enter account number"
                         }
                       />
+                      {errors.accountNumber?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="accountHolderName">
-                        Account Holder Name *
+                        Account Holder Name{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="accountHolderName"
@@ -972,6 +1200,11 @@ const BeneficiaryRegistrationForm = ({
                         onChange={handleInputChange}
                         placeholder="Enter account holder name"
                       />
+                      {errors.accountHolderName?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
                   </div>
 
@@ -990,13 +1223,20 @@ const BeneficiaryRegistrationForm = ({
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="bankAddress">Bank Address *</Label>
+                    <Label htmlFor="bankAddress">
+                      Bank Address <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="bankAddress"
                       value={formData.bankAddress}
                       onChange={handleInputChange}
                       placeholder="Enter bank branch address"
                     />
+                    {errors.bankAddress?.map((msg, i) => (
+                      <p key={i} className="text-sm text-destructive mt-1">
+                        {msg}
+                      </p>
+                    ))}
                   </div>
 
                   {residencyType === "foreign" && (
@@ -1072,7 +1312,9 @@ const BeneficiaryRegistrationForm = ({
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Wallet Provider *</Label>
+                      <Label>
+                        Wallet Provider <span className="text-red-500">*</span>
+                      </Label>
                       <Select
                         value={walletProvider}
                         onValueChange={setWalletProvider}
@@ -1088,15 +1330,28 @@ const BeneficiaryRegistrationForm = ({
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.wallet?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="walletId">Wallet ID/Phone Number *</Label>
+                      <Label htmlFor="walletId">
+                        Wallet ID/Phone Number{" "}
+                        <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="walletId"
                         value={formData.walletId}
                         onChange={handleInputChange}
                         placeholder="Enter wallet ID or phone number"
                       />
+                      {errors.walletId?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
@@ -1113,7 +1368,9 @@ const BeneficiaryRegistrationForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="relationshipType">Relationship Type *</Label>
+            <Label htmlFor="relationshipType">
+              Relationship Type <span className="text-red-500">*</span>
+            </Label>
             <Select
               onValueChange={(v) =>
                 setFormData({ ...formData, relationshipType: v })
@@ -1133,6 +1390,11 @@ const BeneficiaryRegistrationForm = ({
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
+            {errors.relationshipType?.map((msg, i) => (
+              <p key={i} className="text-sm text-destructive mt-1">
+                {msg}
+              </p>
+            ))}
           </div>
           <div className="space-y-2">
             <Label htmlFor="purpose">Expected Transaction Purpose</Label>
@@ -1226,7 +1488,9 @@ const BeneficiaryRegistrationForm = ({
           </Label> */}
         </div>
         <div className="space-x-4">
-          <Button variant="ghost">Cancel</Button>
+          <Button onClick={() => setView("list")} variant="ghost">
+            Cancel
+          </Button>
           <Button
             className="min-w-[150px]"
             onClick={handleSubmit}

@@ -758,7 +758,7 @@ const UserProfile = () => {
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   <MapPin className="h-3 w-3 text-muted-foreground" />
-                  Business Address
+                  Country of Trade
                 </Label>
                 {isEditing ? (
                   <Textarea
@@ -773,7 +773,9 @@ const UserProfile = () => {
                   />
                 ) : (
                   <p className="text-foreground font-medium">
-                    {businessProfile.country}
+                    {Array.isArray(businessProfile.country)
+                      ? businessProfile.country.join(", ")
+                      : businessProfile.country || "N/A"}
                   </p>
                 )}
               </div>

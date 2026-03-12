@@ -1,14 +1,20 @@
 import UserLayout from "@/components/layout/UserLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ApprovalRuleForm from "@/components/governance/ApprovalRuleForm";
-import { 
-  Shield, 
-  Settings, 
-  Users, 
-  DollarSign, 
-  Edit, 
+import {
+  Shield,
+  Settings,
+  Users,
+  DollarSign,
+  Edit,
   Trash2,
   AlertCircle,
   CheckCircle2,
@@ -54,21 +60,28 @@ const UserGovernance = () => {
     totalItems: 0,
   });
   const [currentPage, setCurrentPage] = useState(0);
-  const [loadingStatusChange, setLoadingStatusChange] = useState<number | null>(null);
+  const [loadingStatusChange, setLoadingStatusChange] = useState<number | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchData(currentPage);
   }, [currentPage]);
-
+  const refreshRules = () => {
+    fetchData(currentPage);
+  };
   const fetchData = async (page: number) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/business/governance-rules?page=${page}&size=10`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${BASE_URL}/api/v1/business/governance-rules?page=${page}&size=10`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
       const data = await response.json();
       if (data.status) {
         setDashboard(data.data.dashboard);
@@ -82,17 +95,23 @@ const UserGovernance = () => {
             maxAmount: r.maxAmount,
             department: r.department
               .split("_")
-              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .map(
+                (w: string) =>
+                  w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+              )
               .join(" "),
             // ────────────────────────────────────────
             // IMPORTANT: no .toLowerCase() anymore
-            status: r.status,   // keep exactly as backend sends: DRAFT / ACTIVE / DISABLED
+            status: r.status, // keep exactly as backend sends: DRAFT / ACTIVE / DISABLED
             // ────────────────────────────────────────
             transactionTypes: r.transactionTypes.map((t: string) =>
               t
                 .split("_")
-                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                .join(" ")
+                .map(
+                  (w: string) =>
+                    w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+                )
+                .join(" "),
             ),
             tiers: r.approvalTiers.map((t: any) => ({
               level: t.tierOrder,
@@ -101,11 +120,14 @@ const UserGovernance = () => {
               roles: t.eligibleRoles.map((role: string) =>
                 role
                   .split("_")
-                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                  .join(" ")
+                  .map(
+                    (w: string) =>
+                      w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+                  )
+                  .join(" "),
               ),
             })),
-          }))
+          })),
         );
         setPagination(data.data.pagination);
       } else {
@@ -124,18 +146,23 @@ const UserGovernance = () => {
     }
   };
 
-  const changeRuleStatus = async (ruleId: number, newStatus: "DRAFT" | "ACTIVE" | "DISABLED") => {
+  const changeRuleStatus = async (
+    ruleId: number,
+    newStatus: "DRAFT" | "ACTIVE" | "DISABLED",
+  ) => {
     setLoadingStatusChange(ruleId);
     try {
       const response = await fetch(
-        `${BASE_URL}/api/v1/business/governance-rules/${ruleId}/status?status=${newStatus}`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
+        `${BASE_URL}/api/v1/business/governance-rules/${ruleId}/status?status=${newStatus}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
         },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      );
 
       const result = await response.json();
 
@@ -148,8 +175,8 @@ const UserGovernance = () => {
         // Optimistic update
         setRules((prev) =>
           prev.map((rule) =>
-            rule.id === ruleId ? { ...rule, status: newStatus } : rule
-          )
+            rule.id === ruleId ? { ...rule, status: newStatus } : rule,
+          ),
         );
 
         // Refresh list after short delay
@@ -175,11 +202,26 @@ const UserGovernance = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "ACTIVE":
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle2 className="h-3 w-3 mr-1" />ACTIVE</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            ACTIVE
+          </Badge>
+        );
       case "DRAFT":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><AlertCircle className="h-3 w-3 mr-1" />DRAFT</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            DRAFT
+          </Badge>
+        );
       case "DISABLED":
-        return <Badge variant="secondary" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />DISABLED</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
+            <XCircle className="h-3 w-3 mr-1" />
+            DISABLED
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -188,7 +230,7 @@ const UserGovernance = () => {
   const getStatusColor = (status: string) => {
     const lower = status.toLowerCase();
     if (lower === "active") return "text-green-600 hover:bg-green-50";
-    if (lower === "draft")   return "text-yellow-600 hover:bg-yellow-50";
+    if (lower === "draft") return "text-yellow-600 hover:bg-yellow-50";
     if (lower === "disabled") return "text-red-600 hover:bg-red-50";
     return "";
   };
@@ -204,7 +246,9 @@ const UserGovernance = () => {
               Configure multi-tier approval rules for your business transactions
             </p>
           </div>
-          <ApprovalRuleForm 
+
+          <ApprovalRuleForm
+            onSuccess={refreshRules} // <-- add this line
             trigger={
               <Button variant="default">
                 <Plus className="h-4 w-4 mr-2" />
@@ -223,18 +267,24 @@ const UserGovernance = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboard.totalRules}</div>
-              <p className="text-xs text-muted-foreground">+1 from last month</p>
+              <p className="text-xs text-muted-foreground">
+                +1 from last month
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Rules</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Active Rules
+              </CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboard.activeRules}</div>
-              <p className="text-xs text-muted-foreground">Currently enforced</p>
+              <p className="text-xs text-muted-foreground">
+                Currently enforced
+              </p>
             </CardContent>
           </Card>
 
@@ -245,7 +295,9 @@ const UserGovernance = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboard.draftRules}</div>
-              <p className="text-xs text-muted-foreground">Pending activation</p>
+              <p className="text-xs text-muted-foreground">
+                Pending activation
+              </p>
             </CardContent>
           </Card>
 
@@ -256,7 +308,9 @@ const UserGovernance = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboard.currencies}</div>
-              <p className="text-xs text-muted-foreground">Configured currencies</p>
+              <p className="text-xs text-muted-foreground">
+                Configured currencies
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -283,7 +337,9 @@ const UserGovernance = () => {
                           <h3 className="text-lg font-semibold">{rule.name}</h3>
                           {getStatusBadge(rule.status)}
                         </div>
-                        <p className="text-sm text-muted-foreground">{rule.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {rule.description}
+                        </p>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -308,7 +364,9 @@ const UserGovernance = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => changeRuleStatus(rule.id, "ACTIVE")}
+                              onClick={() =>
+                                changeRuleStatus(rule.id, "ACTIVE")
+                              }
                               className="text-green-700"
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -322,7 +380,9 @@ const UserGovernance = () => {
                               DRAFT
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => changeRuleStatus(rule.id, "DISABLED")}
+                              onClick={() =>
+                                changeRuleStatus(rule.id, "DISABLED")
+                              }
                               className="text-red-700"
                             >
                               <XCircle className="h-4 w-4 mr-2" />
@@ -331,15 +391,16 @@ const UserGovernance = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <ApprovalRuleForm 
+                        {/*<ApprovalRuleForm
                           editRule={rule}
+                          onSuccess={refreshRules} // <-- add this line
                           trigger={
                             <Button variant="outline" size="sm">
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
                           }
-                        />
+                        />*/}
                         <Button variant="outline" size="sm">
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -350,18 +411,27 @@ const UserGovernance = () => {
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Currency & Amount</p>
                         <p className="text-sm text-muted-foreground">
-                          {rule.currency} {rule.minAmount.toLocaleString()} - {rule.maxAmount ? rule.maxAmount.toLocaleString() : 'Unlimited'}
+                          {rule.currency} {rule.minAmount.toLocaleString()} -{" "}
+                          {rule.maxAmount
+                            ? rule.maxAmount.toLocaleString()
+                            : "Unlimited"}
                         </p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Department</p>
-                        <p className="text-sm text-muted-foreground">{rule.department}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {rule.department}
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Transaction Types</p>
                         <div className="flex flex-wrap gap-1">
                           {rule.transactionTypes.map((type: string) => (
-                            <Badge key={type} variant="secondary" className="text-xs">
+                            <Badge
+                              key={type}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {type}
                             </Badge>
                           ))}
@@ -376,21 +446,30 @@ const UserGovernance = () => {
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {rule.tiers.map((tier: any) => (
-                          <div key={tier.level} className="p-3 bg-muted/50 rounded-lg">
+                          <div
+                            key={tier.level}
+                            className="p-3 bg-muted/50 rounded-lg"
+                          >
                             <div className="flex items-center justify-between mb-2">
                               <Badge variant="outline" className="text-xs">
                                 Tier {tier.level}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
-                                {tier.approvers} approver{tier.approvers > 1 ? 's' : ''} required
+                                {tier.approvers} approver
+                                {tier.approvers > 1 ? "s" : ""} required
                               </span>
                             </div>
                             <p className="text-sm mb-1">
-                              Threshold: {rule.currency} {tier.threshold.toLocaleString()}+
+                              Threshold: {rule.currency}{" "}
+                              {tier.threshold.toLocaleString()}+
                             </p>
                             <div className="flex flex-wrap gap-1">
                               {tier.roles.map((role: string) => (
-                                <Badge key={role} variant="outline" className="text-xs">
+                                <Badge
+                                  key={role}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
                                   {role}
                                 </Badge>
                               ))}
@@ -434,7 +513,11 @@ const UserGovernance = () => {
                   ))}
                   <PaginationItem>
                     <PaginationNext
-                      href={currentPage < pagination.totalPages - 1 ? "#" : undefined}
+                      href={
+                        currentPage < pagination.totalPages - 1
+                          ? "#"
+                          : undefined
+                      }
                       onClick={(e) => {
                         if (currentPage < pagination.totalPages - 1) {
                           e.preventDefault();

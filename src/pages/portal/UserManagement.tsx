@@ -39,7 +39,7 @@ const UserManagement = () => {
   });
   const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
-
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -66,7 +66,7 @@ const UserManagement = () => {
       }
     };
     fetchData();
-  }, [currentPage, token]);
+  }, [currentPage, token, refreshKey]);
 
   const totalUsers = dashboard.find((d) => d.key === "TOTAL_USERS") || {
     value: 0,
@@ -110,6 +110,10 @@ const UserManagement = () => {
     };
     return colors[role as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
+  const handleUserCreated = () => {
+    setRefreshKey((prev) => prev + 1); // triggers useEffect
+    setCurrentPage(0); // reset to first page after creation
+  };
 
   return (
     <UserLayout>
@@ -125,7 +129,7 @@ const UserManagement = () => {
               hierarchies
             </p>
           </div>
-          <UserCreationForm />
+          <UserCreationForm onUserCreated={handleUserCreated} />
         </div>
 
         {/* Statistics Cards */}
