@@ -1172,9 +1172,9 @@ const ExchangeKYBReview = () => {
                     </div>
 
                     {/* Review Actions */}
+
                     <div className="border-t pt-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Review Comments */}
                         <div className="space-y-4">
                           <Label htmlFor={`comments-${application.uuid}`}>
                             Review Comments
@@ -1197,93 +1197,62 @@ const ExchangeKYBReview = () => {
                           />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="space-y-4">
-                          <Label>Review Actions</Label>
-                          <div className="grid grid-cols-2 gap-3">
-                            <Button
-                              type="button"
-                              variant="default"
-                              className="w-full"
-                              disabled={!allDocumentsApproved}
-                              title={
-                                !allDocumentsApproved
-                                  ? "All documents must be approved first"
-                                  : "Approve business application"
-                              }
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleKybAction(
-                                  application.originalData.id,
-                                  "approve",
-                                  comments[application.uuid] ||
-                                    "Application approved",
-                                );
-                              }}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            {/*<Button
-                              type="button"
-                              variant="destructive"
-                              className="w-full"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleKybAction(
-                                  application.originalData.id,
-                                  "reject",
-                                  comments[application.uuid] ||
-                                    "Application rejected",
-                                );
-                              }}
-                            >
-                              Reject
-                            </Button>*/}
-
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              className="w-full"
-                              disabled={application.documents.length === 0} // <-- added
-                              title={
-                                application.documents.length === 0
-                                  ? "No documents uploaded"
-                                  : ""
-                              }
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleKybAction(
-                                  application.originalData.id,
-                                  "reject",
-                                  comments[application.uuid] ||
-                                    "Application rejected",
-                                );
-                              }}
-                            >
-                              Reject
-                            </Button>
-                            {/*<Button
-                              type="button"
-                              variant="outline"
-                              className="w-full"
-                            >
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Request Info
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full"
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Assign Reviewer
-                            </Button>*/}
+                        {!["approved", "rejected"].includes(
+                          application.status,
+                        ) && (
+                          <div className="space-y-4">
+                            <Label>Review Actions</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <Button
+                                type="button"
+                                variant="default"
+                                className="w-full"
+                                disabled={!allDocumentsApproved}
+                                title={
+                                  !allDocumentsApproved
+                                    ? "All documents must be approved first"
+                                    : "Approve business application"
+                                }
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleKybAction(
+                                    application.originalData.id,
+                                    "approve",
+                                    comments[application.uuid] ||
+                                      "Application approved",
+                                  );
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                className="w-full"
+                                disabled={application.documents.length === 0} // <-- added
+                                title={
+                                  application.documents.length === 0
+                                    ? "No documents uploaded"
+                                    : ""
+                                }
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleKybAction(
+                                    application.originalData.id,
+                                    "reject",
+                                    comments[application.uuid] ||
+                                      "Application rejected",
+                                  );
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
