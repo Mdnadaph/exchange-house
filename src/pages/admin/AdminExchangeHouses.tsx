@@ -441,13 +441,14 @@ const AdminExchangeHouses = () => {
         });
       }
     } catch (err: any) {
-      if (err.response?.status === 422 && err.response?.data?.data) {
-        // ─── This is the key part ───
+      if (
+        err.response?.data?.data &&
+        typeof err.response.data.data === "object"
+      ) {
         const backendErrors = err.response.data.data;
         const formattedErrors: Record<string, string[]> = {};
 
         Object.entries(backendErrors).forEach(([field, messages]) => {
-          // messages can be string or string[]
           formattedErrors[field] = Array.isArray(messages)
             ? messages
             : [messages];
@@ -455,12 +456,14 @@ const AdminExchangeHouses = () => {
 
         setErrors(formattedErrors);
 
-        //toast({
-        //  title: "Validation Error",
-        //  description: "Please check the highlighted fields",
-        //  variant: "destructive",
-        //});
+        // Optional: show a brief validation summary toast
+        // toast({
+        //   title: "Validation Error",
+        //   description: "Please check the highlighted fields",
+        //   variant: "destructive",
+        // });
       } else {
+        // Handle other errors (network issues, server errors, etc.)
         toast({
           title: "Error",
           description: err.response?.data?.message || "Something went wrong",
@@ -804,10 +807,7 @@ const AdminExchangeHouses = () => {
                     </div> */}
 
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="phoneNumber"
-                        className={errors.phoneNumber ? "text-destructive" : ""}
-                      >
+                      <Label htmlFor="phoneNumber">
                         {/* {t("phoneNumber")} * */}
                         phone Number *
                       </Label>
@@ -846,10 +846,7 @@ const AdminExchangeHouses = () => {
                       />
 
                       {errors.phoneNumber?.map((msg, i) => (
-                        <p
-                          key={i}
-                          className="text-sm text-destructive mt-1 font-medium"
-                        >
+                        <p key={i} className="text-sm text-destructive mt-1">
                           {msg}
                         </p>
                       ))}
