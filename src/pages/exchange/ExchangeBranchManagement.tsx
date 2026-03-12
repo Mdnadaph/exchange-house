@@ -46,6 +46,7 @@ import {
   Globe,
   Calendar,
 } from "lucide-react";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 const ExchangeBranchManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -393,12 +394,14 @@ const ExchangeBranchManagement = () => {
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="business" onClick={openAddModal}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Branch
-              </Button>
-            </DialogTrigger>
+            <PermissionGate permission="BTN_CREATE_BRANCH">
+              <DialogTrigger asChild>
+                <Button variant="business" onClick={openAddModal}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Branch
+                </Button>
+              </DialogTrigger>
+            </PermissionGate>
 
             <DialogContent className="max-w-lg">
               <DialogHeader>
@@ -827,14 +830,16 @@ const ExchangeBranchManagement = () => {
                         View Details
                       </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditModal(branch)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit Branch
-                      </Button>
+                      <PermissionGate permission="BTN_EDIT_BRANCH">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditModal(branch)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit Branch
+                        </Button>
+                      </PermissionGate>
                       {/*<Button variant="outline" size="sm">
                         <Users className="h-4 w-4 mr-1" />
                         Manage Staff

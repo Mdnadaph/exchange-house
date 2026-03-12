@@ -33,6 +33,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { usePermission } from "@/hooks/usePermission";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 type Discount = {
   id: number;
@@ -62,7 +64,6 @@ const ExchangeDiscount = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "ACTIVE" | "INACTIVE"
@@ -274,13 +275,14 @@ const ExchangeDiscount = () => {
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="business" onClick={openAddModal}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Discount
-              </Button>
-            </DialogTrigger>
-
+            <PermissionGate permission="BTN_CREATE_DISCOUNT">
+              <DialogTrigger asChild>
+                <Button variant="business" onClick={openAddModal}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Discount
+                </Button>
+              </DialogTrigger>
+            </PermissionGate>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">

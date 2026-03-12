@@ -46,6 +46,8 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
+import { usePermission } from "@/hooks/usePermission";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 // --- Types ---
 interface FeeRule {
@@ -67,6 +69,7 @@ interface FeeRule {
 const ExchangeFeeManagement = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
+
   const { toast } = useToast();
 
   // --- States ---
@@ -447,9 +450,14 @@ const ExchangeFeeManagement = () => {
               transaction types
             </p>
           </div>
-          <Button className="shadow-sm" onClick={handleAddClick}>
+          {/*<Button className="shadow-sm" onClick={handleAddClick}>
             <Plus className="h-4 w-4 mr-2" /> Add Fee Rule
-          </Button>
+          </Button>*/}
+          <PermissionGate permission="BTN_CREATE_FEE_RULE">
+            <Button className="shadow-sm" onClick={handleAddClick}>
+              <Plus className="h-4 w-4 mr-2" /> Add Fee Rule
+            </Button>
+          </PermissionGate>
         </div>
 
         {/* --- Create/Edit Dialog --- */}
@@ -945,24 +953,29 @@ const ExchangeFeeManagement = () => {
                         <TableCell>{getStatusBadge(rule.status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditClick(rule)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600"
-                              onClick={() => {
-                                setSelectedIdForDelete(rule.id);
-                                setIsConfirmDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <PermissionGate permission="BTN_EDIT_FEE_RULE">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditClick(rule)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
+
+                            <PermissionGate permission="BTN_DELETE_FEE_RULE">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600"
+                                onClick={() => {
+                                  setSelectedIdForDelete(rule.id);
+                                  setIsConfirmDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
                           </div>
                         </TableCell>
                       </TableRow>

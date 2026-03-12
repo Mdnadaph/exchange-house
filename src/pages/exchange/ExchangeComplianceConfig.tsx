@@ -5,10 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 
 import {
@@ -27,12 +40,12 @@ import {
 
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 const ExchangeComplianceConfig = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
-
   const [rules, setRules] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [countryMap, setCountryMap] = useState<{ [key: string]: string }>({});
@@ -46,15 +59,21 @@ const ExchangeComplianceConfig = () => {
     currency: "",
     action: "",
     frequency: "",
-    category: ""
+    category: "",
   });
   const [editForm, setEditForm] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
-  const actions = ["FLAG", "MANUAL_REVIEW", "ENHANCED_SCREENING", "AUTO_REPORT_CBUAE", "BLOCK"];
+  const actions = [
+    "FLAG",
+    "MANUAL_REVIEW",
+    "ENHANCED_SCREENING",
+    "AUTO_REPORT_CBUAE",
+    "BLOCK",
+  ];
   const categories = ["REGULATORY", "AML", "SANCTIONS", "RISK_MANAGEMENT"];
   const frequencies = ["IMMEDIATE", "REALTIME", "DAILY", "WEEKLY"];
   const transactionTypes = ["SINGLE", "BULK"];
@@ -63,8 +82,8 @@ const ExchangeComplianceConfig = () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
       setCountries(data.data || []);
@@ -74,27 +93,38 @@ const ExchangeComplianceConfig = () => {
       });
       setCountryMap(map);
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to fetch countries" });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch countries",
+      });
     }
   };
 
-  const fetchRules = async (page: number, activeFilter: 'all' | 'active' | 'inactive') => {
+  const fetchRules = async (
+    page: number,
+    activeFilter: "all" | "active" | "inactive",
+  ) => {
     try {
       let url = `${BASE_URL}/api/v1/compliance/rules?page=${page}&size=${pageSize}`;
-      if (activeFilter !== 'all') {
-        url += `&active=${activeFilter === 'active'}`;
+      if (activeFilter !== "all") {
+        url += `&active=${activeFilter === "active"}`;
       }
       const res = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
       setRules(data.data || []);
       setTotalPages(data.totalPages || 1);
       setCurrentPage(data.currentPage || 0);
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to fetch rules" });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch rules",
+      });
     }
   };
 
@@ -114,9 +144,9 @@ const ExchangeComplianceConfig = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(createForm)
+        body: JSON.stringify(createForm),
       });
       if (res.ok) {
         toast({ title: "Success", description: "Rule created successfully" });
@@ -130,37 +160,56 @@ const ExchangeComplianceConfig = () => {
           currency: "",
           action: "",
           frequency: "",
-          category: ""
+          category: "",
         });
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to create rule" });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create rule",
+        });
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to create rule" });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create rule",
+      });
     }
   };
 
   const handleUpdate = async () => {
     if (!editForm) return;
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/compliance/rules/${editForm.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+      const res = await fetch(
+        `${BASE_URL}/api/v1/compliance/rules/${editForm.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(editForm),
         },
-        body: JSON.stringify(editForm)
-      });
+      );
       if (res.ok) {
         toast({ title: "Success", description: "Rule updated successfully" });
         fetchRules(currentPage, filter);
         setIsEditOpen(false);
         setEditForm(null);
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update rule" });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update rule",
+        });
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to update rule" });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update rule",
+      });
     }
   };
 
@@ -170,18 +219,26 @@ const ExchangeComplianceConfig = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ active })
+        body: JSON.stringify({ active }),
       });
       if (res.ok) {
         toast({ title: "Success", description: "Rule status updated" });
         fetchRules(currentPage, filter);
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update status" });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update status",
+        });
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to update status" });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update status",
+      });
     }
   };
 
@@ -191,29 +248,29 @@ const ExchangeComplianceConfig = () => {
       value: "98.5%",
       status: "excellent",
       threshold: ">95%",
-      icon: Shield
+      icon: Shield,
     },
     {
       title: "Transaction Monitoring",
       value: "Active",
       status: "active",
       threshold: "24/7",
-      icon: Eye
+      icon: Eye,
     },
     {
       title: "Regulatory Reports",
       value: "Up to date",
       status: "current",
       threshold: "Monthly",
-      icon: FileText
+      icon: FileText,
     },
     {
       title: "Risk Assessment",
       value: "Low Risk",
       status: "low",
       threshold: "<5%",
-      icon: AlertTriangle
-    }
+      icon: AlertTriangle,
+    },
   ];
 
   const getStatusColor = (status: string) => {
@@ -223,7 +280,7 @@ const ExchangeComplianceConfig = () => {
       current: "text-success",
       low: "text-success",
       medium: "text-warning",
-      high: "text-destructive"
+      high: "text-destructive",
     };
     return colors[status as keyof typeof colors] || "text-muted-foreground";
   };
@@ -236,9 +293,17 @@ const ExchangeComplianceConfig = () => {
       REGULATORY: { variant: "default" as const, label: "Regulatory" },
       AML: { variant: "destructive" as const, label: "AML" },
       SANCTIONS: { variant: "secondary" as const, label: "Sanctions" },
-      RISK_MANAGEMENT: { variant: "outline" as const, label: "Risk Management" }
+      RISK_MANAGEMENT: {
+        variant: "outline" as const,
+        label: "Risk Management",
+      },
     };
-    return categories[category as keyof typeof categories] || { variant: "default" as const, label: "Regulatory" };
+    return (
+      categories[category as keyof typeof categories] || {
+        variant: "default" as const,
+        label: "Regulatory",
+      }
+    );
   };
 
   return (
@@ -247,18 +312,26 @@ const ExchangeComplianceConfig = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Compliance Configuration</h1>
-            <p className="text-muted-foreground">Configure compliance thresholds, monitoring rules, and regulatory requirements</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Compliance Configuration
+            </h1>
+            <p className="text-muted-foreground">
+              Configure compliance thresholds, monitoring rules, and regulatory
+              requirements
+            </p>
           </div>
 
           <div className="flex space-x-3">
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button variant="business">
-                  <Save className="h-4 w-4 mr-2" />
-                  Create Compliance
-                </Button>
-              </DialogTrigger>
+              <PermissionGate permission="BTN_CREATE_COMPLIANCE_RULE">
+                <DialogTrigger asChild>
+                  <Button variant="business">
+                    <Save className="h-4 w-4 mr-2" />
+                    Create Compliance
+                  </Button>
+                </DialogTrigger>
+              </PermissionGate>
+
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create New Compliance Rule</DialogTitle>
@@ -268,7 +341,9 @@ const ExchangeComplianceConfig = () => {
                     <Label>Name</Label>
                     <Input
                       value={createForm.name}
-                      onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                      onChange={(e) =>
+                        setCreateForm({ ...createForm, name: e.target.value })
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -276,7 +351,9 @@ const ExchangeComplianceConfig = () => {
                       <Label>Transaction Type</Label>
                       <Select
                         value={createForm.transactionType}
-                        onValueChange={(v) => setCreateForm({ ...createForm, transactionType: v })}
+                        onValueChange={(v) =>
+                          setCreateForm({ ...createForm, transactionType: v })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -294,14 +371,19 @@ const ExchangeComplianceConfig = () => {
                       <Label>Payout Country</Label>
                       <Select
                         value={createForm.payoutCountry}
-                        onValueChange={(v) => setCreateForm({ ...createForm, payoutCountry: v })}
+                        onValueChange={(v) =>
+                          setCreateForm({ ...createForm, payoutCountry: v })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Country" />
                         </SelectTrigger>
                         <SelectContent>
                           {countries.map((country) => (
-                            <SelectItem key={country.isoCode} value={country.isoCode}>
+                            <SelectItem
+                              key={country.isoCode}
+                              value={country.isoCode}
+                            >
                               {country.name}
                             </SelectItem>
                           ))}
@@ -316,7 +398,12 @@ const ExchangeComplianceConfig = () => {
                         type="number"
                         placeholder="0"
                         value={createForm.thresholdAmount}
-                        onChange={(e) => setCreateForm({ ...createForm, thresholdAmount: parseFloat(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            thresholdAmount: parseFloat(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                     <div>
@@ -324,7 +411,12 @@ const ExchangeComplianceConfig = () => {
                       <Input
                         placeholder="AED"
                         value={createForm.currency}
-                        onChange={(e) => setCreateForm({ ...createForm, currency: e.target.value })}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            currency: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -333,7 +425,9 @@ const ExchangeComplianceConfig = () => {
                       <Label>Action</Label>
                       <Select
                         value={createForm.action}
-                        onValueChange={(v) => setCreateForm({ ...createForm, action: v })}
+                        onValueChange={(v) =>
+                          setCreateForm({ ...createForm, action: v })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select action" />
@@ -351,7 +445,9 @@ const ExchangeComplianceConfig = () => {
                       <Label>Frequency</Label>
                       <Select
                         value={createForm.frequency}
-                        onValueChange={(v) => setCreateForm({ ...createForm, frequency: v })}
+                        onValueChange={(v) =>
+                          setCreateForm({ ...createForm, frequency: v })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select frequency" />
@@ -370,7 +466,9 @@ const ExchangeComplianceConfig = () => {
                     <Label>Category</Label>
                     <Select
                       value={createForm.category}
-                      onValueChange={(v) => setCreateForm({ ...createForm, category: v })}
+                      onValueChange={(v) =>
+                        setCreateForm({ ...createForm, category: v })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
@@ -386,17 +484,17 @@ const ExchangeComplianceConfig = () => {
                   </div>
                 </div>
                 <DialogFooter className="mt-6">
-                  <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateOpen(false)}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleCreate}>
-                    Create
-                  </Button>
+                  <Button onClick={handleCreate}>Create</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
-
         </div>
 
         {/* Compliance Overview */}
@@ -404,18 +502,27 @@ const ExchangeComplianceConfig = () => {
           {complianceMetrics.map((metric, index) => {
             const Icon = metric.icon;
             return (
-              <Card key={index} className="shadow-card hover:shadow-lg transition-smooth">
+              <Card
+                key={index}
+                className="shadow-card hover:shadow-lg transition-smooth"
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     {metric.title}
                   </CardTitle>
-                  <Icon className={`h-5 w-5 ${getStatusColor(metric.status)}`} />
+                  <Icon
+                    className={`h-5 w-5 ${getStatusColor(metric.status)}`}
+                  />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${getStatusColor(metric.status)}`}>
+                  <div
+                    className={`text-2xl font-bold ${getStatusColor(metric.status)}`}
+                  >
                     {metric.value}
                   </div>
-                  <p className="text-xs text-muted-foreground">Threshold: {metric.threshold}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Threshold: {metric.threshold}
+                  </p>
                 </CardContent>
               </Card>
             );
@@ -424,8 +531,6 @@ const ExchangeComplianceConfig = () => {
 
         {/* Regulatory Thresholds */}
         <Card className="shadow-card">
-
-
           <div className="flex p-6">
             <div className="flex-1">
               {/* <CardHeader> */}
@@ -437,23 +542,34 @@ const ExchangeComplianceConfig = () => {
             </div>
 
             <div className="flex gap-2 items-end">
-              <Button variant={filter === 'all' ? "default" : "outline"} onClick={() => setFilter('all')}>All Compliance</Button>
-              <Button variant={filter === 'active' ? "default" : "outline"} onClick={() => setFilter('active')}>Active Compliance</Button>
-              <Button variant={filter === 'inactive' ? "default" : "outline"} onClick={() => setFilter('inactive')}>Inactive Compliance</Button>
+              <Button
+                variant={filter === "all" ? "default" : "outline"}
+                onClick={() => setFilter("all")}
+              >
+                All Compliance
+              </Button>
+              <Button
+                variant={filter === "active" ? "default" : "outline"}
+                onClick={() => setFilter("active")}
+              >
+                Active Compliance
+              </Button>
+              <Button
+                variant={filter === "inactive" ? "default" : "outline"}
+                onClick={() => setFilter("inactive")}
+              >
+                Inactive Compliance
+              </Button>
             </div>
           </div>
-
-
-
-
-
 
           <CardContent className="space-y-6">
             {rules.map((rule) => {
               const categoryBadge = getCategoryBadge(rule.category);
               const ruleName = rule.name || "Unnamed Rule";
               const ruleStatus = rule.active ? "active" : "inactive";
-              const countryName = countryMap[rule.payoutCountry] || rule.payoutCountry;
+              const countryName =
+                countryMap[rule.payoutCountry] || rule.payoutCountry;
 
               return (
                 <Card key={rule.id} className="border-l-4 border-l-primary">
@@ -464,9 +580,13 @@ const ExchangeComplianceConfig = () => {
                           <AlertTriangle className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-semibold text-foreground">{ruleName}</h4>
+                          <h4 className="text-lg font-semibold text-foreground">
+                            {ruleName}
+                          </h4>
                           <p className="text-sm text-muted-foreground">
-                            Threshold: {rule.thresholdAmount.toLocaleString()} {rule.currency || "N/A"} for {rule.transactionType} to {countryName}
+                            Threshold: {rule.thresholdAmount.toLocaleString()}{" "}
+                            {rule.currency || "N/A"} for {rule.transactionType}{" "}
+                            to {countryName}
                           </p>
                         </div>
                       </div>
@@ -482,22 +602,48 @@ const ExchangeComplianceConfig = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 rounded-lg p-4">
                       <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">Action:</div>
-                        <p className="font-medium capitalize">{(rule.action || "N/A").replace(/_/g, " ")}</p>
+                        <div className="text-muted-foreground text-sm">
+                          Action:
+                        </div>
+                        <p className="font-medium capitalize">
+                          {(rule.action || "N/A").replace(/_/g, " ")}
+                        </p>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">Frequency:</div>
-                        <p className="font-medium capitalize">{rule.frequency || "N/A"}</p>
+                        <div className="text-muted-foreground text-sm">
+                          Frequency:
+                        </div>
+                        <p className="font-medium capitalize">
+                          {rule.frequency || "N/A"}
+                        </p>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">Currency:</div>
+                        <div className="text-muted-foreground text-sm">
+                          Currency:
+                        </div>
                         <p className="font-medium">{rule.currency || "N/A"}</p>
                       </div>
                     </div>
 
                     <div className="flex justify-end space-x-2 mt-4">
-                      <Button variant="outline" size="sm" onClick={() => { setEditForm(rule); setIsEditOpen(true); }}>Edit</Button>
-                      <Switch checked={rule.active} onCheckedChange={(checked) => handleToggleActive(rule.id, checked)} />
+                      <PermissionGate permission="BTN_EDIT_COMPLIANCE_RULE">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditForm(rule);
+                            setIsEditOpen(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </PermissionGate>
+                      <Switch
+                        checked={rule.active}
+                        onCheckedChange={(checked) =>
+                          handleToggleActive(rule.id, checked)
+                        }
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -545,7 +691,9 @@ const ExchangeComplianceConfig = () => {
                   <Label>Name</Label>
                   <Input
                     value={editForm.name || ""}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -553,7 +701,9 @@ const ExchangeComplianceConfig = () => {
                     <Label>Transaction Type</Label>
                     <Select
                       value={editForm.transactionType}
-                      onValueChange={(v) => setEditForm({ ...editForm, transactionType: v })}
+                      onValueChange={(v) =>
+                        setEditForm({ ...editForm, transactionType: v })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -571,14 +721,19 @@ const ExchangeComplianceConfig = () => {
                     <Label>Payout Country</Label>
                     <Select
                       value={editForm.payoutCountry}
-                      onValueChange={(v) => setEditForm({ ...editForm, payoutCountry: v })}
+                      onValueChange={(v) =>
+                        setEditForm({ ...editForm, payoutCountry: v })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Country" />
                       </SelectTrigger>
                       <SelectContent>
                         {countries.map((country) => (
-                          <SelectItem key={country.isoCode} value={country.isoCode}>
+                          <SelectItem
+                            key={country.isoCode}
+                            value={country.isoCode}
+                          >
                             {country.name}
                           </SelectItem>
                         ))}
@@ -593,7 +748,12 @@ const ExchangeComplianceConfig = () => {
                       type="number"
                       placeholder="0"
                       value={editForm.thresholdAmount}
-                      onChange={(e) => setEditForm({ ...editForm, thresholdAmount: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          thresholdAmount: parseFloat(e.target.value) || 0,
+                        })
+                      }
                     />
                   </div>
                   <div>
@@ -601,7 +761,9 @@ const ExchangeComplianceConfig = () => {
                     <Input
                       placeholder="AED"
                       value={editForm.currency || ""}
-                      onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, currency: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -610,7 +772,9 @@ const ExchangeComplianceConfig = () => {
                     <Label>Action</Label>
                     <Select
                       value={editForm.action}
-                      onValueChange={(v) => setEditForm({ ...editForm, action: v })}
+                      onValueChange={(v) =>
+                        setEditForm({ ...editForm, action: v })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select action" />
@@ -628,7 +792,9 @@ const ExchangeComplianceConfig = () => {
                     <Label>Frequency</Label>
                     <Select
                       value={editForm.frequency || ""}
-                      onValueChange={(v) => setEditForm({ ...editForm, frequency: v })}
+                      onValueChange={(v) =>
+                        setEditForm({ ...editForm, frequency: v })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
@@ -647,7 +813,9 @@ const ExchangeComplianceConfig = () => {
                   <Label>Category</Label>
                   <Select
                     value={editForm.category || ""}
-                    onValueChange={(v) => setEditForm({ ...editForm, category: v })}
+                    onValueChange={(v) =>
+                      setEditForm({ ...editForm, category: v })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -667,9 +835,7 @@ const ExchangeComplianceConfig = () => {
               <Button variant="outline" onClick={() => setIsEditOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdate}>
-                Update
-              </Button>
+              <Button onClick={handleUpdate}>Update</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -882,8 +1048,6 @@ const ExchangeComplianceConfig = () => {
             </div>
           </CardContent>
         </Card> */}
-
-
 
         {/* Action Buttons */}
         {/* <div className="flex justify-end space-x-3">

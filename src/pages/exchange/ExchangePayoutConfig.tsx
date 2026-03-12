@@ -41,6 +41,8 @@ import {
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
+import { usePermission } from "@/hooks/usePermission";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 interface PayoutDestination {
   id: string;
@@ -110,6 +112,7 @@ const ExchangePayoutConfig = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
+
   const [countries, setCountries] = useState([]);
   const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
@@ -659,20 +662,23 @@ const ExchangePayoutConfig = () => {
                 {t("globalSettings") || "Global Settings"}
               </span>
             </Button> */}
-            <Button
-              variant="business"
-              size="sm"
-              className="sm:size-default"
-              onClick={() => {
-                resetForm();
-                setAddDestinationOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">
-                {t("addDestination") || "Add Destination"}
-              </span>
-            </Button>
+
+            <PermissionGate permission="BTN_CREATE_PAYOUT_DESTINATION">
+              <Button
+                variant="business"
+                size="sm"
+                className="sm:size-default"
+                onClick={() => {
+                  resetForm();
+                  setAddDestinationOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">
+                  {t("addDestination") || "Add Destination"}
+                </span>
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 
@@ -881,23 +887,28 @@ const ExchangePayoutConfig = () => {
                           </div>
 
                           <div className="flex flex-wrap gap-2 justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditDialog(destination)}
-                            >
-                              <Edit className="h-4 w-4 sm:mr-1" />
-                              <span className="hidden sm:inline">
-                                {t("configure") || "Configure"}
-                              </span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openDeleteConfirm(destination)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <PermissionGate permission="BTN_EDIT_PAYOUT_DESTINATION">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditDialog(destination)}
+                              >
+                                <Edit className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                  {t("configure") || "Configure"}
+                                </span>
+                              </Button>
+                            </PermissionGate>
+
+                            <PermissionGate permission="BTN_DELETE_PAYOUT_DESTINATION">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDeleteConfirm(destination)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
                           </div>
                         </div>
                       </CardContent>

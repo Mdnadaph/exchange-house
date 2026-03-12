@@ -185,7 +185,9 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <Landmark className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Exchange House Admin
+                  {role === "ROLE_EXCHANGE_ADMIN"
+                    ? "Exchange House Admin"
+                    : " Exchange House User"}
                 </span>
               </div>
             </div>
@@ -194,7 +196,10 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName} (Exchange Admin)
+                {fullName}
+                {role === "ROLE_EXCHANGE_ADMIN"
+                  ? "Exchange Admin"
+                  : " Exchange User"}
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

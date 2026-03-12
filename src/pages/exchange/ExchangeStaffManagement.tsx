@@ -43,6 +43,7 @@ import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 const ExchangeStaffManagement = () => {
   const [cookies] = useCookies(["token", "email"]);
@@ -334,13 +335,16 @@ const ExchangeStaffManagement = () => {
               <TrendingUp className="h-4 w-4 mr-2" />
               Performance Reports
             </Button> */}
-            <Button
-              variant="business"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Staff Member
-            </Button>
+
+            <PermissionGate permission="BTN_CREATE_STAFF">
+              <Button
+                variant="business"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Staff Member
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 

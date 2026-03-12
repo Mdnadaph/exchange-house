@@ -27,6 +27,7 @@ import CreateKybRule from "@/components/kyb/CreateKybRule";
 import axios from "axios";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 const ExchangeKYBConfig = () => {
   const [cookie] = useCookies(["token"]);
@@ -35,7 +36,7 @@ const ExchangeKYBConfig = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const token = cookie.token;
-  const { can } = usePermission();
+
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
@@ -252,10 +253,17 @@ const ExchangeKYBConfig = () => {
               <FileCheck className="h-4 w-4 mr-2" />
               Import Template
             </Button>*/}
-            <Button variant="business" onClick={() => setShowPopup(true)}>
+            {/*<Button variant="business" onClick={() => setShowPopup(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create New Rule
-            </Button>
+            </Button>*/}
+            <PermissionGate permission="BTN_CREATE_KYB_RULE">
+              <Button variant="business" onClick={() => setShowPopup(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Rule
+              </Button>
+            </PermissionGate>
+
             {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm />}*/}
           </div>
         </div>

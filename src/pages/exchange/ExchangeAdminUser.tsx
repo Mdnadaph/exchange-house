@@ -45,6 +45,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Loader2 } from "lucide-react";
+import { PermissionGate } from "@/contexts/PermissionGate";
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 const ExchangeAdminUser = () => {
   const [cookies] = useCookies(["token", "email"]);
@@ -426,12 +427,14 @@ const ExchangeAdminUser = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <Button
-              variant="business"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" /> Add Exchange User
-            </Button>
+            <PermissionGate permission="BTN_CREATE_EXCHANGE_USER">
+              <Button
+                variant="business"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Exchange User
+              </Button>
+            </PermissionGate>
           </div>
         </div>
         <h1 className="text-3xl font-bold">Exchange Admin User Lists</h1>
@@ -565,7 +568,9 @@ const ExchangeAdminUser = () => {
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
-              <DialogTitle className="text-xl">Create Exchange Admin User</DialogTitle>
+              <DialogTitle className="text-xl">
+                Create Exchange Admin User
+              </DialogTitle>
             </DialogHeader>
             <div className="max-h-[70vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-1 gap-4 py-4 px-4">

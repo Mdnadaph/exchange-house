@@ -25,16 +25,15 @@ import {
 } from "@/components/ui/pagination";
 import { useEffect, useState } from "react";
 import { Button } from "react-day-picker";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 const ExchangeBusinessOnboarding = () => {
-  const [cookies] = useCookies(["token", "role"]);
+  const [cookies] = useCookies(["token"]);
   const token = cookies.token;
-  const role = cookies.role;
-  console.log("role", role);
 
   const navigate = useNavigate();
   const { uuid } = useParams();
-  const { can } = usePermission();
+
   const [businesses, setBusinesses] = useState([]);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
@@ -187,12 +186,16 @@ const ExchangeBusinessOnboarding = () => {
               Register and manage new business accounts
             </p>
           </div>
-          <BusinessOnboardingForm onSuccess={refreshData} />
+          {/*<BusinessOnboardingForm onSuccess={refreshData} />*/}
+
+          <PermissionGate permission="BTN_ONBOARD_BUSINESS">
+            <BusinessOnboardingForm />
+          </PermissionGate>
 
           {/*{role === "ROLE_EXCHANGE_USER" && can("BTN_ONBOARD_BUSINESS") ? (
-            <BusinessOnboardingForm />
+            <BusinessOnboardingForm onSuccess={refreshData} />
           ) : (
-            <BusinessOnboardingForm />
+            <BusinessOnboardingForm onSuccess={refreshData} />
           )}*/}
           {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm onSuccess={refreshData} />}*/}
           {/*{can("BTN_ONBOARD_BUSINESS") && <BusinessOnboardingForm />}*/}
