@@ -468,10 +468,10 @@ const UserTransactions = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" disabled={transactions.length === 0}>
+            {/*<Button variant="outline" disabled={transactions.length === 0}>
               <Download className="h-4 w-4 mr-2" />
               Export
-            </Button>
+            </Button>*/}
             <BulkTransactionForm refetch={fetchTransactions} />
             <SingleTransactionForm refetch={fetchTransactions} />
           </div>
@@ -601,12 +601,12 @@ const UserTransactions = () => {
                 >
                   All Status
                 </Button>
-                <Button variant="outline">This Month</Button>
+                {/*<Button variant="outline">This Month</Button>*/}
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("COMPLETED")}
                 >
-                  Completed
+                  Approved
                 </Button>
                 <Button
                   variant="outline"

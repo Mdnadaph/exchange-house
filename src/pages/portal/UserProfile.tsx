@@ -96,7 +96,7 @@ const UserProfile = () => {
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [kybContext, setKybContext] = useState<KYBContext | null>(null);
-
+  const [isSaving, setIsSaving] = useState(false);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>({
     id: 0,
     companyName: "",
@@ -282,6 +282,46 @@ const UserProfile = () => {
     }
   }, [id]);
 
+  const handleView = async (viewUrl: string) => {
+    try {
+      const response = await axios.get(viewUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error) {
+      toast({
+        title: "Failed",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+  const handleDownload = async (viewUrl: string, fileName: string) => {
+    try {
+      const response = await axios.get(viewUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Failed",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -433,21 +473,51 @@ const UserProfile = () => {
 
   const confirmSaveProfile = async () => {
     try {
-      // Update business profile API call would go here
-      // For now, we'll just update the local state
-      setIsEditing(false);
-      setShowSaveConfirmation(false);
+      setIsSaving(true);
 
-      toast({
-        title: "Profile Updated",
-        description: "Your business profile has been updated successfully.",
-      });
-    } catch (error) {
+      // Convert country to string if it's an array
+      const businessAddress = Array.isArray(businessProfile.country)
+        ? businessProfile.country.join(", ")
+        : businessProfile.country;
+
+      const payload = {
+        companyName: businessProfile.companyName,
+        tradeLicense: businessProfile.tradeLicense,
+        taxNumber: businessProfile.taxNumber,
+        businessPhone: businessProfile.businessPhone,
+        businessAddress: businessAddress,
+      };
+
+      const response = await axios.put(
+        `${BASE_URL}/api/v3/business/${id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.data?.status) {
+        setIsEditing(false);
+        setShowSaveConfirmation(false);
+        toast({
+          title: "Profile Updated",
+          description: "Your business profile has been updated successfully.",
+        });
+      } else {
+        throw new Error(response.data?.message || "Update failed");
+      }
+    } catch (error: any) {
       toast({
         title: "Update Failed",
-        description: "Failed to update business profile",
+        description:
+          error.response?.data?.message || "Failed to update business profile",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -663,13 +733,6 @@ const UserProfile = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Business ID</Label>
-                  <p className="text-foreground font-medium">
-                    {businessProfile.id}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
                   <Label className="text-muted-foreground">
                     Trade License Number
                   </Label>
@@ -709,7 +772,7 @@ const UserProfile = () => {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                {/*<div className="space-y-2">
                   <Label className="flex items-center gap-1 text-muted-foreground">
                     <Mail className="h-3 w-3" />
                     Company Email
@@ -730,6 +793,15 @@ const UserProfile = () => {
                       {businessProfile.businessEmail}
                     </p>
                   )}
+                </div>*/}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1 text-muted-foreground">
+                    <Mail className="h-3 w-3" />
+                    Company Email
+                  </Label>
+                  <p className="text-foreground font-medium">
+                    {businessProfile.businessEmail}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -754,7 +826,7 @@ const UserProfile = () => {
                   )}
                 </div>
               </div>
-
+              {/*
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -778,6 +850,17 @@ const UserProfile = () => {
                       : businessProfile.country || "N/A"}
                   </p>
                 )}
+              </div>*/}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-muted-foreground" />
+                  Country of Trade
+                </Label>
+                <p className="text-foreground font-medium">
+                  {Array.isArray(businessProfile.country)
+                    ? businessProfile.country.join(", ")
+                    : businessProfile.country || "N/A"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -990,11 +1073,21 @@ const UserProfile = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleView(doc?.fileUrl)}
+                          >
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleDownload(doc?.fileUrl, doc?.name)
+                            }
+                          >
                             <Download className="h-4 w-4 mr-1" />
                             Download
                           </Button>
@@ -1015,17 +1108,12 @@ const UserProfile = () => {
       </div>
 
       <ConfirmationDialog
-        open={showUploadConfirmation}
-        onOpenChange={setShowUploadConfirmation}
-        onConfirm={confirmUploadDocument}
-        title="Confirm Document Upload"
-        description={`Are you sure you want to upload this ${documentType} document (Code: ${
-          kybContext?.documents.find((doc) => doc.name === documentType)
-            ?.code || "N/A"
-        })${
-          documentNumber ? ` with number: ${documentNumber}` : ""
-        }? It will be sent for review by the Exchange House.`}
-        confirmText="Upload Document"
+        open={showSaveConfirmation}
+        onOpenChange={setShowSaveConfirmation}
+        onConfirm={confirmSaveProfile}
+        title="Confirm Profile Update"
+        description="Are you sure you want to save these changes to your business profile?"
+        confirmText="Save Changes"
       />
     </UserLayout>
   );

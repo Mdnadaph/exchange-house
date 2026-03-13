@@ -65,7 +65,7 @@ const ApprovalRuleForm = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-
+  const [successMessage, setSuccessMessage] = useState("");
   const clearFieldError = (field: string) => {
     setErrors((prev) => {
       const next = { ...prev };
@@ -139,8 +139,6 @@ const ApprovalRuleForm = ({
       transactionTypes: [],
       tiers: [{ level: 1, threshold: "", approvers: 1, roles: [] }],
     });
-    setError(null);
-    setSuccess(false);
   };
 
   const addTier = () => {
@@ -293,7 +291,41 @@ const ApprovalRuleForm = ({
       setSuccess(false);
     }
   }, [open]);
-
+  // Populate form when dialog opens in edit mode
+  useEffect(() => {
+    if (open && editRule) {
+      setFormData({
+        name: editRule.name || "",
+        description: editRule.description || "",
+        currency: editRule.currency || "USD",
+        minAmount: editRule.minAmount?.toString() || "",
+        maxAmount: editRule.maxAmount?.toString() || "",
+        department: editRule.department || "All",
+        transactionTypes: editRule.transactionTypes || [],
+        tiers: editRule.tiers?.map((tier: any) => ({
+          level: tier.level,
+          threshold: tier.threshold?.toString() || "",
+          approvers: tier.approvers || 1,
+          roles: tier.roles || [],
+        })) || [{ level: 1, threshold: "", approvers: 1, roles: [] }],
+      });
+      setError(null);
+      setSuccess(false);
+    } else if (open && !editRule) {
+      // Reset to empty for creation
+      resetForm();
+      setError(null);
+      setSuccess(false);
+    }
+  }, [open, editRule]);
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      resetForm();
+      setError(null);
+      setSuccess(false);
+    }
+  }, [open]);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

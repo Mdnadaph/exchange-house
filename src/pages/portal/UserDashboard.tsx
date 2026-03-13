@@ -79,7 +79,7 @@ const UserDashboard = () => {
     ? [
         {
           title: "Monthly Transactions",
-          value: `$${dashboardData.stats.monthlyTransactions.toLocaleString()}`,
+          value: `${dashboardData.stats.monthlyTransactions.toLocaleString()}`,
           change: "",
           icon: CreditCard,
           color: "text-green-600",

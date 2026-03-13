@@ -23,8 +23,9 @@ import {
   Key,
   Settings,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import UserEditForm from "@/components/governance/UserEdit";
 
 const UserManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -37,20 +38,24 @@ const UserManagement = () => {
     totalPages: 0,
     totalItems: 0,
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [editingUser, setEditingUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/api/v1/business-users?page=${currentPage}&size=10`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        let url = `${BASE_URL}/api/v1/business-users?page=${currentPage}&size=10`;
+        if (debouncedSearch.trim()) {
+          url += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
+        }
+
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const json = await response.json();
         if (json.status) {
           setDashboard(json.data.dashboard);
@@ -66,8 +71,24 @@ const UserManagement = () => {
       }
     };
     fetchData();
-  }, [currentPage, token, refreshKey]);
+  }, [currentPage, token, refreshKey, debouncedSearch]);
 
+  // Debounce search term
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(0); // reset to first page on new search
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchTerm]);
   const totalUsers = dashboard.find((d) => d.key === "TOTAL_USERS") || {
     value: 0,
     subValue: "",
@@ -213,14 +234,16 @@ const UserManagement = () => {
                     id="search"
                     placeholder="Search by name, email, or role..."
                     className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              {/*<div className="flex gap-2">
                 <Button variant="outline">All Status</Button>
                 <Button variant="outline">Active Only</Button>
                 <Button variant="outline">Finance Dept</Button>
-              </div>
+              </div>*/}
             </div>
           </CardContent>
         </Card>
@@ -314,13 +337,13 @@ const UserManagement = () => {
                                 {Number(user.approvalLimit).toLocaleString()}
                               </p>
                             </div>
-                            <div className="space-y-1">
+                            {/*<div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Calendar className="h-3 w-3 mr-1" />
                                 Last Login:
                               </div>
                               <p className="font-medium">{user.lastLogin}</p>
-                            </div>
+                            </div>*/}
                           </div>
 
                           {/* Permissions and Approval Authority */}
@@ -361,13 +384,21 @@ const UserManagement = () => {
 
                         {/* Actions */}
                         <div className="flex space-x-2 ml-4">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm">
+                          <UserEditForm
+                            userId={user.uuid}
+                            trigger={
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            }
+                            onUserUpdated={() =>
+                              setRefreshKey((prev) => prev + 1)
+                            }
+                          />
+                          {/*<Button variant="outline" size="sm">
                             <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          </Button>*/}
                         </div>
                       </div>
                     </CardContent>

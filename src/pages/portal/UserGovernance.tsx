@@ -391,7 +391,7 @@ const UserGovernance = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {/*<ApprovalRuleForm
+                        <ApprovalRuleForm
                           editRule={rule}
                           onSuccess={refreshRules} // <-- add this line
                           trigger={
@@ -400,10 +400,10 @@ const UserGovernance = () => {
                               Edit
                             </Button>
                           }
-                        />*/}
-                        <Button variant="outline" size="sm">
+                        />
+                        {/*<Button variant="outline" size="sm">
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button>*/}
                       </div>
                     </div>
 

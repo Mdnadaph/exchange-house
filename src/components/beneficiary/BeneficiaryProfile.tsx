@@ -142,7 +142,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
               <h1 className="text-3xl font-bold text-foreground">
                 {beneficiary.name}
               </h1>
-              <p className="text-muted-foreground">ID: {beneficiary.id}</p>
+              {/*<p className="text-muted-foreground">ID: {beneficiary.id}</p>*/}
               <div className="flex items-center gap-2 mt-2">
                 <Badge
                   variant={status.variant}
@@ -163,7 +163,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             </div>
           </div>
         </div>
-        <div className="flex space-x-3">
+        {/*<div className="flex space-x-3">
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
             Edit Details
@@ -172,7 +172,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             <CreditCard className="h-4 w-4 mr-2" />
             Send Payment
           </Button>
-        </div>
+        </div>*/}
       </div>
 
       {/* Quick Stats */}

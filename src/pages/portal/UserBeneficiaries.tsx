@@ -172,6 +172,7 @@ const UserBeneficiaries = () => {
       if (appliedSearch) {
         url += `&search=${encodeURIComponent(appliedSearch)}`;
       }
+
       let approvalStatus = "";
       if (filterStatus === "active") approvalStatus = "APPROVED";
       if (filterStatus === "pending_approval") approvalStatus = "PENDING";
@@ -194,7 +195,7 @@ const UserBeneficiaries = () => {
         id: item.id,
         name: item.name,
         type: item.type,
-        email: item?.email, // API doesn't provide, keep empty
+        email: item?.email,
         phone: item?.phoneNumber,
         address: {
           line1: "",
@@ -207,7 +208,7 @@ const UserBeneficiaries = () => {
             bankName: item.bankName,
             accountNumber: item.maskedAccount || "N/A",
             accountName: item.name,
-            swift: "", // API doesn't provide
+            swift: "",
             currency: item.currency,
           },
         ],
@@ -218,9 +219,17 @@ const UserBeneficiaries = () => {
         totalSent: item.totalSent ? String(item.totalSent) : "0",
         transactionCount: item.totalPayments || 0,
         payoutMethod: item.payoutMethod,
-        registrationDate: "", // API doesn't provide
-        documents: [], // API doesn't provide, keep empty or mock if needed
-        riskLevel: "medium", // Default as per your design
+        registrationDate: "",
+        // ✅ Map documents properly (adjust field names to match your API)
+        documents:
+          item.documents?.map((doc: any) => ({
+            type: doc.type || "Unknown",
+            status: doc.status || "pending",
+            uploadDate: doc.uploadedAt
+              ? new Date(doc.uploadedAt).toLocaleDateString()
+              : "",
+          })) || [],
+        riskLevel: "medium",
         monthlyLimit: item.monthlyLimit || 0,
         averageTransaction: item.avgAmount ? String(item.avgAmount) : "0",
       }));
@@ -888,7 +897,7 @@ const UserBeneficiaries = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
+                      {/*<Button
                         variant={filterStatus === "all" ? "default" : "outline"}
                         onClick={() => {
                           setFilterStatus("all");
@@ -920,7 +929,7 @@ const UserBeneficiaries = () => {
                         }}
                       >
                         Pending
-                      </Button>
+                      </Button>*/}
                       {/*<Button variant="outline">
                         <Filter className="h-4 w-4 mr-2" />
                         More Filters
@@ -985,11 +994,11 @@ const UserBeneficiaries = () => {
                                           RISK
                                         </span>
                                       </div>
-                                      <p className="text-sm text-muted-foreground">
+                                      {/*<p className="text-sm text-muted-foreground">
                                         ID: {beneficiary.id}
-                                      </p>
+                                      </p>*/}
                                     </div>
-                                    <div className="flex items-center space-x-2">
+                                    {/*<div className="flex items-center space-x-2">
                                       <Badge
                                         variant={status.variant}
                                         className="flex items-center gap-1"
@@ -1003,7 +1012,7 @@ const UserBeneficiaries = () => {
                                       >
                                         {verification.label}
                                       </Badge>
-                                    </div>
+                                    </div>*/}
                                   </div>
                                   {/* Enhanced Beneficiary Details */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
@@ -1132,7 +1141,7 @@ const UserBeneficiaries = () => {
                                 </div>
                                 {/* Enhanced Actions */}
                                 <div className="flex flex-col space-y-2 ml-4">
-                                  <Button
+                                  {/*<Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
@@ -1142,16 +1151,16 @@ const UserBeneficiaries = () => {
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
                                     View Profile
-                                  </Button>
-                                  <Button variant="outline" size="sm">
+                                  </Button>*/}
+                                  {/*<Button variant="outline" size="sm">
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit Details
-                                  </Button>
-                                  {beneficiary.status === "active" && (
+                                  </Button>*/}
+                                  {/*{beneficiary.status === "active" && (
                                     <Button variant="business" size="sm">
                                       Send Payment
                                     </Button>
-                                  )}
+                                  )}*/}
                                   {(beneficiary.verificationStatus ===
                                     "expired" ||
                                     beneficiary.verificationStatus ===
@@ -1160,7 +1169,7 @@ const UserBeneficiaries = () => {
                                       Re-verify
                                     </Button>
                                   )}
-                                  <Button
+                                  {/*<Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
@@ -1168,7 +1177,7 @@ const UserBeneficiaries = () => {
                                     }
                                   >
                                     <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  </Button>*/}
                                 </div>
                               </div>
                             </CardContent>

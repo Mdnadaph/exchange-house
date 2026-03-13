@@ -44,7 +44,7 @@ import {
   TrendingUp,
   Loader2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner"; // Assuming sonner for notifications
 import { useNavigate } from "react-router-dom";
 
@@ -77,6 +77,8 @@ const BeneficiaryRegistrationForm = ({
   const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(
     undefined,
   );
+  const [idDocument, setIdDocument] = useState<File | null>(null);
+  const [proofOfAddress, setProofOfAddress] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   const clearFieldError = (field: string) => {
@@ -87,6 +89,18 @@ const BeneficiaryRegistrationForm = ({
     });
   };
 
+  const idFileInputRef = useRef<HTMLInputElement>(null);
+  const addressFileInputRef = useRef<HTMLInputElement>(null);
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (file: File | null) => void,
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setter(file);
+      // Optional: upload immediately or store for later
+    }
+  };
   // Input States for API
   const [formData, setFormData] = useState({
     firstName: "",
@@ -1446,6 +1460,7 @@ const BeneficiaryRegistrationForm = ({
       </Card>
 
       {/* Supportive Documents Section (Design Only) */}
+      {/* Supportive Documents Section */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -1455,25 +1470,60 @@ const BeneficiaryRegistrationForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* National ID / Passport */}
             <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center space-y-2">
               <Upload className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm font-medium">National ID / Passport</p>
               <p className="text-xs text-muted-foreground text-center">
                 Upload a clear copy for verification
               </p>
-              <Button variant="outline" size="sm">
+              <input
+                type="file"
+                ref={idFileInputRef}
+                onChange={(e) => handleFileChange(e, setIdDocument)}
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => idFileInputRef.current?.click()}
+              >
                 Browse Files
               </Button>
+              {idDocument && (
+                <p className="text-xs text-success truncate max-w-full">
+                  Selected: {idDocument.name}
+                </p>
+              )}
             </div>
+
+            {/* Proof of Address */}
             <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center space-y-2">
               <Upload className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm font-medium">Proof of Address</p>
               <p className="text-xs text-muted-foreground text-center">
                 Utility bill or bank statement
               </p>
-              <Button variant="outline" size="sm">
+              <input
+                type="file"
+                ref={addressFileInputRef}
+                onChange={(e) => handleFileChange(e, setProofOfAddress)}
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addressFileInputRef.current?.click()}
+              >
                 Browse Files
               </Button>
+              {proofOfAddress && (
+                <p className="text-xs text-success truncate max-w-full">
+                  Selected: {proofOfAddress.name}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
