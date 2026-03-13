@@ -502,6 +502,26 @@ const ExchangeBranchManagement = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
+                      <Label htmlFor="email">
+                        Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => {
+                          setForm({ ...form, email: e.target.value });
+                          clearError("email");
+                        }}
+                        placeholder="branch@bizpayaxis.ae"
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.email}
+                        </p>
+                      )}
+                    </div>
+                    <div>
                       <Label htmlFor="phone">
                         Phone <span className="text-red-500">*</span>
                       </Label>
@@ -527,27 +547,6 @@ const ExchangeBranchManagement = () => {
                       {errors.phone && (
                         <p className="text-sm text-red-500 mt-1">
                           {errors.phone}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="email">
-                        Email <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => {
-                          setForm({ ...form, email: e.target.value });
-                          clearError("email");
-                        }}
-                        placeholder="branch@bizpayaxis.ae"
-                      />
-                      {errors.email && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.email}
                         </p>
                       )}
                     </div>
