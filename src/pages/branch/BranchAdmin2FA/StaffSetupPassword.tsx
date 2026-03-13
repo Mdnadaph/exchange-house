@@ -243,12 +243,10 @@ export default StaffSetupPassword;
 
 
 
-
-
 // import React, { useState, useEffect } from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import axios from "axios";
-// import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
+// import { Formik, Form, Field, ErrorMessage } from "formik";
 // import * as Yup from "yup";
 // import { IoMdEye, IoIosEyeOff } from "react-icons/io";
 // import { useCookies } from "react-cookie";
@@ -259,169 +257,183 @@ export default StaffSetupPassword;
 //   confirmPassword: string;
 // }
 
-// interface Staff {
-//   email?: string;
-//   twoFactorEnabled?: boolean;
-//   active?: boolean;
+// interface ValidateResponse {
+//   valid: boolean;
+//   message: string;
 // }
 
-// interface ApiResponseData {
-//   tempToken?: string;
-//   requiresTwoFactor?: boolean;
-//   staff?: Staff;
-// }
-
-// interface ApiResponse {
+// interface SetPasswordResponse {
 //   status: boolean;
 //   message: string;
-//   data: ApiResponseData;
+//   data: {
+//     tempToken?: string;
+//     requiresTwoFactor?: boolean;
+//     staff?: {
+//       email?: string;
+//       twoFactorEnabled?: boolean;
+//     };
+//   };
 // }
 
 // const PasswordSchema = Yup.object({
-//   password: Yup.string().required("Password is required"),
+//   password: Yup.string()
+//     .min(8, "Password must be at least 8 characters")
+//     .required("Password is required"),
 //   confirmPassword: Yup.string()
 //     .oneOf([Yup.ref("password")], "Passwords must match")
-//     .required("Confirm Password is required"),
+//     .required("Confirm password is required"),
 // });
 
-// const StaffSetupPassword: React.FC = () => {
+// const StaffSetupPassword = () => {
 //   const navigate = useNavigate();
 //   const location = useLocation();
-//   const [, setCookie] = useCookies(["tempToken", "email", "twoFactorEnabled", "requiresTwoFactor"]);
+//   const [, setCookie] = useCookies([
+//     "tempToken",
+//     "email",
+//     "twoFactorEnabled",
+//     "requiresTwoFactor",
+//   ]);
 
-//   const searchParams = new URLSearchParams(location.search);
-//   const token = searchParams.get("token");
+//   const token = new URLSearchParams(location.search).get("token");
 
+//   const [isChecking, setIsChecking] = useState(true);
+//   const [isValid, setIsValid] = useState(false);
+//   const [errorMessage, setErrorMessage] = useState("");
 //   const [showPassword, setShowPassword] = useState(false);
 //   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-//   const [checking, setChecking] = useState(true);
-//   const [isValid, setIsValid] = useState(false);
-//   const [message, setMessage] = useState<string | null>(null);
-
 //   useEffect(() => {
 //     if (!token) {
-//       setMessage("Invalid or missing link. Please request a new one.");
-//       setChecking(false);
+//       setErrorMessage("No setup token found in the URL.");
+//       setIsChecking(false);
 //       return;
 //     }
 
-//     const validateToken = async () => {
+//     let isCurrent = true;
+
+//     (async () => {
 //       try {
-//         // We only send dummy password to check if token is usable
-//         const res = await axios.post<ApiResponse>(
-//           `${BASE_URL}/api/v3/staff-auth/set-password`,
+//         const res = await axios.get(
+//           `${BASE_URL}/api/v3/staff-auth/validate-setup-link`,
 //           {
-//             token,
-//             password: "dummy-check-987654",
-//             confirmPassword: "dummy-check-987654",
-//           }
+//             params: { token },
+//           },
 //         );
 
-//         if (res.data.status === true) {
-//           // Token looks usable
-//           setIsValid(true);
-//         } else {
-//           // Token rejected (expired, used, invalid...)
-//           setMessage(
-//             res.data.message ||
-//             "This link has expired or is no longer valid. Please request a new link."
+//         console.log("API RESPONSE →", res.data); // ← most useful
+//         console.log("Full response →", res); // everything
+//         console.log("Just valid & message →", {
+//           valid: res.data.valid,
+//           message: res.data.message,
+//         });
+//       } catch (err: any) {
+//         if (isCurrent) {
+//           setIsValid(false);
+//           setErrorMessage(
+//             err.response?.data?.message ||
+//               "Cannot validate setup link. It may be expired or invalid.",
 //           );
 //         }
-//       } catch (err: any) {
-//         const msg =
-//           err.response?.data?.message ||
-//           err.response?.status === 401 ? "This link has expired or is invalid." :
-//           "Something went wrong. Please request a new link.";
-
-//         setMessage(msg);
 //       } finally {
-//         setChecking(false);
+//         if (isCurrent) {
+//           setIsChecking(false);
+//         }
 //       }
-//     };
+//     })();
 
-//     validateToken();
-//   }, [token]);
+//     return () => {
+//       isCurrent = false;
+//     };
+//   }, [token, BASE_URL]);
 
 //   const handleSubmit = async (
 //     values: FormValues,
-//     { setSubmitting, setStatus }: FormikHelpers<FormValues>
+//     { setSubmitting, setStatus }: any,
 //   ) => {
+//     if (!token) {
+//       setStatus("Setup token is missing");
+//       setSubmitting(false);
+//       return;
+//     }
+
 //     try {
-//       const response = await axios.post<ApiResponse>(
+//       const { data } = await axios.post<SetPasswordResponse>(
 //         `${BASE_URL}/api/v3/staff-auth/set-password`,
 //         {
 //           token,
 //           password: values.password,
 //           confirmPassword: values.confirmPassword,
-//         }
+//         },
 //       );
 
-//       if (!response.data.status) {
-//         setStatus(response.data.message || "Failed to set password");
+//       if (!data.status) {
+//         setStatus(data.message || "Failed to set password");
 //         return;
 //       }
 
-//       const { tempToken, requiresTwoFactor } = response.data.data;
-//       const staff = response.data.data.staff;
+//       const { tempToken, staff, requiresTwoFactor } = data.data;
 
-//       if (tempToken) setCookie("tempToken", tempToken, { path: "/", sameSite: "lax" });
-//       if (staff?.email) setCookie("email", staff.email, { path: "/", sameSite: "lax" });
-//       if (staff?.twoFactorEnabled !== undefined) {
-//         setCookie("twoFactorEnabled", staff.twoFactorEnabled, { path: "/", sameSite: "lax" });
-//       }
-//       if (requiresTwoFactor !== undefined) {
-//         setCookie("requiresTwoFactor", requiresTwoFactor, { path: "/", sameSite: "lax" });
-//       }
+//       if (tempToken)
+//         setCookie("tempToken", tempToken, { path: "/", sameSite: "lax" });
+//       if (staff?.email)
+//         setCookie("email", staff.email, { path: "/", sameSite: "lax" });
+//       if (staff?.twoFactorEnabled !== undefined)
+//         setCookie("twoFactorEnabled", staff.twoFactorEnabled, {
+//           path: "/",
+//           sameSite: "lax",
+//         });
+//       if (requiresTwoFactor !== undefined)
+//         setCookie("requiresTwoFactor", requiresTwoFactor, {
+//           path: "/",
+//           sameSite: "lax",
+//         });
 
-//       if (requiresTwoFactor) {
-//         navigate("/generateqr");
-//       } else {
-//         navigate("/");
-//       }
-//     } catch (error: any) {
+//       navigate(requiresTwoFactor ? "/generateqr" : "/");
+//     } catch (err: any) {
 //       setStatus(
-//         error.response?.data?.message ||
-//         (error.response?.status === 401 ? "This link has expired." : "Server error")
+//         err.response?.data?.message ||
+//           "Something went wrong. Please try again.",
 //       );
 //     } finally {
 //       setSubmitting(false);
 //     }
 //   };
 
-//   // ─── Rendering states ───
+//   // ────────────────────────────────────────────────
+//   // Render
+//   // ────────────────────────────────────────────────
 
-//   if (checking) {
+//   if (isChecking) {
 //     return (
 //       <div className="min-h-screen flex items-center justify-center">
-//         <div className="text-lg font-medium">Verifying link...</div>
+//         <div className="text-lg font-medium">Checking link validity...</div>
 //       </div>
 //     );
 //   }
 
-//   if (message) {
+//   if (!isValid) {
 //     return (
-//       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-//         <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg text-center border">
-//           <h2 className="text-2xl font-bold text-red-600 mb-5">Link Expired or Invalid</h2>
-//           {/* <p className="text-gray-700 text-lg mb-8 leading-relaxed">{message}</p> */}
-//           <p>This link has expired. Please request a new link and try again.</p>
-//           {/* <button
-//             onClick={() => navigate("/forgot-password")}
-//             className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition"
-//           >
-//             Request New Link
-//           </button> */}
+//       <div className="min-h-screen flex items-center justify-center p-4">
+//         <div className="max-w-md w-full bg-white border rounded-lg shadow-lg p-8 text-center">
+//           <h2 className="text-2xl font-bold text-red-600 mb-4">
+//             Invalid or Expired Link
+//           </h2>
+//           <p className="text-gray-700 mb-6">{errorMessage}</p>
+//           <p className="text-sm text-gray-500">
+//             Please ask your administrator to send you a new setup link.
+//           </p>
 //         </div>
 //       </div>
 //     );
 //   }
 
-//   // Valid token → show form
+//   // Valid → show form
 //   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-//       <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg border">
-//         <h2 className="text-2xl font-bold mb-6 text-center">Set New Password</h2>
+//     <div className="min-h-screen flex items-center justify-center p-4">
+//       <div className="max-w-md w-full bg-white border rounded-lg shadow-lg p-8">
+//         <h1 className="text-2xl font-bold text-center mb-8">
+//           Set Your Password
+//         </h1>
 
 //         <Formik
 //           initialValues={{ password: "", confirmPassword: "" }}
@@ -429,53 +441,77 @@ export default StaffSetupPassword;
 //           onSubmit={handleSubmit}
 //         >
 //           {({ isSubmitting, status }) => (
-//             <Form>
-//               <div className="mb-5">
-//                 <label className="block mb-2 font-medium">New Password</label>
+//             <Form className="space-y-6">
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   New Password
+//                 </label>
 //                 <div className="relative">
 //                   <Field
 //                     type={showPassword ? "text" : "password"}
 //                     name="password"
-//                     className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 //                   />
 //                   <button
 //                     type="button"
 //                     onClick={() => setShowPassword(!showPassword)}
-//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
+//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
 //                   >
-//                     {showPassword ? <IoMdEye size={20} /> : <IoIosEyeOff size={20} />}
+//                     {showPassword ? (
+//                       <IoMdEye size={22} />
+//                     ) : (
+//                       <IoIosEyeOff size={22} />
+//                     )}
 //                   </button>
 //                 </div>
-//                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+//                 <ErrorMessage
+//                   name="password"
+//                   component="div"
+//                   className="mt-1 text-sm text-red-600"
+//                 />
 //               </div>
 
-//               <div className="mb-6">
-//                 <label className="block mb-2 font-medium">Confirm Password</label>
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Confirm Password
+//                 </label>
 //                 <div className="relative">
 //                   <Field
 //                     type={showConfirmPassword ? "text" : "password"}
 //                     name="confirmPassword"
-//                     className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 //                   />
 //                   <button
 //                     type="button"
 //                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
+//                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
 //                   >
-//                     {showConfirmPassword ? <IoMdEye size={20} /> : <IoIosEyeOff size={20} />}
+//                     {showConfirmPassword ? (
+//                       <IoMdEye size={22} />
+//                     ) : (
+//                       <IoIosEyeOff size={22} />
+//                     )}
 //                   </button>
 //                 </div>
-//                 <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm mt-1" />
+//                 <ErrorMessage
+//                   name="confirmPassword"
+//                   component="div"
+//                   className="mt-1 text-sm text-red-600"
+//                 />
 //               </div>
 
-//               {status && <div className="text-red-600 mb-4 text-center font-medium">{status}</div>}
+//               {status && (
+//                 <div className="text-red-600 text-center font-medium">
+//                   {status}
+//                 </div>
+//               )}
 
 //               <button
 //                 type="submit"
 //                 disabled={isSubmitting}
-//                 className="w-full bg-blue-600 text-white py-3 rounded font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+//                 className="w-full bg-blue-600 text-white py-3 rounded-md font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
 //               >
-//                 {isSubmitting ? "Setting Password..." : "Set Password"}
+//                 {isSubmitting ? "Setting password..." : "Set Password"}
 //               </button>
 //             </Form>
 //           )}
