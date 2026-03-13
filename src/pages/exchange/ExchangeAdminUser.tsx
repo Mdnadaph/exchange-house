@@ -572,8 +572,8 @@ const ExchangeAdminUser = () => {
                 Create Exchange Admin User
               </DialogTitle>
             </DialogHeader>
-            <div className="max-h-[70vh] overflow-y-auto pr-2">
-              <div className="grid grid-cols-1 gap-4 py-4 px-4">
+            <div className="max-h-[70vh] overflow-y-auto pl-2">
+              <div className="grid grid-cols-2 gap-4 py-4">
                 <div>
                   <Label className="text-lg">
                     Full Name <span className="text-red-500">*</span>
@@ -613,10 +613,30 @@ const ExchangeAdminUser = () => {
                 </div>
                 <div>
                   <Label className="text-lg">
+                    Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={userForm.address}
+                    onChange={(e) => {
+                      setUserForm({ ...userForm, address: e.target.value });
+                      clearError("address");
+                    }}
+                    className="mt-2 py-2 text-lg"
+                    placeholder="Enter address"
+                  />
+                  {errors.address && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.address}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-lg">
                     Phone Number <span className="text-red-500">*</span>
                   </Label>
+
                   <PhoneInput
-                    country={"ae"}
+                    country={"ae"} // default country (UAE)
                     value={userForm.phoneNumber}
                     onChange={(value) => {
                       setUserForm({ ...userForm, phoneNumber: value });
@@ -640,25 +660,7 @@ const ExchangeAdminUser = () => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <Label className="text-lg">
-                    Address <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={userForm.address}
-                    onChange={(e) => {
-                      setUserForm({ ...userForm, address: e.target.value });
-                      clearError("address");
-                    }}
-                    className="mt-2 py-2 text-lg"
-                    placeholder="Enter address"
-                  />
-                  {errors.address && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.address}
-                    </p>
-                  )}
-                </div>
+
                 <div className="flex flex-col items-start">
                   <Label className="text-lg pr-4 mt-2">
                     Permissions <span className="text-red-500">*</span>

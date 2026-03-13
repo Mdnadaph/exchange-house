@@ -1178,6 +1178,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Info } from "lucide-react";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1249,7 +1259,7 @@ const BusinessOnboardingForm = ({
     "AED",
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+  const [infoOpen, setInfoOpen] = useState(false);
   const [branchLoading, setBranchLoading] = useState(false);
 
   interface Branch {
@@ -1788,9 +1798,20 @@ const BusinessOnboardingForm = ({
             </div>
 
             <div>
-              <Label htmlFor="businessType">
-                Type of Business <span className="text-red-500">*</span>
-              </Label>
+              <div className="flex items-center gap-2 mb-1">
+                <Label htmlFor="businessType" className="mb-0">
+                  Type of Business <span className="text-red-500">*</span>
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 rounded-full"
+                  onClick={() => setInfoOpen(true)}
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              </div>
               <Select
                 value={formData.businessType}
                 onValueChange={(value) => {
@@ -2550,6 +2571,32 @@ const BusinessOnboardingForm = ({
         description={`Are you sure you want to onboard ${formData.companyName}? An admin account will be created and credentials will be sent to ${formData.adminEmail}.`}
         confirmText="Onboard Business"
       />
+
+      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Business Type Descriptions</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 max-h-96 overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>KYB Type</TableHead>
+                  <TableHead>Business type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {businessTypes.map((type) => (
+                  <TableRow key={type.value}>
+                    <TableCell className="font-mono">{type.value}</TableCell>
+                    <TableCell>{type.label}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

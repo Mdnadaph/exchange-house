@@ -131,9 +131,6 @@
 
 // export default App;
 
-
-
-
 import {
   BrowserRouter,
   Routes,
@@ -297,7 +294,10 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/change-password" element={<ChangePassword />} />
-                <Route path="/ExchangeUser-ChangePassword" element={<ExchangeUserChangePassword />} />
+                <Route
+                  path="/ExchangeUser-ChangePassword"
+                  element={<ExchangeUserChangePassword />}
+                />
 
                 {/* Staff / Exchange 2FA & setup – public */}
                 <Route path="/set-password" element={<StaffSetupPassword />} />
