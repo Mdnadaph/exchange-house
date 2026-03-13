@@ -473,8 +473,8 @@ const VerifyTwoFALogin: React.FC = () => {
       );
 
       if (!response.data.status) {
-        setOtpError("Invalid or wrong OTP");
-        toast.error(response.data.message || "Invalid or wrong OTP");
+        setOtpError("Invalid 2FA code");
+        toast.error(response.data.message || "Invalid 2FA code");
 
         setOtp(["", "", "", "", "", ""]);
         inputsRef.current[0]?.focus();
@@ -520,10 +520,10 @@ const VerifyTwoFALogin: React.FC = () => {
       toast.success("Login successful");
       navigate("/branch", { replace: true });
     } catch (error: any) {
-      console.error("❌ VERIFY ERROR:", error);
+      console.error("VERIFY ERROR:", error);
 
-      setOtpError("Invalid or wrong OTP");
-      toast.error(error.response?.data?.message || "Invalid or wrong OTP");
+      setOtpError("Invalid 2FA code");
+      toast.error(error.response?.data?.message || "Invalid 2FA code");
 
       setOtp(["", "", "", "", "", ""]);
       inputsRef.current[0]?.focus();
