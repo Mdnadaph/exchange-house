@@ -244,13 +244,13 @@ const AdminDashboard = () => {
               System Settings
             </Button> */}
 
-            <Button
+            {/* <Button
               onClick={() => navigate("/admin/exchange-houses")}
               variant="business"
             >
               <Plus className="h-4 w-4 mr-2" />
               Onboard Exchange House
-            </Button>
+            </Button> */}
           </div>
         </div>
 
