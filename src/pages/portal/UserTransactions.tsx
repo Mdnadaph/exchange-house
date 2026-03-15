@@ -871,7 +871,7 @@ const UserTransactions = () => {
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
+                              {/*<Button variant="outline" size="sm">
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
                               </Button>
@@ -885,7 +885,7 @@ const UserTransactions = () => {
                                     <FileText className="h-4 w-4 mr-1" />
                                     Documents
                                   </Button>
-                                )}
+                                )}*/}
                               <Button
                                 variant="outline"
                                 size="sm"

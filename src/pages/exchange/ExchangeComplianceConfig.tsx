@@ -66,7 +66,16 @@ const ExchangeComplianceConfig = () => {
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
-
+  const [createErrors, setCreateErrors] = useState<{ [key: string]: string }>(
+    {},
+  );
+  const clearFormError = (field: string) => {
+    setCreateErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
   const actions = [
     "FLAG",
     "MANUAL_REVIEW",
@@ -78,6 +87,21 @@ const ExchangeComplianceConfig = () => {
   const frequencies = ["IMMEDIATE", "REALTIME", "DAILY", "WEEKLY"];
   const transactionTypes = ["SINGLE", "BULK"];
 
+  const validateCreateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!createForm.name.trim()) errors.name = "Name is required";
+    if (!createForm.transactionType)
+      errors.transactionType = "Transaction type is required";
+    if (!createForm.payoutCountry)
+      errors.payoutCountry = "Payout country is required";
+    if (!createForm.thresholdAmount || createForm.thresholdAmount <= 0)
+      errors.thresholdAmount = "Threshold amount must be greater than 0";
+    if (!createForm.currency.trim()) errors.currency = "Currency is required";
+    if (!createForm.action) errors.action = "Action is required";
+    if (!createForm.frequency) errors.frequency = "Frequency is required";
+    if (!createForm.category) errors.category = "Category is required";
+    return errors;
+  };
   const fetchCountries = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
@@ -139,6 +163,12 @@ const ExchangeComplianceConfig = () => {
   }, [filter]);
 
   const handleCreate = async () => {
+    const errors = validateCreateForm();
+    if (Object.keys(errors).length > 0) {
+      setCreateErrors(errors);
+
+      return;
+    }
     try {
       const res = await fetch(`${BASE_URL}/api/v1/compliance/rules`, {
         method: "POST",
@@ -338,22 +368,34 @@ const ExchangeComplianceConfig = () => {
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
-                    <Label>Name</Label>
+                    <Label>
+                      Name <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       value={createForm.name}
-                      onChange={(e) =>
-                        setCreateForm({ ...createForm, name: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setCreateForm({ ...createForm, name: e.target.value });
+                        clearFormError("name");
+                      }}
                     />
+                    {createErrors.name && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.name}
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Transaction Type</Label>
+                      <Label>
+                        Transaction Type{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
                       <Select
                         value={createForm.transactionType}
-                        onValueChange={(v) =>
-                          setCreateForm({ ...createForm, transactionType: v })
-                        }
+                        onValueChange={(v) => {
+                          setCreateForm({ ...createForm, transactionType: v });
+                          clearFormError("transactionType");
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -366,14 +408,23 @@ const ExchangeComplianceConfig = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {createErrors.transactionType && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.transactionType}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <Label>Payout Country</Label>
+                      <Label>
+                        Payout Country{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
                       <Select
                         value={createForm.payoutCountry}
-                        onValueChange={(v) =>
-                          setCreateForm({ ...createForm, payoutCountry: v })
-                        }
+                        onValueChange={(v) => {
+                          setCreateForm({ ...createForm, payoutCountry: v });
+                          clearFormError("payoutCountry");
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Country" />
@@ -389,45 +440,70 @@ const ExchangeComplianceConfig = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {createErrors.payoutCountry && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.payoutCountry}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Threshold Amount</Label>
+                      <Label>
+                        Threshold Amount{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         type="number"
                         placeholder="0"
                         value={createForm.thresholdAmount}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setCreateForm({
                             ...createForm,
                             thresholdAmount: parseFloat(e.target.value) || 0,
-                          })
-                        }
+                          });
+                          clearFormError("thresholdAmount");
+                        }}
                       />
+                      {createErrors.thresholdAmount && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.thresholdAmount}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <Label>Currency</Label>
+                      <Label>
+                        Currency <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         placeholder="AED"
                         value={createForm.currency}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setCreateForm({
                             ...createForm,
                             currency: e.target.value,
-                          })
-                        }
+                          });
+                          clearFormError("currency");
+                        }}
                       />
+                      {createErrors.currency && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.currency}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Action</Label>
+                      <Label>
+                        Action <span className="text-destructive">*</span>
+                      </Label>
                       <Select
                         value={createForm.action}
-                        onValueChange={(v) =>
-                          setCreateForm({ ...createForm, action: v })
-                        }
+                        onValueChange={(v) => {
+                          setCreateForm({ ...createForm, action: v });
+                          clearFormError("action");
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select action" />
@@ -440,14 +516,22 @@ const ExchangeComplianceConfig = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {createErrors.action && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.action}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <Label>Frequency</Label>
+                      <Label>
+                        Frequency <span className="text-destructive">*</span>
+                      </Label>
                       <Select
                         value={createForm.frequency}
-                        onValueChange={(v) =>
-                          setCreateForm({ ...createForm, frequency: v })
-                        }
+                        onValueChange={(v) => {
+                          setCreateForm({ ...createForm, frequency: v });
+                          clearFormError("frequency");
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select frequency" />
@@ -460,15 +544,23 @@ const ExchangeComplianceConfig = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {createErrors.frequency && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.frequency}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div>
-                    <Label>Category</Label>
+                    <Label>
+                      Category <span className="text-destructive">*</span>
+                    </Label>
                     <Select
                       value={createForm.category}
-                      onValueChange={(v) =>
-                        setCreateForm({ ...createForm, category: v })
-                      }
+                      onValueChange={(v) => {
+                        setCreateForm({ ...createForm, category: v });
+                        clearFormError("category");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
@@ -481,6 +573,11 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.category && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.category}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <DialogFooter className="mt-6">

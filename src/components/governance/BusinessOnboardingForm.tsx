@@ -1261,7 +1261,8 @@ const BusinessOnboardingForm = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoOpen, setInfoOpen] = useState(false);
   const [branchLoading, setBranchLoading] = useState(false);
-
+  const [kybTypeMappings, setKybTypeMappings] = useState<any[]>([]);
+  const [kybLoading, setKybLoading] = useState(false);
   interface Branch {
     branchId: string;
     uuid: string;
@@ -1590,7 +1591,29 @@ const BusinessOnboardingForm = ({
       setLoading(false);
     }
   };
-
+  const fetchKybTypeMappings = async () => {
+    setKybLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v1/kyb-type-mappings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // The response is an array directly
+      setKybTypeMappings(res.data || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load KYB type mappings",
+        variant: "destructive",
+      });
+    } finally {
+      setKybLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (infoOpen) {
+      fetchKybTypeMappings();
+    }
+  }, [infoOpen]);
   const fetchBranches = async () => {
     try {
       setBranchLoading(true);
@@ -1809,7 +1832,7 @@ const BusinessOnboardingForm = ({
                   className="h-5 w-5 rounded-full"
                   onClick={() => setInfoOpen(true)}
                 >
-                  <Info className="h-4 w-4" />
+                  <Info className="h-4 w-4 text-green-600" />
                 </Button>
               </div>
               <Select
@@ -2578,22 +2601,35 @@ const BusinessOnboardingForm = ({
             <DialogTitle>Business Type Descriptions</DialogTitle>
           </DialogHeader>
           <div className="py-4 max-h-96 overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>KYB Type</TableHead>
-                  <TableHead>Business type</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {businessTypes.map((type) => (
-                  <TableRow key={type.value}>
-                    <TableCell className="font-mono">{type.value}</TableCell>
-                    <TableCell>{type.label}</TableCell>
+            {kybLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Business Type</TableHead>
+                    <TableHead>KYB Type</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {kybTypeMappings
+                    .slice() // create a copy to avoid mutating state
+                    .sort((a, b) =>
+                      a.businessType.localeCompare(b.businessType),
+                    )
+                    .map((mapping) => (
+                      <TableRow key={mapping.id}>
+                        <TableCell className="font-medium">
+                          {mapping.businessType}
+                        </TableCell>
+                        <TableCell>{mapping.kybType}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </DialogContent>
       </Dialog>

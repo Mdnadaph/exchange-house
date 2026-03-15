@@ -44,10 +44,6 @@ const ExchangeBusinessDocuments = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
-  // console.log("Token:-",token);
-
-  const [openViewer, setOpenViewer] = useState(false);
-  const [activeDoc, setActiveDoc] = useState<any>(null);
 
   const [documents, setDocuments] = useState<any[]>([]);
   const [dashboard, setDashboard] = useState<any>({
@@ -57,32 +53,31 @@ const ExchangeBusinessDocuments = () => {
     activeBusinesses: 0,
   });
 
-  const [selectedBusiness, setSelectedBusiness] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize] = useState(10);
   const [loading, setLoading] = useState(false);
+
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
+  // ✅ CHANGED: track loading per document ID instead of a single boolean
+  const [loadingDocId, setLoadingDocId] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileType, setPreviewFileType] = useState<
     "image" | "pdf" | "other"
   >("other");
   const [previewFileName, setPreviewFileName] = useState("");
 
-  //const handleView = (doc: any) => {
-  //  setActiveDoc(doc);
-  //  setOpenViewer(true);
-  //};
+  /* ================= VIEW DOCUMENT ================= */
   const handleView = async (doc: any) => {
     try {
-      setPreviewLoading(true);
-      setPreviewFileName(doc.documentName); // ✅ use documentName
+      // ✅ CHANGED: set loading only for this specific document's ID
+      setLoadingDocId(doc.documentId);
+      setPreviewFileName(doc.documentName);
 
       const response = await axios.get(doc.viewUrl, {
-        // ✅ use viewUrl
         responseType: "blob",
         headers: {
           Authorization: `Bearer ${cookies.token}`,
@@ -92,7 +87,6 @@ const ExchangeBusinessDocuments = () => {
       const blob = response.data;
       const blobUrl = URL.createObjectURL(blob);
 
-      // Detect file type from documentName
       if (doc.documentName.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
         setPreviewFileType("image");
       } else if (doc.documentName.match(/\.pdf$/i)) {
@@ -110,16 +104,21 @@ const ExchangeBusinessDocuments = () => {
         description: "Unable to load document preview.",
       });
     } finally {
-      setPreviewLoading(false);
+      // ✅ CHANGED: clear the loading ID when done
+      setLoadingDocId(null);
     }
   };
+
+  /* ================= CLOSE PREVIEW ================= */
   const handleClosePreview = (open: boolean) => {
     if (!open && previewUrl) {
-      URL.revokeObjectURL(previewUrl); // free memory
+      URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
     setPreviewOpen(open);
   };
+
+  /* ================= DOWNLOAD DOCUMENT ================= */
   const handleDownload = async (doc: any) => {
     try {
       const response = await axios.get(doc.viewUrl, {
@@ -130,14 +129,11 @@ const ExchangeBusinessDocuments = () => {
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
-
       const link = document.createElement("a");
-
       link.href = url;
       link.setAttribute("download", doc.documentName);
       document.body.appendChild(link);
       link.click();
-
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -160,7 +156,7 @@ const ExchangeBusinessDocuments = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (res.data?.status) {
@@ -185,7 +181,7 @@ const ExchangeBusinessDocuments = () => {
     fetchDocuments(currentPage);
   }, [currentPage]);
 
-  /* ================= FILTER ================= */
+  /* ================= FILTER (status + search) ================= */
   const filteredDocuments = documents.filter((doc) => {
     if (selectedStatus !== "all") {
       if (selectedStatus === "verified" && doc.status !== "Verified")
@@ -198,6 +194,17 @@ const ExchangeBusinessDocuments = () => {
       if (selectedStatus === "rejected" && doc.status !== "Rejected")
         return false;
     }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return (
+        doc.documentName?.toLowerCase().includes(q) ||
+        doc.businessName?.toLowerCase().includes(q) ||
+        doc.documentType?.toLowerCase().includes(q) ||
+        doc.branchName?.toLowerCase().includes(q)
+      );
+    }
+
     return true;
   });
 
@@ -241,10 +248,6 @@ const ExchangeBusinessDocuments = () => {
               View and manage all business documents across all branches
             </p>
           </div>
-          {/* <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button> */}
         </div>
 
         {/* ================= DASHBOARD ================= */}
@@ -305,7 +308,12 @@ const ExchangeBusinessDocuments = () => {
               <Label>Search Documents</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder="Search..." />
+                <Input
+                  className="pl-9"
+                  placeholder="Search by name, business, type, branch..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
             </div>
 
@@ -332,73 +340,98 @@ const ExchangeBusinessDocuments = () => {
           </CardHeader>
 
           <CardContent className="space-y-3">
-            {!loading &&
-              filteredDocuments.map((doc) => (
-                <Card key={doc.documentId}>
-                  <CardContent className="p-4 flex justify-between">
-                    <div className="flex gap-3">
-                      <FileText className="h-8 w-8 text-primary" />
-                      <div>
-                        <div className="flex gap-2">
-                          <h4 className="font-semibold">{doc.documentName}</h4>
-                          {getStatusBadge(doc.status)}
-                        </div>
+            {loading && (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
 
-                        <div className="text-xs text-muted-foreground flex gap-4 flex-wrap">
-                          <span>
-                            <Building2 className="inline h-3 w-3 mr-1" />
-                            {doc.businessName}
-                          </span>
-                          <span>{doc.documentType}</span>
-                          <span>
-                            <Calendar className="inline h-3 w-3 mr-1" />
-                            {doc.uploadedAt}
-                          </span>
-                          <span>{(doc.fileSize / 1024).toFixed(1)} KB</span>
-                          <Badge variant="outline">{doc.branchName}</Badge>
+            {!loading &&
+              filteredDocuments.map((doc) => {
+                // ✅ CHANGED: each row checks if ITS OWN ID is loading
+                const isThisDocLoading = loadingDocId === doc.documentId;
+
+                return (
+                  <Card key={doc.documentId}>
+                    <CardContent className="p-4 flex justify-between">
+                      <div className="flex gap-3">
+                        <FileText className="h-8 w-8 text-primary" />
+                        <div>
+                          <div className="flex gap-2 flex-wrap items-center">
+                            <h4 className="font-semibold">
+                              {doc.documentName}
+                            </h4>
+                            {getStatusBadge(doc.status)}
+                          </div>
+
+                          <div className="text-xs text-muted-foreground flex gap-4 flex-wrap mt-1">
+                            <span>
+                              <Building2 className="inline h-3 w-3 mr-1" />
+                              {doc.businessName}
+                            </span>
+                            <span>{doc.documentType}</span>
+                            <span>
+                              <Calendar className="inline h-3 w-3 mr-1" />
+                              {doc.uploadedAt}
+                            </span>
+                            <span>{(doc.fileSize / 1024).toFixed(1)} KB</span>
+                            <Badge variant="outline">{doc.branchName}</Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleView(doc)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* ✅ CHANGED: only THIS button disables and shows spinner */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleView(doc)}
+                          disabled={isThisDocLoading}
+                        >
+                          {isThisDocLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Eye className="h-4 w-4 mr-1" />
+                          )}
+                          View
+                        </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownload(doc)}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(doc)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
 
-                      {doc.status === "pending_review" && (
-                        <>
-                          <Button variant="default" size="sm">
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Verify
-                          </Button>
-                          <Button variant="destructive" size="sm">
-                            <X className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        {doc.status === "Pending Review" && (
+                          <>
+                            <Button variant="default" size="sm">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Verify
+                            </Button>
+                            <Button variant="destructive" size="sm">
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
 
             {!loading && filteredDocuments.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No documents found
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p>No documents found</p>
+                {(searchQuery || selectedStatus !== "all") && (
+                  <p className="text-sm mt-1">
+                    Try clearing your search or filter
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
@@ -436,36 +469,32 @@ const ExchangeBusinessDocuments = () => {
           </Pagination>
         )}
 
-        {/* ============= Modal for View Documents =========== */}
+        {/* ================= PREVIEW MODAL ================= */}
         <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0">
-            {/* Fixed Header */}
             <DialogHeader className="p-4 border-b">
               <DialogTitle className="truncate">{previewFileName}</DialogTitle>
             </DialogHeader>
 
-            {/* Scrollable Content Area */}
             <div className="flex-1 overflow-auto p-4 bg-muted/10">
-              {previewLoading && (
-                <div className="flex justify-center items-center h-full">
+              {!previewUrl && (
+                <div className="flex justify-center items-center h-64">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               )}
 
-              {!previewLoading && previewUrl && (
+              {previewUrl && (
                 <>
-                  {/* Image Preview */}
                   {previewFileType === "image" && (
                     <div className="flex justify-center items-center h-full">
                       <img
                         src={previewUrl}
                         alt="Preview"
-                        className="max-w-full max-h-full object-contain"
+                        className="max-w-full max-h-full object-contain rounded"
                       />
                     </div>
                   )}
 
-                  {/* PDF Preview */}
                   {previewFileType === "pdf" && (
                     <iframe
                       src={previewUrl}
@@ -474,7 +503,6 @@ const ExchangeBusinessDocuments = () => {
                     />
                   )}
 
-                  {/* Unsupported File Type */}
                   {previewFileType === "other" && (
                     <div className="text-center text-muted-foreground py-8">
                       Preview not available for this file type.
