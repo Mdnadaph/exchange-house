@@ -37,6 +37,7 @@ import {
   Building,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentType {
   documentCode: string;
@@ -114,14 +115,14 @@ const Step2Schema = Yup.object().shape({
       Yup.object().shape({
         documentCode: Yup.string().required("Document type is required"),
         required: Yup.boolean(),
-      })
+      }),
     )
     .min(1, "At least one document is required"),
   risks: Yup.array().of(
     Yup.object().shape({
       risk: Yup.string().required("Risk type is required"),
       enabled: Yup.boolean(),
-    })
+    }),
   ),
   escalation: Yup.object()
     .shape({
@@ -141,7 +142,7 @@ const Step2Schema = Yup.object().shape({
       (value) => {
         if (!value) return true;
         return value.highRisk <= value.edd && value.edd <= value.manualReview;
-      }
+      },
     ),
 });
 
@@ -435,7 +436,7 @@ const Step2: React.FC<Step2Props> = ({
                             onValueChange={(value) =>
                               setFieldValue(
                                 `documents.${index}.documentCode`,
-                                value
+                                value,
                               )
                             }
                             disabled={documentTypes.length === 0}
@@ -483,7 +484,7 @@ const Step2: React.FC<Step2Props> = ({
                             onCheckedChange={(checked) =>
                               setFieldValue(
                                 `documents.${index}.required`,
-                                checked
+                                checked,
                               )
                             }
                             className="data-[state=checked]:bg-blue-600"
@@ -952,6 +953,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
   const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
+  const { toast } = useToast();
 
   const [step, setStep] = useState(1);
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -977,12 +979,16 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data.status) {
-        setSuccessMessage("KYB Rule created successfully!");
-
+        // setSuccessMessage("KYB Rule created successfully!");
+        toast({
+          title: "Success",
+          description:
+            response?.data?.message || "KYB Rule created successfully!",
+        });
         // Add a small delay to show success message
         setTimeout(() => {
           if (isModal) {
@@ -993,15 +999,31 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           }
         }, 1000);
       } else {
-        setErrorMessage(response.data.message || "Failed to create rule");
+        // setErrorMessage(response.data.message || "Failed to create rule");
+        toast({
+          title: "Error",
+          description:
+            response?.data?.statusCode == 409
+              ? response?.data?.data?.database[0]
+              : response?.data?.message || "Failed to create rule",
+          variant: "destructive",
+        });
         setIsSubmitting(false); // Reset submitting state on error
       }
     } catch (error: any) {
-      setErrorMessage(
-        error.response?.data?.message ||
+      // setErrorMessage(
+      //   error.response?.data?.message ||
+      //     error.response?.data?.error ||
+      //     "Failed to create KYB rule. Please try again.",
+      // );
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message ||
           error.response?.data?.error ||
-          "Failed to create KYB rule. Please try again."
-      );
+          "Failed to create KYB rule. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -1021,12 +1043,9 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
             axios.get(`${BASE_URL}/api/v3/admin/kyb/master/documents`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            axios.get(
-              `${BASE_URL}/api/v3/admin/kyb/master/risks`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            ),
+            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/risks`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
           ]);
 
         // Set business types
@@ -1054,7 +1073,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
       } catch (error: any) {
         setErrorMessage(
           error.response?.data?.message ||
-            "Failed to fetch master data. Please try again."
+            "Failed to fetch master data. Please try again.",
         );
       } finally {
         setIsLoading(false);
@@ -1252,9 +1271,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           )}
         </Formik>
       </div>
-      
     </div>
-    
   );
 };
 
