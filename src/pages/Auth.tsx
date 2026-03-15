@@ -526,7 +526,7 @@ const Auth: React.FC = () => {
 
       const data = res.data.data;
 
-      // ─── 2FA required ───────────────────────────────────────
+      // ─── 2FA required ─────────────────────────────────
       if (data.requiresTwoFactor && data.tempToken) {
         const payload = JSON.parse(atob(data.tempToken.split(".")[1]));
         const maxAge = payload.exp - Math.floor(Date.now() / 1000);

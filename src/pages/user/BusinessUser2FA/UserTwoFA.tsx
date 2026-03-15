@@ -227,6 +227,9 @@
 // export default UserTwoFA;
 
 
+
+
+
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -285,7 +288,7 @@ const UserTwoFA = () => {
           setError(response.data.message || "Failed to initiate 2FA");
         }
       } catch (err: any) {
-        console.error("❌ initiate-2fa-setup error:", err);
+        console.error("initiate-2fa-setup error:", err);
         setError(err.response?.data?.message || "Error initiating 2FA setup");
       } finally {
         setLoading(false);
@@ -358,7 +361,7 @@ const UserTwoFA = () => {
         toast.error(msg);
       }
     } catch (err: any) {
-      console.error("❌ verify error:", err);
+      console.error("verify error:", err);
       const msg = err.response?.data?.message || "Verification failed";
       setVerifyError(msg);
       toast.error(msg);
