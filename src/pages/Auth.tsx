@@ -424,10 +424,6 @@
 
 // export default Auth;
 
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -601,10 +597,11 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
-      const statusCode = err?.response?.data?.statusCode;
+      console.log("error", err);
+      const statusCode = err?.response?.status;
       const uuid = err?.response?.data?.data?.uuid;
 
-      if (statusCode === 428 && uuid) {
+      if (statusCode === 428) {
         navigate(`/change-password?uuid=${uuid}`);
         return;
       }
@@ -657,7 +654,9 @@ const Auth: React.FC = () => {
                 <Form>
                   <CardContent className="space-y-5">
                     <div>
-                      <Label>Email Address <span className="text-red-600">*</span></Label>
+                      <Label>
+                        Email Address <span className="text-red-600">*</span>
+                      </Label>
                       <Field
                         as={Input}
                         name="email"
@@ -672,7 +671,9 @@ const Auth: React.FC = () => {
                     </div>
 
                     <div>
-                      <Label>Password <span className="text-red-600">*</span></Label>
+                      <Label>
+                        Password <span className="text-red-600">*</span>
+                      </Label>
                       <div className="relative">
                         <Field
                           as={Input}
@@ -705,7 +706,11 @@ const Auth: React.FC = () => {
                   </CardContent>
 
                   <div className="text-center mt-0">
-                    <Button variant="link" className="text-sm">
+                    <Button
+                      variant="link"
+                      className="text-sm"
+                      onClick={() => navigate("/forgot-password")}
+                    >
                       Forgot Password ?
                     </Button>
                   </div>

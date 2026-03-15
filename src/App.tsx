@@ -220,6 +220,8 @@ import ExchangeDiscount from "./pages/exchange/ExchangeDiscount";
 import ExchangeAdminUser from "./pages/exchange/ExchangeAdminUser";
 
 import ExchangeUserChangePassword from "./pages/ExchangeUserChangePassword";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -294,6 +296,8 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route
                   path="/ExchangeUser-ChangePassword"
                   element={<ExchangeUserChangePassword />}

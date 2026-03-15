@@ -1,43 +1,35 @@
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ErrorMessage, Field, Formik, Form } from "formik";
+import { ErrorMessage, Field, Form, Formik } from "formik";
 import { Building2, Eye, EyeOff } from "lucide-react";
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-// import { Form } from "react-router-dom";
+import { useState } from "react";
 import * as Yup from "yup";
+import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BASE_URL from "@/config/config";
 import axios from "axios";
-import { toast } from "sonner";
-const loginSchema = Yup.object({
+const schema = Yup.object({
   newPassword: Yup.string().min(6).required("New Password required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("newPassword")], "Passwords must match")
-    .required("Confirm password required"),
 });
-export default function ChangePassword() {
-  const [searchParams] = useSearchParams();
-  const uuid = searchParams.get("uuid");
+export default function ResetPassword() {
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
   const navigate = useNavigate();
-  const handleLogin = async (values: any, { setSubmitting }: any) => {
+  const handleResetPassword = async (values: any, { setSubmitting }: any) => {
     setErrorMessage(""); // Clear previous error
-    let apiUrl = `${BASE_URL}/api/v3/super/exchange-admins/${uuid}/change-initial-password`;
+    const dtoFormData = {
+      token,
+      ...values,
+    };
+    let apiUrl = `${BASE_URL}/api/v3/unified/reset-password`;
     try {
-      const res = await axios.put(apiUrl, values, {
+      const res = await axios.post(apiUrl, dtoFormData, {
         headers: { "Content-Type": "application/json" },
-        withCredentials: true,
       });
-      if (!res.data?.status) {
-        setErrorMessage(res.data.message || "password do not match!");
-        return;
-      }
-      if (res?.data?.statusCode === 200) {
-        toast.success(res?.data?.message || "Change Password Successfully");
-      }
+      toast.success(res?.data?.message || "Reset Password Successfully");
       navigate("/login");
       /* ===== 2FA FLOW ===== */
     } catch (err: any) {
@@ -54,16 +46,16 @@ export default function ChangePassword() {
             <div className="inline-flex w-16 h-16 rounded-2xl bg-primary text-primary-foreground items-center justify-center mb-4">
               <Building2 className="h-8 w-8" />
             </div>
-            <h1 className="text-2xl font-bold">Change password</h1>
+            <h1 className="text-2xl font-bold">Reset password</h1>
           </div>
           <Card
             className="shadow-xl
           pt-7"
           >
             <Formik
-              initialValues={{ newPassword: "", confirmPassword: "" }}
-              validationSchema={loginSchema}
-              onSubmit={handleLogin}
+              initialValues={{ newPassword: "" }}
+              validationSchema={schema}
+              onSubmit={handleResetPassword}
             >
               {({ isSubmitting }) => (
                 <Form>
@@ -94,34 +86,6 @@ export default function ChangePassword() {
                         className="text-red-500 text-sm"
                       />
                     </div>
-                    <div>
-                      <p className="text-gray-800 pb-3 font-medium text-base">
-                        Confirm password
-                      </p>
-                      <div className="relative">
-                        <Field
-                          as={Input}
-                          name="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                        >
-                          {showConfirmPassword ? <EyeOff /> : <Eye />}
-                        </Button>
-                      </div>
-                      <ErrorMessage
-                        name="confirmPassword"
-                        component="div"
-                        className="text-red-500 text-sm"
-                      />
-                    </div>
 
                     {errorMessage && (
                       <div className="text-red-500 text-sm text-center">
@@ -133,7 +97,7 @@ export default function ChangePassword() {
                       className="w-full"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Setting..." : "Set Password"}
+                      {isSubmitting ? "Setting..." : "Rest Password"}
                     </Button>
                   </CardContent>
                 </Form>

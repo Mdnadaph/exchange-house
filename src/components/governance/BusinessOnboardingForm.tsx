@@ -1278,7 +1278,7 @@ const BusinessOnboardingForm = ({
   const [branchList, setBranchList] = useState<Branch[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
-
+  const [apiErrors, setApiErrors] = useState<any>({});
   const [formData, setFormData] = useState({
     // Business Information
     companyName: "",
@@ -1576,6 +1576,7 @@ const BusinessOnboardingForm = ({
       }
     } catch (error: any) {
       let errorMsg = "Failed to onboard business. Please try again.";
+      setApiErrors(error?.response?.data?.data);
       if (error.response?.data?.message) {
         const backendErrors = parseBackendErrors(error.response.data.message);
         setErrors(backendErrors);
@@ -1783,12 +1784,21 @@ const BusinessOnboardingForm = ({
                     companyName: e.target.value,
                   }));
                   clearError("companyName");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    companyName: "",
+                  }));
                 }}
                 placeholder="Enter company name"
               />
               {errors.companyName && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.companyName}
+                </p>
+              )}
+              {apiErrors?.companyName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.companyName}
                 </p>
               )}
             </div>
@@ -1802,6 +1812,10 @@ const BusinessOnboardingForm = ({
                 onValueChange={(value) => {
                   setFormData((prev) => ({ ...prev, legalForm: value }));
                   clearError("legalForm");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    legalForm: "",
+                  }));
                 }}
               >
                 <SelectTrigger>
@@ -1817,6 +1831,11 @@ const BusinessOnboardingForm = ({
               </Select>
               {errors.legalForm && (
                 <p className="text-sm text-red-500 mt-1">{errors.legalForm}</p>
+              )}
+              {apiErrors?.legalForm && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors.legalForm}
+                </p>
               )}
             </div>
 
@@ -1840,6 +1859,10 @@ const BusinessOnboardingForm = ({
                 onValueChange={(value) => {
                   setFormData((prev) => ({ ...prev, businessType: value }));
                   clearError("businessType");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    businessType: "",
+                  }));
                 }}
               >
                 <SelectTrigger>
@@ -1858,6 +1881,11 @@ const BusinessOnboardingForm = ({
                   {errors.businessType}
                 </p>
               )}
+              {apiErrors?.businessType && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.businessType}
+                </p>
+              )}
             </div>
 
             <div>
@@ -1873,12 +1901,21 @@ const BusinessOnboardingForm = ({
                     tradeLicense: e.target.value,
                   }));
                   clearError("tradeLicense");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    tradeLicense: "",
+                  }));
                 }}
                 placeholder="TL-XXXXXX"
               />
               {errors.tradeLicense && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.tradeLicense}
+                </p>
+              )}
+              {apiErrors?.tradeLicense && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.tradeLicense}
                 </p>
               )}
             </div>
@@ -2370,12 +2407,21 @@ const BusinessOnboardingForm = ({
                     dealValidityDays: e.target.value,
                   }));
                   clearError("dealValidityDays");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    dealValidityDays: "",
+                  }));
                 }}
                 placeholder="7"
               />
               {errors.dealValidityDays && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.dealValidityDays}
+                </p>
+              )}
+              {apiErrors?.dealValidityDays && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.dealValidityDays}
                 </p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
