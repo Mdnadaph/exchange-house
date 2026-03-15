@@ -436,9 +436,9 @@ const StaffSetupPassword = () => {
             Invalid or Expired Link
           </h2>
           <p className="text-gray-700 mb-6">{errorMessage}</p>
-          {/* <p className="text-sm text-gray-500">
-            Please contact your administrator to get a new setup link.
-          </p> */}
+          <p className="text-sm text-gray-500">
+            Please request a new password setup link from your administrator.
+          </p>
         </div>
       </div>
     );

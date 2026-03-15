@@ -463,13 +463,15 @@ const BRANCH_ROLES = [
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [cookies, setCookie] = useCookies([
+  const [cookies, setCookie, removeCookie] = useCookies([
     "token",
     "refreshToken",
     "role",
     "tempToken",
     "twoFactorMethod",
     "fullName",
+    "passwordChangeToken", // ← added
+    "tempUserType", // ← added (optional but useful)
   ]);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -507,7 +509,6 @@ const Auth: React.FC = () => {
         {
           email: values.email,
           password: values.password,
-          // NO userType field anymore
         },
         {
           headers: { "Content-Type": "application/json" },
@@ -533,10 +534,9 @@ const Auth: React.FC = () => {
           maxAge,
         });
 
-        // Redirect based on userType from response (recommended)
         switch (data.userType) {
           case "SUPER_USER":
-            navigate("/verify-2fa-super"); // adjust route name as needed
+            navigate("/verify-2fa-super");
             break;
           case "EXCHANGE_ADMIN":
           case "EXCHANGE_USER":
@@ -549,13 +549,12 @@ const Auth: React.FC = () => {
             navigate("/business-user-2fa-login");
             break;
           default:
-            // fallback — or use /verify-2fa-login if most common
             navigate("/verify-2fa-login");
         }
         return;
       }
 
-      // ─── Normal login (has accessToken) ────────
+      // ─── Normal successful login ────────
       if (data.accessToken) {
         const jwtPayload = JSON.parse(atob(data.accessToken.split(".")[1]));
         const role = jwtPayload.roles?.[0] || "";
@@ -597,7 +596,6 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
-      console.log("error", err);
       const statusCode = err?.response?.status;
       const uuid = err?.response?.data?.data?.uuid;
 
@@ -606,6 +604,14 @@ const Auth: React.FC = () => {
         return;
       }
 
+      // (Optional) Keep old uuid-based flow if it still exists somewhere
+      // const uuid = responseData.uuid;
+      // if (statusCode === 428 && uuid) {
+      //   navigate(`/change-password?uuid=${uuid}`, { replace: true });
+      //   return;
+      // }
+
+      // Default error message
       setErrorMessage(
         err?.response?.data?.message || "Invalid email or password",
       );
