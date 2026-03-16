@@ -83,7 +83,12 @@ interface DocumentViewerData {
   document: any;
   application: any;
 }
-
+const filterToBackendStatus: Record<string, string> = {
+  pending: "NOT_STARTED",
+  approved: "APPROVED",
+  rejected: "REJECTED",
+  all: "",
+};
 const ExchangeKYBReview = () => {
   const [kybApplications, setKybApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +98,7 @@ const ExchangeKYBReview = () => {
 
   // Comments state for each application
   const [comments, setComments] = useState<Record<string, string>>({});
-
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   // Document viewer state
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerData, setViewerData] = useState<DocumentViewerData | null>(null);
@@ -117,9 +122,8 @@ const ExchangeKYBReview = () => {
   const token = cookies.token;
 
   useEffect(() => {
-    fetchKYBApplications(currentPage);
-  }, [currentPage]);
-
+    fetchKYBApplications(currentPage, searchTerm, filterStatus);
+  }, [currentPage, filterStatus]);
   // Clean up blob URLs when component unmounts or when viewer closes
   useEffect(() => {
     return () => {
@@ -132,7 +136,11 @@ const ExchangeKYBReview = () => {
     };
   }, [imageBlobUrl, pdfBlobUrl]);
 
-  const fetchKYBApplications = async (page = 0) => {
+  const fetchKYBApplications = async (
+    page = 0,
+    search = searchTerm,
+    status = filterStatus,
+  ) => {
     try {
       setLoading(true);
       setError(null);
@@ -142,16 +150,24 @@ const ExchangeKYBReview = () => {
         setLoading(false);
         return;
       }
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: pageSize.toString(),
+      });
+      if (search) params.append("query", search);
 
-      const response = await axios.get(
-        `${BASE_URL}/api/v3/admin/kyb/businesses?page=${page}&size=${pageSize}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      if (status) {
+        const backendStatus = filterToBackendStatus[status];
+        if (backendStatus) {
+          params.append("status", backendStatus);
+        } else {
+          params.append("status", status); // fallback (should not happen)
         }
+      }
+      const response = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/businesses?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       if (response.data?.status) {
         const data: ApiResponse = response.data;
 
@@ -240,18 +256,20 @@ const ExchangeKYBReview = () => {
     }
   };
 
-  // Helper function to determine priority
   const determinePriority = (status: string, createdDate: string): string => {
     const statusPriority: Record<string, string> = {
       NOT_STARTED: "high",
-      IN_PROGRESS: "medium",
+      PENDING: "high",
+      MANUAL_REVIEW: "medium",
+      EDD_REQUIRED: "medium",
+      AUTO_APPROVED: "low",
       APPROVED: "low",
       REJECTED: "low",
     };
-
     const basePriority = statusPriority[status] || "medium";
 
-    if (status === "NOT_STARTED" && createdDate) {
+    // Aging for pending statuses
+    if ((status === "NOT_STARTED" || status === "PENDING") && createdDate) {
       const created = new Date(createdDate);
       const now = new Date();
       const diffDays = (now.getTime() - created.getTime()) / (1000 * 3600 * 24);
@@ -261,23 +279,24 @@ const ExchangeKYBReview = () => {
     return basePriority;
   };
 
-  // Helper function to map API kybStatus to component status
   const mapKybStatus = (status: string): string => {
     const statusMap: Record<string, string> = {
       NOT_STARTED: "pending_review",
-      IN_PROGRESS: "under_review",
+      PENDING: "pending_review",
+      AUTO_APPROVED: "approved",
+      EDD_REQUIRED: "under_review",
+      MANUAL_REVIEW: "under_review",
       APPROVED: "approved",
       REJECTED: "rejected",
     };
     return statusMap[status] || "pending_review";
   };
-
   // Add this helper function after the other helpers
   const checkAllDocumentsApproved = (documents: any[]): boolean => {
     if (!documents || documents.length === 0) return false;
 
     return documents.every(
-      (doc) => doc.originalStatus === "APPROVED" || doc.status === "approved"
+      (doc) => doc.originalStatus === "APPROVED" || doc.status === "approved",
     );
   };
 
@@ -297,7 +316,7 @@ const ExchangeKYBReview = () => {
     if (!documents || documents.length === 0) return 0;
 
     const approvedDocs = documents.filter(
-      (doc) => doc.status === "APPROVED"
+      (doc) => doc.status === "APPROVED",
     ).length;
 
     return Math.round((approvedDocs / documents.length) * 100);
@@ -306,7 +325,7 @@ const ExchangeKYBReview = () => {
   // Determine risk score based on business type and country
   const determineRiskScore = (
     businessType: string,
-    country: string
+    country: string,
   ): string => {
     const highRiskCountries = ["HighRiskCountry1", "HighRiskCountry2"];
     const highRiskBusinessTypes = ["GAMBLING", "CRYPTOCURRENCY", "CASINO"];
@@ -372,22 +391,12 @@ const ExchangeKYBReview = () => {
     return colors[risk as keyof typeof colors] || colors.Medium;
   };
 
-  // Filter applications based on search term
-  const filteredApplications = kybApplications.filter(
-    (app) =>
-      app.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.branch.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const handleViewDocument = async (document: any, application: any) => {
-    console.log("Opening document:", {
-      documentId: document.documentId,
-      viewUrl: document.viewUrl,
-      name: document.name,
-    });
+    // console.log("Opening document:", {
+    //   documentId: document.documentId,
+    //   viewUrl: document.viewUrl,
+    //   name: document.name,
+    // });
 
     // Clear previous blob URLs
     if (imageBlobUrl) {
@@ -475,7 +484,7 @@ const ExchangeKYBReview = () => {
 
   const handleDownloadDocument = async (
     viewUrl: string,
-    documentName: string
+    documentName: string,
   ) => {
     try {
       if (!token) {
@@ -527,8 +536,8 @@ const ExchangeKYBReview = () => {
 
     try {
       setActionLoading(true);
-      console.log("Approving document ID:", viewerData.document.documentId);
-      console.log("Sending approval request...");
+      // console.log("Approving document ID:", viewerData.document.documentId);
+      // console.log("Sending approval request...");
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb/documents/${viewerData.document.documentId}/review`,
@@ -540,10 +549,10 @@ const ExchangeKYBReview = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
-      console.log("Approval response:", response.data);
+      // console.log("Approval response:", response.data);
 
       if (response.data?.status) {
         await fetchKYBApplications(currentPage);
@@ -584,8 +593,8 @@ const ExchangeKYBReview = () => {
 
     try {
       setActionLoading(true);
-      console.log("Rejecting document ID:", viewerData.document.documentId);
-      console.log("Rejection reason:", rejectionReason);
+      // console.log("Rejecting document ID:", viewerData.document.documentId);
+      // console.log("Rejection reason:", rejectionReason);
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb/documents/${viewerData.document.documentId}/review`,
@@ -598,10 +607,10 @@ const ExchangeKYBReview = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
-      console.log("Rejection response:", response.data);
+      // console.log("Rejection response:", response.data);
 
       if (response.data?.status) {
         await fetchKYBApplications(currentPage);
@@ -641,7 +650,7 @@ const ExchangeKYBReview = () => {
     const extension = fileName.split(".").pop()?.toLowerCase();
     if (
       ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(
-        extension || ""
+        extension || "",
       )
     ) {
       return <FileImage className="h-6 w-6 text-blue-500" />;
@@ -659,7 +668,7 @@ const ExchangeKYBReview = () => {
     if (!fileName) return false;
     const extension = fileName.split(".").pop()?.toLowerCase();
     return ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(
-      extension || ""
+      extension || "",
     );
   };
 
@@ -674,7 +683,7 @@ const ExchangeKYBReview = () => {
   const handleKybAction = async (
     businessId: number,
     action: "approve" | "reject",
-    comment: string
+    comment: string,
   ) => {
     try {
       if (!token) {
@@ -684,7 +693,7 @@ const ExchangeKYBReview = () => {
 
       // Find the application to check document statuses
       const application = kybApplications.find(
-        (app) => app.originalData.id === businessId
+        (app) => app.originalData.id === businessId,
       );
 
       // If approving, check if all documents are approved
@@ -692,18 +701,18 @@ const ExchangeKYBReview = () => {
         const hasPendingDocuments = application?.documents?.some(
           (doc: any) =>
             doc.originalStatus !== "APPROVED" &&
-            doc.originalStatus !== "APPROVED"
+            doc.originalStatus !== "APPROVED",
         );
 
         // More accurate check:
         const unapprovedDocuments = application?.documents?.filter(
           (doc: any) =>
-            doc.originalStatus !== "APPROVED" && doc.status !== "approved"
+            doc.originalStatus !== "APPROVED" && doc.status !== "approved",
         );
 
         if (unapprovedDocuments && unapprovedDocuments.length > 0) {
           setError(
-            `Cannot approve business. ${unapprovedDocuments.length} document(s) are not approved yet.`
+            `Cannot approve business. ${unapprovedDocuments.length} document(s) are not approved yet.`,
           );
           return;
         }
@@ -814,7 +823,7 @@ const ExchangeKYBReview = () => {
                 Review and process business verification applications
               </p>
             </div>
-            <div className="flex space-x-3">
+            {/* <div className="flex space-x-3">
               <Button
                 variant="outline"
                 type="button"
@@ -829,7 +838,7 @@ const ExchangeKYBReview = () => {
               <Button type="button" variant="business">
                 Assign Reviewer
               </Button>
-            </div>
+            </div> */}
           </div>
 
           {/* Error Display */}
@@ -875,16 +884,57 @@ const ExchangeKYBReview = () => {
                 <div className="flex gap-2 items-end">
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => {
+                      setCurrentPage(0);
+                      fetchKYBApplications(0, searchTerm, filterStatus);
+                    }}
+                    disabled={!searchTerm.trim()}
                   >
-                    Clear Filters
+                    Search
                   </Button>
-                  <Button type="button" variant="outline">
-                    High Priority
+                  <Button
+                    type="button"
+                    variant={filterStatus === null ? "default" : "outline"}
+                    onClick={() => {
+                      setFilterStatus(null);
+                      setCurrentPage(0);
+                    }}
+                  >
+                    All
                   </Button>
-                  <Button type="button" variant="outline">
-                    Pending Review
+                  <Button
+                    type="button"
+                    variant={filterStatus === "pending" ? "default" : "outline"}
+                    onClick={() => {
+                      setFilterStatus("pending");
+                      setCurrentPage(0);
+                    }}
+                  >
+                    Pending
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      filterStatus === "approved" ? "default" : "outline"
+                    }
+                    onClick={() => {
+                      setFilterStatus("approved");
+                      setCurrentPage(0);
+                    }}
+                  >
+                    Approved
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      filterStatus === "rejected" ? "default" : "outline"
+                    }
+                    onClick={() => {
+                      setFilterStatus("rejected");
+                      setCurrentPage(0);
+                    }}
+                  >
+                    Rejected
                   </Button>
                 </div>
               </div>
@@ -893,11 +943,11 @@ const ExchangeKYBReview = () => {
 
           {/* KYB Applications */}
           <div className="space-y-6">
-            {filteredApplications.map((application) => {
+            {kybApplications.map((application) => {
               const status = getStatusBadge(application.status);
               const StatusIcon = status.icon;
               const allDocumentsApproved = checkAllDocumentsApproved(
-                application.documents
+                application.documents,
               );
 
               return (
@@ -930,7 +980,7 @@ const ExchangeKYBReview = () => {
                         </Badge>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
-                            application.riskScore
+                            application.riskScore,
                           )}`}
                         >
                           {application.riskScore.toUpperCase()} RISK
@@ -1032,7 +1082,7 @@ const ExchangeKYBReview = () => {
                             {application.transactionProfile.destinations
                               .length > 0
                               ? application.transactionProfile.destinations.join(
-                                  ", "
+                                  ", ",
                                 )
                               : "Not specified"}
                           </p>
@@ -1051,7 +1101,7 @@ const ExchangeKYBReview = () => {
                           {application.documents.map(
                             (doc: any, index: number) => {
                               const docStatus = getDocumentStatusBadge(
-                                doc.status
+                                doc.status,
                               );
                               return (
                                 <div
@@ -1097,7 +1147,7 @@ const ExchangeKYBReview = () => {
                                         doc.viewUrl &&
                                         handleDownloadDocument(
                                           doc.viewUrl,
-                                          doc.documentName
+                                          doc.documentName,
                                         )
                                       }
                                       disabled={!doc.viewUrl}
@@ -1108,7 +1158,7 @@ const ExchangeKYBReview = () => {
                                   </div>
                                 </div>
                               );
-                            }
+                            },
                           )}
                         </div>
                       ) : (
@@ -1122,9 +1172,9 @@ const ExchangeKYBReview = () => {
                     </div>
 
                     {/* Review Actions */}
+
                     <div className="border-t pt-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Review Comments */}
                         <div className="space-y-4">
                           <Label htmlFor={`comments-${application.uuid}`}>
                             Review Comments
@@ -1147,69 +1197,62 @@ const ExchangeKYBReview = () => {
                           />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="space-y-4">
-                          <Label>Review Actions</Label>
-                          <div className="grid grid-cols-2 gap-3">
-                            <Button
-                              type="button"
-                              variant="default"
-                              className="w-full"
-                              disabled={!allDocumentsApproved}
-                              title={
-                                !allDocumentsApproved
-                                  ? "All documents must be approved first"
-                                  : "Approve business application"
-                              }
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleKybAction(
-                                  application.originalData.id,
-                                  "approve",
-                                  comments[application.uuid] ||
-                                    "Application approved"
-                                );
-                              }}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              className="w-full"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleKybAction(
-                                  application.originalData.id,
-                                  "reject",
-                                  comments[application.uuid] ||
-                                    "Application rejected"
-                                );
-                              }}
-                            >
-                              Reject
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full"
-                            >
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Request Info
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full"
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Assign Reviewer
-                            </Button>
+                        {!["approved", "rejected"].includes(
+                          application.status,
+                        ) && (
+                          <div className="space-y-4">
+                            <Label>Review Actions</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <Button
+                                type="button"
+                                variant="default"
+                                className="w-full"
+                                disabled={!allDocumentsApproved}
+                                title={
+                                  !allDocumentsApproved
+                                    ? "All documents must be approved first"
+                                    : "Approve business application"
+                                }
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleKybAction(
+                                    application.originalData.id,
+                                    "approve",
+                                    comments[application.uuid] ||
+                                      "Application approved",
+                                  );
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                className="w-full"
+                                disabled={application.documents.length === 0} // <-- added
+                                title={
+                                  application.documents.length === 0
+                                    ? "No documents uploaded"
+                                    : ""
+                                }
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleKybAction(
+                                    application.originalData.id,
+                                    "reject",
+                                    comments[application.uuid] ||
+                                      "Application rejected",
+                                  );
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -1217,7 +1260,7 @@ const ExchangeKYBReview = () => {
               );
             })}
 
-            {filteredApplications.length === 0 && !loading && (
+            {kybApplications.length === 0 && !loading && (
               <Card className="shadow-card">
                 <CardContent className="py-12 text-center">
                   <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -1356,7 +1399,7 @@ const ExchangeKYBReview = () => {
                                   onClick={() =>
                                     viewerData.document.viewUrl &&
                                     loadImageWithAuth(
-                                      viewerData.document.viewUrl
+                                      viewerData.document.viewUrl,
                                     )
                                   }
                                 >
@@ -1423,7 +1466,7 @@ const ExchangeKYBReview = () => {
                               onClick={() =>
                                 handleDownloadDocument(
                                   viewerData.document.viewUrl,
-                                  viewerData.document.documentName
+                                  viewerData.document.documentName,
                                 )
                               }
                             >
