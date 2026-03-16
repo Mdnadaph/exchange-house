@@ -49,14 +49,27 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
 
   // console.log("full Name ", fullName);
 
+  // const handleLogout = () => {
+  //   removeCookie("email");
+  //   removeCookie("token");
+  //   removeCookie("fullName");
+  //   removeCookie("role");
+  //   removeCookie("accessToken");
+  //   removeCookie("refreshToken");
+  //   navigate("/");
+  // };
+
   const handleLogout = () => {
-    removeCookie("email");
-    removeCookie("token");
-    removeCookie("fullName");
-    removeCookie("role");
-    removeCookie("accessToken");
-    removeCookie("refreshToken");
-    navigate("/");
+    const options = { path: "/" };
+
+    removeCookie("token", options);
+    removeCookie("accessToken", options);
+    removeCookie("refreshToken", options);
+    removeCookie("email", options);
+    removeCookie("role", options);
+    removeCookie("fullName", options);
+
+    navigate("/", { replace: true });
   };
 
   //const navigation = [

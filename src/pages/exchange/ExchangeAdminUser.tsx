@@ -437,7 +437,7 @@ const ExchangeAdminUser = () => {
             </PermissionGate>
           </div>
         </div>
-        <h1 className="text-3xl font-bold">Exchange Admin User Lists</h1>
+        {/* <h1 className="text-3xl font-bold">Exchange Admin User Lists</h1> */}
 
         {/* ---------- Permission Edit Modal (for existing users) ---------- */}
         <Dialog
