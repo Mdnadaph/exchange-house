@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import {
-  TrendingUp,
   Search,
   Clock,
   CheckCircle,
@@ -19,15 +18,32 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  Info,
-  MessageSquare,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { formateDateTime } from "@/utils/formateDateTime";
-import UserLayout from "@/components/layout/UserLayout";
+
+// ──────────────────────────────────────────────
+// Simple debounce hook (no external dependency needed)
+// ──────────────────────────────────────────────
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 const BranchDealReview = () => {
   const [expandedDeal, setExpandedDeal] = useState<string | null>(null);
@@ -35,65 +51,50 @@ const BranchDealReview = () => {
   const token = cookies?.token;
   const [page, setPage] = useState<number>(0);
   const [searchValue, setSearchValue] = useState<string>("");
-  const [rateDealsData, setRateDealsData] = useState(null);
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+
+  // Debounce search input — API called only after 500ms pause
+  const debouncedSearch = useDebounce(searchValue, 500);
+
+  const [rateDealsData, setRateDealsData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { toast } = useToast();
-  // Only deals from businesses registered through this branch
+
   const getRateDeals = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      let url = `${BASE_URL}/api/v1/rate-deals?query=${encodeURIComponent(
+        debouncedSearch
+      )}&page=${page}&size=10`;
+
+      if (filterStatus !== "ALL") {
+        url += `&status=${filterStatus}`;
+      }
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const json = await res.json();
       if (json?.status !== true || !json.data) {
-        throw new Error("Unexpected response format");
+        throw new Error("Unexpected API response format");
       }
-      setRateDealsData(json?.data);
-    } catch (error) {
-      const msg = error.message || "Failed to load rate-deals";
+
+      setRateDealsData(json.data);
+    } catch (error: any) {
+      const msg = error.message || "Failed to load rate deals";
       toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
+
+  // Trigger fetch when these values change
   useEffect(() => {
     getRateDeals();
-  }, [searchValue, page]);
-
-  const deals = [
-    {
-      id: "DEAL-001",
-      businessId: "BIZ-001",
-      businessName: "Tech Solutions LLC",
-      sendingCurrency: "AED",
-      sendingAmount: "50,000",
-      payoutCountry: "India",
-      payoutCurrency: "INR",
-      requestedRate: "23.50",
-      currentRate: "22.50",
-      status: "pending",
-      purpose: "Supplier Payment",
-      submittedDate: "2024-01-16 10:30",
-      registeredDate: "2023-05-15",
-      notes: "Urgent payment needed for supplier contract renewal",
-      timeline: [
-        {
-          id: "1",
-          type: "request" as const,
-          actor: "Sarah Smith",
-          role: "Business" as const,
-          proposedRate: "23.50",
-          timestamp: "2024-01-16 10:30",
-        },
-      ],
-    },
-  ];
+  }, [debouncedSearch, page, filterStatus]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -126,29 +127,35 @@ const BranchDealReview = () => {
           </Badge>
         );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{status || "Unknown"}</Badge>;
     }
   };
 
-  const calculateRateDifference = (requested: string, current: string) => {
-    const diff =
-      ((parseFloat(requested) - parseFloat(current)) / parseFloat(current)) *
-      100;
+  const calculateRateDifference = (requested: any, current: any) => {
+    const req = parseFloat(requested);
+    const cur = parseFloat(current);
+    if (isNaN(req) || isNaN(cur) || cur === 0) return "0.00";
+    const diff = ((req - cur) / cur) * 100;
     return diff.toFixed(2);
   };
-  const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
+
+  const stats = rateDealsData?.branchStats || {};
+  const content = rateDealsData?.rateDeals?.content || [];
+  const totalElements = rateDealsData?.rateDeals?.totalElements || 0;
+
   if (loading) {
     return (
       <BranchLayout>
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
+            <p className="text-muted-foreground">Loading rate deals...</p>
           </div>
         </div>
       </BranchLayout>
     );
   }
+
   return (
     <BranchLayout>
       <div className="space-y-8">
@@ -164,25 +171,6 @@ const BranchDealReview = () => {
           </div>
         </div>
 
-        {/* Info Alert */}
-        <Card className="bg-accent-muted/20 border-accent">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-accent mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Branch Deal Authority
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  You can review and respond to deal requests from businesses
-                  registered through Dubai Mall Branch. You have authority to
-                  approve deals within your branch's rate margin limits.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
@@ -193,7 +181,7 @@ const BranchDealReview = () => {
               <Building2 className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3</div>
+              <div className="text-2xl font-bold">{stats.branchBusiness ?? 0}</div>
               <p className="text-xs text-muted-foreground">Active businesses</p>
             </CardContent>
           </Card>
@@ -203,11 +191,11 @@ const BranchDealReview = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pending Review
               </CardTitle>
-              <Clock className="h-5 w-5 text-warning" />
+              <Clock className="h-5 w-5 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-warning">
-                {deals.filter((d) => d.status === "pending").length}
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pending ?? 0}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting decision</p>
             </CardContent>
@@ -218,10 +206,12 @@ const BranchDealReview = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Approved
               </CardTitle>
-              <CheckCircle className="h-5 w-5 text-success" />
+              <CheckCircle className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">8</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.approved ?? 0}
+              </div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
           </Card>
@@ -234,33 +224,76 @@ const BranchDealReview = () => {
               <DollarSign className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$450K</div>
+              <div className="text-2xl font-bold">
+                {stats.totalVolume?.toLocaleString() ?? "0"}
+              </div>
               <p className="text-xs text-muted-foreground">Deals volume</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search */}
+        {/* Search + Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
+            <div className="flex gap-4 flex-wrap items-end">
+              <div className="flex-1 min-w-[280px]">
                 <Label htmlFor="search">Search Deals</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search"
-                    placeholder="Search by business name, ID, or currency..."
-                    className="pl-9"
+                    placeholder="Business name, deal code, currency..."
+                    className="pl-10"
                     value={searchValue}
-                    onChange={(e) => setSearchValue(e?.target?.value)}
+                    onChange={(e) => {
+                      setSearchValue(e.target.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2 items-end">
-                <Button variant="outline">Pending</Button>
-                <Button variant="outline">All Businesses</Button>
-                <Button variant="outline">This Week</Button>
+
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={filterStatus === "ALL" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterStatus("ALL");
+                    setPage(0);
+                  }}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={filterStatus === "PENDING_REVIEW" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterStatus("PENDING_REVIEW");
+                    setPage(0);
+                  }}
+                >
+                  Pending
+                </Button>
+                <Button
+                  variant={filterStatus === "APPROVED" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterStatus("APPROVED");
+                    setPage(0);
+                  }}
+                >
+                  Approved
+                </Button>
+                <Button
+                  variant={filterStatus === "REJECTED" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterStatus("REJECTED");
+                    setPage(0);
+                  }}
+                >
+                  Rejected
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -268,182 +301,163 @@ const BranchDealReview = () => {
 
         {/* Deals List */}
         <div className="space-y-4">
-          {rateDealsData?.rateDeals?.content?.map((deal: any) => (
+          {content.map((deal: any) => (
             <Card key={deal.id} className="shadow-card">
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {/* Deal Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <Building2 className="h-4 w-4 text-primary" />
-                        <h3 className="font-semibold">{deal?.companyName}</h3>
+                        <h3 className="font-semibold">{deal?.companyName || "—"}</h3>
                         <span className="text-sm text-muted-foreground">
-                          BIZ-001
+                          {deal?.dealCode}
                         </span>
-                        <Badge variant="outline" className="text-xs">
-                          Reg: 2023-05-15
-                        </Badge>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{deal?.dealCode}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
                         {getStatusBadge(deal?.dealStatus)}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {deal?.transactionPurpose}
+                        {deal?.transactionPurpose || "—"}
                       </p>
                     </div>
-                    <div className="text-right">
+
+                    <div className="text-right shrink-0">
                       <p className="text-2xl font-bold">
-                        {deal?.sendingCurrency} {deal.amount}
+                        {deal?.sendingCurrency} {deal?.amount?.toLocaleString() || "—"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        to {deal?.country}
+                        to {deal?.country || "—"}
                       </p>
                     </div>
                   </div>
 
-                  {/* Deal Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
                     <div className="space-y-1">
-                      <span className="text-muted-foreground">
-                        Requested Rate:
-                      </span>
-                      <p className="font-semibold text-lg">
-                        {deal?.proposedRate}
-                      </p>
+                      <span className="text-muted-foreground">Requested Rate</span>
+                      <p className="font-semibold text-lg">{deal?.proposedRate || "—"}</p>
                       <p className="text-xs text-muted-foreground">
                         {deal?.payoutCurrency}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-muted-foreground">
-                        Market Rate:
-                      </span>
-                      <p className="font-medium">{deal?.currentMarketRate}</p>
+                      <span className="text-muted-foreground">Market Rate</span>
+                      <p className="font-medium">{deal?.currentMarketRate || "—"}</p>
                       <p className="text-xs text-muted-foreground">
                         {deal?.payoutCurrency}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-muted-foreground">Difference:</span>
+                      <span className="text-muted-foreground">Difference</span>
                       <p
-                        className={`font-medium ${parseFloat(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) > 0 ? "text-warning" : "text-success"}`}
+                        className={`font-medium ${
+                          Number(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
                       >
-                        +
-                        {calculateRateDifference(
-                          deal.proposedRate,
-                          deal.currentMarketRate,
-                        )}
-                        %
+                        {Number(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) >= 0 ? "+" : ""}
+                        {calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)}%
                       </p>
-                      <p className="text-xs text-muted-foreground">vs market</p>
                     </div>
                     <div className="space-y-1">
                       <span className="text-muted-foreground flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Submitted:
+                        Submitted
                       </span>
                       <p className="font-medium">
-                        {formateDateTime(deal?.submittedAt)}
+                        {deal?.submittedAt ? formateDateTime(deal.submittedAt) : "—"}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-muted-foreground">
-                        Estimated Payout:
-                      </span>
+                      <span className="text-muted-foreground">Est. Payout</span>
                       <p className="font-medium">
                         {deal?.payoutCurrency}{" "}
                         {(
-                          parseFloat(deal?.amount) *
-                          parseFloat(deal.proposedRate)
-                        ).toLocaleString()}
+                          Number(deal?.amount || 0) * Number(deal?.proposedRate || 0)
+                        ).toLocaleString() || "—"}
                       </p>
                     </div>
                   </div>
 
-                  {/* Notes */}
                   {deal?.notes && (
-                    <Card className="bg-muted/20">
-                      <CardContent className="p-3">
-                        <p className="text-sm">
-                          <span className="font-medium">Business Notes:</span>{" "}
-                          {deal?.notes}
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <div className="text-sm bg-muted/20 p-3 rounded">
+                      <span className="font-medium">Notes: </span>
+                      {deal.notes}
+                    </div>
                   )}
 
-                  {/* Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="flex items-center justify-between pt-3 border-t">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        setExpandedDeal(
-                          expandedDeal === deal?.id ? null : deal?.id,
-                        )
+                        setExpandedDeal(expandedDeal === deal.id ? null : deal.id)
                       }
                     >
-                      <Eye className="h-4 w-4 mr-1" />
-                      {expandedDeal === deal?.id ? (
-                        <ChevronUp className="h-4 w-4 ml-1" />
+                      <Eye className="h-4 w-4 mr-2" />
+                      {expandedDeal === deal.id ? "Hide" : "View"} details
+                      {expandedDeal === deal.id ? (
+                        <ChevronUp className="h-4 w-4 ml-2" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 ml-1" />
+                        <ChevronDown className="h-4 w-4 ml-2" />
                       )}
                     </Button>
                   </div>
 
-                  {/* Expanded View */}
-                  {expandedDeal === deal?.id && (
-                    <div className="pt-4 border-t space-y-4">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <DealNegotiationTimeline
-                          events={deal?.negotiationHistory}
-                          currentRate={deal.proposedRate}
+                  {expandedDeal === deal.id && (
+                    <div className="pt-4 border-t grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <DealNegotiationTimeline
+                        events={deal?.negotiationHistory || []}
+                        currentRate={deal.proposedRate}
+                        currency={deal.payoutCurrency}
+                      />
+
+                      {deal?.dealStatus === "PENDING_REVIEW" && (
+                        <DealResponseForm
+                          refetch={getRateDeals}
+                          dealId={deal.id}
+                          businessName={deal.companyName}
+                          requestedRate={deal.proposedRate}
                           currency={deal.payoutCurrency}
                         />
-
-                        {deal?.dealStatus === "PENDING_REVIEW" && (
-                          <DealResponseForm
-                            refetch={getRateDeals}
-                            dealId={deal?.id}
-                            businessName={deal?.companyName}
-                            requestedRate={deal?.proposedRate}
-                            currency={deal.payoutCurrency}
-                          />
-                        )}
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
           ))}
-          {totalDealsRateDataList > 10 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+
+          {totalElements > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} beneficiaries
+                Showing {content.length} of {totalElements} deals
               </p>
-              <div className="flex space-x-2">
+              <div className="flex gap-3">
                 <Button
                   variant="outline"
                   size="sm"
                   disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => setPage((p) => p - 1)}
                 >
                   Previous
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
-                  onClick={() => setPage(page + 1)}
+                  disabled={page * 10 + content.length >= totalElements}
+                  onClick={() => setPage((p) => p + 1)}
                 >
                   Next
                 </Button>
               </div>
+            </div>
+          )}
+
+          {content.length === 0 && !loading && (
+            <div className="text-center py-16 text-muted-foreground">
+              No rate deals found matching your filters.
             </div>
           )}
         </div>

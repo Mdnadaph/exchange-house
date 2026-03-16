@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import SingleTransactionForm from "@/components/transactions/SingleTransactionForm";
 import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
 import PaymentExecutionForm from "@/components/transactions/PaymentExecutionForm";
-
 import TransactionComments from "@/components/transactions/TransactionComments";
 import ProofOfPaymentUpload from "@/components/transactions/ProofOfPaymentUpload";
 import {
@@ -410,12 +409,12 @@ const BranchTransactions = () => {
               View and manage your payment transactions
             </p>
           </div>
-          <div className="flex space-x-3">
+          {/* <div className="flex space-x-3">
             <Button variant="outline" disabled={transactions.length === 0}>
               <Download className="h-4 w-4 mr-2" />
               Export Branch Data
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {error && (
@@ -528,7 +527,7 @@ const BranchTransactions = () => {
                 >
                   All Status
                 </Button>
-                <Button variant="outline">This Month</Button>
+                {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("COMPLETED")}
@@ -771,6 +770,7 @@ const BranchTransactions = () => {
 
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
+                              
                               <Button variant="outline" size="sm">
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
@@ -786,6 +786,7 @@ const BranchTransactions = () => {
                                     Documents
                                   </Button>
                                 )}
+
                               <Button
                                 variant="outline"
                                 size="sm"
