@@ -219,7 +219,6 @@ import ChangePassword from "./pages/ChangePassword";
 import ExchangeDiscount from "./pages/exchange/ExchangeDiscount";
 import ExchangeAdminUser from "./pages/exchange/ExchangeAdminUser";
 
-import ExchangeUserChangePassword from "./pages/ExchangeUserChangePassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -298,10 +297,7 @@ function App() {
                 <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route
-                  path="/ExchangeUser-ChangePassword"
-                  element={<ExchangeUserChangePassword />}
-                />
+
 
                 {/* Staff / Exchange 2FA & setup – public */}
                 <Route path="/set-password" element={<StaffSetupPassword />} />

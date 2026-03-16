@@ -245,118 +245,6 @@ const AdminExchangeHouses = () => {
     fetchExchangeAdmins();
   }, [token, currentPage, searchQuery]);
 
-  // const handleSubmitOnboarding = async () => {
-  //   // Required fields validation
-  //   if (
-  //     !formData.fullName.trim() ||
-  //     !formData.email.trim() ||
-  //     !formData.legalBusinessName.trim() ||
-  //     !formData.centralBankLicense.trim()
-  //   ) {
-  //     toast({
-  //       title: t("validationError"),
-  //       description: "Please fill all required fields",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   setFormSubmitting(true);
-
-  //   try {
-  //     const payload = {
-  //       fullName: formData.fullName.trim(),
-  //       email: formData.email.trim(),
-  //       primaryContactEmail: formData.primaryContactEmail.trim() || null,
-  //       phoneNumber: formData.phoneNumber.trim() || null,
-  //       legalBusinessName: formData.legalBusinessName.trim(),
-  //       tradingName: formData.tradingName.trim() || null,
-  //       registrationNumber: formData.registrationNumber.trim() || null,
-  //       centralBankLicense: formData.centralBankLicense.trim(),
-  //       licenseExpiryDate: formData.licenseExpiryDate || null,
-  //       businessAddress: formData.businessAddress.trim() || null,
-  //       city: formData.city.trim() || null,
-  //       countryId: formData.countryId,
-  //       postalCode: formData.postalCode.trim() || null,
-  //       subscriptionPlanId: formData.subscriptionPlanId,
-  //     };
-
-  //     let res;
-  //     if (isEdit && selectedAdmin) {
-  //       res = await axios.put(
-  //         `${BASE_URL}/api/v3/super/exchange-admins/${selectedAdmin.id}/edit`,
-  //         payload,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //             "Content-Type": "application/json",
-  //           },
-  //         },
-  //       );
-  //     } else {
-  //       res = await axios.post(
-  //         `${BASE_URL}/api/v3/super/exchange-admins`,
-  //         payload,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //             "Content-Type": "application/json",
-  //           },
-  //         },
-  //       );
-  //     }
-  //     if (res.data.status) {
-  //       toast({
-  //         title: "Success",
-  //         description:
-  //           res.data.message ||
-  //           (isEdit ? "Exchange house updated" : t("exchangeHouseCreated")),
-  //       });
-  //       setIsOnboardingOpen(false);
-  //       fetchExchangeAdmins(); // refresh list
-
-  //       // Reset form and states
-  //       setFormData({
-  //         fullName: "",
-  //         email: "",
-  //         primaryContactEmail: "",
-  //         phoneNumber: "",
-  //         legalBusinessName: "",
-  //         tradingName: "",
-  //         registrationNumber: "",
-  //         centralBankLicense: "",
-  //         licenseExpiryDate: "",
-  //         businessAddress: "",
-  //         city: "",
-  //         countryId: 1,
-  //         postalCode: "",
-  //         subscriptionPlanId: 2,
-  //       });
-  //       setIsEdit(false);
-  //       setSelectedAdmin(null);
-  //     } else {
-  //       toast({
-  //         title: "Error",
-  //         description: res.data.message || "Something went wrong",
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   } catch (err: any) {
-  //     console.error(`${isEdit ? "Update" : "Onboarding"} error:`, err);
-  //     toast({
-  //       title: "Error",
-  //       description:
-  //         err.response?.data?.message ||
-  //         (isEdit
-  //           ? "Failed to update exchange house"
-  //           : "Failed to create exchange house"),
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setFormSubmitting(false);
-  //   }
-  // };
-
   const handleSubmitOnboarding = async () => {
     setFormSubmitting(true);
     setErrors({}); // clear previous errors
@@ -410,6 +298,8 @@ const AdminExchangeHouses = () => {
           description: res.data.message || (isEdit ? "Updated" : "Created"),
         });
         setIsOnboardingOpen(false);
+        setSearchQuery(""); // ← added
+        setCurrentPage(0);
         fetchExchangeAdmins();
 
         // Reset everything
@@ -657,6 +547,28 @@ const AdminExchangeHouses = () => {
               <Button
                 variant="business"
                 className={isRTL ? "flex-row-reverse" : ""}
+                onClick={() => {
+                  // Reset form when opening in CREATE mode
+                  setIsEdit(false);
+                  setSelectedAdmin(null);
+                  setFormData({
+                    fullName: "",
+                    email: "",
+                    primaryContactEmail: "",
+                    phoneNumber: "",
+                    legalBusinessName: "",
+                    tradingName: "",
+                    registrationNumber: "",
+                    centralBankLicense: "",
+                    licenseExpiryDate: "",
+                    businessAddress: "",
+                    city: "",
+                    countryId: 1,
+                    postalCode: "",
+                    subscriptionPlanId: 2,
+                  });
+                  setErrors({});
+                }}
               >
                 <Plus className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
                 {t("onboardExchangeHouse")}
@@ -684,18 +596,6 @@ const AdminExchangeHouses = () => {
                     {"Admin Details"}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="fullName">{t("fullName")} *</Label>
-                      <Input
-                        id="fullName"
-                        value={formData.fullName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, fullName: e.target.value })
-                        }
-                        placeholder="Hamdan Al Nahyan"
-                      />
-                    </div> */}
-
                     <div className="space-y-2">
                       <Label htmlFor="fullName">{t("fullName")} *</Label>
                       <Input
@@ -721,19 +621,6 @@ const AdminExchangeHouses = () => {
                       ))}
                     </div>
 
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="email">{t("adminEmail")} *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                        placeholder="admin@uaeexchange.com"
-                      />
-                    </div> */}
-
                     <div className="space-y-2">
                       <Label htmlFor="email">{t("adminEmail")} *</Label>
                       <Input
@@ -756,55 +643,6 @@ const AdminExchangeHouses = () => {
                         </p>
                       ))}
                     </div>
-
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">{"Phone Number"} *</Label>
-                      <Input
-                        id="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            phoneNumber: e.target.value,
-                          })
-                        }
-                        placeholder="971501234567"
-                      />
-                    </div> */}
-
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number *</Label>
-                      <PhoneInput
-                        country={"us"}
-                        value={formData.phoneNumber}
-                        onChange={(value, country) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            phoneNumber: value,
-                          }));
-
-                          // Optionally store country data if needed later
-                        }}
-                        inputProps={{
-                          name: "phoneNumber",
-                          id: "phoneNumber",
-                          required: true,
-                        }}
-                        containerClass="phone-input-container" // optional custom class
-                        //inputClass="!pl-12" // adjust padding for the flag button
-                        buttonClass="phone-flag-button"
-                        enableSearch={true}
-                        searchPlaceholder="Search country"
-                        //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
-                        preferredCountries={["ae", "in"]} // show these at top
-                      />
-                      
-                      {errors.phoneNumber?.map((msg, i) => (
-                        <p key={i} className="text-sm text-destructive mt-1">
-                          {msg}
-                        </p>
-                      ))}
-                    </div> */}
 
                     <div className="space-y-2">
                       <Label htmlFor="phoneNumber">
@@ -841,7 +679,8 @@ const AdminExchangeHouses = () => {
                         buttonClass="phone-flag-button"
                         dropdownClass="phone-dropdown-custom"
                         enableSearch={true}
-                        searchPlaceholder={t("searchCountry") || "Search..."}
+                        // searchPlaceholder={t("searchCountry") || "Search..."}
+                        searchPlaceholder="search Counrty"
                         preferredCountries={["ae", "in"]}
                       />
 
@@ -852,23 +691,6 @@ const AdminExchangeHouses = () => {
                       ))}
                     </div>
 
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="primaryContactEmail">
-                        {t("primaryContactEmail")} *
-                      </Label>
-                      <Input
-                        id="primaryContactEmail"
-                        type="email"
-                        value={formData.primaryContactEmail}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            primaryContactEmail: e.target.value,
-                          })
-                        }
-                        placeholder="contact@uaeexchange.com"
-                      />
-                    </div> */}
                     <div className="space-y-2">
                       <Label htmlFor="primaryContactEmail">
                         {t("primaryContactEmail")} *
@@ -905,23 +727,6 @@ const AdminExchangeHouses = () => {
                     {t("exchangeHouseDetails")}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="legalBusinessName">
-                        {t("legalBusinessName")} *
-                      </Label>
-                      <Input
-                        id="legalBusinessName"
-                        value={formData.legalBusinessName}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            legalBusinessName: e.target.value,
-                          })
-                        }
-                        placeholder="UAE Exchange Centre LLC"
-                      />
-                    </div> */}
-
                     <div className="space-y-2">
                       <Label htmlFor="legalBusinessName">
                         {t("legalBusinessName")} *
@@ -1400,7 +1205,8 @@ const AdminExchangeHouses = () => {
                                   "suspended" ||
                                 admin.exchangeStatus?.toLowerCase() ===
                                   "pending" ? (
-                                <DropdownMenuItem
+                                <div>
+                                  {/* <DropdownMenuItem
                                   className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
                                     setSelectedHouseId(admin.id);
@@ -1411,7 +1217,8 @@ const AdminExchangeHouses = () => {
                                     className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                                   />
                                   {t("activateExchangeHouse")}
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
+                                </div>
                               ) : null}
                               <DropdownMenuItem
                                 className={isRTL ? "flex-row-reverse" : ""}
