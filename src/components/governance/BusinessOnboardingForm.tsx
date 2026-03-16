@@ -1640,6 +1640,28 @@ const BusinessOnboardingForm = ({
     if (open) {
       fetchBranches();
       setErrors({});
+      setSelectedCurrencies(["AED"]);
+      setFormData({
+        companyName: "",
+        tradeLicense: "",
+        taxNumber: "",
+        businessEmail: "",
+        businessPhone: "",
+        businessAddress: "",
+        addressLine2: "",
+        branchId: "",
+        legalForm: "",
+        businessType: "",
+        countryName: [],
+        alternatePhone: "",
+        adminFirstName: "",
+        adminLastName: "",
+        adminEmail: "",
+        adminPhone: "",
+        adminDesignation: "",
+        monthlyLimit: "",
+        dealValidityDays: "7",
+      });
     }
   }, [open]);
 
@@ -1802,7 +1824,6 @@ const BusinessOnboardingForm = ({
                 </p>
               )}
             </div>
-
             <div>
               <Label htmlFor="legalForm">
                 Legal Form <span className="text-red-500">*</span>
@@ -1933,11 +1954,20 @@ const BusinessOnboardingForm = ({
                     taxNumber: e.target.value,
                   }));
                   clearError("taxNumber");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    taxNumber: "",
+                  }));
                 }}
                 placeholder="TAX-XXXXXX"
               />
               {errors.taxNumber && (
                 <p className="text-sm text-red-500 mt-1">{errors.taxNumber}</p>
+              )}
+              {apiErrors?.taxNumber && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.taxNumber}
+                </p>
               )}
             </div>
 
@@ -2009,6 +2039,10 @@ const BusinessOnboardingForm = ({
                                   return { ...prev, countryName: newCountries };
                                 });
                                 clearError("countryName");
+                                setApiErrors((prev) => ({
+                                  ...prev,
+                                  countryName: "",
+                                }));
                               }}
                             >
                               <Check
@@ -2031,6 +2065,11 @@ const BusinessOnboardingForm = ({
                   {errors.countryName}
                 </p>
               )}
+              {apiErrors?.countryName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.countryName}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="branchId">
@@ -2041,6 +2080,10 @@ const BusinessOnboardingForm = ({
                 onValueChange={(value) => {
                   setFormData((prev) => ({ ...prev, branchId: value }));
                   clearError("branchId");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    branchId: "",
+                  }));
                 }}
               >
                 <SelectTrigger>
@@ -2064,6 +2107,11 @@ const BusinessOnboardingForm = ({
               {errors.branchId && (
                 <p className="text-sm text-red-500 mt-1">{errors.branchId}</p>
               )}
+              {apiErrors?.branchId && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors.branchId}
+                </p>
+              )}
             </div>
 
             <div>
@@ -2082,6 +2130,10 @@ const BusinessOnboardingForm = ({
                       businessEmail: e.target.value,
                     }));
                     clearError("businessEmail");
+                    setApiErrors((prev: any) => ({
+                      ...prev,
+                      businessEmail: "",
+                    }));
                   }}
                   placeholder="info@company.ae"
                   className="pl-9"
@@ -2090,6 +2142,11 @@ const BusinessOnboardingForm = ({
               {errors.businessEmail && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.businessEmail}
+                </p>
+              )}
+              {apiErrors?.businessEmail && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.businessEmail}
                 </p>
               )}
             </div>
@@ -2106,6 +2163,10 @@ const BusinessOnboardingForm = ({
                   onChange={(value, country) => {
                     setFormData((prev) => ({ ...prev, businessPhone: value }));
                     clearError("businessPhone");
+                    setApiErrors((prev: any) => ({
+                      ...prev,
+                      businessPhone: "",
+                    }));
                     // Optionally store country data if needed later
                   }}
                   inputProps={{
@@ -2128,6 +2189,11 @@ const BusinessOnboardingForm = ({
                   {errors.businessPhone}
                 </p>
               )}
+              {apiErrors?.businessPhone && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.businessPhone}
+                </p>
+              )}
             </div>
 
             <div>
@@ -2139,7 +2205,7 @@ const BusinessOnboardingForm = ({
                   value={formData.alternatePhone}
                   onChange={(value, country) => {
                     setFormData((prev) => ({ ...prev, alternatePhone: value }));
-                    clearError("businessPhone");
+                    clearError("alternatePhone");
                     // Optionally store country data if needed later
                   }}
                   inputProps={{
@@ -2173,6 +2239,10 @@ const BusinessOnboardingForm = ({
                       businessAddress: e.target.value,
                     }));
                     clearError("businessAddress");
+                    setApiErrors((prev: any) => ({
+                      ...prev,
+                      businessAddress: "",
+                    }));
                   }}
                   placeholder="Office address, building name, street"
                   className="pl-9"
@@ -2181,6 +2251,11 @@ const BusinessOnboardingForm = ({
               {errors.businessAddress && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.businessAddress}
+                </p>
+              )}
+              {apiErrors?.businessAddress && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.businessAddress}
                 </p>
               )}
             </div>
@@ -2232,12 +2307,21 @@ const BusinessOnboardingForm = ({
                     adminFirstName: e.target.value,
                   }));
                   clearError("adminFirstName");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    adminFirstName: "",
+                  }));
                 }}
                 placeholder="Enter first name"
               />
               {errors.adminFirstName && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.adminFirstName}
+                </p>
+              )}
+              {apiErrors?.adminFirstName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminFirstName}
                 </p>
               )}
             </div>
@@ -2254,12 +2338,21 @@ const BusinessOnboardingForm = ({
                     adminLastName: e.target.value,
                   }));
                   clearError("adminLastName");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    adminLastName: "",
+                  }));
                 }}
                 placeholder="Enter last name"
               />
               {errors.adminLastName && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.adminLastName}
+                </p>
+              )}
+              {apiErrors?.adminLastName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminLastName}
                 </p>
               )}
             </div>
@@ -2279,6 +2372,10 @@ const BusinessOnboardingForm = ({
                       adminEmail: e.target.value,
                     }));
                     clearError("adminEmail");
+                    setApiErrors((prev: any) => ({
+                      ...prev,
+                      adminEmail: "",
+                    }));
                   }}
                   placeholder="admin@company.ae"
                   className="pl-9"
@@ -2286,6 +2383,11 @@ const BusinessOnboardingForm = ({
               </div>
               {errors.adminEmail && (
                 <p className="text-sm text-red-500 mt-1">{errors.adminEmail}</p>
+              )}
+              {apiErrors?.adminEmail && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminEmail}
+                </p>
               )}
             </div>
             <div>
@@ -2300,6 +2402,10 @@ const BusinessOnboardingForm = ({
                   onChange={(value, country) => {
                     setFormData((prev) => ({ ...prev, adminPhone: value }));
                     clearError("adminPhone");
+                    setApiErrors((prev: any) => ({
+                      ...prev,
+                      adminPhone: "",
+                    }));
                     // Optionally store country data if needed later
                   }}
                   inputProps={{
@@ -2319,6 +2425,11 @@ const BusinessOnboardingForm = ({
               {errors.adminPhone && (
                 <p className="text-sm text-red-500 mt-1">{errors.adminPhone}</p>
               )}
+              {apiErrors?.adminPhone && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminPhone}
+                </p>
+              )}
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="adminDesignation">
@@ -2333,12 +2444,21 @@ const BusinessOnboardingForm = ({
                     adminDesignation: e.target.value,
                   }));
                   clearError("adminDesignation");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    adminDesignation: "",
+                  }));
                 }}
                 placeholder="e.g., Finance Manager, CEO"
               />
               {errors.adminDesignation && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.adminDesignation}
+                </p>
+              )}
+              {apiErrors?.adminDesignation && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminDesignation}
                 </p>
               )}
             </div>
@@ -2383,12 +2503,21 @@ const BusinessOnboardingForm = ({
                   const value = e.target.value;
                   setFormData((prev) => ({ ...prev, monthlyLimit: value }));
                   clearError("monthlyLimit");
+                  setApiErrors((prev: any) => ({
+                    ...prev,
+                    monthlyLimit: "",
+                  }));
                 }}
                 placeholder="Enter limit amount"
               />
               {errors.monthlyLimit && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.monthlyLimit}
+                </p>
+              )}
+              {apiErrors?.monthlyLimit && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.monthlyLimit}
                 </p>
               )}
             </div>
