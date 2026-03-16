@@ -43,7 +43,17 @@ import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
-
+interface Branch {
+  branchId: string;
+  uuid: string;
+  name: string;
+  address: string;
+  emirate: string;
+  location: string;
+  email: string;
+  contactNumber: string;
+  active: boolean;
+}
 const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
 
@@ -62,6 +72,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
   const navigate = useNavigate();
   const uuid = useParams();
   const [open, setOpen] = useState(false);
+  const [branchList, setBranchList] = useState<Branch[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [idDocuments, setIdDocuments] = useState<IDDocument[]>([]);
@@ -368,6 +379,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
             </div>
 
             {/* Business Type - WorkerAppz API Field */}
+
             <div>
               <Label htmlFor="businessType">Type of Business *</Label>
               <Select
