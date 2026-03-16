@@ -598,9 +598,9 @@ const Auth: React.FC = () => {
     } catch (err: any) {
       const statusCode = err?.response?.status;
       const uuid = err?.response?.data?.data?.uuid;
-
-      if (statusCode === 428) {
-        navigate(`/change-password?uuid=${uuid}`);
+      const userType = err?.response?.data?.data?.userType;
+      if (statusCode === 428 && uuid && userType) {
+        navigate(`/change-password?uuid=${uuid}`, { state: { userType } });
         return;
       }
 

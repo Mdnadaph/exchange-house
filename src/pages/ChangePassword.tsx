@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 // import { Form } from "react-router-dom";
 import * as Yup from "yup";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BASE_URL from "@/config/config";
 import axios from "axios";
 import { toast } from "sonner";
@@ -19,13 +19,18 @@ const loginSchema = Yup.object({
 export default function ChangePassword() {
   const [searchParams] = useSearchParams();
   const uuid = searchParams.get("uuid");
+  const location = useLocation();
+  const userType = location?.state?.userType;
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const handleLogin = async (values: any, { setSubmitting }: any) => {
     setErrorMessage(""); // Clear previous error
-    let apiUrl = `${BASE_URL}/api/v3/super/exchange-admins/${uuid}/change-initial-password`;
+    const exchangeAdminApiUrl = `${BASE_URL}/api/v3/super/exchange-admins/${uuid}/change-initial-password`;
+    const exchangeUserApiUrl = `${BASE_URL}/api/v1/exchange-users/${uuid}/change-initial-password`;
+    const apiUrl =
+      userType == "EXCHANGE_USER" ? exchangeUserApiUrl : exchangeAdminApiUrl;
     try {
       const res = await axios.put(apiUrl, values, {
         headers: { "Content-Type": "application/json" },
