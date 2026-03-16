@@ -823,7 +823,7 @@ const ExchangeKYBReview = () => {
                 Review and process business verification applications
               </p>
             </div>
-            <div className="flex space-x-3">
+            {/* <div className="flex space-x-3">
               <Button
                 variant="outline"
                 type="button"
@@ -835,10 +835,10 @@ const ExchangeKYBReview = () => {
                 />
                 {loading ? "Refreshing..." : "Refresh"}
               </Button>
-              {/*<Button type="button" variant="business">
+              <Button type="button" variant="business">
                 Assign Reviewer
-              </Button>*/}
-            </div>
+              </Button>
+            </div> */}
           </div>
 
           {/* Error Display */}

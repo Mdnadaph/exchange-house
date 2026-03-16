@@ -410,10 +410,10 @@ const ExchangeTransactions = () => {
               Monitor and manage all business payment transactions
             </p>
           </div>
-          <Button variant="outline" disabled={transactions.length === 0}>
+          {/* <Button variant="outline" disabled={transactions.length === 0}>
             <Download className="h-4 w-4 mr-2" />
             Export All
-          </Button>
+          </Button> */}
         </div>
 
         {/* Show error message prominently */}

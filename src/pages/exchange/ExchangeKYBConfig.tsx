@@ -816,13 +816,13 @@ const ExchangeKYBConfig = () => {
         </Card>*/}
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3">
+        {/* <div className="flex justify-end space-x-3">
           <Button variant="outline">Reset to Defaults</Button>
           <Button variant="business">
             <Save className="h-4 w-4 mr-2" />
             Save Configuration
           </Button>
-        </div>
+        </div> */}
       </div>
       {/* Create KYB Rule Popup */}
       {/* Create KYB Rule Popup */}

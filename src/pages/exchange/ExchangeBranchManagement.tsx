@@ -839,11 +839,15 @@ const ExchangeBranchManagement = () => {
                           Edit Branch
                         </Button>
                       </PermissionGate>
-                      {/*<Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate("/exchange/staff")}
+                      >
                         <Users className="h-4 w-4 mr-1" />
                         Manage Staff
                       </Button>
-                      {branch.status === "active" ? (
+                      {/* {branch.status === "active" ? (
                         <Button variant="destructive" size="sm">
                           <XCircle className="h-4 w-4 mr-1" />
                           Deactivate
@@ -858,7 +862,7 @@ const ExchangeBranchManagement = () => {
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Complete Setup
                         </Button>
-                      )}*/}
+                      )} */}
                     </div>
                   </div>
                 </CardContent>
