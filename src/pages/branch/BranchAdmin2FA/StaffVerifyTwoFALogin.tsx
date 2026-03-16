@@ -205,7 +205,6 @@
 
 // export default VerifyTwoFALogin;
 
-
 // import React, { useRef, useState } from "react";
 // import axios from "axios";
 // import { useCookies } from "react-cookie";
@@ -387,10 +386,6 @@
 
 // export default VerifyTwoFALogin;
 
-
-
-
-
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -412,6 +407,7 @@ const VerifyTwoFALogin: React.FC = () => {
     "contactNumber",
     "branchId",
     "roleName",
+    "branchName",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -510,6 +506,7 @@ const VerifyTwoFALogin: React.FC = () => {
       setCookie("fullName", staff.fullName, { path: "/" });
       setCookie("email", staff.email, { path: "/" });
       setCookie("branchId", staff.branchId, { path: "/" });
+      setCookie("branchName", staff?.branchName, { path: "/" });
       setCookie("roleName", staff.roleName, { path: "/" });
       setCookie("role", staff.roleName, { path: "/" });
       setCookie("contactNumber", staff.contactNumber, { path: "/" });

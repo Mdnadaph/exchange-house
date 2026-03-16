@@ -40,7 +40,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     "roleName",
     "id",
     "refreshToken",
-    
+    "branchName",
   ]);
 
   const id = cookie.branchId;
@@ -48,7 +48,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   const firstName = cookie.firstName;
   const lastName = cookie.lastName;
 
-  const token =cookie.token;
+  const token = cookie.token;
   const role = cookie.role;
   const tempToken = cookie.tempToken;
   const email = cookie.email;
@@ -80,6 +80,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     removeCookie("lastName");
     removeCookie("requiresTwoFactor");
     removeCookie("branchId");
+    removeCookie("branchName");
     removeCookie("contactNumber");
     removeCookie("roleName");
 
@@ -123,7 +124,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Branch Admin)
+                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`}{" "}
+                (Branch Admin)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -159,9 +161,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
         </aside>
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-6 py-2 mb-4">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-2 mb-4">{children}</div>
         </main>
       </div>
     </div>

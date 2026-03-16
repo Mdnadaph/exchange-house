@@ -1566,7 +1566,6 @@ const BusinessOnboardingForm = ({
           const targetStep = getStepForField(firstField);
           setCurrentStep(targetStep);
         }
-
         toast({
           title: "Validation Failed",
           description:
