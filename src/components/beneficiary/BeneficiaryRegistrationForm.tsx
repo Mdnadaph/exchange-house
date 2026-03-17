@@ -1404,9 +1404,10 @@ const BeneficiaryRegistrationForm = ({
               Relationship Type <span className="text-red-500">*</span>
             </Label>
             <Select
-              onValueChange={(v) =>
-                setFormData({ ...formData, relationshipType: v })
-              }
+              onValueChange={(v) => {
+                setFormData({ ...formData, relationshipType: v });
+                clearFieldError("relationshipType");
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select relationship type" />
