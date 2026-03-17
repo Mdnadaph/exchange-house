@@ -36,7 +36,7 @@ import { useCookies } from "react-cookie";
 interface BeneficiarySummary {
   id: number;
   name: string;
-  type: "INDIVIDUAL" | "CORPORATE";
+  type: "INDIVIDUAL" | "BUSINESS";
   countryId: number;
   countryName: string;
   currency: string;
@@ -363,14 +363,14 @@ const BeneficiaryGroupForm = ({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {b.type === "CORPORATE" ? (
+                          {b.type === "BUSINESS" ? (
                             <Building className="h-4 w-4 shrink-0 text-primary" />
                           ) : (
                             <User className="h-4 w-4 shrink-0 text-primary" />
                           )}
                           <span className="font-medium truncate">{b.name}</span>
                           <Badge variant="outline" className="text-xs">
-                            {b.type === "CORPORATE" ? "Business" : "Individual"}
+                            {b.type === "BUSINESS" ? "Business" : "Individual"}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">

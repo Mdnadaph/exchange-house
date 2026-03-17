@@ -240,7 +240,7 @@ const BussinessUserDashboard = () => {
               Welcome back! Here's your transaction overview
             </p>
           </div>
-          <div className="flex space-x-3">
+          {/* <div className="flex space-x-3">
             <Button
               onClick={() => navigate("/user/transactions")}
               variant="business"
@@ -248,7 +248,7 @@ const BussinessUserDashboard = () => {
               <Plus className="h-4 w-4 mr-2" />
               New Transaction
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {/* Stats Grid */}
@@ -339,7 +339,7 @@ const BussinessUserDashboard = () => {
           </div>
 
           {/* Pending Actions */}
-          <div>
+          {/* <div>
             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -349,7 +349,7 @@ const BussinessUserDashboard = () => {
               </CardHeader>
               <p className="text-center pb-3">No data available</p>
             </Card>
-          </div>
+          </div> */}
         </div>
 
         {/* Quick Actions */}

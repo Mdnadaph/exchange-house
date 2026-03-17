@@ -162,7 +162,6 @@ const UserTransactions = () => {
         timeout: 10000,
       };
 
-
       let url = `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&size=10`;
       if (searchValue) {
         url += `&query=${encodeURIComponent(searchValue)}`;
@@ -884,6 +883,8 @@ const UserTransactions = () => {
                                     Documents
                                   </Button>
                                 )}*/}
+
+                              
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -932,6 +933,7 @@ const UserTransactions = () => {
                                 userRole="Business"
                                 userName={userName}
                                 branchName={transaction.branchName}
+                                initialDocuments={transaction.documents}
                               />
                               <TransactionComments
                                 transactionId={transaction.id}

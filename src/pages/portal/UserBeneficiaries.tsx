@@ -42,7 +42,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface Beneficiary {
   id: number;
   name: string;
-  type: "INDIVIDUAL" | "CORPORATE";
+  type: "INDIVIDUAL" | "BUSINESS";
   countryId: number;
   countryName: string;
   currency: string;
@@ -805,7 +805,7 @@ const UserBeneficiaries = () => {
                                         variant="outline"
                                         className="flex items-center gap-1"
                                       >
-                                        {ben.type === "corporate" ? (
+                                        {ben.type === "business" ? (
                                           <Building className="h-3 w-3" />
                                         ) : (
                                           <User className="h-3 w-3" />
@@ -968,7 +968,7 @@ const UserBeneficiaries = () => {
                                   {/* Beneficiary Header */}
                                   <div className="flex items-center space-x-4">
                                     <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                                      {beneficiary.type === "corporate" ? (
+                                      {beneficiary.type === "business" ? (
                                         <Building className="h-6 w-6 text-muted-foreground" />
                                       ) : (
                                         <Users className="h-6 w-6 text-muted-foreground" />
@@ -983,14 +983,14 @@ const UserBeneficiaries = () => {
                                           variant="outline"
                                           className="text-xs"
                                         >
-                                          {beneficiary.type === "corporate"
-                                            ? "Corporate"
+                                          {beneficiary.type === "BUSINESS"
+                                            ? "Business"
                                             : "Individual"}
                                         </Badge>
                                         <span
                                           className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(beneficiary.riskLevel)}`}
                                         >
-                                          {beneficiary.riskLevel?.toUpperCase()}{" "}
+                                          {beneficiary.riskLevel?.toUpperCase()}
                                           RISK
                                         </span>
                                       </div>

@@ -444,12 +444,12 @@ const BusinessUserTransaction = () => {
               View and manage your payment transactions
             </p>
           </div>
-          <div className="flex space-x-3">
+          {/* <div className="flex space-x-3">
             <Button variant="outline" disabled={transactions.length === 0}>
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {error && (
@@ -913,6 +913,7 @@ const BusinessUserTransaction = () => {
                                   userRole="Business"
                                   userName={userName}
                                   branchName={transaction.branchName}
+                                   initialDocuments={transaction.documents}
                                 />
                                 <TransactionComments
                                   transactionId={transaction.id}

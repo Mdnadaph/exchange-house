@@ -24,7 +24,7 @@ interface BeneficiaryProfileProps {
   beneficiary: {
     id: string | number;
     name: string;
-    type: "INDIVIDUAL" | "CORPORATE";
+    type: "INDIVIDUAL" | "BUSINESS";
     email?: string;
     phone?: string;
     address: {
@@ -132,7 +132,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
         <div className="space-y-2">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-              {beneficiary.type === "CORPORATE" ? (
+              {beneficiary.type === "BUSINESS" ? (
                 <Building className="h-8 w-8 text-muted-foreground" />
               ) : (
                 <User className="h-8 w-8 text-muted-foreground" />
@@ -155,8 +155,8 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
                   {verification.label}
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {beneficiary.type === "CORPORATE"
-                    ? "Corporate"
+                  {beneficiary.type === "BUSINESS"
+                    ? "business"
                     : "Individual"}
                 </Badge>
               </div>
