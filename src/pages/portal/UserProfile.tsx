@@ -91,6 +91,7 @@ interface KYBContext {
   businessType: string;
   kybType: string;
   kybRuleName: string;
+  kybStatus?: string;
   documents: KYBContextDocument[];
 }
 
@@ -162,7 +163,10 @@ const UserProfile = () => {
         if (docData.uploadedAt) {
           if (typeof docData.uploadedAt === "string") {
             uploadDate = docData.uploadedAt.split(" ")[0];
-          } else if (Array.isArray(docData.uploadedAt) && docData.uploadedAt.length >= 3) {
+          } else if (
+            Array.isArray(docData.uploadedAt) &&
+            docData.uploadedAt.length >= 3
+          ) {
             const [y, m, d] = docData.uploadedAt;
             uploadDate = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           }
@@ -172,11 +176,13 @@ const UserProfile = () => {
         if (typeof docData.fileSize === "number") {
           const bytes = docData.fileSize;
           if (bytes < 1024) fileSizeStr = `${bytes} B`;
-          else if (bytes < 1024 * 1024) fileSizeStr = `${(bytes / 1024).toFixed(1)} KB`;
+          else if (bytes < 1024 * 1024)
+            fileSizeStr = `${(bytes / 1024).toFixed(1)} KB`;
           else fileSizeStr = `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
         }
 
-        let status: "verified" | "pending_review" | "rejected" = "pending_review";
+        let status: "verified" | "pending_review" | "rejected" =
+          "pending_review";
         if (doc.verified === true) status = "verified";
         if (doc.verified === false) status = "rejected";
 
@@ -779,30 +785,55 @@ const UserProfile = () => {
                 <CardTitle className="text-lg">KYB Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-center">{getKybStatusBadge()}</div>
                 {kybContext && (
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">
-                        Business Type:
-                      </span>
-                      <span className="font-medium">
-                        {kybContext.businessType}
-                      </span>
+                  <>
+                    <div className="flex justify-center py-4">
+                      {kybContext?.kybStatus ? (
+                        <Badge
+                          variant="default"
+                          className={`
+                            text-lg px-8 py-2.5 font-semibold shadow-sm
+                            ${getKybStatusColor(kybContext.kybStatus)}
+                          `}
+                        >
+                          {kybContext.kybStatus.toUpperCase()}
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="text-lg px-8 py-2.5"
+                        >
+                          <Clock className="h-4 w-4 mr-2 animate-pulse" />
+                          LOADING...
+                        </Badge>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">KYB Type:</span>
-                      <span className="font-medium">{kybContext.kybType}</span>
+
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">
+                          Business Type:
+                        </span>
+                        <span className="font-medium">
+                          {kybContext.businessType}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">KYB Type:</span>
+                        <span className="font-medium">
+                          {kybContext.kybType}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">
+                          Rule Applied:
+                        </span>
+                        <span className="font-medium">
+                          {kybContext.kybRuleName}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">
-                        Rule Applied:
-                      </span>
-                      <span className="font-medium">
-                        {kybContext.kybRuleName}
-                      </span>
-                    </div>
-                  </div>
+                  </>
                 )}
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
