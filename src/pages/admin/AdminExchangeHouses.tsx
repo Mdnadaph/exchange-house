@@ -770,7 +770,8 @@ const AdminExchangeHouses = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="registrationNumber">
-                        {t("registrationNumber")}
+                        {/* {t("registrationNumber")} */}
+                        Company Registration Number
                       </Label>
                       <Input
                         id="registrationNumber"
@@ -1206,7 +1207,7 @@ const AdminExchangeHouses = () => {
                                 admin.exchangeStatus?.toLowerCase() ===
                                   "pending" ? (
                                 <div>
-                                  {/* <DropdownMenuItem
+                                  <DropdownMenuItem
                                   className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                   onClick={() => {
                                     setSelectedHouseId(admin.id);
@@ -1217,7 +1218,7 @@ const AdminExchangeHouses = () => {
                                     className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                                   />
                                   {t("activateExchangeHouse")}
-                                </DropdownMenuItem> */}
+                                </DropdownMenuItem>
                                 </div>
                               ) : null}
                               <DropdownMenuItem
