@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import BASE_URL from "@/config/config";
 import {
   Building2,
@@ -41,7 +40,7 @@ interface BusinessProfile {
   businessType: string;
   tradeLicense: string;
   taxNumber: string;
-  country: string;
+  country: string | string[];
   branchId: number;
   branchName: string;
   businessEmail: string;
@@ -76,7 +75,15 @@ interface KYBContextDocument {
   required: boolean;
   uploaded: boolean;
   verified: boolean | null;
-  document: any | null;
+  rejectionReason?: string;
+  document: {
+    id: number;
+    fileName: string;
+    fileUrl: string;
+    documentNumber?: string;
+    fileSize?: number;
+    uploadedAt: string | number[];
+  } | null;
 }
 
 interface KYBContext {
@@ -125,9 +132,6 @@ const UserProfile = () => {
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
 
-  // ───────────────────────────────────────────────
-  // Helper: Load / refresh documents from server
-  // ───────────────────────────────────────────────
   const loadDocumentsFromServer = async () => {
     if (!id || !token) return;
 
@@ -143,7 +147,7 @@ const UserProfile = () => {
       if (!data?.documents) return;
 
       const uploadedDocs = data.documents.filter(
-        (doc: KYBContextDocument) => doc.uploaded && doc.document,
+        (doc) => doc.uploaded && doc.document,
       );
 
       if (uploadedDocs.length === 0) {
@@ -151,59 +155,46 @@ const UserProfile = () => {
         return;
       }
 
-      const transformed: Document[] = uploadedDocs.map(
-        (doc: KYBContextDocument) => {
-          const docData = doc.document!;
+      const transformed: Document[] = uploadedDocs.map((doc) => {
+        const docData = doc.document;
 
-          let uploadDate = new Date().toISOString().split("T")[0];
-          if (
-            docData.uploadedAt &&
-            Array.isArray(docData.uploadedAt) &&
-            docData.uploadedAt.length >= 3
-          ) {
+        let uploadDate = new Date().toISOString().split("T")[0];
+        if (docData.uploadedAt) {
+          if (typeof docData.uploadedAt === "string") {
+            uploadDate = docData.uploadedAt.split(" ")[0];
+          } else if (Array.isArray(docData.uploadedAt) && docData.uploadedAt.length >= 3) {
             const [y, m, d] = docData.uploadedAt;
             uploadDate = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           }
+        }
 
-          let fileSizeStr = "N/A";
-          if (docData.fileSize) {
-            const bytes = Number(docData.fileSize);
-            if (!isNaN(bytes)) {
-              if (bytes < 1024) fileSizeStr = `${bytes} B`;
-              else if (bytes < 1024 * 1024)
-                fileSizeStr = `${(bytes / 1024).toFixed(1)} KB`;
-              else fileSizeStr = `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-            }
-          }
+        let fileSizeStr = "N/A";
+        if (typeof docData.fileSize === "number") {
+          const bytes = docData.fileSize;
+          if (bytes < 1024) fileSizeStr = `${bytes} B`;
+          else if (bytes < 1024 * 1024) fileSizeStr = `${(bytes / 1024).toFixed(1)} KB`;
+          else fileSizeStr = `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
 
-          return {
-            id: `DOC-${String(docData.id).padStart(3, "0")}`,
-            name: docData.fileName || doc.name,
-            type: doc.name,
-            uploadDate,
-            uploadedBy: "Business",
-            fileSize: fileSizeStr,
-            // status:
-            //   doc.verified === true
-            //     ? "verified"
-            //     : doc.verified === false
-            //       ? "rejected"
-            //       : "pending_review",
+        let status: "verified" | "pending_review" | "rejected" = "pending_review";
+        if (doc.verified === true) status = "verified";
+        if (doc.verified === false) status = "rejected";
 
-            status:
-              doc.verified === true
-                ? "verified"
-                : doc.verified === false
-                  ? "rejected"
-                  : "pending_review",
-            documentId: docData.id,
-            fileUrl: docData.fileUrl,
-            documentNumber: docData.documentNumber,
-            verified: doc.verified,
-            rejectionReason: docData.rejectionReason || undefined, // ← THIS WAS MISSING
-          };
-        },
-      );
+        return {
+          id: `DOC-${docData.id}`,
+          name: docData.fileName || doc.name,
+          type: doc.name,
+          uploadDate,
+          uploadedBy: "Business",
+          fileSize: fileSizeStr,
+          status,
+          documentId: docData.id,
+          fileUrl: docData.fileUrl,
+          documentNumber: docData.documentNumber,
+          verified: doc.verified,
+          rejectionReason: doc.rejectionReason || undefined,
+        };
+      });
 
       setDocuments(transformed);
     } catch (err) {
@@ -211,7 +202,6 @@ const UserProfile = () => {
     }
   };
 
-  // Fetch business profile
   useEffect(() => {
     const fetchBusinessProfile = async () => {
       try {
@@ -264,7 +254,6 @@ const UserProfile = () => {
     fetchBusinessProfile();
   }, [id, toast, token]);
 
-  // Fetch KYB context + documents
   useEffect(() => {
     const fetchKYBContext = async () => {
       try {
@@ -280,12 +269,9 @@ const UserProfile = () => {
         if (data?.documents) {
           setKybContext(data);
 
-          const types = data.documents.map(
-            (doc: KYBContextDocument) => doc.name,
-          );
+          const types = data.documents.map((doc) => doc.name);
           setDocumentTypes(types);
 
-          // Initial load of documents
           await loadDocumentsFromServer();
         }
       } catch (error) {
@@ -391,10 +377,6 @@ const UserProfile = () => {
 
       if (documentNumber) {
         formData.append("documentNumber", documentNumber);
-      }
-
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
       }
 
       const response = await axios.post(
@@ -874,7 +856,6 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Upload New Document Section */}
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -954,7 +935,6 @@ const UserProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Documents List */}
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -977,7 +957,6 @@ const UserProfile = () => {
                   >
                     <CardContent className="p-5">
                       <div className="flex flex-col gap-4">
-                        {/* Main info row */}
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div className="flex items-start gap-4 flex-1 min-w-0">
                             <FileText className="h-9 w-9 text-primary mt-0.5 flex-shrink-0" />
@@ -1005,12 +984,10 @@ const UserProfile = () => {
                                     #{doc.documentNumber}
                                   </span>
                                 )}
-                                <span>{doc.rejectionReason}</span>
                               </div>
                             </div>
                           </div>
 
-                          {/* Buttons */}
                           <div className="flex items-center gap-2.5 flex-wrap mt-2 sm:mt-0">
                             {doc.fileUrl && (
                               <>
@@ -1037,8 +1014,7 @@ const UserProfile = () => {
                           </div>
                         </div>
 
-                        {/* Rejection reason */}
-                        {doc.status === "rejected" && doc.rejectionReason && (
+                        {doc.rejectionReason && (
                           <div className="mt-1 p-3.5 bg-destructive/10 border border-destructive/20 rounded-lg text-sm">
                             <div className="flex items-start gap-2.5">
                               <AlertCircle className="h-4.5 w-4.5 text-destructive mt-0.5 flex-shrink-0" />
@@ -1053,7 +1029,6 @@ const UserProfile = () => {
                             </div>
                           </div>
                         )}
-
                       </div>
                     </CardContent>
                   </Card>
@@ -1064,7 +1039,6 @@ const UserProfile = () => {
         </Card>
       </div>
 
-      {/* Dialogs */}
       <ConfirmationDialog
         open={showSaveConfirmation}
         onOpenChange={setShowSaveConfirmation}

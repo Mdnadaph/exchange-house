@@ -162,10 +162,6 @@ const UserTransactions = () => {
         timeout: 10000,
       };
 
-      //const response = await axios.get<ApiResponse>(
-      //  `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&setPage=10`,
-      //  config,
-      //);
 
       let url = `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&size=10`;
       if (searchValue) {
@@ -810,6 +806,7 @@ const UserTransactions = () => {
                               </p>
                             </div>
                           </div>
+
                           {/* <div className="border-t pt-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-4">
@@ -868,6 +865,7 @@ const UserTransactions = () => {
                               </div>
                             </div>
                           </div> */}
+
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">

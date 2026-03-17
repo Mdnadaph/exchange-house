@@ -9,7 +9,6 @@ import { useParams } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
 import axios from "axios";
-// Add any missing imports
 import {
   FileText,
   Upload,
@@ -19,7 +18,7 @@ import {
   Trash2,
   CheckCircle,
   Clock,
-  AlertCircle, // Make sure this is imported
+  AlertCircle,
   File,
   Image,
   FileSpreadsheet,
@@ -32,12 +31,16 @@ const UserDocuments = () => {
   const token = cookie.token;
   const firstName = cookie.firstName;
   const { toast } = useToast();
+
   const [apiData, setApiData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
 
-  // Fetch KYB context data
+  // ── Search & Filter States ──
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All"); // All | Pending | Approved | Rejected
+
   // Fetch KYB context data
   useEffect(() => {
     const fetchKYBContext = async () => {
@@ -50,7 +53,7 @@ const UserDocuments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          },
+          }
         );
 
         const data = response?.data?.data;
@@ -58,44 +61,31 @@ const UserDocuments = () => {
         if (data?.documents) {
           setApiData(data);
 
-          // Transform API data to match your document structure
           const transformedDocs = data.documents
             .filter((doc: any) => doc.uploaded && doc.document)
             .map((doc: any) => {
               const docData = doc.document;
 
-              // Format uploaded date - handle both string and array formats
               let uploadDate = "Date not available";
               let uploadedAtFormatted = "N/A";
 
               if (docData.uploadedAt) {
                 if (typeof docData.uploadedAt === "string") {
-                  // If it's already a string, use it directly
                   uploadDate = docData.uploadedAt;
                   uploadedAtFormatted = docData.uploadedAt;
                 } else if (
                   Array.isArray(docData.uploadedAt) &&
                   docData.uploadedAt.length >= 5
                 ) {
-                  // If it's an array, format it
                   const [year, month, day, hour, minute] = docData.uploadedAt;
-                  uploadDate = `${year}-${String(month).padStart(
-                    2,
-                    "0",
-                  )}-${String(day).padStart(2, "0")} ${String(hour).padStart(
-                    2,
-                    "0",
-                  )}:${String(minute).padStart(2, "0")}`;
+                  uploadDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
                   uploadedAtFormatted = uploadDate;
                 }
               }
 
-              // Determine file type
               const fileName = docData.fileName || "";
-              const fileExtension =
-                fileName.split(".").pop()?.toLowerCase() || "";
+              const fileExtension = fileName.split(".").pop()?.toLowerCase() || "";
 
-              // Map API categories to your categories
               const categoryMap: Record<string, string> = {
                 BUSINESS: "Compliance",
                 FINANCIAL: "Financial",
@@ -103,28 +93,19 @@ const UserDocuments = () => {
                 TRANSACTION: "Transaction Supporting",
               };
 
-              // Determine status
               let status = "pending_review";
               if (doc.verified === true) status = "approved";
               if (doc.verified === false) status = "rejected";
 
-              // Add this helper function to format file sizes
               const formatFileSize = (bytes: number): string => {
-                if (bytes === 0 || bytes === undefined || bytes === null)
-                  return "0 Bytes";
-
+                if (bytes === 0 || bytes === undefined || bytes === null) return "0 Bytes";
                 const k = 1024;
                 const sizes = ["Bytes", "KB", "MB", "GB"];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-                // Handle very small sizes (less than 1 KB)
-                if (i === 0) {
-                  return `${bytes} ${sizes[i]}`;
-                }
-
+                if (i === 0) return `${bytes} ${sizes[i]}`;
                 return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
               };
-              // Format file size - FIX HERE
+
               let sizeFormatted = "N/A";
               if (docData.fileSize) {
                 sizeFormatted = formatFileSize(docData.fileSize);
@@ -135,7 +116,7 @@ const UserDocuments = () => {
                 name: fileName,
                 type: doc.name,
                 category: categoryMap[doc.category] || doc.category,
-                size: sizeFormatted, // Use the formatted file size
+                size: sizeFormatted,
                 uploadDate: uploadDate,
                 uploadedAt: uploadedAtFormatted,
                 uploadedBy: "System",
@@ -144,15 +125,14 @@ const UserDocuments = () => {
                 expiryDate: null,
                 fileType: fileExtension,
                 description: `${doc.name} for KYB compliance`,
-                rejectionReason:
-                  doc.verified === false ? "Verification failed" : null,
+                rejectionReason: doc.verified === false ? doc.rejectionReason || "Verification failed" : null,
                 documentNumber: docData.documentNumber,
                 fileUrl: docData.fileUrl,
-                rawFileSize: docData.fileSize, // Keep raw size for reference if needed
+                rawFileSize: docData.fileSize,
               };
             });
 
-          setDocuments(transformedDocs); // Add this for debugging
+          setDocuments(transformedDocs);
         }
       } catch (err: any) {
         setError(err.response?.data?.message || "Failed to load documents");
@@ -171,30 +151,12 @@ const UserDocuments = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      approved: {
-        variant: "default" as const,
-        label: "Approved",
-        icon: CheckCircle,
-      },
-      pending_review: {
-        variant: "secondary" as const,
-        label: "Pending Review",
-        icon: Clock,
-      },
-      rejected: {
-        variant: "destructive" as const,
-        label: "Rejected",
-        icon: AlertCircle,
-      },
-      expired: {
-        variant: "destructive" as const,
-        label: "Expired",
-        icon: AlertCircle,
-      },
+      approved: { variant: "default" as const, label: "Approved", icon: CheckCircle },
+      pending_review: { variant: "secondary" as const, label: "Pending Review", icon: Clock },
+      rejected: { variant: "destructive" as const, label: "Rejected", icon: AlertCircle },
+      expired: { variant: "destructive" as const, label: "Expired", icon: AlertCircle },
     };
-    return (
-      statusMap[status as keyof typeof statusMap] || statusMap.pending_review
-    );
+    return statusMap[status as keyof typeof statusMap] || statusMap.pending_review;
   };
 
   const getFileIcon = (fileType: string) => {
@@ -217,9 +179,7 @@ const UserDocuments = () => {
       Financial: "bg-purple-100 text-purple-800",
       Identity: "bg-orange-100 text-orange-800",
     };
-    return (
-      colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800"
-    );
+    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
   const handleView = async (viewUrl: string) => {
@@ -234,7 +194,7 @@ const UserDocuments = () => {
     } catch (error) {
       toast({
         title: "Failed",
-        description: error?.message || "Please try again",
+        description: (error as any)?.message || "Please try again",
         variant: "destructive",
       });
     }
@@ -258,11 +218,32 @@ const UserDocuments = () => {
     } catch (error) {
       toast({
         title: "Failed",
-        description: error?.message || "Please try again",
+        description: (error as any)?.message || "Please try again",
         variant: "destructive",
       });
     }
   };
+
+  // ── Filtering & Searching Logic ──
+  const filteredDocuments = documents.filter((doc) => {
+    // Status filter
+    if (activeFilter !== "All") {
+      if (activeFilter === "Pending" && doc.status !== "pending_review") return false;
+      if (activeFilter === "Approved" && doc.status !== "approved") return false;
+      if (activeFilter === "Rejected" && doc.status !== "rejected") return false;
+    }
+
+    // Search term
+    if (!searchTerm.trim()) return true;
+
+    const term = searchTerm.toLowerCase();
+    return (
+      doc.name?.toLowerCase().includes(term) ||
+      doc.type?.toLowerCase().includes(term) ||
+      doc.description?.toLowerCase().includes(term) ||
+      (doc.rejectionReason && doc.rejectionReason.toLowerCase().includes(term))
+    );
+  });
 
   if (loading) {
     return (
@@ -301,13 +282,8 @@ const UserDocuments = () => {
               Manage transaction supporting documents and compliance files
             </p>
           </div>
-          {/* <Button variant="business">
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Document
-          </Button> */}
         </div>
 
-        {/* Statistics Cards */}
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
@@ -321,9 +297,7 @@ const UserDocuments = () => {
               <div className="text-2xl font-bold">{documents.length}</div>
               <p className="text-xs text-muted-foreground">
                 {apiData
-                  ? `of ${
-                      apiData.documents.filter((d: any) => d.required).length
-                    } required`
+                  ? `of ${apiData.documents.filter((d: any) => d.required).length} required`
                   : "No data"}
               </p>
             </CardContent>
@@ -343,9 +317,7 @@ const UserDocuments = () => {
               <p className="text-xs text-muted-foreground">
                 {documents.length > 0
                   ? `${Math.round(
-                      (documents.filter((d) => d.status === "approved").length /
-                        documents.length) *
-                        100,
+                      (documents.filter((d) => d.status === "approved").length / documents.length) * 100
                     )}% approval rate`
                   : "No documents"}
               </p>
@@ -376,13 +348,9 @@ const UserDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {apiData
-                  ? apiData.documents.filter((d: any) => d.required).length
-                  : "N/A"}
+                {apiData ? apiData.documents.filter((d: any) => d.required).length : "N/A"}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Total required for KYB
-              </p>
+              <p className="text-xs text-muted-foreground">Total required for KYB</p>
             </CardContent>
           </Card>
         </div>
@@ -397,38 +365,42 @@ const UserDocuments = () => {
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search"
-                    placeholder="Search by name, type, or transaction ID..."
+                    placeholder="Search by name, type, description, rejection reason..."
                     className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline">All Status</Button>
-                <Button variant="outline">Approved</Button>
-                <Button variant="outline">Compliance</Button>
-                <Button variant="outline">This Month</Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={activeFilter === "All" ? "default" : "outline"}
+                  onClick={() => setActiveFilter("All")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={activeFilter === "Pending" ? "default" : "outline"}
+                  onClick={() => setActiveFilter("Pending")}
+                >
+                  Pending
+                </Button>
+                <Button
+                  variant={activeFilter === "Approved" ? "default" : "outline"}
+                  onClick={() => setActiveFilter("Approved")}
+                >
+                  Approved
+                </Button>
+                <Button
+                  variant={activeFilter === "Rejected" ? "default" : "outline"}
+                  onClick={() => setActiveFilter("Rejected")}
+                >
+                  Rejected
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Upload Area */}
-        {/* <Card className="shadow-card border-2 border-dashed border-muted hover:border-primary transition-colors">
-          <CardContent className="p-8 text-center">
-            <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Upload New Document
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Drag and drop files here or click to browse. Supports PDF, JPG,
-              PNG, XLSX files up to 10MB.
-            </p>
-            <div className="flex justify-center space-x-4">
-              <Button variant="business">Choose Files</Button>
-              <Button variant="outline">Scan Document</Button>
-            </div>
-          </CardContent>
-        </Card> */}
 
         {/* Documents List */}
         <Card className="shadow-card">
@@ -436,49 +408,41 @@ const UserDocuments = () => {
             <CardTitle>Documents Library</CardTitle>
             {apiData && (
               <p className="text-sm text-muted-foreground">
-                KYB Type: {apiData.kybType} • Business Type:{" "}
-                {apiData.businessType}
+                KYB Type: {apiData.kybType} • Business Type: {apiData.businessType}
               </p>
             )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {documents.length === 0 ? (
+              {filteredDocuments.length === 0 ? (
                 <div className="text-center py-12">
                   <File className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    No documents uploaded yet
+                    No documents found
                   </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Upload your required documents to complete KYB compliance
+                  <p className="text-muted-foreground">
+                    Try adjusting your search or filter
                   </p>
-                  {/* <Button variant="business">Upload Your First Document</Button> */}
                 </div>
               ) : (
-                documents.map((doc) => {
+                filteredDocuments.map((doc) => {
                   const status = getStatusBadge(doc.status);
                   const StatusIcon = status.icon;
                   const FileIcon = getFileIcon(doc.fileType);
+
                   return (
-                    <Card
-                      key={doc.id}
-                      className="hover:shadow-md transition-smooth"
-                    >
+                    <Card key={doc.id} className="hover:shadow-md transition-smooth">
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
-                          {/* File Icon */}
                           <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
                             <FileIcon className="h-6 w-6 text-muted-foreground" />
                           </div>
 
-                          {/* Document Details */}
                           <div className="flex-1 space-y-3">
                             <div className="flex items-start justify-between">
                               <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                  <h4 className="font-semibold text-foreground">
-                                    {doc.name}
-                                  </h4>
+                                  <h4 className="font-semibold text-foreground">{doc.name}</h4>
                                   <Badge
                                     variant={status.variant}
                                     className="flex items-center gap-1"
@@ -488,20 +452,13 @@ const UserDocuments = () => {
                                   </Badge>
                                   <span
                                     className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                                      doc.category,
+                                      doc.category
                                     )}`}
                                   >
                                     {doc.category}
                                   </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {doc.description}
-                                </p>
-                                {/*{doc.rejectionReason && (
-                                  <p className="text-sm text-destructive">
-                                    Rejection reason: {doc.rejectionReason}
-                                  </p>
-                                )}*/}
+                                <p className="text-sm text-muted-foreground">{doc.description}</p>
                               </div>
 
                               <div className="flex space-x-1 pl-8">
@@ -516,74 +473,39 @@ const UserDocuments = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleDownload(doc?.fileUrl, doc?.name)
-                                  }
+                                  onClick={() => handleDownload(doc?.fileUrl, doc?.name)}
                                 >
                                   <Download className="h-4 w-4 mr-1" />
                                   Download
                                 </Button>
-                                {/* <Button variant="outline" size="sm">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button> */}
                               </div>
                             </div>
 
-                            {/* Document Metadata */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                               <div>
-                                <span className="text-muted-foreground">
-                                  Type:
-                                </span>
+                                <span className="text-muted-foreground">Type:</span>
                                 <p className="font-medium">{doc.type}</p>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">
-                                  Size:
-                                </span>
+                                <span className="text-muted-foreground">Size:</span>
                                 <p className="font-medium">{doc.size}</p>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">
-                                  Uploaded:
-                                </span>
-                                <p className="font-medium">{doc.uploadDate}</p>{" "}
-                                {/* Use uploadDate instead of uploadedAt */}
-                                <p className="text-xs text-muted-foreground">
-                                  by {firstName}
+                                <span className="text-muted-foreground">Uploaded:</span>
+                                <p className="font-medium">{doc.uploadDate}</p>
+                                <p className="text-xs text-muted-foreground">by {firstName}</p>
+                              </div>
+                            </div>
+
+                            {/* Show rejection reason when exists */}
+                            {doc.rejectionReason && (
+                              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                                <p className="text-sm text-red-800">
+                                  <span className="font-medium">Rejection Reason:</span>{" "}
+                                  {doc.rejectionReason}
                                 </p>
                               </div>
-                              {/*<div>
-                                {doc.transactionId ? (
-                                  <>
-                                    <span className="text-muted-foreground">
-                                      Transaction:
-                                    </span>
-                                    <p className="font-medium font-mono text-xs">
-                                      {doc.transactionId}
-                                    </p>
-                                  </>
-                                ) : doc.expiryDate ? (
-                                  <>
-                                    <span className="text-muted-foreground">
-                                      Expires:
-                                    </span>
-                                    <p className="font-medium">
-                                      {doc.expiryDate}
-                                    </p>
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-muted-foreground">
-                                      Status:
-                                    </span>
-                                    <p className="font-medium">
-                                      General Document
-                                    </p>
-                                  </>
-                                )}
-                              </div>*/}
-                            </div>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -592,14 +514,11 @@ const UserDocuments = () => {
                 })
               )}
             </div>
-            {/* Pagination */}
+
+            {/* Pagination (static for now) */}
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {documents.length} of{" "}
-                {apiData
-                  ? apiData.documents.filter((d: any) => d.required).length
-                  : 0}{" "}
-                required documents
+                Showing {filteredDocuments.length} of {documents.length} documents
               </p>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" disabled>
