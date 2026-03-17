@@ -791,10 +791,10 @@ const UserProfile = () => {
                       {kybContext?.kybStatus ? (
                         <Badge
                           variant="default"
-                          className={`
-                            text-lg px-8 py-2.5 font-semibold shadow-sm
-                            ${getKybStatusColor(kybContext.kybStatus)}
-                          `}
+                          // className={`
+                          //   text-lg px-8 py-2.5 font-semibold shadow-sm
+                          //   ${getKybStatusColor(kybContext.kybStatus)}
+                          // `}
                         >
                           {kybContext.kybStatus.toUpperCase()}
                         </Badge>
