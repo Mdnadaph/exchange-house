@@ -117,6 +117,7 @@ const ExchangePayoutConfig = () => {
   const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
+  const [errors, setErrors] = useState<any>({});
   //  const [destinations, setDestinations] = useState<PayoutDestination[]>([
   //   {
   //     id: "1",
@@ -360,15 +361,24 @@ const ExchangePayoutConfig = () => {
   };
 
   const handleAddDestination = async () => {
-    if (!destinationForm.country || destinationForm.mechanisms.length === 0) {
-      toast({
-        title: t("validationError") || "Validation Error",
-        description:
-          t("fillRequiredFields") || "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // if (!destinationForm.country || destinationForm.mechanisms.length === 0) {
+    //   toast({
+    //     title: t("validationError") || "Validation Error",
+    //     description:
+    //       t("fillRequiredFields") || "Please fill in all required fields.",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
+    let newErrors: any = {};
+    if (!destinationForm?.country) newErrors.country = "Country is required";
+    if (!destinationForm.mechanisms || destinationForm.mechanisms.length === 0)
+      newErrors.mechanisms = "Select at least one mechanism.";
+
+    setErrors(newErrors);
+
+    // Stop if any errors
+    if (Object.keys(newErrors).length > 0) return;
     const payload = buildPayload();
     try {
       const res = await fetch(`${BASE_URL}/api/v1/payout/config/country`, {
@@ -380,7 +390,6 @@ const ExchangePayoutConfig = () => {
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-
       if (!res.ok || json.status !== true) {
         throw new Error(json.message || "Create failed");
       }
@@ -390,8 +399,7 @@ const ExchangePayoutConfig = () => {
       toast({
         title: t("destinationAdded") || "Destination Added",
         description:
-          t("destinationAddedDesc") ||
-          `${destinationForm?.country} has been added successfully.`,
+          json?.message || "Country configuration saved successfully",
       });
     } catch (error) {
       toast({
@@ -605,8 +613,16 @@ const ExchangePayoutConfig = () => {
       country,
       currency: countryData?.isoCode,
     }));
+    setErrors((prev: any) => ({
+      ...prev,
+      country: "",
+    }));
   };
   const handleMechanismToggle = (mechanism: string) => {
+    setErrors((prev: any) => ({
+      ...prev,
+      mechanisms: "",
+    }));
     setDestinationForm((prev) => {
       const exists = prev.mechanisms.includes(mechanism);
 
@@ -1250,6 +1266,9 @@ const ExchangePayoutConfig = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.country && (
+                    <p className="text-red-500 text-xs">{errors.country}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1337,6 +1356,9 @@ const ExchangePayoutConfig = () => {
                     </div>
                   ))}
                 </div>
+                {errors?.mechanisms && (
+                  <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
+                )}
               </div>
 
               {destinationForm.mechanisms.map((m) => {

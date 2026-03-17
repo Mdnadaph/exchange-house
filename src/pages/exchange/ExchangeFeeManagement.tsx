@@ -77,6 +77,7 @@ const ExchangeFeeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [payoutCountryData, setPayoutCountryData] = useState([]);
+  const [countries, setCountries] = useState([]);
 
   // Dialog Controls
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false); // Combined Create/Edit Dialog
@@ -184,16 +185,16 @@ const ExchangeFeeManagement = () => {
   };
 
   // --- Constants ---
-  const countries = [
-    { label: "India", value: "IN" },
-    { label: "Philippines", value: "PH" },
-    { label: "Bangladesh", value: "BD" },
-    { label: "Pakistan", value: "PK" },
-    { label: "Nepal", value: "NP" },
-    { label: "Sri Lanka", value: "LK" },
-    { label: "United Arab Emirates", value: "AE" },
-    { label: "Qatar", value: "QA" },
-  ];
+  // const countries = [
+  //   { label: "India", value: "IN" },
+  //   { label: "Philippines", value: "PH" },
+  //   { label: "Bangladesh", value: "BD" },
+  //   { label: "Pakistan", value: "PK" },
+  //   { label: "Nepal", value: "NP" },
+  //   { label: "Sri Lanka", value: "LK" },
+  //   { label: "United Arab Emirates", value: "AE" },
+  //   { label: "Qatar", value: "QA" },
+  // ];
 
   const transactionTypes = [
     { label: "Single Transaction", value: "SINGLE" },
@@ -258,6 +259,27 @@ const ExchangeFeeManagement = () => {
   };
   useEffect(() => {
     getPayoutCountryList();
+  }, []);
+  const getCountriesData = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      setCountries(json?.data);
+    } catch (error) {
+      const msg = error.message || "Failed to load countries";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+  // State for destinations
+  useEffect(() => {
+    getCountriesData();
   }, []);
   const handleSaveRule = async () => {
     if (!validateForm()) {
@@ -829,8 +851,8 @@ const ExchangeFeeManagement = () => {
                   <SelectContent>
                     <SelectItem value="all">All Countries</SelectItem>
                     {countries.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
+                      <SelectItem key={c?.isoCode} value={c?.isoCode}>
+                        {c?.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -595,7 +595,7 @@ const ExchangeComplianceConfig = () => {
         </div>
 
         {/* Compliance Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {complianceMetrics.map((metric, index) => {
             const Icon = metric.icon;
             return (
@@ -624,7 +624,7 @@ const ExchangeComplianceConfig = () => {
               </Card>
             );
           })}
-        </div>
+        </div> */}
 
         {/* Regulatory Thresholds */}
         <Card className="shadow-card">
