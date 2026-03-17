@@ -47,6 +47,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner"; // Assuming sonner for notifications
 import { useNavigate } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
 
 const BeneficiaryRegistrationForm = ({
   onSuccess,
@@ -946,23 +947,40 @@ const BeneficiaryRegistrationForm = ({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">
-                Phone Number <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                  placeholder="971501234567"
-                />
-                {errors.phoneNumber?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">
-                    {msg}
-                  </p>
-                ))}
+              <div>
+                <Label htmlFor="phoneNumber">
+                  Phone Number <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <PhoneInput
+                    country={"us"}
+                    value={formData.phoneNumber}
+                    onChange={(value, country) => {
+                      setFormData((prev) => ({ ...prev, phoneNumber: value }));
+                      clearFieldError("phoneNumber");
+
+                      // Optionally store country data if needed later
+                    }}
+                    inputProps={{
+                      name: "phone",
+                      id: "phone",
+                      required: true,
+                    }}
+                    containerClass="phone-input-container" // optional custom class
+                    //inputClass="!pl-12" // adjust padding for the flag button
+                    buttonClass="phone-flag-button"
+                    enableSearch={true}
+                    searchPlaceholder="Search country"
+                    //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                    preferredCountries={["ae", "in"]} // show these at top
+                  />
+                  {errors.phoneNumber?.map((msg, i) => (
+                    <p key={i} className="text-sm text-destructive mt-1">
+                      {msg}
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
