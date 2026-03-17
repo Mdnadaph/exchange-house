@@ -62,7 +62,6 @@ const ExchangeAdminUser = () => {
   const navigate = useNavigate();
   const uuid = useParams();
 
-  const [userLoading, setUserLoading] = useState(false);
   const [dashboardPermissionId, setDashboardPermissionId] = useState<
     string | null
   >(null);
@@ -77,7 +76,6 @@ const ExchangeAdminUser = () => {
   const [assignedPermissionIds, setAssignedPermissionIds] = useState<string[]>(
     [],
   );
-
   const [rawSelectedIds, setRawSelectedIds] = useState<string[]>([]);
   const [parentMap, setParentMap] = useState<Record<string, string | null>>({});
   const [loadingPermissions, setLoadingPermissions] = useState(false);
@@ -181,6 +179,7 @@ const ExchangeAdminUser = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const treeData = res.data?.data || [];
+      console.log("res", res);
       const { filtered: treeDataFiltered, dashboardId } =
         filterOutDashboard(treeData);
       setPermissionTree(treeDataFiltered);
@@ -412,7 +411,24 @@ const ExchangeAdminUser = () => {
 
   const totalStaff = users.length;
   const activeStaff = users.filter((u) => u.active).length;
+  const handleToggle = (perm: any) => {
+    const parentId = String(perm.id);
+    const childIds = perm.children?.map((c: any) => String(c.id)) || [];
 
+    const allIds = [parentId, ...childIds];
+
+    setAssignedPermissionIds((prev) => {
+      const allSelected = allIds.every((id) => prev.includes(id));
+
+      if (allSelected) {
+        // ❌ uncheck parent + all children
+        return prev.filter((id) => !allIds.includes(id));
+      } else {
+        // ✅ check parent + all children
+        return [...new Set([...prev, ...allIds])];
+      }
+    });
+  };
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -464,48 +480,61 @@ const ExchangeAdminUser = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {allPermissions.length === 0 ? (
+                  {permissionTree?.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center">
                       No permissions available
                     </p>
                   ) : (
-                    allPermissions.map((perm) => (
-                      <div key={perm.id} className="flex items-start space-x-3">
-                        <input
-                          type="checkbox"
-                          id={`perm-${perm.id}`}
-                          checked={assignedPermissionIds.includes(
-                            String(perm.id),
-                          )}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setAssignedPermissionIds([
-                                ...assignedPermissionIds,
-                                String(perm.id),
-                              ]);
-                            } else {
-                              setAssignedPermissionIds(
-                                assignedPermissionIds.filter(
-                                  (id) => id !== String(perm.id),
-                                ),
-                              );
-                            }
-                          }}
-                          className="mt-1 h-4 w-4 rounded border-gray-300"
-                        />
-                        <div>
+                    permissionTree?.map((perm) => (
+                      <div key={perm.id} className="space-y-2">
+                        {/* Parent */}
+                        <div className="flex items-start space-x-3">
+                          <input
+                            type="checkbox"
+                            id={`perm-${perm.id}`}
+                            checked={assignedPermissionIds.includes(
+                              String(perm.id),
+                            )}
+                            onChange={() => handleToggle(perm)}
+                            className="mt-1 h-4 w-4 rounded border-gray-300"
+                          />
                           <Label
                             htmlFor={`perm-${perm.id}`}
                             className="text-sm font-normal"
                           >
                             {perm.name}
                           </Label>
-                          {perm.description && (
-                            <p className="text-xs text-muted-foreground">
-                              {perm.description}
-                            </p>
-                          )}
                         </div>
+
+                        {/* Children */}
+                        {perm.children && perm.children.length > 0 && (
+                          <div className="ml-6 space-y-2">
+                            {perm.children.map((child: any) => (
+                              <div
+                                key={child.id}
+                                className="flex items-start space-x-3"
+                              >
+                                <input
+                                  type="checkbox"
+                                  id={`perm-${child.id}`}
+                                  checked={assignedPermissionIds.includes(
+                                    String(child.id),
+                                  )}
+                                  onChange={() =>
+                                    handleToggle({ id: child.id })
+                                  }
+                                  className="mt-1 h-4 w-4 rounded border-gray-300"
+                                />
+                                <Label
+                                  htmlFor={`perm-${child.id}`}
+                                  className="text-sm font-normal"
+                                >
+                                  {child.name}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
@@ -521,7 +550,9 @@ const ExchangeAdminUser = () => {
               </Button>
               <Button
                 variant="business"
+                disabled={loading}
                 onClick={async () => {
+                  setLoading(true);
                   if (!selectedUserForPermissions) return;
                   let permissionIds = assignedPermissionIds.map(Number);
 
@@ -533,14 +564,15 @@ const ExchangeAdminUser = () => {
                     permissionIds.push(Number(dashboardPermissionId));
                   }
                   try {
-                    await axios.put(
-                      `${BASE_URL}/api/v3/admin/staff/${selectedUserForPermissions.uuid}/permissions`,
+                    const res = await axios.put(
+                      `${BASE_URL}/api/v1/exchange-users/${selectedUserForPermissions.uuid}/permissions`,
                       { permissionIds },
                       { headers: { Authorization: `Bearer ${token}` } },
                     );
+
                     toast({
                       title: "Success",
-                      description: "Permissions updated",
+                      description: res?.data?.message || "Permissions updated",
                     });
                     fetchUsers(currentPage);
                     setIsPermissionModalOpen(false);
@@ -555,6 +587,8 @@ const ExchangeAdminUser = () => {
                         "Failed to update permissions",
                       variant: "destructive",
                     });
+                  } finally {
+                    setLoading(false);
                   }
                 }}
               >
@@ -866,7 +900,7 @@ const ExchangeAdminUser = () => {
                           {/* <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-1" /> Edit Details
                           </Button> */}
-                          {/* <Button
+                          <Button
                             variant="outline"
                             size="sm"
                             onClick={async () => {
@@ -874,14 +908,19 @@ const ExchangeAdminUser = () => {
                               setLoadingPermissions(true);
                               await Promise.all([
                                 fetchAllPermissions(),
-                                fetchUserPermissions(user.uuid),
+                                // fetchUserPermissions(user.uuid),
                               ]);
                               setLoadingPermissions(false);
                               setIsPermissionModalOpen(true);
+                              setAssignedPermissionIds(
+                                user?.permissions?.map((id: number) =>
+                                  String(id),
+                                ),
+                              );
                             }}
                           >
                             <Shield className="h-4 w-4 mr-1" /> Permissions
-                          </Button> */}
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
