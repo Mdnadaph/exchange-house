@@ -142,7 +142,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                Branch Admin - ( {fullName ? fullName : `${firstName || ""} ${lastName || ""}`} )
+                Branch Admin - ({" "}
+                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`} )
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

@@ -1076,9 +1076,9 @@ const AdminExchangeHouses = () => {
               </div>
             ) : (
               exchangeAdmins.map((admin) => {
-                console.log(
-                  `Admin ID: ${admin.id}, Status: ${admin.exchangeStatus}`,
-                ); // Debug log - remove after testing
+                // console.log(
+                //   `Admin ID: ${admin.id}, Status: ${admin.exchangeStatus}`,
+                // ); // Debug log - remove after testing
                 const status = getStatusBadge(admin.exchangeStatus);
                 const plan = getPlanBadge(admin.subscriptionPlan);
                 const StatusIcon = status.icon;

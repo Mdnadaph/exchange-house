@@ -187,9 +187,6 @@ const UserVerifyTwoFALogin: React.FC = () => {
         setCookie("userId", businessUser.id, { path: "/" });
         setCookie("fullName", businessUser.fullName, { path: "/" });
         setCookie("email", businessUser.email, { path: "/" });
-        // setCookie("businessName", businessUser.businessName, { path: "/" });
-        // setCookie("businessName", businessUser.businessName ?? "", { path: "/" });
-        setCookie("businessName", businessUser.businessName ?? "", { path: "/" });
       }
 
       if (businessAdmin) {
