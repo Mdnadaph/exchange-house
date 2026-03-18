@@ -173,7 +173,11 @@ const BranchBusinessOnboarding = () => {
               Register and manage new business accounts
             </p>
           </div>
-          <StaffOnboardingForm />
+          <StaffOnboardingForm
+            refetch={() =>
+              fetchBusinesses(pagination.pageNumber, pagination.pageSize)
+            }
+          />
         </div>
 
         {/* Stats Grid */}

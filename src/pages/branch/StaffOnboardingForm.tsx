@@ -51,6 +51,7 @@ import {
 
 interface BusinessOnboardingFormProps {
   trigger?: React.ReactNode;
+  refetch: (a?: number, b?: number) => void;
 }
 
 import BASE_URL from "@/config/config";
@@ -59,7 +60,10 @@ import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import { cn } from "@/lib/utils";
-const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
+const StaffOnboardingForm = ({
+  trigger,
+  refetch,
+}: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
 
   const [cookies] = useCookies(["token", "branchId", "role", "branchName"]); // Added "role"
@@ -261,6 +265,7 @@ const StaffOnboardingForm = ({ trigger }: BusinessOnboardingFormProps) => {
         setCurrentStep(1);
         setIdDocuments([]);
         setSelectedCurrencies(["AED"]);
+        refetch();
         setFormData({
           companyName: "",
           tradeLicense: "",

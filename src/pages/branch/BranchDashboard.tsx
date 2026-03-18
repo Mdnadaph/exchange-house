@@ -45,7 +45,6 @@ const BranchDashboard = () => {
 
     fetchDashboardData();
   }, [token]);
-
   const stats = [
     {
       title: "Assigned KYB Applications",
@@ -187,10 +186,11 @@ const BranchDashboard = () => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">
-                    Dubai Mall Branch
+                    {dashboardData?.branchInfo?.name}
                   </h2>
                   <p className="text-muted-foreground">
-                    Level 2, Dubai Mall, Downtown Dubai
+                    {dashboardData?.branchInfo?.address},
+                    {dashboardData?.branchInfo?.location}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Branch Manager: {cookies.fullName}
@@ -254,7 +254,6 @@ const BranchDashboard = () => {
                 </div>
               </CardHeader>
 
-
               <CardContent className="space-y-4 ">
                 {myKYBQueue.map((application) => {
                   const status = getStatusBadge(application.kybStatus);
@@ -314,8 +313,6 @@ const BranchDashboard = () => {
                   );
                 })}
               </CardContent>
-
-
             </Card>
           </div>
 
