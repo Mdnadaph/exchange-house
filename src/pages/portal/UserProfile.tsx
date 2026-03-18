@@ -46,6 +46,7 @@ interface BusinessProfile {
   businessEmail: string;
   businessPhone: string;
   status: string;
+  kybStatus?: "NOT_STARTED" | "PENDING" | "APPROVED" | "REJECTED"; // Added
   monthlyLimit: number;
   dealValidityDays: number;
   supportedCurrencies: string[];
@@ -118,6 +119,7 @@ const UserProfile = () => {
     businessEmail: "",
     businessPhone: "",
     status: "PENDING",
+    kybStatus: undefined, // Added
     monthlyLimit: 0,
     dealValidityDays: 0,
     supportedCurrencies: [],
@@ -132,6 +134,18 @@ const UserProfile = () => {
 
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
+
+  // Helper function for KYB Status color
+  const getKybStatusColor = (status?: string): string => {
+    if (!status) return "bg-gray-100 text-gray-800 border border-gray-200";
+
+    const s = status.toUpperCase();
+    if (s === "APPROVED") return "bg-green-100 text-green-800 border border-green-200";
+    if (s === "PENDING") return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+    if (s === "REJECTED") return "bg-red-100 text-red-800 border border-red-200";
+    if (s === "NOT_STARTED") return "bg-blue-100 text-blue-800 border border-blue-200";
+    return "bg-gray-100 text-gray-800 border border-gray-200";
+  };
 
   const loadDocumentsFromServer = async () => {
     if (!id || !token) return;
@@ -240,6 +254,7 @@ const UserProfile = () => {
           businessEmail: data?.businessEmail || "",
           businessPhone: data?.businessPhone || "",
           status: data?.status || "PENDING",
+          kybStatus: data?.kybStatus, // Added - getting from this API
           monthlyLimit: data?.monthlyLimit || 0,
           dealValidityDays: data?.dealValidityDays || 0,
           supportedCurrencies: data?.supportedCurrencies || [],
@@ -785,30 +800,26 @@ const UserProfile = () => {
                 <CardTitle className="text-lg">KYB Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Updated KYB Status display using businessProfile.kybStatus */}
+                <div className="flex justify-center py-4">
+                  {businessProfile.kybStatus ? (
+                    <Badge
+                      className={`text-lg px-8 py-2.5 font-semibold shadow-sm ${getKybStatusColor(
+                        businessProfile.kybStatus
+                      )}`}
+                    >
+                      {businessProfile.kybStatus.replace("_", " ")}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-lg px-8 py-2.5">
+                      <Clock className="h-4 w-4 mr-2" />
+                      NOT STARTED
+                    </Badge>
+                  )}
+                </div>
+
                 {kybContext && (
                   <>
-                    <div className="flex justify-center py-4">
-                      {kybContext?.kybStatus ? (
-                        <Badge
-                          variant="default"
-                          // className={`
-                          //   text-lg px-8 py-2.5 font-semibold shadow-sm
-                          //   ${getKybStatusColor(kybContext.kybStatus)}
-                          // `}
-                        >
-                          {kybContext.kybStatus.toUpperCase()}
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="text-lg px-8 py-2.5"
-                        >
-                          <Clock className="h-4 w-4 mr-2 animate-pulse" />
-                          LOADING...
-                        </Badge>
-                      )}
-                    </div>
-
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">
