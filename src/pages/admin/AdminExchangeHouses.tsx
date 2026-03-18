@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css"; // choose a theme if desired
+import "react-phone-input-2/lib/style.css";
 import {
   Select,
   SelectContent,
