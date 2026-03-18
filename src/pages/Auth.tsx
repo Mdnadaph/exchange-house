@@ -205,13 +205,6 @@ const Auth: React.FC = () => {
         return;
       }
 
-      // (Optional) Keep old uuid-based flow if it still exists somewhere
-      // const uuid = responseData.uuid;
-      // if (statusCode === 428 && uuid) {
-      //   navigate(`/change-password?uuid=${uuid}`, { replace: true });
-      //   return;
-      // }
-
       // Default error message
       setErrorMessage(
         err?.response?.data?.message || "Invalid email or password",

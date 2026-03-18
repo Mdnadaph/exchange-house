@@ -119,7 +119,7 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="h-screen overflow-hidden bg-muted/30">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
