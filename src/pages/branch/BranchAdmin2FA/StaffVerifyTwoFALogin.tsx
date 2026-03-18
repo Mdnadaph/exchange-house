@@ -92,20 +92,6 @@ const VerifyTwoFALogin: React.FC = () => {
 
       const { accessToken, expiresIn, staff, refreshToken } = response.data.data;
 
-      // 2. PRINT DATA TO CONSOLE
-      // console.log("--- Login Success Data ---");
-      // console.log("Access Token:", accessToken);
-      // console.log("Staff Details:", staff);
-      // // Individual fields as requested:
-      // console.log("ID:", staff.id);
-      // console.log("UUID:", staff.uuid);
-      // console.log("Full Name:", staff.fullName);
-      // console.log("Email:", staff.email);
-      // console.log("Branch ID:", staff.branchId);
-      // console.log("Role Name:", staff.roleName);
-      // console.log("Contact Number:", staff.contactNumber);
-      // console.log("--------------------------");
-
       /* ===== STORE TOKEN ===== */
       setCookie("token", accessToken, {
         path: "/",
@@ -178,7 +164,7 @@ const VerifyTwoFALogin: React.FC = () => {
 
         {/* VERIFY BUTTON */}
         <button
-          onClick={handleVerify}
+          onClick={() => handleVerify()}
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition mt-3"
         >
           Verify & Login

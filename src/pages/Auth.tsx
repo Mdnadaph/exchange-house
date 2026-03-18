@@ -54,7 +54,6 @@ const Auth: React.FC = () => {
 
   const from = location.state?.from?.pathname;
 
-
   useEffect(() => {
     if (cookies.token && cookies.role) {
       const role = cookies.role as string;
@@ -147,10 +146,11 @@ const Auth: React.FC = () => {
         }
 
         if (data.legalBusinessName) {
-          setCookie("legalBusinessName", data.legalBusinessName, { path: "/", maxAge,});
+          setCookie("legalBusinessName", data.legalBusinessName, {
+            path: "/",
+            maxAge,
+          });
         }
-
-
 
         const userInfo =
           data.exchangeAdmin ||
@@ -165,198 +165,190 @@ const Auth: React.FC = () => {
         }
 
         if (userInfo?.legalBusinessName) {
-          setCookie("legalBusinessName", userInfo.legalBusinessName, { path: "/", maxAge });
+          setCookie("legalBusinessName", userInfo.legalBusinessName, {
+            path: "/",
+            maxAge,
+          });
         }
 
-      
+        toast.success("Login successful");
 
+        if (from) {
+          navigate(from, { replace: true });
+          return;
+        }
 
-
-
-
-
-
-
-
-      toast.success("Login successful");
-
-      if (from) {
-        navigate(from, { replace: true });
+        // Role-based redirect
+        if (role === "ROLE_SUPER_USER") {
+          navigate("/admin");
+        } else if (
+          ["ROLE_EXCHANGE_ADMIN", "ROLE_EXCHANGE_USER"].includes(role)
+        ) {
+          navigate("/exchange");
+        } else if (BRANCH_ROLES.includes(role)) {
+          navigate("/branch");
+        } else if (role === "ROLE_BUSINESS_ADMIN") {
+          navigate("/portal");
+        } else if (["ROLE_BUSINESS_USER", "ROLE_USER"].includes(role)) {
+          navigate("/user");
+        } else {
+          toast.error("Unrecognized role — please contact support");
+          navigate("/login");
+        }
+      }
+    } catch (err: any) {
+      const statusCode = err?.response?.status;
+      const uuid = err?.response?.data?.data?.uuid;
+      const userType = err?.response?.data?.data?.userType;
+      if (statusCode === 428 && uuid && userType) {
+        navigate(`/change-password?uuid=${uuid}`, { state: { userType } });
         return;
       }
 
-      // Role-based redirect
-      if (role === "ROLE_SUPER_USER") {
-        navigate("/admin");
-      } else if (
-        ["ROLE_EXCHANGE_ADMIN", "ROLE_EXCHANGE_USER"].includes(role)
-      ) {
-        navigate("/exchange");
-      } else if (BRANCH_ROLES.includes(role)) {
-        navigate("/branch");
-      } else if (role === "ROLE_BUSINESS_ADMIN") {
-        navigate("/portal");
-      } else if (["ROLE_BUSINESS_USER", "ROLE_USER"].includes(role)) {
-        navigate("/user");
-      } else {
-        toast.error("Unrecognized role — please contact support");
-        navigate("/login");
-      }
+      // (Optional) Keep old uuid-based flow if it still exists somewhere
+      // const uuid = responseData.uuid;
+      // if (statusCode === 428 && uuid) {
+      //   navigate(`/change-password?uuid=${uuid}`, { replace: true });
+      //   return;
+      // }
+
+      // Default error message
+      setErrorMessage(
+        err?.response?.data?.message || "Invalid email or password",
+      );
+    } finally {
+      setSubmitting(false);
     }
-    
-    } catch (err: any) {
-    const statusCode = err?.response?.status;
-    const uuid = err?.response?.data?.data?.uuid;
-    const userType = err?.response?.data?.data?.userType;
-    if (statusCode === 428 && uuid && userType) {
-      navigate(`/change-password?uuid=${uuid}`, { state: { userType } });
-      return;
-    }
+  };
 
-    // (Optional) Keep old uuid-based flow if it still exists somewhere
-    // const uuid = responseData.uuid;
-    // if (statusCode === 428 && uuid) {
-    //   navigate(`/change-password?uuid=${uuid}`, { replace: true });
-    //   return;
-    // }
-
-    // Default error message
-    setErrorMessage(
-      err?.response?.data?.message || "Invalid email or password",
-    );
-  } finally {
-    setSubmitting(false);
-  }
-};
-
-return (
-  <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
-    <header className="border-b bg-background/80 backdrop-blur">
-      <div className="container mx-auto px-4 py-4 flex justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back
-        </Button>
-        <div className="flex gap-2">
-          <LanguageSwitcher />
-          <ThemeToggle />
-        </div>
-      </div>
-    </header>
-
-    <main className="flex-1 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 rounded-2xl bg-primary text-primary-foreground items-center justify-center mb-4">
-            <Building2 className="h-8 w-8" />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
+      <header className="border-b bg-background/80 backdrop-blur">
+        <div className="container mx-auto px-4 py-4 flex justify-between">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          </Button>
+          <div className="flex gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
           </div>
-          <h1 className="text-2xl font-bold">B2B Remit Portal</h1>
-          <p className="text-muted-foreground">
-            Secure cross-border payment platform
-          </p>
         </div>
+      </header>
 
-        <Card className="shadow-xl">
-          <div className="pt-6 pb-2 text-center">
-            <h1 className="text-xl font-bold">Sign In</h1>
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex w-16 h-16 rounded-2xl bg-primary text-primary-foreground items-center justify-center mb-4">
+              <Building2 className="h-8 w-8" />
+            </div>
+            <h1 className="text-2xl font-bold">B2B Remit Portal</h1>
+            <p className="text-muted-foreground">
+              Secure cross-border payment platform
+            </p>
           </div>
 
-          <Formik
-            initialValues={{ email: "", password: "" }}
-            validationSchema={loginSchema}
-            onSubmit={handleLogin}
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <CardContent className="space-y-5">
-                  <div>
-                    <Label>
-                      Email Address <span className="text-red-600">*</span>
-                    </Label>
-                    <Field
-                      as={Input}
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                    />
-                    <ErrorMessage
-                      name="email"
-                      component="div"
-                      className="text-red-500 text-sm mt-1"
-                    />
-                  </div>
+          <Card className="shadow-xl">
+            <div className="pt-6 pb-2 text-center">
+              <h1 className="text-xl font-bold">Sign In</h1>
+            </div>
 
-                  <div>
-                    <Label>
-                      Password <span className="text-red-600">*</span>
-                    </Label>
-                    <div className="relative">
+            <Formik
+              initialValues={{ email: "", password: "" }}
+              validationSchema={loginSchema}
+              onSubmit={handleLogin}
+            >
+              {({ isSubmitting }) => (
+                <Form>
+                  <CardContent className="space-y-5">
+                    <div>
+                      <Label>
+                        Email Address <span className="text-red-600">*</span>
+                      </Label>
                       <Field
                         as={Input}
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="current-password"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff /> : <Eye />}
-                      </Button>
+                      <ErrorMessage
+                        name="email"
+                        component="div"
+                        className="text-red-500 text-sm mt-1"
+                      />
                     </div>
-                    <ErrorMessage
-                      name="password"
-                      component="div"
-                      className="text-red-500 text-sm mt-0"
-                    />
+
+                    <div>
+                      <Label>
+                        Password <span className="text-red-600">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Field
+                          as={Input}
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="current-password"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff /> : <Eye />}
+                        </Button>
+                      </div>
+                      <ErrorMessage
+                        name="password"
+                        component="div"
+                        className="text-red-500 text-sm mt-0"
+                      />
+                    </div>
+
+                    {errorMessage && (
+                      <div className="text-red-500 text-sm text-center pt-2">
+                        {errorMessage}
+                      </div>
+                    )}
+                  </CardContent>
+
+                  <div className="text-center mt-0">
+                    <Button
+                      variant="link"
+                      type="button"
+                      className="text-sm"
+                      onClick={() => navigate("/forgot-password")}
+                    >
+                      Forgot Password ?
+                    </Button>
                   </div>
 
-                  {errorMessage && (
-                    <div className="text-red-500 text-sm text-center pt-2">
-                      {errorMessage}
+                  <CardFooter className="flex-col gap-4 pt-2">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Logging in..." : "Sign In"}
+                    </Button>
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                      <Shield className="h-3 w-3" />
+                      Secured with enterprise-grade encryption
                     </div>
-                  )}
-                </CardContent>
+                  </CardFooter>
+                </Form>
+              )}
+            </Formik>
+          </Card>
+        </div>
+      </main>
 
-                <div className="text-center mt-0">
-                  <Button
-                    variant="link"
-                    type="button"
-                    className="text-sm"
-                    onClick={() => navigate("/forgot-password")}
-                  >
-                    Forgot Password ?
-                  </Button>
-                </div>
-
-                <CardFooter className="flex-col gap-4 pt-2">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Logging in..." : "Sign In"}
-                  </Button>
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                    <Shield className="h-3 w-3" />
-                    Secured with enterprise-grade encryption
-                  </div>
-                </CardFooter>
-              </Form>
-            )}
-          </Formik>
-        </Card>
-      </div>
-    </main>
-
-    <footer className="border-t py-4 text-center text-sm text-muted-foreground mt-auto">
-      © {new Date().getFullYear()} TIJARASOFT. All rights reserved.
-    </footer>
-  </div>
-);
+      <footer className="border-t py-4 text-center text-sm text-muted-foreground mt-auto">
+        © {new Date().getFullYear()} TIJARASOFT. All rights reserved.
+      </footer>
+    </div>
+  );
 };
 
 export default Auth;
