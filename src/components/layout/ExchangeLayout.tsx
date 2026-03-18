@@ -183,8 +183,8 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
                 <span className="font-medium text-primary">
                   {role === "ROLE_EXCHANGE_ADMIN"
                     ? "Exchange House Admin"
-                    : "Exchange House User"}{" "}
-                  - {legalBusinessName}
+                    : "Exchange House User"}
+                  - ( {legalBusinessName} )
                 </span>
               </div>
             </div>
@@ -195,8 +195,8 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
               <span className="text-sm text-muted-foreground">
                 {role === "ROLE_EXCHANGE_ADMIN"
                   ? "Exchange Admin"
-                  : " Exchange User"}{" "}
-                - {fullName}
+                  : " Exchange User"}
+                - ( {fullName} )
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

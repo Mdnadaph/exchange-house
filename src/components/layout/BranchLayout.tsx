@@ -134,7 +134,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Branch Admin Portal - {branchName}
+                  Branch Admin Portal - ( {branchName} )
                 </span>
               </div>
             </div>
@@ -142,8 +142,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                (Branch Admin) -{" "}
-                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`}
+                Branch Admin - ( {fullName ? fullName : `${firstName || ""} ${lastName || ""}`} )
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

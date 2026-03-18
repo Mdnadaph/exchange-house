@@ -2,6 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import axios from "axios";
+import BASE_URL from "@/config/config";
 import {
   Building2,
   Home,
@@ -38,6 +40,8 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     "businessId",
     "uuid",
     "id",
+    "businessName",
+    "refreshToken",
   ]);
 
   const id = cookie.businessId;
@@ -45,36 +49,62 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const firstName = cookie.firstName;
   const lastName = cookie.lastName;
 
-  const token =cookie.token;
+  const token = cookie.token;
   const role = cookie.role;
   const tempToken = cookie.tempToken;
   const email = cookie.email;
   const uuid = cookie.uuid;
   const requiresTwoFactor = cookie.requiresTwoFactor;
   const businessId = cookie.businessId;
+  const businessName = cookie.businessName;
+  const refreshToken = cookie.refreshToken;
 
   // console.log(firstName);
   // console.log(id);
 
-  const handleLogout = () => {
-    removeCookie("token");
-    removeCookie("role");
-    removeCookie("fullName");
-    removeCookie("email");
-    removeCookie("twoFactorEnabled");
-    removeCookie("tempToken");
+  const clearAllCookies = () => {
+    removeCookie("token", { path: "/" });
+    removeCookie("role", { path: "/" });
+    removeCookie("fullName", { path: "/" });
+    removeCookie("refreshToken", { path: "/" });
+    removeCookie("accessToken", { path: "/" });
 
-    removeCookie("token");
-    removeCookie("email");
-    removeCookie("uuid");
-    removeCookie("id");
+    removeCookie("email", { path: "/" });
+    removeCookie("twoFactorEnabled", { path: "/" });
+    removeCookie("tempToken", { path: "/" });
 
-    removeCookie("firstName");
-    removeCookie("lastName");
-    removeCookie("requiresTwoFactor");
-    removeCookie("businessId");
+    removeCookie("token", { path: "/" });
+    removeCookie("email", { path: "/" });
+    removeCookie("uuid", { path: "/" });
+    removeCookie("id", { path: "/" });
 
-    navigate("/");
+    removeCookie("firstName", { path: "/" });
+    removeCookie("lastName", { path: "/" });
+    removeCookie("requiresTwoFactor", { path: "/" });
+    removeCookie("businessId", { path: "/" });
+    removeCookie("businessName", { path: "/" });
+    removeCookie("refreshToken", { path: "/" });
+    
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${BASE_URL}/api/v3/unified/logout`,
+        { refreshToken: refreshToken },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            token: token,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      clearAllCookies();
+      navigate("/");
+    }
   };
 
   const navigation = [
@@ -104,7 +134,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <User className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Business Admin Portal
+                  Business Admin Portal - ( {businessName} )
                 </span>
               </div>
             </div>
@@ -112,7 +142,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Business Admin)
+                Business Admin - ( {fullName ? fullName : `${firstName || ""} ${lastName || ""}`} )
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

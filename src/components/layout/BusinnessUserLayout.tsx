@@ -114,7 +114,7 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} (Business User)
+               (Business User) - ( {fullName ? fullName : `${firstName || ''} ${lastName || ''}`} )
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
