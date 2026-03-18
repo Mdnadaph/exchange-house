@@ -484,13 +484,13 @@ const ExchangeFeeManagement = () => {
 
         {/* --- Create/Edit Dialog --- */}
         <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl h-[90vh]">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? "Update Fee Rule" : "Create New Fee Rule"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-4">
+            <div className="space-y-4 mt-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>
@@ -709,7 +709,7 @@ const ExchangeFeeManagement = () => {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Known fee shown to Business
+                        "Fee added to transaction cost (visible to Business)"
                       </p>
                     </div>
                     <div>
@@ -759,7 +759,8 @@ const ExchangeFeeManagement = () => {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Hidden fee deducted from payout
+                        "Fee deducted from payout amount (not shown to
+                        Business)"
                       </p>
                     </div>
                     <div>

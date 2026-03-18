@@ -31,6 +31,7 @@ interface Document {
   size: string;
   status: string;
   viewUrl: string;
+  rejectionReason?: string;
 }
 
 interface Business {
@@ -78,6 +79,7 @@ const BranchBusinessDocuments = () => {
       setLoading(true);
       setError(null);
       let allDocuments: any[] = [];
+
       let page = 0;
       const size = 10;
       let fetchedDashboard: Dashboard | null = null;
@@ -108,6 +110,7 @@ const BranchBusinessDocuments = () => {
         businessId: apiDoc.businessId.toString(),
         businessName: apiDoc.businessName,
         name: apiDoc.documentName,
+        rejectionReason: apiDoc?.rejectionReason,
         type: apiDoc.documentType,
         uploadDate: apiDoc.uploadedAt,
         size: formatBytes(apiDoc.fileSize),
@@ -162,7 +165,6 @@ const BranchBusinessDocuments = () => {
     indexOfLastItem,
   );
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "verified":
@@ -431,6 +433,11 @@ const BranchBusinessDocuments = () => {
                             </span>
                             <span>{doc.size}</span>
                           </div>
+                          {doc?.rejectionReason && (
+                            <p className="text-xs text-muted-foreground pt-1">
+                              Rejected Reason: {doc?.rejectionReason}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

@@ -938,7 +938,7 @@ const ExchangeComplianceConfig = () => {
         </Dialog>
 
         {/* AML Configuration */}
-        {/* <Card className="shadow-card">
+        <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
@@ -948,33 +948,51 @@ const ExchangeComplianceConfig = () => {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">Screening Settings</h4>
+                <h4 className="font-semibold text-foreground">
+                  Screening Settings
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <span className="text-sm font-medium">Real-time Sanctions Check</span>
-                      <p className="text-xs text-muted-foreground">Screen against global sanctions lists</p>
+                      <span className="text-sm font-medium">
+                        Real-time Sanctions Check
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        Screen against global sanctions lists
+                      </p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <span className="text-sm font-medium">PEP Database Screening</span>
-                      <p className="text-xs text-muted-foreground">Check politically exposed persons</p>
+                      <span className="text-sm font-medium">
+                        PEP Database Screening
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        Check politically exposed persons
+                      </p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <span className="text-sm font-medium">Adverse Media Monitoring</span>
-                      <p className="text-xs text-muted-foreground">Monitor negative news and events</p>
+                      <span className="text-sm font-medium">
+                        Adverse Media Monitoring
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        Monitor negative news and events
+                      </p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <span className="text-sm font-medium">Enhanced Due Diligence</span>
-                      <p className="text-xs text-muted-foreground">Additional checks for high-risk entities</p>
+                      <span className="text-sm font-medium">
+                        Enhanced Due Diligence
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        Additional checks for high-risk entities
+                      </p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -982,10 +1000,14 @@ const ExchangeComplianceConfig = () => {
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">Monitoring Intervals</h4>
+                <h4 className="font-semibold text-foreground">
+                  Monitoring Intervals
+                </h4>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="sanctions-frequency">Sanctions List Update</Label>
+                    <Label htmlFor="sanctions-frequency">
+                      Sanctions List Update
+                    </Label>
                     <Select defaultValue="daily">
                       <SelectTrigger>
                         <SelectValue />
@@ -1028,10 +1050,10 @@ const ExchangeComplianceConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
 
         {/* Country Risk Configuration */}
-        {/* <Card className="shadow-card">
+        <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" />
@@ -1041,46 +1063,58 @@ const ExchangeComplianceConfig = () => {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">High Risk Countries</h4>
+                <h4 className="font-semibold text-foreground">
+                  High Risk Countries
+                </h4>
                 <div className="space-y-2">
                   <Textarea
                     placeholder="Enter country codes (e.g., AF, IR, KP)"
                     rows={4}
                     defaultValue="AF, IR, KP, MM, SY"
                   />
-                  <p className="text-xs text-muted-foreground">Additional screening required</p>
+                  <p className="text-xs text-muted-foreground">
+                    Additional screening required
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">Prohibited Countries</h4>
+                <h4 className="font-semibold text-foreground">
+                  Prohibited Countries
+                </h4>
                 <div className="space-y-2">
                   <Textarea
                     placeholder="Enter country codes for blocked countries"
                     rows={4}
                     defaultValue="CU, IR, KP"
                   />
-                  <p className="text-xs text-muted-foreground">Complete transaction blocking</p>
+                  <p className="text-xs text-muted-foreground">
+                    Complete transaction blocking
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">Enhanced Monitoring</h4>
+                <h4 className="font-semibold text-foreground">
+                  Enhanced Monitoring
+                </h4>
                 <div className="space-y-2">
                   <Textarea
                     placeholder="Countries requiring enhanced monitoring"
                     rows={4}
                     defaultValue="BD, LK, PH, PK"
                   />
-                  <p className="text-xs text-muted-foreground">Lower thresholds applied</p>
+                  <p className="text-xs text-muted-foreground">
+                    Lower thresholds applied
+                  </p>
                 </div>
               </div>
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
 
         {/* Reporting Configuration */}
-        {/* <Card className="shadow-card">
+        <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -1090,28 +1124,44 @@ const ExchangeComplianceConfig = () => {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">CBUAE Reporting</h4>
+                <h4 className="font-semibold text-foreground">
+                  CBUAE Reporting
+                </h4>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="large-transaction">Large Transaction Threshold (AED)</Label>
-                    <Input id="large-transaction" type="number" defaultValue="55000" />
+                    <Label htmlFor="large-transaction">
+                      Large Transaction Threshold (AED)
+                    </Label>
+                    <Input
+                      id="large-transaction"
+                      type="number"
+                      defaultValue="55000"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="suspicious-activity">Suspicious Activity Reports</Label>
+                    <Label htmlFor="suspicious-activity">
+                      Suspicious Activity Reports
+                    </Label>
                     <Switch id="suspicious-activity" defaultChecked />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="monthly-returns">Monthly Statistical Returns</Label>
+                    <Label htmlFor="monthly-returns">
+                      Monthly Statistical Returns
+                    </Label>
                     <Switch id="monthly-returns" defaultChecked />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">Internal Reporting</h4>
+                <h4 className="font-semibold text-foreground">
+                  Internal Reporting
+                </h4>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="compliance-officer">Compliance Officer Alerts</Label>
+                    <Label htmlFor="compliance-officer">
+                      Compliance Officer Alerts
+                    </Label>
                     <Select defaultValue="immediate">
                       <SelectTrigger>
                         <SelectValue />
@@ -1124,11 +1174,21 @@ const ExchangeComplianceConfig = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="audit-trail">Audit Trail Retention (years)</Label>
-                    <Input id="audit-trail" type="number" defaultValue="7" min="5" max="10" />
+                    <Label htmlFor="audit-trail">
+                      Audit Trail Retention (years)
+                    </Label>
+                    <Input
+                      id="audit-trail"
+                      type="number"
+                      defaultValue="7"
+                      min="5"
+                      max="10"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="management-reports">Management Reports</Label>
+                    <Label htmlFor="management-reports">
+                      Management Reports
+                    </Label>
                     <Select defaultValue="monthly">
                       <SelectTrigger>
                         <SelectValue />
@@ -1144,17 +1204,17 @@ const ExchangeComplianceConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
 
         {/* Action Buttons */}
-        {/* <div className="flex justify-end space-x-3">
+        <div className="flex justify-end space-x-3">
           <Button variant="outline">Test Configuration</Button>
           <Button variant="outline">Reset to Defaults</Button>
           <Button variant="business">
             <Save className="h-4 w-4 mr-2" />
             Save Configuration
           </Button>
-        </div> */}
+        </div>
       </div>
     </ExchangeLayout>
   );
