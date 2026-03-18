@@ -304,7 +304,7 @@ const UserManagement = () => {
                           </div>
 
                           {/* User Details Grid */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
                             <div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Mail className="h-3 w-3 mr-1" />
@@ -337,6 +337,15 @@ const UserManagement = () => {
                                 {Number(user.approvalLimit).toLocaleString()}
                               </p>
                             </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Tier:
+                              </span>
+                              <p className="font-medium">
+                                {user.tier}
+                              </p>
+                            </div>
+                            
                             {/*<div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Calendar className="h-3 w-3 mr-1" />
