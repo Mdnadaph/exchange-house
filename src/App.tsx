@@ -91,7 +91,7 @@ import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
-// ─── Role Constants ───────────────────────────────────────────────────────
+// ─── Role Constants ──
 const BRANCH_ROLES = [
   "ROLE_STAFF",
   "ROLE_KYB_OFFICER",
@@ -101,7 +101,7 @@ const BRANCH_ROLES = [
 
 const BUSINESS_ROLES = ["ROLE_USER", "ROLE_BUSINESS_USER"];
 
-// ─── Protected Route with Role + Smart Redirects ──────────────────────────
+// ─── Protected Route with Role + Smart Redirects ─────
 interface ProtectedRouteProps {
   allowedRoles: string[];
 }
