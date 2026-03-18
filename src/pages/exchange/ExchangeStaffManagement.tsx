@@ -64,7 +64,11 @@ const ExchangeStaffManagement = () => {
   const [branchLoading, setBranchLoading] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
+  const [isEditStaffModalOpen, setIsEditStaffModalOpen] = useState(false);
+  const [editableStaffData, setEditableStaffData] = useState<any>({});
+  const [staffUUID, setStaffUUID] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterByRole, setFilterByRole] = useState("");
   const [staffForm, setStaffForm] = useState({
     fullName: "",
     email: "",
@@ -158,6 +162,8 @@ const ExchangeStaffManagement = () => {
         params: {
           page: page,
           size: pageSize,
+          query: searchQuery,
+          role: filterByRole,
         },
       });
       setBranches(res?.data?.data?.content || []);
@@ -179,7 +185,7 @@ const ExchangeStaffManagement = () => {
     if (token) {
       fetchBranchWithStaff(currentPage);
     }
-  }, [token, currentPage]);
+  }, [token, currentPage, searchQuery, filterByRole]);
   const createStaff = async () => {
     if (!validateAllStaff()) {
       toast({
@@ -234,6 +240,61 @@ const ExchangeStaffManagement = () => {
     }
   };
 
+  const EditStaff = async () => {
+    if (!validateAllStaff()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/api/v3/admin/staff/${staffUUID}/edit`,
+        {
+          fullName: staffForm.fullName,
+          email: staffForm.email,
+          contactNumber: staffForm.contactNumber,
+          branchId: Number(staffForm.branchId),
+          roleId: Number(staffForm.roleId),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      toast({
+        title: "Success",
+        description:
+          response?.data?.message || "Staff member edited successfully",
+      });
+
+      setIsEditStaffModalOpen(false);
+      setStaffUUID("");
+      setStaffForm({
+        fullName: "",
+        email: "",
+        contactNumber: "",
+        branchId: "",
+        roleId: "",
+      });
+      setStaffErrors({}); // clear errors on success
+      setCurrentPage(0);
+      fetchBranchWithStaff(0);
+    } catch (error: any) {
+      console.error("Update Staff Error:", error?.response?.data || error);
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Failed to update staff",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchBranches = async () => {
     if (!cookies.token) {
       console.error("Token not found. Skipping branch fetch.");
@@ -264,10 +325,10 @@ const ExchangeStaffManagement = () => {
   };
 
   useEffect(() => {
-    if (isCreateModalOpen && cookies.token) {
+    if (isCreateModalOpen || (isEditStaffModalOpen && cookies.token)) {
       fetchBranches();
     }
-  }, [isCreateModalOpen, cookies.token]);
+  }, [isCreateModalOpen, cookies.token, isEditStaffModalOpen]);
   useEffect(() => {});
 
   const getStatusBadge = (status: string) => {
@@ -317,6 +378,19 @@ const ExchangeStaffManagement = () => {
     0,
   );
   const totalBranches = branches.length;
+  const individualStaffData = editableStaffData?.staff?.find(
+    (staff: any) => staff?.uuid == staffUUID,
+  );
+
+  useEffect(() => {
+    setStaffForm({
+      fullName: individualStaffData?.fullName ?? "",
+      email: individualStaffData?.email ?? "",
+      contactNumber: individualStaffData?.contactNumber ?? "",
+      branchId: String(editableStaffData?.branchId) ?? "",
+      roleId: String(individualStaffData?.roleId) ?? "",
+    });
+  }, [isEditStaffModalOpen]);
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -416,7 +490,15 @@ const ExchangeStaffManagement = () => {
         </div>
 
         {/* Create staff Modal */}
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <Dialog
+          open={isCreateModalOpen}
+          onOpenChange={(open) => {
+            setIsCreateModalOpen(open);
+            if (!open) {
+              setStaffErrors({});
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Create Staff Member</DialogTitle>
@@ -575,6 +657,183 @@ const ExchangeStaffManagement = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Edit staff Modal*/}
+
+        <Dialog
+          open={isEditStaffModalOpen}
+          onOpenChange={(open) => {
+            setIsEditStaffModalOpen(open);
+            if (!open) {
+              setEditableStaffData({});
+              setStaffUUID("");
+              setStaffErrors({});
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Edit Staff Member</DialogTitle>
+            </DialogHeader>
+
+            <div className="grid grid-cols-1 gap-4 py-4">
+              <div>
+                <Label>
+                  Full Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={staffForm.fullName}
+                  onChange={(e) => {
+                    setStaffForm({ ...staffForm, fullName: e.target.value });
+                    clearStaffError("fullName");
+                  }}
+                  placeholder="full name"
+                />
+                {staffErrors.fullName && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.fullName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>
+                  Email Address <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  disabled={!!staffUUID}
+                  type="email"
+                  value={staffForm.email}
+                  onChange={(e) => {
+                    setStaffForm({ ...staffForm, email: e.target.value });
+                    clearStaffError("email");
+                  }}
+                  placeholder="example@gmail.com"
+                />
+                {staffErrors.email && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.email}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>
+                  Contact Number <span className="text-red-500">*</span>
+                </Label>
+                <PhoneInput
+                  country={"ae"} // default country (UAE)
+                  value={staffForm.contactNumber}
+                  onChange={(value) => {
+                    setStaffForm({ ...staffForm, contactNumber: value });
+                    clearStaffError("contactNumber");
+                  }}
+                  inputProps={{
+                    name: "phone",
+                    id: "phone",
+                  }}
+                  containerClass="w-full mt-1"
+                  inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                  buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                  dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                  enableSearch
+                  searchPlaceholder="Search country..."
+                  preferredCountries={["ae", "in"]}
+                />
+                {staffErrors.contactNumber && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.contactNumber}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>
+                  Select Branch <span className="text-red-500">*</span>
+                </Label>
+
+                <Select
+                  value={staffForm.branchId}
+                  onValueChange={(value) => {
+                    setStaffForm({ ...staffForm, branchId: value });
+                    clearStaffError("branchId");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        branchLoading ? "Loading branches..." : "Select Branch"
+                      }
+                    />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {branchList.map((branch) => (
+                      <SelectItem
+                        key={branch.branchId}
+                        value={String(branch.branchId)}
+                      >
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {staffErrors.branchId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.branchId}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>
+                  Staff Role <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={staffForm.roleId}
+                  onValueChange={(value) => {
+                    setStaffForm({ ...staffForm, roleId: value });
+                    clearStaffError("roleId");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((role) => (
+                      <SelectItem key={role.id} value={String(role.id)}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {staffErrors.roleId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {staffErrors.roleId}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditStaffModalOpen(false);
+                  setEditableStaffData({});
+                  setStaffUUID("");
+                  setStaffErrors({});
+                }}
+              >
+                Cancel
+              </Button>
+              <Button variant="business" onClick={EditStaff}>
+                Edit Staff
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
@@ -589,14 +848,33 @@ const ExchangeStaffManagement = () => {
                     id="search"
                     placeholder="Search by name, role, or branch..."
                     className="pl-9"
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">All Staff</Button>
-                <Button variant="outline">Managers</Button>
-                <Button variant="outline">KYB Officers</Button>
-                <Button variant="outline">High Performers</Button>
+                <Button variant="outline" onClick={() => setFilterByRole("")}>
+                  All Staff
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setFilterByRole("BRANCH_MANAGER")}
+                >
+                  Branch Managers
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setFilterByRole("KYB_OFFICER")}
+                >
+                  KYB Officers
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setFilterByRole("SENIOR_KYB_OFFICER")}
+                >
+                  Senior KYB Officer
+                </Button>
+                {/* <Button variant="outline">High Performers</Button> */}
               </div>
             </div>
           </CardContent>
@@ -775,17 +1053,25 @@ const ExchangeStaffManagement = () => {
 
                                     {/* Actions */}
                                     <div className="flex flex-col space-y-2 ml-4">
-                                      <Button variant="outline" size="sm">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setIsEditStaffModalOpen(true);
+                                          setEditableStaffData(branch);
+                                          setStaffUUID(staff?.uuid);
+                                        }}
+                                      >
                                         <Edit className="h-4 w-4 mr-1" />
                                         Edit Details
                                       </Button>
-                                      <Button variant="outline" size="sm">
+                                      {/* <Button variant="outline" size="sm">
                                         <Shield className="h-4 w-4 mr-1" />
                                         Permissions
                                       </Button>
                                       <Button variant="business" size="sm">
                                         Assign KYB
-                                      </Button>
+                                      </Button> */}
                                     </div>
                                   </div>
                                 </CardContent>
