@@ -55,11 +55,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const role = cookies.role;
 
   const clearAllCookies = () => {
-    removeCookie("token");
-    removeCookie("role");
-    removeCookie("fullName");
-    removeCookie("refreshToken");
-    removeCookie("accessToken");
+    removeCookie("token", { path: "/" });
+    removeCookie("role", { path: "/" });
+    removeCookie("fullName", { path: "/" });
+    removeCookie("refreshToken", { path: "/" });
+    removeCookie("accessToken", { path: "/" });
   };
 
   const handleLogout = async () => {

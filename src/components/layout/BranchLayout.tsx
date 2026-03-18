@@ -66,23 +66,23 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   // console.log(id);
 
   const clearAllCookies = () => {
-    removeCookie("token");
-    removeCookie("role");
-    removeCookie("fullName");
-    removeCookie("email");
-    removeCookie("twoFactorEnabled");
-    removeCookie("tempToken");
-    removeCookie("refreshToken");
-    removeCookie("uuid");
-    removeCookie("id");
-    removeCookie("firstName");
-    removeCookie("lastName");
-    removeCookie("requiresTwoFactor");
-    removeCookie("branchId");
-    removeCookie("branchName");
-    removeCookie("contactNumber");
-    removeCookie("roleName");
-    removeCookie("accessToken");
+    removeCookie("token", { path: "/" });
+    removeCookie("role", { path: "/" });
+    removeCookie("fullName", { path: "/" });
+    removeCookie("email", { path: "/" });
+    removeCookie("twoFactorEnabled", { path: "/" });
+    removeCookie("tempToken", { path: "/" });
+    removeCookie("refreshToken", { path: "/" });
+    removeCookie("uuid", { path: "/" });
+    removeCookie("id", { path: "/" });
+    removeCookie("firstName", { path: "/" });
+    removeCookie("lastName", { path: "/" });
+    removeCookie("requiresTwoFactor", { path: "/" });
+    removeCookie("branchId", { path: "/" });
+    removeCookie("branchName", { path: "/" });
+    removeCookie("contactNumber", { path: "/" });
+    removeCookie("roleName", { path: "/" });
+    removeCookie("accessToken", { path: "/" });
   };
 
   const handleLogout = async () => {
@@ -142,8 +142,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
+                (Branch Admin) -{" "}
                 {fullName ? fullName : `${firstName || ""} ${lastName || ""}`}
-                (Branch Admin)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
