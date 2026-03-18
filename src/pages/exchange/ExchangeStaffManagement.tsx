@@ -774,7 +774,7 @@ const ExchangeStaffManagement = () => {
                                     </div>
 
                                     {/* Actions */}
-                                    {/* <div className="flex flex-col space-y-2 ml-4">
+                                    <div className="flex flex-col space-y-2 ml-4">
                                       <Button variant="outline" size="sm">
                                         <Edit className="h-4 w-4 mr-1" />
                                         Edit Details
@@ -786,7 +786,7 @@ const ExchangeStaffManagement = () => {
                                       <Button variant="business" size="sm">
                                         Assign KYB
                                       </Button>
-                                    </div> */}
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>
