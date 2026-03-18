@@ -424,6 +424,7 @@
 
 // export default Auth;
 
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -714,6 +715,7 @@ const Auth: React.FC = () => {
                   <div className="text-center mt-0">
                     <Button
                       variant="link"
+                      type="button" 
                       className="text-sm"
                       onClick={() => navigate("/forgot-password")}
                     >

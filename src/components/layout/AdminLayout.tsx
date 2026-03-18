@@ -3,12 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { 
-  Building2, 
-  Home, 
-  Users, 
-  Settings, 
-  FileCheck, 
+import axios from "axios";
+import BASE_URL from "@/config/config";
+
+import {
+  Building2,
+  Home,
+  Users,
+  Settings,
+  FileCheck,
   LogOut,
   Shield,
   Handshake,
@@ -23,38 +26,61 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: Home },
-    { name: "Exchange House Management", href: "/admin/exchange-houses", icon: Landmark },
+    {
+      name: "Exchange House Management",
+      href: "/admin/exchange-houses",
+      icon: Landmark,
+    },
     // { name: "KYB Onboarding", href: "/admin/onboarding", icon: FileCheck },
     // { name: "Deal Settings", href: "/admin/deal-settings", icon: Handshake },
     // { name: "Settings & Rules", href: "/admin/settings", icon: Settings },
   ];
 
-   const [cookies, , removeCookie] = useCookies([
-      "token",
-      "accessToken",
-      "refreshToken",
-      "fullName",
-      "role",
-    ]);
-  
-    const token = cookies.token;
-    const accessToken = cookies.accessToken;
-    const refreshToken = cookies.refreshToken;
+  const [cookies, , removeCookie] = useCookies([
+    "token",
+    "accessToken",
+    "refreshToken",
+    "fullName",
+    "role",
+  ]);
 
-    const fullName = cookies.fullName;
-    const role = cookies.role;
+  const token = cookies.token;
+  const accessToken = cookies.accessToken;
+  const refreshToken = cookies.refreshToken;
 
-    const handleLogout = () => {
-      removeCookie("token");
-      removeCookie("accessToken");
-      removeCookie("refreshToken");
-      removeCookie("fullName");
-      removeCookie("role");
+  const fullName = cookies.fullName;
+  const role = cookies.role;
+
+  const clearAllCookies = () => {
+    removeCookie("token");
+    removeCookie("role");
+    removeCookie("fullName");
+    removeCookie("refreshToken");
+    removeCookie("accessToken");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${BASE_URL}/api/v3/unified/logout`,
+        { refreshToken: refreshToken },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            token: token,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      clearAllCookies();
       navigate("/");
-    };
+    }
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -71,13 +97,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </Link>
               <div className="flex items-center space-x-2 text-sm">
                 <Shield className="h-4 w-4 text-primary" />
-                <span className="font-medium text-primary">Super Admin Portal</span>
+                <span className="font-medium text-primary">
+                  Super Admin Portal
+                </span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <ThemeToggle />
-              <span className="text-sm text-muted-foreground">Super admin (Admin)</span>
+              <span className="text-sm text-muted-foreground">
+                Super admin (Admin)
+              </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -89,7 +119,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       <div className="flex">
         {/* Sidebar */}
-          <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+        <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -113,9 +143,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-6 py-2 mb-4">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-2 mb-4">{children}</div>
         </main>
       </div>
     </div>

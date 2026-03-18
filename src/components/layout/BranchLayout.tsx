@@ -2,6 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import axios from "axios";
+import BASE_URL from "@/config/config";
 import {
   Building2,
   Home,
@@ -47,6 +49,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   const fullName = cookie.fullName;
   const firstName = cookie.firstName;
   const lastName = cookie.lastName;
+  const branchName = cookie.branchName;
 
   const token = cookie.token;
   const role = cookie.role;
@@ -62,7 +65,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
   // console.log(firstName);
   // console.log(id);
 
-  const handleLogout = () => {
+  const clearAllCookies = () => {
     removeCookie("token");
     removeCookie("role");
     removeCookie("fullName");
@@ -70,12 +73,8 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     removeCookie("twoFactorEnabled");
     removeCookie("tempToken");
     removeCookie("refreshToken");
-
-    removeCookie("token");
-    removeCookie("email");
     removeCookie("uuid");
     removeCookie("id");
-
     removeCookie("firstName");
     removeCookie("lastName");
     removeCookie("requiresTwoFactor");
@@ -83,8 +82,27 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     removeCookie("branchName");
     removeCookie("contactNumber");
     removeCookie("roleName");
+    removeCookie("accessToken");
+  };
 
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${BASE_URL}/api/v3/unified/logout`,
+        { refreshToken: refreshToken },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            token: token,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      clearAllCookies();
+      navigate("/");
+    }
   };
 
   const navigation = [
@@ -116,7 +134,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Branch Admin Portal - Dubai Mall
+                  Branch Admin Portal - {branchName}
                 </span>
               </div>
             </div>
@@ -124,7 +142,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`}{" "}
+                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`}
                 (Branch Admin)
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
