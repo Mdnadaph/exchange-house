@@ -33,6 +33,7 @@ import axios from "axios";
 import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 interface TransactionDocument {
   id: number;
@@ -157,7 +158,10 @@ const BusinessUserTransaction = () => {
   const [error, setError] = useState<string | null>(null);
   const [disableButton, setDisableButton] = useState(false);
   const [comment, setComment] = useState<Record<string, string>>({});
+  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
+  const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [reviewActionData, setReviewActionData] = useState<any>({});
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [totalTransactionsData, setTotalTransactionsData] = useState<number>(0);
@@ -371,15 +375,15 @@ const BusinessUserTransaction = () => {
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
-  const handleReviewAction = async (id: string, reviewActionStatus: string) => {
+  const handleReviewAction = async () => {
     const payload = {
-      status: reviewActionStatus,
-      notes: comment[id],
+      status: reviewActionData?.actionType,
+      notes: comment[reviewActionData?.transactionId],
     };
     setDisableButton(true);
     try {
       const res = await axios.patch(
-        `${BASE_URL}/api/v1/transactions/${id}/toggle-status`,
+        `${BASE_URL}/api/v1/transactions/${reviewActionData?.transactionId}/toggle-status`,
         payload,
         {
           headers: {
@@ -401,11 +405,12 @@ const BusinessUserTransaction = () => {
         });
       }
       fetchTransactions();
+      setReviewActionData({});
       setComment({});
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.message,
+        description: error?.response?.data?.message,
         variant: "destructive",
       });
     } finally {
@@ -819,10 +824,15 @@ const BusinessUserTransaction = () => {
                                           disabled={disableButton}
                                           onClick={(e) => {
                                             e.preventDefault();
-                                            handleReviewAction(
-                                              transaction?.id,
-                                              "APPROVED",
-                                            );
+                                            setShowApproveConfirmation(true);
+                                            setReviewActionData({
+                                              transactionId: transaction?.id,
+                                              actionType: "APPROVED",
+                                            });
+                                            // handleReviewAction(
+                                            //   transaction?.id,
+                                            //   "APPROVED",
+                                            // );
                                           }}
                                         >
                                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -835,10 +845,15 @@ const BusinessUserTransaction = () => {
                                           disabled={disableButton}
                                           onClick={(e) => {
                                             e.preventDefault();
-                                            handleReviewAction(
-                                              transaction?.id,
-                                              "REJECTED",
-                                            );
+                                            // handleReviewAction(
+                                            //   transaction?.id,
+                                            //   "REJECTED",
+                                            // );
+                                            setShowRejectConfirmation(true);
+                                            setReviewActionData({
+                                              transactionId: transaction?.id,
+                                              actionType: "REJECTED",
+                                            });
                                           }}
                                         >
                                           Reject
@@ -913,7 +928,7 @@ const BusinessUserTransaction = () => {
                                   userRole="Business"
                                   userName={userName}
                                   branchName={transaction.branchName}
-                                   initialDocuments={transaction.documents}
+                                  initialDocuments={transaction.documents}
                                 />
                                 <TransactionComments
                                   transactionId={transaction.id}
@@ -960,6 +975,24 @@ const BusinessUserTransaction = () => {
             )}
           </CardContent>
         </Card>
+        {/* conformation modal of approve and reject */}
+
+        <ConfirmationDialog
+          open={showApproveConfirmation}
+          onOpenChange={setShowApproveConfirmation}
+          onConfirm={handleReviewAction}
+          title="Confirm"
+          description={`Are you sure want to approve `}
+          confirmText="Confirm Approve"
+        />
+        <ConfirmationDialog
+          open={showRejectConfirmation}
+          onOpenChange={setShowRejectConfirmation}
+          onConfirm={handleReviewAction}
+          title="Confirm"
+          description={`Are you sure want to Reject`}
+          confirmText="Confirm Reject"
+        />
       </div>
     </BusinessUserLayout>
   );
