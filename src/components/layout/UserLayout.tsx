@@ -42,6 +42,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     "id",
     "businessName",
     "refreshToken",
+    "exchangeHouseName",
   ]);
 
   const id = cookie.businessId;
@@ -58,6 +59,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const businessId = cookie.businessId;
   const businessName = cookie.businessName;
   const refreshToken = cookie.refreshToken;
+  const exchangeHouseName = cookie.exchangeHouseName;
 
   // console.log(firstName);
   // console.log(id);
@@ -120,7 +122,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="h-screen overflow-hidden bg-muted/30">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -133,7 +135,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <div className="flex items-center space-x-2 text-sm">
                 <User className="h-4 w-4 text-primary" />
                 <span className="font-medium text-primary">
-                  Business Admin Portal - ({businessName})
+                  Business Admin Portal - {exchangeHouseName} - ({businessName})
                 </span>
               </div>
             </div>

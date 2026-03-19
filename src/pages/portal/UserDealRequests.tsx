@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import {
   MessageSquare,
   Calendar,
   DollarSign,
-  MapPin,
   Eye,
   ThumbsUp,
   ThumbsDown,
@@ -34,6 +33,9 @@ const UserDealRequests = () => {
   const { toast } = useToast();
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
 
+
+  const [searchTerm, setSearchTerm] = useState("");
+   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
   const [showDeclineConfirmation, setShowDeclineConfirmation] = useState(false);
   const [counterDeal, setCounterDeal] = useState<any>(null);
@@ -42,10 +44,9 @@ const UserDealRequests = () => {
   const [id, setId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>(""); // "" means all
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [page, setPage] = useState<number>(0);
 
-  // Add a function to fetch data with explicit parameters
   const getRateDeals = async (options?: {
     page?: number;
     search?: string;
@@ -59,10 +60,9 @@ const UserDealRequests = () => {
       reset = false,
     } = options || {};
 
-    // If resetting, we want page 0 for the API call
     const effectivePage = reset ? 0 : targetPage;
     if (reset) {
-      setPage(0); // Update state for UI consistency
+      setPage(0);
     }
 
     setLoading(true);
@@ -94,23 +94,23 @@ const UserDealRequests = () => {
     }
   };
 
-  // Remove the useEffect that depended on page, and add an initial fetch on mount
   useEffect(() => {
-    getRateDeals(); // initial load
-  }, []); // empty dependency – run once
+    getRateDeals();
+  }, []);
 
-  // Handlers
-  const handleSearch = () => {
-    getRateDeals({ search: searchValue, status: statusFilter, reset: true });
-  };
+  // Search debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      getRateDeals({ search: searchValue, status: statusFilter, reset: true });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchValue]);
 
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
-    // Immediately fetch with the new status
     getRateDeals({ search: searchValue, status: status, reset: true });
   };
 
-  // Pagination handlers
   const goToPrevPage = () => {
     const newPage = page - 1;
     setPage(newPage);
@@ -122,142 +122,10 @@ const UserDealRequests = () => {
     setPage(newPage);
     getRateDeals({ page: newPage });
   };
-  const businessAdminstates = rateDealsData?.businessAdminStats;
 
-  const deals = [
-    {
-      id: "DEAL-001",
-      sendingCurrency: "AED",
-      sendingAmount: "50,000",
-      payoutCountry: "India",
-      payoutCurrency: "INR",
-      requestedRate: "23.50",
-      currentRate: "22.50",
-      status: "pending",
-      purpose: "Supplier Payment",
-      submittedDate: "2024-01-16 10:30",
-      expiresAt: "2024-01-23 10:30",
-      branch: "Dubai Mall Branch",
-      timeline: [
-        {
-          id: "1",
-          type: "request" as const,
-          actor: "Sarah Smith",
-          role: "Business" as const,
-          proposedRate: "23.50",
-          timestamp: "2024-01-16 10:30",
-        },
-      ],
-    },
-    {
-      id: "DEAL-002",
-      sendingCurrency: "AED",
-      sendingAmount: "100,000",
-      payoutCountry: "Pakistan",
-      payoutCurrency: "PKR",
-      requestedRate: "78.00",
-      currentRate: "75.80",
-      counterRate: "76.50",
-      status: "counter_proposed",
-      purpose: "Salary Payment",
-      submittedDate: "2024-01-15 14:20",
-      expiresAt: "2024-01-22 14:20",
-      branch: "Dubai Mall Branch",
-      counterMessage:
-        "We can offer 76.50 PKR which is still better than market rate. This is our best offer for this amount.",
-      timeline: [
-        {
-          id: "1",
-          type: "request" as const,
-          actor: "Sarah Smith",
-          role: "Business" as const,
-          proposedRate: "78.00",
-          timestamp: "2024-01-15 14:20",
-        },
-        {
-          id: "2",
-          type: "counter" as const,
-          actor: "Sarah Wilson",
-          role: "Exchange" as const,
-          proposedRate: "76.50",
-          message:
-            "We can offer 76.50 PKR which is still better than market rate.",
-          timestamp: "2024-01-15 16:45",
-        },
-      ],
-    },
-    {
-      id: "DEAL-003",
-      sendingCurrency: "USD",
-      sendingAmount: "25,000",
-      payoutCountry: "Philippines",
-      payoutCurrency: "PHP",
-      requestedRate: "56.20",
-      currentRate: "55.80",
-      approvedRate: "56.20",
-      status: "approved",
-      purpose: "Invoice Payment",
-      submittedDate: "2024-01-14 09:15",
-      approvedDate: "2024-01-14 11:30",
-      expiresAt: "2024-01-21 09:15",
-      branch: "Dubai Mall Branch",
-      timeline: [
-        {
-          id: "1",
-          type: "request" as const,
-          actor: "Sarah Smith",
-          role: "Business" as const,
-          proposedRate: "56.20",
-          timestamp: "2024-01-14 09:15",
-        },
-        {
-          id: "2",
-          type: "approved" as const,
-          actor: "Ahmed Hassan",
-          role: "Branch" as const,
-          proposedRate: "56.20",
-          message: "Approved. Rate locked for 7 days.",
-          timestamp: "2024-01-14 11:30",
-        },
-      ],
-    },
-    {
-      id: "DEAL-004",
-      sendingCurrency: "AED",
-      sendingAmount: "75,000",
-      payoutCountry: "Bangladesh",
-      payoutCurrency: "BDT",
-      requestedRate: "31.00",
-      currentRate: "29.60",
-      status: "rejected",
-      purpose: "Supplier Payment",
-      submittedDate: "2024-01-13 16:00",
-      rejectedDate: "2024-01-13 18:20",
-      branch: "Dubai Mall Branch",
-      rejectionReason:
-        "The requested rate is significantly higher than market rate and current margin structures.",
-      timeline: [
-        {
-          id: "1",
-          type: "request" as const,
-          actor: "Sarah Smith",
-          role: "Business" as const,
-          proposedRate: "31.00",
-          timestamp: "2024-01-13 16:00",
-        },
-        {
-          id: "2",
-          type: "rejected" as const,
-          actor: "Sarah Wilson",
-          role: "Exchange" as const,
-          message:
-            "The requested rate is significantly higher than market rate.",
-          timestamp: "2024-01-13 18:20",
-        },
-      ],
-    },
-  ];
+  const businessAdminstates = rateDealsData?.businessAdminStats;
   const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING_REVIEW":
@@ -313,9 +181,7 @@ const UserDealRequests = () => {
   };
 
   const confirmAccept = async () => {
-    const formDTO = {
-      counterDealStatus: "COUNTER_PROPOSAL_ACCEPTED",
-    };
+    const formDTO = { counterDealStatus: "COUNTER_PROPOSAL_ACCEPTED" };
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/rate-deals/${id}/counter-action`,
@@ -329,7 +195,6 @@ const UserDealRequests = () => {
         },
       );
       const json = await res.json();
-
       if (!res.ok || json.status !== true) {
         throw new Error(json.message || "Create failed");
       }
@@ -350,9 +215,7 @@ const UserDealRequests = () => {
   };
 
   const confirmDecline = async () => {
-    const formDTO = {
-      counterDealStatus: "COUNTER_PROPOSAL_DECLINED",
-    };
+    const formDTO = { counterDealStatus: "COUNTER_PROPOSAL_DECLINED" };
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/rate-deals/${id}/counter-action`,
@@ -366,7 +229,6 @@ const UserDealRequests = () => {
         },
       );
       const json = await res.json();
-
       if (!res.ok || json.status !== true) {
         throw new Error(json.message || "Create failed");
       }
@@ -385,16 +247,19 @@ const UserDealRequests = () => {
       });
     }
   };
+
   const getCounterRate = (negotiationHistory: any) => {
     return negotiationHistory?.find(
       (item: any) => item?.actionType === "COUNTER_PROPOSAL",
     )?.rate;
   };
+
   const getCounterComments = (negotiationHistory: any) => {
     return negotiationHistory?.find(
       (item: any) => item?.actionType === "COUNTER_PROPOSAL",
     )?.comments;
   };
+
   if (loading) {
     return (
       <UserLayout>
@@ -407,6 +272,7 @@ const UserDealRequests = () => {
       </UserLayout>
     );
   }
+
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -479,7 +345,6 @@ const UserDealRequests = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {/* {deals.filter((d) => d.status === "counter_proposed").length} */}
                 {businessAdminstates?.awaitingResponse}
               </div>
               <p className="text-xs text-muted-foreground">Counter proposals</p>
@@ -487,33 +352,34 @@ const UserDealRequests = () => {
           </Card>
         </div>
 
-        {/* Search */}
+        {/* Search and Filter */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <div className="flex-1">
                 <Label htmlFor="search">Search Deals</Label>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search by ID, currency, or purpose..."
-                      className="pl-9"
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    onClick={handleSearch}
-                    className="mt-auto"
-                    disabled={!searchValue.trim()}
-                  >
-                    Search
-                  </Button>
+                {/* <div className="relative mt-1.5">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by ID, currency, or purpose..."
+                    className="pl-9"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                  />
+                </div> */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by name, email, or role..."
+                    className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
               </div>
-              <div className="flex gap-2 items-end">
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
                 <Button
                   variant={statusFilter === "" ? "default" : "outline"}
                   onClick={() => handleStatusFilter("")}
@@ -521,9 +387,7 @@ const UserDealRequests = () => {
                   All Status
                 </Button>
                 <Button
-                  variant={
-                    statusFilter === "PENDING_REVIEW" ? "default" : "outline"
-                  }
+                  variant={statusFilter === "PENDING_REVIEW" ? "default" : "outline"}
                   onClick={() => handleStatusFilter("PENDING_REVIEW")}
                 >
                   Pending
@@ -533,6 +397,12 @@ const UserDealRequests = () => {
                   onClick={() => handleStatusFilter("APPROVED")}
                 >
                   Approved
+                </Button>
+                <Button
+                  variant={statusFilter === "REJECTED" ? "default" : "outline"}
+                  onClick={() => handleStatusFilter("REJECTED")}
+                >
+                  Rejected
                 </Button>
               </div>
             </div>
@@ -594,10 +464,9 @@ const UserDealRequests = () => {
                           {deal.currentMarketRate} {deal.payoutCurrency}
                         </p>
                       </div>
-                      {[
-                        "COUNTER_PROPOSAL",
-                        "COUNTER_PROPOSAL_ACCEPTED",
-                      ].includes(deal?.dealStatus) && (
+                      {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
+                        deal?.dealStatus,
+                      ) && (
                         <div className="space-y-1">
                           <span className="text-muted-foreground flex items-center gap-1">
                             <MessageSquare className="h-3 w-3" />
@@ -609,13 +478,10 @@ const UserDealRequests = () => {
                           </p>
                         </div>
                       )}
-
                       <div className="space-y-1">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {deal.dealStatus === "APPROVED"
-                            ? "Expires:"
-                            : "Submitted:"}
+                          {deal.dealStatus === "APPROVED" ? "Expires:" : "Submitted:"}
                         </span>
                         <p className="font-medium">
                           {deal.status === "APPROVED"
@@ -624,6 +490,7 @@ const UserDealRequests = () => {
                         </p>
                       </div>
                     </div>
+
                     {/* Counter Proposal Message */}
                     {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
                       deal?.dealStatus,
@@ -710,21 +577,22 @@ const UserDealRequests = () => {
             ))
           ) : (
             <p className="text-center font-semibold text-sm text-gray-500">
-              No Date Found
+              No Data Found
             </p>
           )}
+
           {totalDealsRateDataList > 10 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
                 Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} beneficiaries
+                {totalDealsRateDataList} deals
               </p>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
                   disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
+                  onClick={goToPrevPage}
                 >
                   Previous
                 </Button>
@@ -732,7 +600,7 @@ const UserDealRequests = () => {
                   variant="outline"
                   size="sm"
                   disabled={(page + 1) * 10 >= totalDealsRateDataList}
-                  onClick={() => setPage(page + 1)}
+                  onClick={goToNextPage}
                 >
                   Next
                 </Button>
