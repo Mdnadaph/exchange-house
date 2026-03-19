@@ -16,6 +16,7 @@ interface BusinessAdmin {
   businessId: number;
   businessName: string;
   refreshToken:string;
+  exchangeHouseName: string;
   
 }
 
@@ -24,6 +25,7 @@ interface VerifyResponseData {
   refreshToken:string;
   expiresIn: number;
   businessAdmin: BusinessAdmin;
+  exchangeHouseName: string;
 }
 
 interface JwtPayload {
@@ -46,6 +48,7 @@ const BusinessTwoFALogin: React.FC = () => {
     "email",
     "businessName",
     "refreshToken",
+    "exchangeHouseName",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -118,7 +121,7 @@ const BusinessTwoFALogin: React.FC = () => {
         return;
       }
 
-      const { accessToken, expiresIn, businessAdmin, refreshToken } = response.data.data;
+      const { accessToken, expiresIn, businessAdmin, refreshToken, exchangeHouseName } = response.data.data;
 
       /* =========================
           DECODE JWT (CRITICAL FIX)
@@ -179,6 +182,13 @@ const BusinessTwoFALogin: React.FC = () => {
         path: "/",
         // sameSite: "lax",
       });
+
+       setCookie("exchangeHouseName", businessAdmin.exchangeHouseName, {
+        path: "/",
+        // sameSite: "lax",
+      });
+
+      
 
       /* =========================
           CLEANUP

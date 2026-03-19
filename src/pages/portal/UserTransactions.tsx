@@ -120,10 +120,11 @@ interface Transaction {
   failureReason?: string;
   documents?: TransactionDocument[];
   totalDebit: number;
-
   discountValue: string;
-
   discountAmount: String;
+
+  beneficiaryName: string;
+  businessName: string;
 }
 
 const UserTransactions = () => {
@@ -240,6 +241,8 @@ const UserTransactions = () => {
               documents: apiTx.documents,
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
+              beneficiaryName: apiTx.beneficiaryName,
+              businessName: apiTx.businessName,
             };
           });
 
@@ -663,6 +666,9 @@ const UserTransactions = () => {
                         <div className="space-y-4">
                           {/* Transaction Header - Matching ExchangeTransactions layout */}
                           <div className="flex items-start justify-between">
+
+
+                            
                             <div className="space-y-2">
                               {transaction.branchName && (
                                 <div className="flex items-center gap-3">
@@ -714,7 +720,6 @@ const UserTransactions = () => {
                               </p>
                             </div>
                           </div>
-
                           {/* Transaction Details */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                             <div className="space-y-1">
@@ -804,6 +809,24 @@ const UserTransactions = () => {
                                   : `AED ${transaction.discountAmount}`}
                               </p>
                             </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Beneficiary Name:
+                              </span>
+                              <p className="font-medium font-mono text-xs">
+                                {transaction?.beneficiaryName}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Business Name:
+                              </span>
+                              <p className="font-medium font-mono text-xs">
+                                {transaction?.businessName}
+                              </p>
+                            </div>
                           </div>
 
                           {/* <div className="border-t pt-6">
@@ -876,15 +899,15 @@ const UserTransactions = () => {
                                 <Download className="h-4 w-4 mr-1" />
                                 Receipt
                               </Button>
-                              {transaction.documents &&
+
+                              {/* {transaction.documents &&
                                 transaction.documents.length > 0 && (
                                   <Button variant="outline" size="sm">
                                     <FileText className="h-4 w-4 mr-1" />
                                     Documents
                                   </Button>
-                                )}
+                              )} */}
 
-                              
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -924,7 +947,6 @@ const UserTransactions = () => {
                               )}
                             </div>
                           </div>
-
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
