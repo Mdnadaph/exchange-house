@@ -37,6 +37,7 @@ import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -145,6 +146,8 @@ const UserBeneficiaries = () => {
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
   const [payOutConfigData, setPayOutConfigData] = useState(null);
   const [page, setPage] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [beneficiaryId, setBeneficiaryId] = useState<null | number>(null);
 
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
@@ -331,7 +334,7 @@ const UserBeneficiaries = () => {
   };
   // Filter beneficiaries based on status and search - now server-side, so filteredBeneficiaries = beneficiaries
   const filteredBeneficiaries = beneficiaries;
-
+  console.log("beneficiaries", filteredBeneficiaries);
   const getStatusBadge = (status: string) => {
     const statusMap = {
       active: {
@@ -1157,7 +1160,14 @@ const UserBeneficiaries = () => {
                                     Edit Details
                                   </Button>
                                   {beneficiary.status === "active" && (
-                                    <Button variant="business" size="sm">
+                                    <Button
+                                      variant="business"
+                                      size="sm"
+                                      onClick={() => {
+                                        setOpen(true);
+                                        setBeneficiaryId(beneficiary?.id);
+                                      }}
+                                    >
                                       Send Payment
                                     </Button>
                                   )}
@@ -1241,6 +1251,14 @@ const UserBeneficiaries = () => {
           </Button>
           <BeneficiaryProfile beneficiary={selectedBeneficiary} />
         </div>
+      )}
+      {open && (
+        <SingleTransactionWithPreselected
+          open={open}
+          setOpen={setOpen}
+          beneficiaryId={beneficiaryId}
+          setBeneficiaryId={setBeneficiaryId}
+        />
       )}
     </UserLayout>
   );
