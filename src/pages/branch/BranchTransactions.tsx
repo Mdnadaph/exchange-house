@@ -31,6 +31,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import BASE_URL from "@/config/config";
+import TransactionDetailModal, {
+  handleDownloadReceipt,
+} from "../portal/TransactionDetailModal";
 
 interface TransactionDocument {
   id: number;
@@ -137,12 +140,16 @@ interface Transaction {
   discountValue: string;
 
   discountAmount: String;
+  beneficiaryName?: string;
+  businessName?: string;
 }
 
 const BranchTransactions = () => {
   const [expandedTransaction, setExpandedTransaction] = useState<string | null>(
     null,
   );
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dashboardStats, setDashboardStats] = useState<{
     totalTransactions: number;
@@ -770,22 +777,33 @@ const BranchTransactions = () => {
 
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
-                              
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setSelectedTransaction(transaction)
+                                }
+                              >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleDownloadReceipt(transaction)
+                                }
+                              >
                                 <Download className="h-4 w-4 mr-1" />
                                 Receipt
                               </Button>
-                              {transaction?.documents &&
+                              {/* {transaction?.documents &&
                                 transaction?.documents?.length > 0 && (
                                   <Button variant="outline" size="sm">
                                     <FileText className="h-4 w-4 mr-1" />
                                     Documents
                                   </Button>
-                                )}
+                                )} */}
 
                               <Button
                                 variant="outline"
@@ -889,6 +907,12 @@ const BranchTransactions = () => {
             )}
           </CardContent>
         </Card>
+        {/* ── Transaction Detail Modal ── */}
+        <TransactionDetailModal
+          transaction={selectedTransaction}
+          open={selectedTransaction !== null}
+          onClose={() => setSelectedTransaction(null)}
+        />
       </div>
     </BranchLayout>
   );

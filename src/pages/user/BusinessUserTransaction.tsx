@@ -34,6 +34,9 @@ import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import TransactionDetailModal, {
+  handleDownloadReceipt,
+} from "../portal/TransactionDetailModal";
 
 interface TransactionDocument {
   id: number;
@@ -134,6 +137,8 @@ interface Transaction {
   discountValue: string;
 
   discountAmount: String;
+  beneficiaryName?: string;
+  businessName?: string;
 }
 
 const BusinessUserTransaction = () => {
@@ -141,6 +146,8 @@ const BusinessUserTransaction = () => {
     null,
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [dashboardStats, setDashboardStats] = useState<{
     totalTransactions: number;
     completedTransactions: number;
@@ -866,11 +873,23 @@ const BusinessUserTransaction = () => {
 
                             <div className="flex items-center justify-between pt-2">
                               <div className="flex space-x-2">
-                                <Button variant="outline" size="sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setSelectedTransaction(transaction)
+                                  }
+                                >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View Details
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownloadReceipt(transaction)
+                                  }
+                                >
                                   <Download className="h-4 w-4 mr-1" />
                                   Receipt
                                 </Button>
@@ -992,6 +1011,12 @@ const BusinessUserTransaction = () => {
           title="Confirm"
           description={`Are you sure want to Reject?`}
           confirmText="Confirm Reject"
+        />
+        {/* ── Transaction Detail Modal ── */}
+        <TransactionDetailModal
+          transaction={selectedTransaction}
+          open={selectedTransaction !== null}
+          onClose={() => setSelectedTransaction(null)}
         />
       </div>
     </BusinessUserLayout>

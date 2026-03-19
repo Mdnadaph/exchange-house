@@ -28,6 +28,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import BASE_URL from "@/config/config";
+import TransactionDetailModal, {
+  handleDownloadReceipt,
+} from "../portal/TransactionDetailModal";
 
 interface TransactionDocument {
   id: number;
@@ -124,6 +127,8 @@ interface Transaction {
   discountValue: string;
 
   discountAmount: String;
+  beneficiaryName?: string;
+  businessName?: string;
 }
 
 const ExchangeTransactions = () => {
@@ -131,6 +136,8 @@ const ExchangeTransactions = () => {
     null,
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -139,6 +146,7 @@ const ExchangeTransactions = () => {
   const [page, setPage] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [transitionDashboardData, setTransationDashboardData] = useState(null);
+
   const token = cookies.token;
   const fullname = cookies.fullName;
   // Fetch data from API
@@ -248,7 +256,6 @@ const ExchangeTransactions = () => {
         }
       } catch (err: any) {
         console.error("Error fetching transactions:", err);
-
         if (axios.isAxiosError(err)) {
           if (err.response?.status === 401) {
             setError("Unauthorized: Please log in again.");
@@ -770,11 +777,23 @@ const ExchangeTransactions = () => {
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setSelectedTransaction(transaction)
+                                }
+                              >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleDownloadReceipt(transaction)
+                                }
+                              >
                                 <Download className="h-4 w-4 mr-1" />
                                 Receipt
                               </Button>
@@ -866,6 +885,12 @@ const ExchangeTransactions = () => {
           </CardContent>
         </Card>
       </div>
+      {/* ── Transaction Detail Modal ── */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        open={selectedTransaction !== null}
+        onClose={() => setSelectedTransaction(null)}
+      />
     </ExchangeLayout>
   );
 };

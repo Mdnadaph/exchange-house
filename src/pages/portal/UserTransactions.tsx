@@ -1004,7 +1004,6 @@
 
 // export default UserTransactions;
 
-
 import { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import UserLayout from "@/components/layout/UserLayout";
@@ -1018,7 +1017,9 @@ import BulkTransactionForm from "@/components/transactions/BulkTransactionForm";
 import PaymentExecutionForm from "@/components/transactions/PaymentExecutionForm";
 import TransactionComments from "@/components/transactions/TransactionComments";
 import ProofOfPaymentUpload from "@/components/transactions/ProofOfPaymentUpload";
-import TransactionDetailModal, { handleDownloadReceipt } from "./TransactionDetailModal";
+import TransactionDetailModal, {
+  handleDownloadReceipt,
+} from "./TransactionDetailModal";
 import {
   CreditCard,
   Search,
@@ -1134,8 +1135,11 @@ interface Transaction {
 }
 
 const UserTransactions = () => {
-  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(
+    null,
+  );
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -1257,7 +1261,9 @@ const UserTransactions = () => {
         if (err.response?.status === 401) {
           setError("Unauthorized: Please log in again.");
         } else if (err.response?.status === 403) {
-          setError("Forbidden: You don't have permission to view transactions.");
+          setError(
+            "Forbidden: You don't have permission to view transactions.",
+          );
         } else if (err.response?.status === 404) {
           setError("API endpoint not found. Please check the URL.");
         } else if (err.code === "ECONNABORTED") {
@@ -1296,22 +1302,62 @@ const UserTransactions = () => {
       searchTerm === "" ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      transaction.beneficiary
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.referenceNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
     );
   });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      COMPLETED: { variant: "default" as const, label: "Completed", icon: CheckCircle },
-      PENDING_APPROVAL: { variant: "secondary" as const, label: "Pending Approval", icon: Clock },
-      pending_payment: { variant: "destructive" as const, label: "Pending Payment", icon: Wallet },
-      payment_verification: { variant: "secondary" as const, label: "Payment Verification", icon: Clock },
-      PROCESSING: { variant: "destructive" as const, label: "Processing", icon: Clock },
-      FAILED: { variant: "destructive" as const, label: "Failed", icon: AlertCircle },
-      APPROVED: { variant: "default" as const, label: "Approved", icon: AlertCircle },
-      cancelled: { variant: "outline" as const, label: "Cancelled", icon: AlertCircle },
-      COMPLIANCE_REVIEW: { variant: "outline" as const, label: "Compliance Review", icon: AlertCircle },
+      COMPLETED: {
+        variant: "default" as const,
+        label: "Completed",
+        icon: CheckCircle,
+      },
+      PENDING_APPROVAL: {
+        variant: "secondary" as const,
+        label: "Pending Approval",
+        icon: Clock,
+      },
+      pending_payment: {
+        variant: "destructive" as const,
+        label: "Pending Payment",
+        icon: Wallet,
+      },
+      payment_verification: {
+        variant: "secondary" as const,
+        label: "Payment Verification",
+        icon: Clock,
+      },
+      PROCESSING: {
+        variant: "destructive" as const,
+        label: "Processing",
+        icon: Clock,
+      },
+      FAILED: {
+        variant: "destructive" as const,
+        label: "Failed",
+        icon: AlertCircle,
+      },
+      APPROVED: {
+        variant: "default" as const,
+        label: "Approved",
+        icon: AlertCircle,
+      },
+      cancelled: {
+        variant: "outline" as const,
+        label: "Cancelled",
+        icon: AlertCircle,
+      },
+      COMPLIANCE_REVIEW: {
+        variant: "outline" as const,
+        label: "Compliance Review",
+        icon: AlertCircle,
+      },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
   };
@@ -1339,7 +1385,12 @@ const UserTransactions = () => {
       (sum, tx) => sum + parseFloat(tx.amount.replace(/,/g, "")),
       0,
     );
-    return { totalTransactions, completedTransactions, pendingTransactions, totalVolume };
+    return {
+      totalTransactions,
+      completedTransactions,
+      pendingTransactions,
+      totalVolume,
+    };
   };
 
   const statistics = calculateStatistics();
@@ -1400,7 +1451,8 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboardData?.totalTransactions ?? statistics.totalTransactions}
+                {dashboardData?.totalTransactions ??
+                  statistics.totalTransactions}
               </div>
             </CardContent>
           </Card>
@@ -1414,7 +1466,8 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {dashboardData?.completedTransactions ?? statistics.completedTransactions}
+                {dashboardData?.completedTransactions ??
+                  statistics.completedTransactions}
               </div>
             </CardContent>
           </Card>
@@ -1428,7 +1481,8 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-500">
-                {dashboardData?.pendingTransactions ?? statistics.pendingTransactions}
+                {dashboardData?.pendingTransactions ??
+                  statistics.pendingTransactions}
               </div>
             </CardContent>
           </Card>
@@ -1442,7 +1496,9 @@ const UserTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${dashboardData?.totalAmount?.toLocaleString("en-US") ?? statistics.totalVolume.toLocaleString("en-US")}
+                $
+                {dashboardData?.totalAmount?.toLocaleString("en-US") ??
+                  statistics.totalVolume.toLocaleString("en-US")}
               </div>
             </CardContent>
           </Card>
@@ -1477,16 +1533,28 @@ const UserTransactions = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setTransactionType("ALL")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("ALL")}
+                >
                   All Status
                 </Button>
-                <Button variant="outline" onClick={() => setTransactionType("COMPLETED")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("COMPLETED")}
+                >
                   Approved
                 </Button>
-                <Button variant="outline" onClick={() => setTransactionType("SINGLE")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("SINGLE")}
+                >
                   Single
                 </Button>
-                <Button variant="outline" onClick={() => setTransactionType("BULK")}>
+                <Button
+                  variant="outline"
+                  onClick={() => setTransactionType("BULK")}
+                >
                   Bulk
                 </Button>
               </div>
@@ -1529,7 +1597,10 @@ const UserTransactions = () => {
                   const StatusIcon = status.icon;
 
                   return (
-                    <Card key={transaction.id} className="hover:shadow-md transition-smooth">
+                    <Card
+                      key={transaction.id}
+                      className="hover:shadow-md transition-smooth"
+                    >
                       <CardContent className="p-6">
                         <div className="space-y-4">
                           {/* Transaction Header */}
@@ -1569,7 +1640,8 @@ const UserTransactions = () => {
                               </div>
                               <p className="text-sm text-muted-foreground">
                                 {transaction.id}
-                                {transaction.purpose && ` • ${transaction.purpose}`}
+                                {transaction.purpose &&
+                                  ` • ${transaction.purpose}`}
                               </p>
                             </div>
 
@@ -1601,7 +1673,9 @@ const UserTransactions = () => {
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Exchange Rate:</span>
+                              <span className="text-muted-foreground">
+                                Exchange Rate:
+                              </span>
                               <p className="font-medium">
                                 1 {transaction.currency.toUpperCase()} =
                                 {transaction.exchangeRate}
@@ -1610,8 +1684,12 @@ const UserTransactions = () => {
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Fee Details:</span>
-                              <p className="font-medium">AED {transaction.fees}</p>
+                              <span className="text-muted-foreground">
+                                Fee Details:
+                              </span>
+                              <p className="font-medium">
+                                AED {transaction.fees}
+                              </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
                                   Paid by: {transaction.feeResponsibility}
@@ -1620,13 +1698,21 @@ const UserTransactions = () => {
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Total Debit:</span>
-                              <p className="font-medium">AED {transaction.totalDebit}</p>
+                              <span className="text-muted-foreground">
+                                Total Debit:
+                              </span>
+                              <p className="font-medium">
+                                AED {transaction.totalDebit}
+                              </p>
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Branch:</span>
-                              <p className="font-medium">{transaction.branch}</p>
+                              <span className="text-muted-foreground">
+                                Branch:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.branch}
+                              </p>
                               {transaction.failureReason && (
                                 <p className="text-xs text-red-600">
                                   Reason: {transaction.failureReason}
@@ -1635,19 +1721,27 @@ const UserTransactions = () => {
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Reference:</span>
+                              <span className="text-muted-foreground">
+                                Reference:
+                              </span>
                               <p className="font-medium font-mono text-xs">
                                 {transaction?.referenceNumber}
                               </p>
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Discount %:</span>
-                              <p className="font-medium">{transaction.discountValue}</p>
+                              <span className="text-muted-foreground">
+                                Discount %:
+                              </span>
+                              <p className="font-medium">
+                                {transaction.discountValue}
+                              </p>
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Discount Amount:</span>
+                              <span className="text-muted-foreground">
+                                Discount Amount:
+                              </span>
                               <p className="font-medium">
                                 {transaction.discountAmount === "0.00"
                                   ? "—"
@@ -1656,14 +1750,18 @@ const UserTransactions = () => {
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Beneficiary Name:</span>
+                              <span className="text-muted-foreground">
+                                Beneficiary Name:
+                              </span>
                               <p className="font-medium font-mono text-xs">
                                 {transaction?.beneficiaryName}
                               </p>
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-muted-foreground">Business Name:</span>
+                              <span className="text-muted-foreground">
+                                Business Name:
+                              </span>
                               <p className="font-medium font-mono text-xs">
                                 {transaction?.businessName}
                               </p>
@@ -1677,7 +1775,9 @@ const UserTransactions = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setSelectedTransaction(transaction)}
+                                onClick={() =>
+                                  setSelectedTransaction(transaction)
+                                }
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
@@ -1687,10 +1787,11 @@ const UserTransactions = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDownloadReceipt(transaction)}
+                                onClick={() =>
+                                  handleDownloadReceipt(transaction)
+                                }
                               >
                                 <Download className="h-4 w-4 mr-1" />
-                                Receipt
                               </Button>
 
                               <Button
@@ -1762,7 +1863,8 @@ const UserTransactions = () => {
                 {totalTransactionData > 10 && (
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionData} beneficiaries
+                      Showing {transactions?.length} of {totalTransactionData}{" "}
+                      beneficiaries
                     </p>
                     <div className="flex space-x-2">
                       <Button

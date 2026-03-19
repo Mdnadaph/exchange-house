@@ -145,6 +145,7 @@ const UserBeneficiaries = () => {
   const [groupsTotalPages, setGroupsTotalPages] = useState(1);
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
   const [payOutConfigData, setPayOutConfigData] = useState(null);
+  const [payOutId, setPayOutId] = useState<null | number>(null);
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
   const [beneficiaryId, setBeneficiaryId] = useState<null | number>(null);
@@ -334,7 +335,6 @@ const UserBeneficiaries = () => {
   };
   // Filter beneficiaries based on status and search - now server-side, so filteredBeneficiaries = beneficiaries
   const filteredBeneficiaries = beneficiaries;
-  console.log("beneficiaries", filteredBeneficiaries);
   const getStatusBadge = (status: string) => {
     const statusMap = {
       active: {
@@ -437,6 +437,13 @@ const UserBeneficiaries = () => {
   }
 
   const totalPayOutConfigDataList = payOutConfigData?.totalElements;
+
+  const supportedPayoutMechanisms = payOutConfigData?.data?.countries?.find(
+    (data: { id: number }) => data?.id == payOutId,
+  );
+  useEffect(() => {
+    setPayOutId(payOutConfigData?.data?.countries[0]?.id);
+  }, [payOutConfigData?.data?.countries]);
   // Loading state
   if (loading) {
     return (
@@ -522,7 +529,8 @@ const UserBeneficiaries = () => {
                         return (
                           <div
                             key={destination.countryId}
-                            className="flex items-center justify-between p-3 border rounded-lg"
+                            onClick={() => setPayOutId(destination?.id)}
+                            className="cursor-pointer flex items-center justify-between p-3 border rounded-lg"
                           >
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
@@ -600,18 +608,33 @@ const UserBeneficiaries = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
-                    <Banknote className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="font-medium text-foreground">
-                        Bank Account Transfer
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Direct transfer to beneficiary bank account
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
+                  {supportedPayoutMechanisms?.mechanisms?.map(
+                    (mechanisms: any) => (
+                      <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
+                        <Banknote className="h-6 w-6 text-primary" />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {mechanisms?.name
+                              ?.toLowerCase()
+                              .split("_")
+                              ?.map(
+                                (word: any) =>
+                                  word[0].toUpperCase() + word.slice(1),
+                              )
+                              ?.join(" ")}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Fee Range:{mechanisms?.feeRange}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Fee Range:{mechanisms?.processingTime}
+                          </p>
+                        </div>
+                      </div>
+                    ),
+                  )}
+
+                  {/* <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
                     <Wallet className="h-6 w-6 text-primary" />
                     <div>
                       <p className="font-medium text-foreground">
@@ -632,7 +655,7 @@ const UserBeneficiaries = () => {
                       <p>• Bangladesh: bKash, Nagad</p>
                       <p>• UAE: Paymi UAE</p>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </CardContent>
             </Card>

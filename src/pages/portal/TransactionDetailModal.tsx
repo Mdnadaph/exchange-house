@@ -53,8 +53,8 @@ interface Transaction {
   totalDebit: number;
   discountValue: string;
   discountAmount: string | String;
-  beneficiaryName: string;
-  businessName: string;
+  beneficiaryName?: string;
+  businessName?: string;
 }
 
 interface TransactionDetailModalProps {
@@ -73,16 +73,34 @@ const getStatusBadge = (status: string) => {
     }
   > = {
     COMPLETED: { variant: "default", label: "Completed", icon: CheckCircle },
-    PENDING_APPROVAL: { variant: "secondary", label: "Pending Approval", icon: Clock },
-    pending_payment: { variant: "destructive", label: "Pending Payment", icon: Wallet },
-    payment_verification: { variant: "secondary", label: "Payment Verification", icon: Clock },
+    PENDING_APPROVAL: {
+      variant: "secondary",
+      label: "Pending Approval",
+      icon: Clock,
+    },
+    pending_payment: {
+      variant: "destructive",
+      label: "Pending Payment",
+      icon: Wallet,
+    },
+    payment_verification: {
+      variant: "secondary",
+      label: "Payment Verification",
+      icon: Clock,
+    },
     PROCESSING: { variant: "destructive", label: "Processing", icon: Clock },
     FAILED: { variant: "destructive", label: "Failed", icon: AlertCircle },
     APPROVED: { variant: "default", label: "Approved", icon: CheckCircle },
     cancelled: { variant: "outline", label: "Cancelled", icon: AlertCircle },
-    COMPLIANCE_REVIEW: { variant: "outline", label: "Compliance Review", icon: AlertCircle },
+    COMPLIANCE_REVIEW: {
+      variant: "outline",
+      label: "Compliance Review",
+      icon: AlertCircle,
+    },
   };
-  return statusMap[status] ?? { variant: "secondary", label: status, icon: Clock };
+  return (
+    statusMap[status] ?? { variant: "secondary", label: status, icon: Clock }
+  );
 };
 
 const getTypeColor = (type: string) => {
@@ -228,7 +246,7 @@ export default function TransactionDetailModal({
 
   const status = getStatusBadge(transaction.status);
   const StatusIcon = status.icon;
-
+  console.log("transactionData", transaction);
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
@@ -304,9 +322,16 @@ export default function TransactionDetailModal({
                 }
               />
               {transaction.processedDate && (
-                <DetailField label="Processed" value={transaction.processedDate} />
+                <DetailField
+                  label="Processed"
+                  value={transaction.processedDate}
+                />
               )}
-              <DetailField label="Reference" value={transaction.referenceNumber} mono />
+              <DetailField
+                label="Reference"
+                value={transaction.referenceNumber}
+                mono
+              />
               <DetailField label="Branch" value={transaction.branch} />
               <DetailField label="Purpose" value={transaction.purpose} />
               {transaction.failureReason && (
@@ -327,9 +352,21 @@ export default function TransactionDetailModal({
               Business &amp; Beneficiary
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-muted/30 rounded-xl p-4">
-              <DetailField label="Business Name" value={transaction.businessName} mono />
-              <DetailField label="Beneficiary Name" value={transaction.beneficiaryName} mono />
-              <DetailField label="Business ID" value={transaction.businessId} mono />
+              <DetailField
+                label="Business Name"
+                value={transaction.businessName}
+                mono
+              />
+              <DetailField
+                label="Beneficiary Name"
+                value={transaction.beneficiaryName}
+                mono
+              />
+              <DetailField
+                label="Business ID"
+                value={transaction.businessId}
+                mono
+              />
             </div>
           </section>
 
@@ -362,7 +399,10 @@ export default function TransactionDetailModal({
                 label="Total Debit"
                 value={`AED ${transaction.totalDebit}`}
               />
-              <DetailField label="Discount %" value={transaction.discountValue} />
+              <DetailField
+                label="Discount %"
+                value={transaction.discountValue}
+              />
               <DetailField
                 label="Discount Amount"
                 value={
