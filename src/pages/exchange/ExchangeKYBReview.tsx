@@ -124,6 +124,12 @@ const ExchangeKYBReview = () => {
   useEffect(() => {
     fetchKYBApplications(currentPage, searchTerm, filterStatus);
   }, [currentPage, filterStatus]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchKYBApplications(0, searchTerm, filterStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
   // Clean up blob URLs when component unmounts or when viewer closes
   useEffect(() => {
     return () => {
@@ -790,20 +796,20 @@ const ExchangeKYBReview = () => {
     return pages;
   };
 
-  if (loading) {
-    return (
-      <ExchangeLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">
-              Loading KYB applications...
-            </p>
-          </div>
-        </div>
-      </ExchangeLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <ExchangeLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="text-center">
+  //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+  //           <p className="mt-4 text-muted-foreground">
+  //             Loading KYB applications...
+  //           </p>
+  //         </div>
+  //       </div>
+  //     </ExchangeLayout>
+  //   );
+  // }
 
   return (
     <ExchangeLayout>
@@ -882,7 +888,7 @@ const ExchangeKYBReview = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 items-end">
-                  <Button
+                  {/* <Button
                     type="button"
                     onClick={() => {
                       setCurrentPage(0);
@@ -891,7 +897,7 @@ const ExchangeKYBReview = () => {
                     disabled={!searchTerm.trim()}
                   >
                     Search
-                  </Button>
+                  </Button> */}
                   <Button
                     type="button"
                     variant={filterStatus === null ? "default" : "outline"}
@@ -1127,18 +1133,21 @@ const ExchangeKYBReview = () => {
                                     >
                                       {docStatus.label}
                                     </Badge>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleViewDocument(doc, application)
-                                      }
-                                      disabled={!doc.viewUrl}
-                                      title="View Document"
-                                    >
-                                      <Eye className="h-3 w-3" />
-                                    </Button>
+                                    {doc?.status == "pending" && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleViewDocument(doc, application)
+                                        }
+                                        disabled={!doc.viewUrl}
+                                        title="View Document"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                      </Button>
+                                    )}
+
                                     <Button
                                       type="button"
                                       variant="outline"
@@ -1259,7 +1268,16 @@ const ExchangeKYBReview = () => {
                 </Card>
               );
             })}
-
+            {loading && (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-muted-foreground">
+                    Loading KYB applications...
+                  </p>
+                </div>
+              </div>
+            )}
             {kybApplications.length === 0 && !loading && (
               <Card className="shadow-card">
                 <CardContent className="py-12 text-center">

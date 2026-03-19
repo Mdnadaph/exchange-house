@@ -982,7 +982,7 @@ const BusinessUserTransaction = () => {
           onOpenChange={setShowApproveConfirmation}
           onConfirm={handleReviewAction}
           title="Confirm"
-          description={`Are you sure want to approve `}
+          description={`Are you sure want to approve? `}
           confirmText="Confirm Approve"
         />
         <ConfirmationDialog
@@ -990,7 +990,7 @@ const BusinessUserTransaction = () => {
           onOpenChange={setShowRejectConfirmation}
           onConfirm={handleReviewAction}
           title="Confirm"
-          description={`Are you sure want to Reject`}
+          description={`Are you sure want to Reject?`}
           confirmText="Confirm Reject"
         />
       </div>
