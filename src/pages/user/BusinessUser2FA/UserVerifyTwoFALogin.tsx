@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,8 @@ interface BusinessUser {
   email: string;
   status: string;
   active: boolean;
+  businessId: number;
+  businessName: string | null;
 }
 
 interface BusinessAdmin {
@@ -53,7 +55,7 @@ interface JwtPayload {
 }
 
 /* =========================
-    COMPONENT7
+    COMPONENT
 ========================= */
 
 const UserVerifyTwoFALogin: React.FC = () => {
@@ -73,9 +75,13 @@ const UserVerifyTwoFALogin: React.FC = () => {
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-
-  // ── NEW: state for showing error above button ──
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ── Auto-focus first input on mount ──
+  useEffect(() => {
+    inputsRef.current[0]?.focus();
+  }, []);
 
   /* =========================
       OTP INPUT HANDLING
@@ -87,8 +93,6 @@ const UserVerifyTwoFALogin: React.FC = () => {
     const updatedOtp = [...otp];
     updatedOtp[index] = value;
     setOtp(updatedOtp);
-
-    // Clear error when user starts typing again
     setVerifyError(null);
 
     if (value && index < 5) {
@@ -98,6 +102,17 @@ const UserVerifyTwoFALogin: React.FC = () => {
     if (updatedOtp.join("").length === 6) {
       handleVerify(updatedOtp.join(""));
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").trim();
+    if (!/^\d{6}$/.test(pasted)) return;
+
+    const digits = pasted.split("");
+    setOtp(digits);
+    inputsRef.current[5]?.focus();
+    handleVerify(pasted);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -128,7 +143,8 @@ const UserVerifyTwoFALogin: React.FC = () => {
       return;
     }
 
-    setVerifyError(null); // clear previous error
+    setVerifyError(null);
+    setIsLoading(true);
 
     try {
       const response = await axios.post<VerifyResponse>(
@@ -140,7 +156,6 @@ const UserVerifyTwoFALogin: React.FC = () => {
       );
 
       if (!response.data.status) {
-        // backend returned status: false (e.g. 403 Invalid code)
         const msg = response.data.message || "Verification failed";
         setVerifyError(msg);
         toast.error(msg);
@@ -162,7 +177,6 @@ const UserVerifyTwoFALogin: React.FC = () => {
       ========================== */
 
       const payload = JSON.parse(atob(accessToken.split(".")[1])) as JwtPayload;
-
       const role = payload.roles?.[0];
       const maxAge = expiresIn || 10800;
 
@@ -171,12 +185,8 @@ const UserVerifyTwoFALogin: React.FC = () => {
       ========================== */
 
       setCookie("token", accessToken, { path: "/", maxAge });
-      setCookie("refreshToken", refreshToken, {
-        path: "/",
-        maxAge: 86400,
-      });
+      setCookie("refreshToken", refreshToken, { path: "/", maxAge: 86400 });
       setCookie("role", role, { path: "/" });
-      
       setCookie("userType", payload.userType, { path: "/" });
 
       /* =========================
@@ -187,6 +197,7 @@ const UserVerifyTwoFALogin: React.FC = () => {
         setCookie("userId", businessUser.id, { path: "/" });
         setCookie("fullName", businessUser.fullName, { path: "/" });
         setCookie("email", businessUser.email, { path: "/" });
+        setCookie("businessName", businessUser.businessName, { path: "/" });
       }
 
       if (businessAdmin) {
@@ -199,7 +210,6 @@ const UserVerifyTwoFALogin: React.FC = () => {
       ========================== */
 
       setCookie("tempToken", "", { path: "/", maxAge: 0 });
-
       toast.success("Login successful");
 
       /* =========================
@@ -214,7 +224,6 @@ const UserVerifyTwoFALogin: React.FC = () => {
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
 
-      // Most common case: 403 with { status: false, message: "Invalid 2FA code or backup code" }
       const msg =
         error.response?.data?.message ||
         error.message ||
@@ -222,9 +231,10 @@ const UserVerifyTwoFALogin: React.FC = () => {
 
       setVerifyError(msg);
       toast.error(msg);
-
       setOtp(["", "", "", "", "", ""]);
       inputsRef.current[0]?.focus();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -249,16 +259,17 @@ const UserVerifyTwoFALogin: React.FC = () => {
               key={index}
               ref={(el) => (inputsRef.current[index] = el)}
               type="text"
+              inputMode="numeric"
               maxLength={1}
               value={digit}
               onChange={(e) => handleChange(e.target.value, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className="w-12 h-12 text-center text-xl border rounded focus:outline-none focus:border-blue-500"
+              onPaste={index === 0 ? handlePaste : undefined}
+              className="w-12 h-12 text-center text-xl border rounded focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
             />
           ))}
         </div>
 
-        {/* ── ERROR MESSAGE ABOVE BUTTON ── */}
         {verifyError && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-center text-sm">
             {verifyError}
@@ -267,9 +278,10 @@ const UserVerifyTwoFALogin: React.FC = () => {
 
         <button
           onClick={() => handleVerify()}
-          className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition"
+          disabled={isLoading || otp.join("").length !== 6}
+          className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Verify & Access Portal
+          {isLoading ? "Verifying..." : "Verify & Access Portal"}
         </button>
       </div>
     </div>

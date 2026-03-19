@@ -196,7 +196,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
                 {role === "ROLE_EXCHANGE_ADMIN"
                   ? "Exchange Admin"
                   : " Exchange User"}
-                - ( {fullName} )
+                - ({fullName})
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

@@ -501,7 +501,7 @@ const UserTransactions = () => {
                 {dashboardData?.totalTransactions ??
                   statistics.totalTransactions}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -517,13 +517,13 @@ const UserTransactions = () => {
                 {dashboardData?.completedTransactions ??
                   statistics.completedTransactions}
               </div>
-              <p className="text-xs text-muted-foreground">
+              {/* <p className="text-xs text-muted-foreground">
                 {dashboardData?.successRate != null
                   ? `${dashboardData.successRate.toFixed(1)}%`
                   : statistics.totalTransactions > 0
                     ? `${((statistics.completedTransactions / statistics.totalTransactions) * 100).toFixed(1)}% success rate`
                     : "No transactions"}
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 
@@ -539,7 +539,7 @@ const UserTransactions = () => {
                 {dashboardData?.pendingTransactions ??
                   statistics.pendingTransactions}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting approval</p>
+              {/* <p className="text-xs text-muted-foreground">Awaiting approval</p> */}
             </CardContent>
           </Card>
 
@@ -556,7 +556,7 @@ const UserTransactions = () => {
                 {dashboardData?.totalAmount?.toLocaleString("en-US") ??
                   statistics.totalVolume.toLocaleString("en-US")}
               </div>
-              <p className="text-xs text-muted-foreground">This year</p>
+              {/* <p className="text-xs text-muted-foreground">This year</p> */}
             </CardContent>
           </Card>
         </div>
@@ -868,7 +868,7 @@ const UserTransactions = () => {
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
-                              {/*<Button variant="outline" size="sm">
+                              <Button variant="outline" size="sm">
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
                               </Button>
@@ -882,7 +882,7 @@ const UserTransactions = () => {
                                     <FileText className="h-4 w-4 mr-1" />
                                     Documents
                                   </Button>
-                                )}*/}
+                                )}
 
                               
                               <Button
