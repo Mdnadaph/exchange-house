@@ -1141,7 +1141,7 @@ const UserBeneficiaries = () => {
                                 </div>
                                 {/* Enhanced Actions */}
                                 <div className="flex flex-col space-y-2 ml-4">
-                                  {/*<Button
+                                  <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
@@ -1151,16 +1151,16 @@ const UserBeneficiaries = () => {
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
                                     View Profile
-                                  </Button>*/}
-                                  {/*<Button variant="outline" size="sm">
+                                  </Button>
+                                  <Button variant="outline" size="sm">
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit Details
-                                  </Button>*/}
-                                  {/*{beneficiary.status === "active" && (
+                                  </Button>
+                                  {beneficiary.status === "active" && (
                                     <Button variant="business" size="sm">
                                       Send Payment
                                     </Button>
-                                  )}*/}
+                                  )}
                                   {(beneficiary.verificationStatus ===
                                     "expired" ||
                                     beneficiary.verificationStatus ===
