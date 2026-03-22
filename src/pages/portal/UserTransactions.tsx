@@ -1042,6 +1042,7 @@ import axios from "axios";
 import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 
 interface TransactionDocument {
   id: number;
@@ -1150,8 +1151,14 @@ const UserTransactions = () => {
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [page, setPage] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
+
+  //document upload state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadTransaction, setUploadTransaction] =
+    useState<Transaction | null>(null);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
+  const fullname = cookies.fullName;
   const { toast } = useToast();
 
   const fetchTransactions = async (searchValue?: string) => {
@@ -1793,7 +1800,17 @@ const UserTransactions = () => {
                               >
                                 <Download className="h-4 w-4 mr-1" />
                               </Button>
-
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setUploadModalOpen(true);
+                                  setUploadTransaction(transaction);
+                                }}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                Upload Documents
+                              </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1891,6 +1908,25 @@ const UserTransactions = () => {
           </CardContent>
         </Card>
       </div>
+
+      {uploadModalOpen && (
+        <DocumentUploadModal
+          open={uploadModalOpen}
+          onClose={() => {
+            setUploadModalOpen(false);
+            setUploadTransaction(null);
+          }}
+          documentType={uploadTransaction?.type}
+          transactionReference={uploadTransaction?.referenceNumber}
+          userRole="Exchange Admin"
+          userName={fullname}
+          onSuccess={() => {
+            setUploadModalOpen(false);
+            setUploadTransaction(null);
+            fetchTransactions();
+          }}
+        />
+      )}
 
       {/* ── Transaction Detail Modal ── */}
       <TransactionDetailModal

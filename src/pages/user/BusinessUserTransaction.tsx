@@ -37,6 +37,8 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import TransactionDetailModal, {
   handleDownloadReceipt,
 } from "../portal/TransactionDetailModal";
+import DocumentUploadModal from "@/components/transactions/DocumentUpload";
+import ComplianceStatus from "@/components/transactions/ComplianceStatus";
 
 interface TransactionDocument {
   id: number;
@@ -172,9 +174,21 @@ const BusinessUserTransaction = () => {
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [totalTransactionsData, setTotalTransactionsData] = useState<number>(0);
+
+  //compliance
+
+  const [openCompliance, setOpenCompliance] = useState(false);
+  const [complianceTransaction, setComplianceTransaction] =
+    useState<Transaction | null>(null);
+
+  //document upload state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadTransaction, setUploadTransaction] =
+    useState<Transaction | null>(null);
   const [page, setPage] = useState<number>(0);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
+  const fullname = cookies.fullName;
   const { toast } = useToast();
 
   const fetchTransactions = async () => {
@@ -199,13 +213,13 @@ const BusinessUserTransaction = () => {
         config,
       );
 
-      const data = response.data;
+      const data = response?.data;
 
-      if (data.status && data.data) {
+      if (data.status && data?.data) {
         // Save dashboard stats from API
-        setDashboardStats(data.data.dashboard);
+        setDashboardStats(data.data?.dashboard);
 
-        setTotalTransactionsData(data.data.pagination.totalItems);
+        setTotalTransactionsData(data.data?.pagination?.totalItems);
 
         const transformedTransactions: Transaction[] =
           data.data.transactions.map((apiTx: any) => {
@@ -866,6 +880,23 @@ const BusinessUserTransaction = () => {
                                           Reject
                                         </Button>
                                       </div>
+                                      <div className="space-y-4">
+                                        <Label>Compliance Status</Label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <Button
+                                            type="button"
+                                            className="w-full bg-green-700 hover:bg-green-900"
+                                            onClick={() => {
+                                              setComplianceTransaction(
+                                                transaction,
+                                              );
+                                              setOpenCompliance(true);
+                                            }}
+                                          >
+                                            Change Compliance Status
+                                          </Button>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -893,13 +924,24 @@ const BusinessUserTransaction = () => {
                                   <Download className="h-4 w-4 mr-1" />
                                   Receipt
                                 </Button>
-                                {transaction.documents &&
+                                {/*{transaction.documents &&
                                   transaction.documents.length > 0 && (
                                     <Button variant="outline" size="sm">
                                       <FileText className="h-4 w-4 mr-1" />
                                       Documents
                                     </Button>
-                                  )}
+                                  )}*/}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setUploadModalOpen(true);
+                                    setUploadTransaction(transaction);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-1" />
+                                  Upload Documents
+                                </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1012,6 +1054,40 @@ const BusinessUserTransaction = () => {
           description={`Are you sure want to Reject?`}
           confirmText="Confirm Reject"
         />
+
+        {uploadModalOpen && (
+          <DocumentUploadModal
+            open={uploadModalOpen}
+            onClose={() => {
+              setUploadModalOpen(false);
+              setUploadTransaction(null);
+            }}
+            documentType={uploadTransaction.type}
+            transactionReference={uploadTransaction.referenceNumber}
+            userRole="Exchange Admin"
+            userName={fullname}
+            onSuccess={() => {
+              setUploadModalOpen(false);
+              setUploadTransaction(null);
+              fetchTransactions();
+            }}
+          />
+        )}
+        {openCompliance && complianceTransaction && (
+          <ComplianceStatus
+            open={openCompliance}
+            onClose={() => {
+              setOpenCompliance(false);
+              setComplianceTransaction(null);
+            }}
+            transactionReference={complianceTransaction.referenceNumber}
+            onSuccess={() => {
+              setOpenCompliance(false);
+              setComplianceTransaction(null);
+              fetchTransactions(); // Refresh the transaction list
+            }}
+          />
+        )}
         {/* ── Transaction Detail Modal ── */}
         <TransactionDetailModal
           transaction={selectedTransaction}

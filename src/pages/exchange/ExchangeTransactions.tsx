@@ -31,6 +31,7 @@ import BASE_URL from "@/config/config";
 import TransactionDetailModal, {
   handleDownloadReceipt,
 } from "../portal/TransactionDetailModal";
+import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 
 interface TransactionDocument {
   id: number;
@@ -147,148 +148,154 @@ const ExchangeTransactions = () => {
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [transitionDashboardData, setTransationDashboardData] = useState(null);
 
+  //document upload state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadTransaction, setUploadTransaction] =
+    useState<Transaction | null>(null);
+
   const token = cookies.token;
   const fullname = cookies.fullName;
   // Fetch data from API
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
 
-        if (!token) {
-          throw new Error("No authentication token found. Please log in.");
-        }
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 10000,
-        };
-
-        const response = await axios.get<ApiResponse>(
-          `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
-          config,
-        );
-
-        const data = response?.data;
-        setTransationDashboardData(data?.data);
-        setTotalTransactionData(data?.data?.pagination?.totalItems);
-        if (data.status && data.data) {
-          // Transform API data to match UI structure
-          const transformedTransactions: Transaction[] =
-            data?.data?.transactions?.map((apiTx: any) => {
-              // --- Discount logic ---
-              let discountValueDisplay = "—";
-              let discountAmountDisplay = "0.00";
-
-              if (apiTx.discounts && apiTx.discounts.length > 0) {
-                const firstDiscount = apiTx.discounts[0];
-                const totalDiscountAmount = apiTx.discountAmount || 0;
-                discountAmountDisplay = totalDiscountAmount.toFixed(2);
-
-                if (firstDiscount.type === "PERCENTAGE") {
-                  discountValueDisplay = `${firstDiscount.discountValue}%`;
-                }
-                // For FIXED_AMOUNT, discountValueDisplay stays "—"
-              }
-
-              return {
-                id: apiTx.reference,
-                branchName: apiTx.branchName || "",
-                businessId: apiTx.businessId || "",
-                beneficiary: apiTx.beneficiaryName || "",
-                amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }),
-                currency: apiTx.sourceCurrency,
-                exchangeRate: apiTx.exchangeRate?.toFixed(3),
-                localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }),
-                localCurrency: apiTx.targetCurrency,
-                status: apiTx?.status,
-                type: apiTx?.type,
-                purpose: apiTx.purpose || "",
-                date: new Date(apiTx.createdAt)
-                  .toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })
-                  .replace(",", ""),
-                processedDate: null,
-                referenceNumber: apiTx?.reference,
-                fees: apiTx.feeAmount?.toFixed(2),
-                feeResponsibility: apiTx.feeResponsibility || "",
-                branch: apiTx.branchName,
-                failureReason: apiTx.failureReason || "",
-                documents: apiTx.documents,
-                commentCount: apiTx.commentCount || 0,
-                latestComment: apiTx.latestComment || null,
-                bulkCount: apiTx?.itemCount,
-                complianceStatus: apiTx.complianceStatus || "",
-                totalDebit: apiTx.totalDebit,
-                beneficiaryFeeAmount:
-                  apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }) || "0.00",
-                netPayoutAmount:
-                  apiTx.netPayoutAmount?.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }) || "0.00",
-                discountValue: discountValueDisplay,
-                discountAmount: discountAmountDisplay,
-              };
-            });
-          setTransactions(transformedTransactions);
-        } else {
-          throw new Error(data.message || "Failed to fetch transactions");
-        }
-      } catch (err: any) {
-        console.error("Error fetching transactions:", err);
-        if (axios.isAxiosError(err)) {
-          if (err.response?.status === 401) {
-            setError("Unauthorized: Please log in again.");
-          } else if (err.response?.status === 403) {
-            setError(
-              "Forbidden: You don't have permission to view transactions.",
-            );
-          } else if (err.response?.status === 404) {
-            setError("API endpoint not found. Please check the URL.");
-          } else if (err.code === "ECONNABORTED") {
-            setError("Request timeout. Please try again.");
-          } else if (err.response) {
-            setError(
-              `Server Error: ${err.response.status} - ${err.response.data?.message || "Unknown error"}`,
-            );
-          } else if (err.request) {
-            setError("Network error: Could not connect to server.");
-          } else {
-            setError(`Error: ${err.message}`);
-          }
-        } else {
-          setError(
-            err instanceof Error ? err.message : "Failed to fetch transactions",
-          );
-        }
-        setTransactions([]);
-      } finally {
-        setIsLoading(false);
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
       }
-    };
 
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      };
+
+      const response = await axios.get<ApiResponse>(
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        config,
+      );
+
+      const data = response?.data;
+      setTransationDashboardData(data?.data);
+      setTotalTransactionData(data?.data?.pagination?.totalItems);
+      if (data.status && data.data) {
+        // Transform API data to match UI structure
+        const transformedTransactions: Transaction[] =
+          data?.data?.transactions?.map((apiTx: any) => {
+            // --- Discount logic ---
+            let discountValueDisplay = "—";
+            let discountAmountDisplay = "0.00";
+
+            if (apiTx.discounts && apiTx.discounts.length > 0) {
+              const firstDiscount = apiTx.discounts[0];
+              const totalDiscountAmount = apiTx.discountAmount || 0;
+              discountAmountDisplay = totalDiscountAmount.toFixed(2);
+
+              if (firstDiscount.type === "PERCENTAGE") {
+                discountValueDisplay = `${firstDiscount.discountValue}%`;
+              }
+              // For FIXED_AMOUNT, discountValueDisplay stays "—"
+            }
+
+            return {
+              id: apiTx.reference,
+              branchName: apiTx.branchName || "",
+              businessId: apiTx.businessId || "",
+              beneficiary: apiTx.beneficiaryName || "",
+              amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+              currency: apiTx.sourceCurrency,
+              exchangeRate: apiTx.exchangeRate?.toFixed(3),
+              localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+              localCurrency: apiTx.targetCurrency,
+              status: apiTx?.status,
+              type: apiTx?.type,
+              purpose: apiTx.purpose || "",
+              date: new Date(apiTx.createdAt)
+                .toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+                .replace(",", ""),
+              processedDate: null,
+              referenceNumber: apiTx?.reference,
+              fees: apiTx.feeAmount?.toFixed(2),
+              feeResponsibility: apiTx.feeResponsibility || "",
+              branch: apiTx.branchName,
+              failureReason: apiTx.failureReason || "",
+              documents: apiTx.documents,
+              commentCount: apiTx.commentCount || 0,
+              latestComment: apiTx.latestComment || null,
+              bulkCount: apiTx?.itemCount,
+              complianceStatus: apiTx.complianceStatus || "",
+              totalDebit: apiTx.totalDebit,
+              beneficiaryFeeAmount:
+                apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "0.00",
+              netPayoutAmount:
+                apiTx.netPayoutAmount?.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "0.00",
+              discountValue: discountValueDisplay,
+              discountAmount: discountAmountDisplay,
+            };
+          });
+        setTransactions(transformedTransactions);
+      } else {
+        throw new Error(data.message || "Failed to fetch transactions");
+      }
+    } catch (err: any) {
+      console.error("Error fetching transactions:", err);
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setError("Unauthorized: Please log in again.");
+        } else if (err.response?.status === 403) {
+          setError(
+            "Forbidden: You don't have permission to view transactions.",
+          );
+        } else if (err.response?.status === 404) {
+          setError("API endpoint not found. Please check the URL.");
+        } else if (err.code === "ECONNABORTED") {
+          setError("Request timeout. Please try again.");
+        } else if (err.response) {
+          setError(
+            `Server Error: ${err.response.status} - ${err.response.data?.message || "Unknown error"}`,
+          );
+        } else if (err.request) {
+          setError("Network error: Could not connect to server.");
+        } else {
+          setError(`Error: ${err.message}`);
+        }
+      } else {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch transactions",
+        );
+      }
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTransactions();
-  }, [transactionType, page]);
+  }, [fetchTransactions, transactionType, page]);
   // console.log("transitionData", transactions);
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {
@@ -797,13 +804,24 @@ const ExchangeTransactions = () => {
                                 <Download className="h-4 w-4 mr-1" />
                                 Receipt
                               </Button>
-                              {transaction.documents &&
+                              {/*{transaction.documents &&
                                 transaction.documents.length > 0 && (
                                   <Button variant="outline" size="sm">
                                     <FileText className="h-4 w-4 mr-1" />
                                     Documents
                                   </Button>
-                                )}
+                                )}*/}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setUploadModalOpen(true);
+                                  setUploadTransaction(transaction);
+                                }}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                Upload Documents
+                              </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -891,6 +909,24 @@ const ExchangeTransactions = () => {
         open={selectedTransaction !== null}
         onClose={() => setSelectedTransaction(null)}
       />
+      {uploadModalOpen && (
+        <DocumentUploadModal
+          open={uploadModalOpen}
+          onClose={() => {
+            setUploadModalOpen(false);
+            setUploadTransaction(null);
+          }}
+          documentType={uploadTransaction.type}
+          transactionReference={uploadTransaction.referenceNumber}
+          userRole="Exchange Admin"
+          userName={fullname}
+          onSuccess={() => {
+            setUploadModalOpen(false);
+            setUploadTransaction(null);
+            fetchTransactions();
+          }}
+        />
+      )}
     </ExchangeLayout>
   );
 };

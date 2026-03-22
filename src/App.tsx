@@ -239,7 +239,10 @@ function App() {
                     <Route index element={<UserDashboard />} />
                     <Route path="profile" element={<UserProfile />} />
                     <Route path="profile/:id" element={<UserProfile />} />
-                    <Route path="beneficiaries" element={<UserBeneficiaries />} />
+                    <Route
+                      path="beneficiaries"
+                      element={<UserBeneficiaries />}
+                    />
                     <Route path="transactions" element={<UserTransactions />} />
                     <Route path="deals" element={<UserDealRequests />} />
                     <Route path="users" element={<UserManagement />} />
@@ -256,7 +259,10 @@ function App() {
                   <Route path="/user">
                     <Route index element={<BussinessUserDashboard />} />
                     <Route path="profile" element={<BussinessUserProfile />} />
-                    <Route path="transactions" element={<BussinessUserTransaction />} />
+                    <Route
+                      path="transactions"
+                      element={<BussinessUserTransaction />}
+                    />
                   </Route>
                 </Route>
 
