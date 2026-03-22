@@ -46,7 +46,6 @@ const ApprovalRuleForm = ({
 }: ApprovalRuleFormProps) => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
-
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: editRule?.name || "",
@@ -221,7 +220,10 @@ const ApprovalRuleForm = ({
           ? "ALL"
           : formData.department.toUpperCase(),
       transactionTypes: formData.transactionTypes.map((t) =>
-        t.toUpperCase().replace(/\s+/g, "_"),
+        t
+          .toUpperCase()
+          .replace(/\s+/g, "_")
+          .replace(/_TRANSFER$/, ""),
       ),
       approvalTiers: formData.tiers.map((tier) => ({
         tierOrder: tier.level,
@@ -301,7 +303,9 @@ const ApprovalRuleForm = ({
         minAmount: editRule.minAmount?.toString() || "",
         maxAmount: editRule.maxAmount?.toString() || "",
         department: editRule.department || "All",
-        transactionTypes: editRule.transactionTypes || [],
+        transactionTypes: (editRule.transactionTypes || [])?.map((t: string) =>
+          t == "Single" || t == "Bulk" ? `${t} Transfer` : t,
+        ),
         tiers: editRule.tiers?.map((tier: any) => ({
           level: tier.level,
           threshold: tier.threshold?.toString() || "",
@@ -492,7 +496,7 @@ const ApprovalRuleForm = ({
                   <div key={type} className="flex items-center space-x-2">
                     <Checkbox
                       id={`type-${type}`}
-                      checked={formData.transactionTypes.includes(type)}
+                      checked={formData?.transactionTypes?.includes(type)}
                       onCheckedChange={(checked) =>
                         handleTransactionTypeChange(type, !!checked)
                       }
