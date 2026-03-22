@@ -54,6 +54,7 @@ const SingleTransactionForm = ({
 }: SingleTransactionFormProps) => {
   const { toast } = useToast();
   const [selectedBeneficiary, setSelectedBeneficiary] = useState("");
+  console.log("selecetedBeneficiary", selectedBeneficiary);
   const [selectedSource, setSelectedSource] = useState("");
   const [transactionPurpose, setTransactionPurpose] = useState("");
   const [amount, setAmount] = useState("");
@@ -222,7 +223,7 @@ const SingleTransactionForm = ({
       notes,
       discountCode: discountCode.trim() || "",
     };
-    
+
     const formData = new FormData();
 
     // ✅ REQUIRED: data as JSON blob
@@ -295,6 +296,7 @@ const SingleTransactionForm = ({
   useEffect(() => {
     getCurrency();
   }, []);
+  console.log("currencyList", currencyListData);
   const getCurrencyName = () => {
     const currencyName = currencyListData?.data
       ?.find((currencyList: any) => currencyList?.id == currency)
@@ -320,6 +322,11 @@ const SingleTransactionForm = ({
   const removeDocument = (index: number) => {
     setUploadedDocuments((prev) => prev.filter((_, i) => i !== index));
   };
+  const getSelectedBeneficiriesData = beneficiariesList?.find(
+    (beneficiaries: any) => beneficiaries?.id == selectedBeneficiary,
+  );
+  console.log("getSlee", getSelectedBeneficiriesData);
+
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -536,19 +543,37 @@ const SingleTransactionForm = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Amount *</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      step="0.01"
-                    />
+                  <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="text-center">Sender</h5>
+                      <Label htmlFor="amount">Amount(AED) *</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <h5 className="text-center">Receiver</h5>
+                      <Label htmlFor="amount">
+                        Amount{" "}
+                        {`(${getSelectedBeneficiriesData?.currency ? getSelectedBeneficiriesData?.currency : "USD"})`}
+                      </Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        // value={amount}
+                        // onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
                   </div>
 
-                 {/* ← New: Discount Code */}
+                  {/* ← New: Discount Code */}
                   <div>
                     <Label htmlFor="discountCode">Discount Code</Label>
                     <Input

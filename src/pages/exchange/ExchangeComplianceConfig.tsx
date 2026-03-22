@@ -36,11 +36,27 @@ import {
   Save,
   Download,
   Settings,
+  Check,
 } from "lucide-react";
 
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import axios from "axios";
 
 const ExchangeComplianceConfig = () => {
   const { toast } = useToast();
@@ -69,6 +85,17 @@ const ExchangeComplianceConfig = () => {
   const [createErrors, setCreateErrors] = useState<{ [key: string]: string }>(
     {},
   );
+  const [countryRiskFormData, setCountryRiskFormData] = useState<{
+    highRiskCountries: string[];
+    prohibitedCountries: string[];
+    enhancedMonitoringCountries: string[];
+  }>({
+    highRiskCountries: [],
+    prohibitedCountries: [],
+    enhancedMonitoringCountries: [],
+  });
+  const [countriesRiskData, setCountriesRiskData] = useState<any>({});
+  const [loading, setLoading] = useState<boolean>(false);
   const clearFormError = (field: string) => {
     setCreateErrors((prev) => {
       const newErrors = { ...prev };
@@ -124,7 +151,6 @@ const ExchangeComplianceConfig = () => {
       });
     }
   };
-
   const fetchRules = async (
     page: number,
     activeFilter: "all" | "active" | "inactive",
@@ -335,7 +361,75 @@ const ExchangeComplianceConfig = () => {
       }
     );
   };
+  const getCountryRiskData = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/compliance/country-risk`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res?.json();
+      setCountriesRiskData(data?.data);
+    } catch (error) {
+      console.error("error", error);
+    }
+  };
+  const handleCountryRiskConfiguration = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/compliance/country-risk${countriesRiskData?.id ? `/${countriesRiskData?.id}` : ""}`,
+        {
+          method: countriesRiskData?.id ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(countryRiskFormData),
+        },
+      );
+      const responseData = await res.json();
 
+      getCountryRiskData();
+      if (responseData?.status) {
+        toast({
+          title: "Success",
+          description:
+            responseData?.message ||
+            "Country Risk Configuration Created Successfully",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description:
+            responseData?.message ||
+            "Failed to create Country Risk Configuration",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create  Country Risk Configuration",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getCountryRiskData();
+  }, []);
+  useEffect(() => {
+    setCountryRiskFormData({
+      prohibitedCountries: countriesRiskData?.prohibitedCountries,
+      enhancedMonitoringCountries:
+        countriesRiskData?.enhancedMonitoringCountries,
+      highRiskCountries: countriesRiskData?.highRiskCountries,
+    });
+  }, [countriesRiskData]);
   return (
     <ExchangeLayout>
       <div className="space-y-6">
@@ -1053,7 +1147,7 @@ const ExchangeComplianceConfig = () => {
         </Card>
 
         {/* Country Risk Configuration */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" />
@@ -1111,8 +1205,231 @@ const ExchangeComplianceConfig = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Country Risk Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">
+                  High Risk Countries
+                </h4>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Globe className="mr-2 h-4 w-4 shrink-0" />
+                      {countryRiskFormData?.highRiskCountries?.length > 0
+                        ? `${countryRiskFormData?.highRiskCountries?.length} country(s) selected`
+                        : "Select high risk countries..."}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search countries..." />
+                      <CommandList>
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          {countries?.map((country) => {
+                            const isSelected =
+                              countryRiskFormData?.highRiskCountries?.includes(
+                                country?.isoCode,
+                              );
+                            return (
+                              <CommandItem
+                                key={country?.id}
+                                onSelect={() => {
+                                  setCountryRiskFormData((prev) => {
+                                    const newCountries = isSelected
+                                      ? prev.highRiskCountries.filter(
+                                          (c) => c !== country?.isoCode,
+                                        )
+                                      : [
+                                          ...(prev.highRiskCountries || []),
+                                          country?.isoCode,
+                                        ];
+                                    return {
+                                      ...prev,
+                                      highRiskCountries: newCountries,
+                                    };
+                                  });
+                                  // clearError("countryName");
+                                  // setApiErrors((prev) => ({
+                                  //   ...prev,
+                                  //   countryName: "",
+                                  // }));
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {country?.name}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">
+                  Prohibited Countries
+                </h4>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Globe className="mr-2 h-4 w-4 shrink-0" />
+                      {countryRiskFormData?.prohibitedCountries?.length > 0
+                        ? `${countryRiskFormData?.prohibitedCountries?.length} country(s) selected`
+                        : "Select prohibited countries..."}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search countries..." />
+                      <CommandList>
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          {countries.map((country) => {
+                            const isSelected =
+                              countryRiskFormData?.prohibitedCountries?.includes(
+                                country?.isoCode,
+                              );
+                            return (
+                              <CommandItem
+                                key={country?.id}
+                                onSelect={() => {
+                                  setCountryRiskFormData((prev) => {
+                                    const newCountries = isSelected
+                                      ? prev.prohibitedCountries.filter(
+                                          (c) => c !== country?.isoCode,
+                                        )
+                                      : [
+                                          ...(prev.prohibitedCountries || []),
+                                          country?.isoCode,
+                                        ];
+                                    return {
+                                      ...prev,
+                                      prohibitedCountries: newCountries,
+                                    };
+                                  });
+                                  // clearError("countryName");
+                                  // setApiErrors((prev) => ({
+                                  //   ...prev,
+                                  //   countryName: "",
+                                  // }));
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {country?.name}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">
+                  Enhanced Monitoring
+                </h4>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Globe className="mr-2 h-4 w-4 shrink-0" />
+                      {countryRiskFormData?.enhancedMonitoringCountries
+                        ?.length > 0
+                        ? `${countryRiskFormData?.enhancedMonitoringCountries?.length} country(s) selected`
+                        : "Select countries..."}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search countries..." />
+                      <CommandList>
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          {countries.map((country) => {
+                            const isSelected =
+                              countryRiskFormData?.enhancedMonitoringCountries?.includes(
+                                country?.isoCode,
+                              );
+                            return (
+                              <CommandItem
+                                key={country?.id}
+                                onSelect={() => {
+                                  setCountryRiskFormData((prev) => {
+                                    const newCountries = isSelected
+                                      ? prev.enhancedMonitoringCountries.filter(
+                                          (c) => c !== country?.isoCode,
+                                        )
+                                      : [
+                                          ...(prev.enhancedMonitoringCountries ||
+                                            []),
+                                          country?.isoCode,
+                                        ];
+                                    return {
+                                      ...prev,
+                                      enhancedMonitoringCountries: newCountries,
+                                    };
+                                  });
+                                  // clearError("countryName");
+                                  // setApiErrors((prev) => ({
+                                  //   ...prev,
+                                  //   countryName: "",
+                                  // }));
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {country?.name}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {/* Reporting Configuration */}
         <Card className="shadow-card">
           <CardHeader>
@@ -1210,7 +1527,11 @@ const ExchangeComplianceConfig = () => {
         <div className="flex justify-end space-x-3">
           <Button variant="outline">Test Configuration</Button>
           <Button variant="outline">Reset to Defaults</Button>
-          <Button variant="business">
+          <Button
+            variant="business"
+            onClick={() => handleCountryRiskConfiguration()}
+            disabled={loading}
+          >
             <Save className="h-4 w-4 mr-2" />
             Save Configuration
           </Button>

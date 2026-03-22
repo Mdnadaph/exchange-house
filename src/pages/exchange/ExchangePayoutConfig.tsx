@@ -242,6 +242,7 @@ const ExchangePayoutConfig = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedDestination, setSelectedDestination] =
     useState<PayoutDestination | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Form state for add/edit destination
   // const [destinationForm, setDestinationForm] = useState({
@@ -380,6 +381,7 @@ const ExchangePayoutConfig = () => {
     // Stop if any errors
     if (Object.keys(newErrors).length > 0) return;
     const payload = buildPayload();
+    setLoading(true);
     try {
       const res = await fetch(`${BASE_URL}/api/v1/payout/config/country`, {
         method: "POST",
@@ -407,6 +409,8 @@ const ExchangePayoutConfig = () => {
         description: error?.message || "Please try again",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
     // const newDestination: PayoutDestination = {
     //   id: Date.now().toString(),
@@ -611,7 +615,7 @@ const ExchangePayoutConfig = () => {
     setDestinationForm((prev) => ({
       ...prev,
       country,
-      currency: countryData?.isoCode,
+      currency: countryData?.currencyCode,
     }));
     setErrors((prev: any) => ({
       ...prev,
@@ -1455,7 +1459,11 @@ const ExchangePayoutConfig = () => {
               >
                 {t("cancel") || "Cancel"}
               </Button>
-              <Button variant="business" onClick={handleAddDestination}>
+              <Button
+                variant="business"
+                onClick={handleAddDestination}
+                disabled={loading}
+              >
                 {t("addDestination") || "Add Destination"}
               </Button>
             </DialogFooter>

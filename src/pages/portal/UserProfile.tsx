@@ -131,6 +131,7 @@ const UserProfile = () => {
   const [documentType, setDocumentType] = useState("");
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [documentNumber, setDocumentNumber] = useState("");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
@@ -140,10 +141,14 @@ const UserProfile = () => {
     if (!status) return "bg-gray-100 text-gray-800 border border-gray-200";
 
     const s = status.toUpperCase();
-    if (s === "APPROVED") return "bg-green-100 text-green-800 border border-green-200";
-    if (s === "PENDING") return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-    if (s === "REJECTED") return "bg-red-100 text-red-800 border border-red-200";
-    if (s === "NOT_STARTED") return "bg-blue-100 text-blue-800 border border-blue-200";
+    if (s === "APPROVED")
+      return "bg-green-100 text-green-800 border border-green-200";
+    if (s === "PENDING")
+      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+    if (s === "REJECTED")
+      return "bg-red-100 text-red-800 border border-red-200";
+    if (s === "NOT_STARTED")
+      return "bg-blue-100 text-blue-800 border border-blue-200";
     return "bg-gray-100 text-gray-800 border border-gray-200";
   };
 
@@ -633,7 +638,19 @@ const UserProfile = () => {
     if (!date) return "";
     return date.split(" ")[0];
   };
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file); // preview
+      setProfileImage(imageUrl);
 
+      // optional: store file in your main state
+      // setBusinessProfile({
+      //   ...businessProfile,
+      //   profileImage: file,
+      // });
+    }
+  };
   if (isLoading) {
     return (
       <UserLayout>
@@ -688,6 +705,29 @@ const UserProfile = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative">
+                  {/* Hidden input */}
+                  <input
+                    id="profileUpload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+
+                  {/* Clickable Image */}
+                  <label htmlFor="profileUpload" className="cursor-pointer">
+                    <img
+                      src={
+                        profileImage ||
+                        "https://i.fbcd.co/products/original/f8b30a80c3dd7846280debe018062435fb0273b9a391c2d05b1783ac5a473077.jpg"
+                      }
+                      alt="Profile"
+                      className="h-20 w-20 rounded-full object-cover border"
+                    />
+                  </label>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Company Name</Label>
                   {isEditing ? (
@@ -805,7 +845,7 @@ const UserProfile = () => {
                   {businessProfile.kybStatus ? (
                     <Badge
                       className={`text-lg px-8 py-2.5 font-semibold shadow-sm ${getKybStatusColor(
-                        businessProfile.kybStatus
+                        businessProfile.kybStatus,
                       )}`}
                     >
                       {businessProfile.kybStatus.replace("_", " ")}

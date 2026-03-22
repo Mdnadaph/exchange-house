@@ -112,102 +112,320 @@ const getTypeColor = (type: string) => {
 };
 
 /** Generates and triggers a PDF download using the browser's print dialog */
-const handleDownloadReceipt = (transaction: Transaction) => {
-  const status = getStatusBadge(transaction.status);
+// const handleDownloadReceipt = (transaction: Transaction) => {
+//   const status = getStatusBadge(transaction.status);
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
+//   const html = `<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8" />
+//   <title>Receipt – ${transaction.referenceNumber}</title>
+//   <style>
+//     * { box-sizing: border-box; margin: 0; padding: 0; }
+//     body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
+//     .receipt { max-width: 680px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+//     .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 32px 36px; }
+//     .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+//     .header p { font-size: 13px; color: #a0aec0; margin-top: 4px; }
+//     .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); color: #fff; margin-top: 10px; }
+//     .amount-block { background: #f8fafc; padding: 24px 36px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+//     .amount-block .main { font-size: 28px; font-weight: 800; color: #0f3460; }
+//     .amount-block .sub { font-size: 14px; color: #64748b; margin-top: 4px; }
+//     .amount-block .right { text-align: right; }
+//     .section { padding: 20px 36px; border-bottom: 1px solid #f1f5f9; }
+//     .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 14px; }
+//     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+//     .field label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 3px; }
+//     .field p { font-size: 13px; font-weight: 600; color: #1e293b; }
+//     .field p.mono { font-family: 'Courier New', monospace; font-size: 12px; }
+//     .failure { color: #dc2626 !important; }
+//     .footer { padding: 20px 36px; background: #f8fafc; text-align: center; }
+//     .footer p { font-size: 11px; color: #94a3b8; line-height: 1.6; }
+//     @media print {
+//       body { padding: 0; }
+//       .receipt { border: none; border-radius: 0; max-width: 100%; }
+//     }
+//   </style>
+// </head>
+// <body>
+// <div class="receipt">
+//   <div class="header">
+//     <h1>Payment Receipt</h1>
+//     <p>Transaction Reference: ${transaction.referenceNumber}</p>
+//     <span class="badge">${status.label}</span>
+//   </div>
+
+//   <div class="amount-block">
+//     <div>
+//       <div class="main">${transaction.currency.toUpperCase()} ${transaction.amount}</div>
+//       <div class="sub">${transaction.localCurrency} ${transaction.localAmount}</div>
+//     </div>
+//     <div class="right">
+//       <div class="sub">Total Debit</div>
+//       <div class="main" style="font-size:20px">AED ${transaction.totalDebit}</div>
+//     </div>
+//   </div>
+
+//   <div class="section">
+//     <div class="section-title">Transaction Info</div>
+//     <div class="grid">
+//       <div class="field"><label>Beneficiary</label><p>${transaction.beneficiary}</p></div>
+//       <div class="field"><label>Type</label><p>${transaction.type === "BULK" ? `Bulk (${transaction.bulkCount})` : "Single"}</p></div>
+//       <div class="field"><label>Purpose</label><p>${transaction.purpose || "—"}</p></div>
+//       <div class="field"><label>Submitted</label><p>${transaction.date}</p></div>
+//       ${transaction.processedDate ? `<div class="field"><label>Processed</label><p>${transaction.processedDate}</p></div>` : ""}
+//       <div class="field"><label>Status</label><p>${status.label}</p></div>
+//     </div>
+//   </div>
+
+//   <div class="section">
+//     <div class="section-title">Branch & Business</div>
+//     <div class="grid">
+//       <div class="field"><label>Branch Name</label><p>${transaction.branchName || "—"}</p></div>
+//       <div class="field"><label>Business ID</label><p>${transaction.businessId || "—"}</p></div>
+//       <div class="field"><label>Business Name</label><p class="mono">${transaction.businessName || "—"}</p></div>
+//       <div class="field"><label>Beneficiary Name</label><p class="mono">${transaction.beneficiaryName || "—"}</p></div>
+//     </div>
+//   </div>
+
+//   <div class="section">
+//     <div class="section-title">Financial Details</div>
+//     <div class="grid">
+//       <div class="field"><label>Exchange Rate</label><p>1 ${transaction.currency.toUpperCase()} = ${transaction.exchangeRate} ${transaction.localCurrency}</p></div>
+//       <div class="field"><label>Fee</label><p>AED ${transaction.fees}${transaction.feeResponsibility ? ` (Paid by: ${transaction.feeResponsibility})` : ""}</p></div>
+//       <div class="field"><label>Discount %</label><p>${transaction.discountValue}</p></div>
+//       <div class="field"><label>Discount Amount</label><p>${transaction.discountAmount === "0.00" ? "—" : `AED ${transaction.discountAmount}`}</p></div>
+//       ${transaction.failureReason ? `<div class="field" style="grid-column:span 2"><label>Failure Reason</label><p class="failure">${transaction.failureReason}</p></div>` : ""}
+//     </div>
+//   </div>
+
+//   <div class="footer">
+//     <p>This is an auto-generated receipt. Please retain for your records.<br/>Generated on ${new Date().toLocaleString()}</p>
+//   </div>
+// </div>
+// <script>window.onload = () => { window.print(); }</script>
+// </body>
+// </html>`;
+
+//   const win = window.open("", "_blank", "width=800,height=900");
+//   if (win) {
+//     win.document.write(html);
+//     win.document.close();
+//   }
+// };
+
+const handleDownloadReceipt = (transaction: any) => {
+  const html = `
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Receipt – ${transaction.referenceNumber}</title>
+  <title>Receipt - ${transaction.referenceNumber}</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
-    .receipt { max-width: 680px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 32px 36px; }
-    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
-    .header p { font-size: 13px; color: #a0aec0; margin-top: 4px; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); color: #fff; margin-top: 10px; }
-    .amount-block { background: #f8fafc; padding: 24px 36px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-    .amount-block .main { font-size: 28px; font-weight: 800; color: #0f3460; }
-    .amount-block .sub { font-size: 14px; color: #64748b; margin-top: 4px; }
-    .amount-block .right { text-align: right; }
-    .section { padding: 20px 36px; border-bottom: 1px solid #f1f5f9; }
-    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 14px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
-    .field label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 3px; }
-    .field p { font-size: 13px; font-weight: 600; color: #1e293b; }
-    .field p.mono { font-family: 'Courier New', monospace; font-size: 12px; }
-    .failure { color: #dc2626 !important; }
-    .footer { padding: 20px 36px; background: #f8fafc; text-align: center; }
-    .footer p { font-size: 11px; color: #94a3b8; line-height: 1.6; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #000;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .link {
+      font-size: 12px;
+      color: blue;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .logo-section {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .company-info {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+
+    .duplicate {
+      text-align: right;
+      font-weight: bold;
+      color: gray;
+    }
+
+    .section {
+      margin-top: 10px;
+    }
+
+    .flex {
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    .box {
+      width: 48%;
+    }
+
+    .label {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 5px;
+    }
+
+    .row {
+      margin: 2px 0;
+    }
+
+    .amount {
+      text-align: right;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      font-size: 12px;
+    }
+
     @media print {
       body { padding: 0; }
-      .receipt { border: none; border-radius: 0; max-width: 100%; }
     }
   </style>
 </head>
+
 <body>
-<div class="receipt">
+
+<div class="container">
+
+  <!-- Top -->
+  <div class="top-bar">
+    <div class="link" onclick="window.print()">Print</div>
+    <div class="link" onclick="window.close()">Close</div>
+  </div>
+
+  <!-- Header -->
   <div class="header">
-    <h1>Payment Receipt</h1>
-    <p>Transaction Reference: ${transaction.referenceNumber}</p>
-    <span class="badge">${status.label}</span>
+    <div class="logo-section">
+      <div class="logo">WorkerAppz</div>
+      <div class="company-info">
+        ${transaction.branchName || ""}<br/>
+        ${transaction.businessName || ""}<br/>
+        Phone: ${transaction.phone || "-"}
+      </div>
+    </div>
+
+    <div class="duplicate">
+      DUPLICATE COPY<br/>
+      ${transaction.referenceNumber}
+    </div>
   </div>
 
-  <div class="amount-block">
-    <div>
-      <div class="main">${transaction.currency.toUpperCase()} ${transaction.amount}</div>
-      <div class="sub">${transaction.localCurrency} ${transaction.localAmount}</div>
-    </div>
-    <div class="right">
-      <div class="sub">Total Debit</div>
-      <div class="main" style="font-size:20px">AED ${transaction.totalDebit}</div>
-    </div>
-  </div>
+  <!-- Title -->
+  <div class="title">Bolt Remit Receipt - SWT</div>
 
+  <!-- Basic Info -->
   <div class="section">
-    <div class="section-title">Transaction Info</div>
-    <div class="grid">
-      <div class="field"><label>Beneficiary</label><p>${transaction.beneficiary}</p></div>
-      <div class="field"><label>Type</label><p>${transaction.type === "BULK" ? `Bulk (${transaction.bulkCount})` : "Single"}</p></div>
-      <div class="field"><label>Purpose</label><p>${transaction.purpose || "—"}</p></div>
-      <div class="field"><label>Submitted</label><p>${transaction.date}</p></div>
-      ${transaction.processedDate ? `<div class="field"><label>Processed</label><p>${transaction.processedDate}</p></div>` : ""}
-      <div class="field"><label>Status</label><p>${status.label}</p></div>
-    </div>
+    <div class="row"><b>Date:</b> ${transaction.date}</div>
+    <div class="row"><b>Registration No:</b> ${transaction.referenceNumber}</div>
+    <div class="row"><b>Purpose:</b> ${transaction.purpose || "-"}</div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Branch & Business</div>
-    <div class="grid">
-      <div class="field"><label>Branch Name</label><p>${transaction.branchName || "—"}</p></div>
-      <div class="field"><label>Business ID</label><p>${transaction.businessId || "—"}</p></div>
-      <div class="field"><label>Business Name</label><p class="mono">${transaction.businessName || "—"}</p></div>
-      <div class="field"><label>Beneficiary Name</label><p class="mono">${transaction.beneficiaryName || "—"}</p></div>
+  <!-- Main Content -->
+  <div class="flex section">
+
+    <!-- LEFT SIDE -->
+    <div class="box">
+      <div class="label">Remitter Details</div>
+      <div class="row"><b>Name:</b> ${transaction.businessName}</div>
+      <div class="row"><b>Phone:</b> ${transaction.phone || "-"}</div>
+      <div class="row"><b>Address:</b> ${transaction.address || "-"}</div>
+
+      <div class="label">Bank Details</div>
+      <div class="row"><b>Account:</b> ${transaction.accountNumber || "-"}</div>
+      <div class="row"><b>Bank:</b> ${transaction.bankName || "-"}</div>
+      <div class="row"><b>Branch:</b> ${transaction.branchName || "-"}</div>
     </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="box">
+      <div class="label">Beneficiary Details</div>
+      <div class="row"><b>Name:</b> ${transaction.beneficiaryName}</div>
+      <div class="row"><b>Phone:</b> ${transaction.beneficiaryPhone || "-"}</div>
+      <div class="row"><b>Address:</b> ${transaction.beneficiaryAddress || "-"}</div>
+
+      <div class="label">Payment Details</div>
+      <div class="row amount">PayIn Amount: ${transaction.amount} ${transaction.currency}</div>
+      <div class="row amount">Charges: ${transaction.fees}</div>
+      <div class="row amount">VAT: 0</div>
+      <div class="row amount"><b>Total Payable: ${transaction.totalDebit}</b></div>
+      <div class="row amount">Exchange Rate: ${transaction.exchangeRate}</div>
+      <div class="row amount"><b>Payout Amount: ${transaction.localAmount} ${transaction.localCurrency}</b></div>
+    </div>
+
   </div>
 
-  <div class="section">
-    <div class="section-title">Financial Details</div>
-    <div class="grid">
-      <div class="field"><label>Exchange Rate</label><p>1 ${transaction.currency.toUpperCase()} = ${transaction.exchangeRate} ${transaction.localCurrency}</p></div>
-      <div class="field"><label>Fee</label><p>AED ${transaction.fees}${transaction.feeResponsibility ? ` (Paid by: ${transaction.feeResponsibility})` : ""}</p></div>
-      <div class="field"><label>Discount %</label><p>${transaction.discountValue}</p></div>
-      <div class="field"><label>Discount Amount</label><p>${transaction.discountAmount === "0.00" ? "—" : `AED ${transaction.discountAmount}`}</p></div>
-      ${transaction.failureReason ? `<div class="field" style="grid-column:span 2"><label>Failure Reason</label><p class="failure">${transaction.failureReason}</p></div>` : ""}
-    </div>
-  </div>
-
+  <!-- Footer -->
   <div class="footer">
-    <p>This is an auto-generated receipt. Please retain for your records.<br/>Generated on ${new Date().toLocaleString()}</p>
+    Thank you for using our service<br/>
+    Terms & Conditions Apply
   </div>
-</div>
-<script>window.onload = () => { window.print(); }</script>
-</body>
-</html>`;
 
-  const win = window.open("", "_blank", "width=800,height=900");
+  <!-- Signatures -->
+  <div class="signatures">
+    <div>Remitter Signature</div>
+    <div>Operator</div>
+    <div>Cashier</div>
+  </div>
+
+</div>
+
+<script>
+  window.onload = function() {
+    window.print();
+  }
+</script>
+
+</body>
+</html>
+`;
+
+  const win = window.open("", "_blank", "width=900,height=900");
+
   if (win) {
     win.document.write(html);
     win.document.close();
