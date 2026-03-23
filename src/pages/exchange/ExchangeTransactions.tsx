@@ -295,7 +295,7 @@ const ExchangeTransactions = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [fetchTransactions, transactionType, page]);
+  }, [transactionType, page]);
   // console.log("transitionData", transactions);
   // Filter transactions based on search
   const filteredTransactions = transactions.filter((transaction) => {

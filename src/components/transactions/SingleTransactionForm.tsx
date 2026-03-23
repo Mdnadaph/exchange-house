@@ -54,7 +54,6 @@ const SingleTransactionForm = ({
 }: SingleTransactionFormProps) => {
   const { toast } = useToast();
   const [selectedBeneficiary, setSelectedBeneficiary] = useState("");
-  console.log("selecetedBeneficiary", selectedBeneficiary);
   const [selectedSource, setSelectedSource] = useState("");
   const [transactionPurpose, setTransactionPurpose] = useState("");
   const [amount, setAmount] = useState("");
@@ -65,9 +64,11 @@ const SingleTransactionForm = ({
   const [open, setOpen] = useState(false);
   const [currencyListData, setCurrencyListData] = useState(null);
   const [beneficiariesList, setBeneficiariesList] = useState([]);
-
+  const [feeManagementData, setFeeManagementData] = useState([]);
   const [discountCode, setDiscountCode] = useState("");
-
+  const [receiverAmount, setReceiverAmount] = useState("");
+  const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
+    useState<any>(null);
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -293,10 +294,24 @@ const SingleTransactionForm = ({
       toast({ title: "Error", description: msg, variant: "destructive" });
     }
   };
+  const getFeeManagement = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v3/fees`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      setFeeManagementData(json?.data?.rules);
+    } catch (error) {
+      console.error("Error", error);
+    }
+  };
   useEffect(() => {
     getCurrency();
+    getFeeManagement();
   }, []);
-  console.log("currencyList", currencyListData);
   const getCurrencyName = () => {
     const currencyName = currencyListData?.data
       ?.find((currencyList: any) => currencyList?.id == currency)
@@ -325,8 +340,42 @@ const SingleTransactionForm = ({
   const getSelectedBeneficiriesData = beneficiariesList?.find(
     (beneficiaries: any) => beneficiaries?.id == selectedBeneficiary,
   );
-  console.log("getSlee", getSelectedBeneficiriesData);
 
+  const singleTransationFeeManagementData = feeManagementData?.filter(
+    (fee: any) => fee?.transactionType == "SINGLE",
+  );
+
+  const beneficiariyCurrency = currencyListData?.data?.find(
+    (currency: any) =>
+      currency?.name == getSelectedBeneficiriesData?.currency.toLowerCase(),
+  );
+  useEffect(() => {
+    setCurrency(beneficiariyCurrency?.id);
+  }, [beneficiariyCurrency]);
+  useEffect(() => {
+    setReceiverAmount(String(Number(amount) * beneficiariyCurrency?.rate));
+  }, [amount, beneficiariyCurrency?.rate]);
+  useEffect(() => {
+    const fee = singleTransationFeeManagementData?.filter(
+      (fee: any) => fee?.countryId === getSelectedBeneficiriesData?.countryId,
+    );
+    const range = fee?.find(
+      (fee: any) =>
+        Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
+    );
+    setSelectedBeneficiaryFee(range);
+    if (amount == "" || fee?.length == 0) {
+      setSelectedBeneficiaryFee(null);
+    }
+  }, [amount]);
+
+  const fee = singleTransationFeeManagementData?.filter(
+    (fee: any) => fee?.countryId === getSelectedBeneficiriesData?.countryId,
+  );
+  const range = fee?.find(
+    (fee: any) =>
+      Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
+  );
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -551,22 +600,34 @@ const SingleTransactionForm = ({
                         id="amount"
                         type="number"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setAmount(value);
+                          setReceiverAmount(
+                            String(Number(value) * beneficiariyCurrency?.rate),
+                          );
+                        }}
                         placeholder="0.00"
                         step="0.01"
                       />
                     </div>
                     <div>
                       <h5 className="text-center">Receiver</h5>
-                      <Label htmlFor="amount">
+                      <Label htmlFor="receiverAmount">
                         Amount{" "}
                         {`(${getSelectedBeneficiriesData?.currency ? getSelectedBeneficiriesData?.currency : "USD"})`}
                       </Label>
                       <Input
-                        id="amount"
+                        id="receiverAmount"
                         type="number"
-                        // value={amount}
-                        // onChange={(e) => setAmount(e.target.value)}
+                        value={receiverAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setReceiverAmount(value);
+                          setAmount(
+                            String(Number(value) / beneficiariyCurrency?.rate),
+                          );
+                        }}
                         placeholder="0.00"
                         step="0.01"
                       />
@@ -587,7 +648,11 @@ const SingleTransactionForm = ({
 
                   <div>
                     <Label htmlFor="currency">Currency *</Label>
-                    <Select value={currency} onValueChange={setCurrency}>
+                    <Select
+                      value={currency}
+                      onValueChange={setCurrency}
+                      disabled
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
@@ -667,6 +732,39 @@ const SingleTransactionForm = ({
                 )}
               </CardContent>
             </Card>
+            {/*Fee Management */}
+            {selectedBeneficiaryFee && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Fee Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>Country: {selectedBeneficiaryFee?.countryName}</div>
+                    <div>
+                      Fee Type:{" "}
+                      {selectedBeneficiaryFee?.feeType
+                        ?.charAt(0)
+                        .toUpperCase() +
+                        selectedBeneficiaryFee?.feeType?.slice(1).toLowerCase()}
+                    </div>
+                    <div>Fee: {selectedBeneficiaryFee?.feeValue}</div>
+                    <div>
+                      Status:{" "}
+                      {selectedBeneficiaryFee?.status?.charAt(0).toUpperCase() +
+                        selectedBeneficiaryFee?.status
+                          ?.slice(1)
+                          .toLowerCase()}{" "}
+                    </div>
+                    <div>Min Amount: {selectedBeneficiaryFee?.minAmount} </div>
+                    <div>Max Amount: {selectedBeneficiaryFee?.maxAmount} </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Document Upload */}
             <Card>

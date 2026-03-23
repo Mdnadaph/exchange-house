@@ -52,6 +52,7 @@ interface BusinessProfile {
   supportedCurrencies: string[];
   createdDate: string;
   createdBy: string;
+  profileImage: File;
 }
 
 interface Document {
@@ -109,6 +110,7 @@ const UserProfile = () => {
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>({
     id: 0,
     companyName: "",
+    profileImage: undefined,
     legalForm: "",
     businessType: "",
     tradeLicense: "",
@@ -132,7 +134,6 @@ const UserProfile = () => {
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [documentNumber, setDocumentNumber] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
 
@@ -265,6 +266,7 @@ const UserProfile = () => {
           supportedCurrencies: data?.supportedCurrencies || [],
           createdDate: data?.createdDate || "",
           createdBy: data?.createdBy || "",
+          profileImage: data?.profileUrl || "",
         });
       } catch (error) {
         toast({
@@ -503,14 +505,18 @@ const UserProfile = () => {
         businessPhone: businessProfile.businessPhone,
         businessAddress: businessAddress,
       };
-
+      const formData = new FormData();
+      const payloadBlob = new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      });
+      formData.append("data", payloadBlob);
+      formData.append("logo", businessProfile?.profileImage);
       const response = await axios.put(
         `${BASE_URL}/api/v3/business/${id}`,
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         },
       );
@@ -645,10 +651,10 @@ const UserProfile = () => {
       setProfileImage(imageUrl);
 
       // optional: store file in your main state
-      // setBusinessProfile({
-      //   ...businessProfile,
-      //   profileImage: file,
-      // });
+      setBusinessProfile({
+        ...businessProfile,
+        profileImage: file,
+      });
     }
   };
   if (isLoading) {

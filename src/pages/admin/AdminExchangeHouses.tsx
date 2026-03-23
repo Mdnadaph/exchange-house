@@ -175,7 +175,7 @@ const AdminExchangeHouses = () => {
     const fetchStaticData = async () => {
       try {
         const [countriesRes, plansRes] = await Promise.all([
-          axios.get(`${BASE_URL}/api/v3/super/exchange-admins/country`, {
+          axios.get(`${BASE_URL}/api/v3/config/countries`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${BASE_URL}/api/v3/super/exchange-admins/plans`, {
@@ -1208,17 +1208,17 @@ const AdminExchangeHouses = () => {
                                   "pending" ? (
                                 <div>
                                   <DropdownMenuItem
-                                  className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
-                                  onClick={() => {
-                                    setSelectedHouseId(admin.id);
-                                    setActivateDialogOpen(true);
-                                  }}
-                                >
-                                  <Power
-                                    className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
-                                  />
-                                  {t("activateExchangeHouse")}
-                                </DropdownMenuItem>
+                                    className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
+                                    onClick={() => {
+                                      setSelectedHouseId(admin.id);
+                                      setActivateDialogOpen(true);
+                                    }}
+                                  >
+                                    <Power
+                                      className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                    />
+                                    {t("activateExchangeHouse")}
+                                  </DropdownMenuItem>
                                 </div>
                               ) : null}
                               <DropdownMenuItem

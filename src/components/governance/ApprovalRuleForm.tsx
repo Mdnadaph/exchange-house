@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
+import axios from "axios";
 
 interface ApprovalRuleFormProps {
   trigger?: React.ReactNode;
@@ -59,12 +60,12 @@ const ApprovalRuleForm = ({
       { level: 1, threshold: "", approvers: 1, roles: [] },
     ],
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [currencies, setCurrencies] = useState([]);
   const clearFieldError = (field: string) => {
     setErrors((prev) => {
       const next = { ...prev };
@@ -102,7 +103,21 @@ const ApprovalRuleForm = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  const currencies = ["USD", "AED", "EUR", "GBP", "INR", "PKR", "PHP", "ANY"];
+  const fetchCurrency = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v1/payout/config?`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setCurrencies(res?.data?.data?.countries);
+    } catch (error) {
+      console.error("error", error);
+    }
+  };
+  useEffect(() => {
+    fetchCurrency();
+  }, []);
+
   const departments = [
     "All",
     "Finance",
@@ -227,6 +242,7 @@ const ApprovalRuleForm = ({
       ),
       approvalTiers: formData.tiers.map((tier) => ({
         tierOrder: tier.level,
+        userTier: `TIER_${tier.level}`,
         thresholdAmount: Number(tier.threshold) || 0,
         approversRequired: Number(tier.approvers),
         eligibleRoles: tier.roles.map((r) =>
@@ -399,8 +415,8 @@ const ApprovalRuleForm = ({
                     </SelectTrigger>
                     <SelectContent>
                       {currencies.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
+                        <SelectItem key={c?.id} value={c?.currency}>
+                          {c?.countryName}({c?.currency})
                         </SelectItem>
                       ))}
                     </SelectContent>
