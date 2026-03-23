@@ -326,7 +326,7 @@ const BranchTransactions = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [fetchTransactions, token, transactionType, page]);
+  }, [token, transactionType, page]);
   const filteredTransactions = transactions.filter((transaction) => {
     return (
       searchTerm === "" ||
