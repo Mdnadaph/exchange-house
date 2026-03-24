@@ -18,7 +18,6 @@ import {
   Landmark,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
-
 interface AdminLayoutProps {
   children: React.ReactNode;
 }

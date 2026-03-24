@@ -546,7 +546,7 @@ const BeneficiaryRegistrationForm = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Card
+              {/* <Card
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   residencyType === "uae"
                     ? "ring-2 ring-primary bg-primary/5"
@@ -570,7 +570,7 @@ const BeneficiaryRegistrationForm = ({
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
 
               <Card
                 className={`cursor-pointer transition-all hover:shadow-md ${
