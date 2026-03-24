@@ -226,7 +226,7 @@ const ApprovalRuleForm = ({
 
     const payload = {
       ruleName: formData.name.trim(),
-      currency: formData.currency,
+      currencyId: formData.currency,
       description: formData.description.trim(),
       minAmount: formData.minAmount ? Number(formData.minAmount) : 0,
       maxAmount: formData.maxAmount ? Number(formData.maxAmount) : 1000000,
@@ -315,7 +315,7 @@ const ApprovalRuleForm = ({
       setFormData({
         name: editRule.name || "",
         description: editRule.description || "",
-        currency: editRule.currency || "USD",
+        currency: editRule.currencyId || "USD",
         minAmount: editRule.minAmount?.toString() || "",
         maxAmount: editRule.maxAmount?.toString() || "",
         department: editRule.department || "All",
@@ -415,7 +415,7 @@ const ApprovalRuleForm = ({
                     </SelectTrigger>
                     <SelectContent>
                       {currencies.map((c) => (
-                        <SelectItem key={c?.id} value={c?.currency}>
+                        <SelectItem key={c?.id} value={c?.id}>
                           {c?.countryName}({c?.currency})
                         </SelectItem>
                       ))}
@@ -445,6 +445,7 @@ const ApprovalRuleForm = ({
                   <Input
                     type="number"
                     value={formData.minAmount}
+                    onWheel={(e) => e.currentTarget.blur()}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -459,6 +460,7 @@ const ApprovalRuleForm = ({
                   <Input
                     type="number"
                     value={formData.maxAmount}
+                    onWheel={(e) => e.currentTarget.blur()}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -534,7 +536,12 @@ const ApprovalRuleForm = ({
                   <Users className="h-5 w-5" />
                   Approval Tiers
                 </CardTitle>
-                <Button variant="outline" size="sm" onClick={addTier}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addTier}
+                  disabled={formData?.tiers?.length == 3}
+                >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Tier
                 </Button>
@@ -592,6 +599,7 @@ const ApprovalRuleForm = ({
                                 : ""
                             }
                             placeholder="Enter threshold amount"
+                            onWheel={(e) => e.currentTarget.blur()}
                           />
                           {errors[`tier-${index}-threshold`]?.map((msg, i) => (
                             <p

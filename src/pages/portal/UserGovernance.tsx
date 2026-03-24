@@ -91,6 +91,7 @@ const UserGovernance = () => {
             name: r.ruleName,
             description: r.description,
             currency: r.currency,
+            currencyId: r.currencyId,
             minAmount: r.minAmount,
             maxAmount: r.maxAmount,
             department: r.department
