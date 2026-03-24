@@ -57,7 +57,28 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+type ComplianceFormData = {
+  highRiskCountries: string[];
+  prohibitedCountries: string[];
+  enhancedMonitoringCountries: string[];
 
+  realTimeSanctionsCheck: boolean;
+  pepDatabaseScreening: boolean;
+  adverseMediaMonitoring: boolean;
+  enhancedDueDiligence: boolean;
+
+  sanctionsListUpdate: string;
+  pepDatabaseRefresh: string;
+  adverseMediaCheck: string;
+
+  largeTransactionThreshold?: number;
+  suspiciousActivityReports: boolean;
+  monthlyStatisticalReturns: boolean;
+
+  complianceOfficerAlerts: string;
+  auditTrailRetentionYears?: number;
+  managementReports: string;
+};
 const ExchangeComplianceConfig = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
@@ -85,15 +106,25 @@ const ExchangeComplianceConfig = () => {
   const [createErrors, setCreateErrors] = useState<{ [key: string]: string }>(
     {},
   );
-  const [countryRiskFormData, setCountryRiskFormData] = useState<{
-    highRiskCountries: string[];
-    prohibitedCountries: string[];
-    enhancedMonitoringCountries: string[];
-  }>({
-    highRiskCountries: [],
-    prohibitedCountries: [],
-    enhancedMonitoringCountries: [],
-  });
+  const [complianceFormData, setComplianceFormData] =
+    useState<ComplianceFormData>({
+      highRiskCountries: [],
+      prohibitedCountries: [],
+      enhancedMonitoringCountries: [],
+      realTimeSanctionsCheck: false,
+      pepDatabaseScreening: false,
+      adverseMediaMonitoring: false,
+      enhancedDueDiligence: false,
+      sanctionsListUpdate: "",
+      pepDatabaseRefresh: "",
+      adverseMediaCheck: "",
+      largeTransactionThreshold: undefined,
+      suspiciousActivityReports: false,
+      monthlyStatisticalReturns: false,
+      complianceOfficerAlerts: "",
+      auditTrailRetentionYears: undefined,
+      managementReports: "",
+    });
   const [countriesRiskData, setCountriesRiskData] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(false);
   const clearFormError = (field: string) => {
@@ -361,9 +392,9 @@ const ExchangeComplianceConfig = () => {
       }
     );
   };
-  const getCountryRiskData = async () => {
+  const getComplianceData = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/compliance/country-risk`, {
+      const res = await fetch(`${BASE_URL}/api/v1/compliance/config`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -375,23 +406,23 @@ const ExchangeComplianceConfig = () => {
       console.error("error", error);
     }
   };
-  const handleCountryRiskConfiguration = async () => {
+  const handleComplianceConfiguration = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/compliance/country-risk${countriesRiskData?.id ? `/${countriesRiskData?.id}` : ""}`,
+        `${BASE_URL}/api/v1/compliance/config${countriesRiskData?.id ? `/${countriesRiskData?.id}` : ""}`,
         {
           method: countriesRiskData?.id ? "PUT" : "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(countryRiskFormData),
+          body: JSON.stringify(complianceFormData),
         },
       );
       const responseData = await res.json();
 
-      getCountryRiskData();
+      getComplianceData();
       if (responseData?.status) {
         toast({
           title: "Success",
@@ -420,15 +451,39 @@ const ExchangeComplianceConfig = () => {
   };
 
   useEffect(() => {
-    getCountryRiskData();
+    getComplianceData();
   }, []);
   useEffect(() => {
-    setCountryRiskFormData({
-      prohibitedCountries: countriesRiskData?.prohibitedCountries,
-      enhancedMonitoringCountries:
-        countriesRiskData?.enhancedMonitoringCountries,
-      highRiskCountries: countriesRiskData?.highRiskCountries,
-    });
+    if (!countriesRiskData) return;
+
+    const data = countriesRiskData as ComplianceFormData;
+
+    setComplianceFormData((prev) => ({
+      ...prev,
+
+      highRiskCountries: data.highRiskCountries ?? [],
+      prohibitedCountries: data.prohibitedCountries ?? [],
+      enhancedMonitoringCountries: data.enhancedMonitoringCountries ?? [],
+
+      realTimeSanctionsCheck: data.realTimeSanctionsCheck ?? false,
+      pepDatabaseScreening: data.pepDatabaseScreening ?? false,
+      adverseMediaMonitoring: data.adverseMediaMonitoring ?? false,
+      enhancedDueDiligence: data.enhancedDueDiligence ?? false,
+
+      sanctionsListUpdate: data.sanctionsListUpdate ?? "",
+      pepDatabaseRefresh: data.pepDatabaseRefresh ?? "",
+      adverseMediaCheck: data.adverseMediaCheck ?? "",
+
+      largeTransactionThreshold: data.largeTransactionThreshold ?? undefined,
+
+      suspiciousActivityReports: data.suspiciousActivityReports ?? false,
+      monthlyStatisticalReturns: data.monthlyStatisticalReturns ?? false,
+
+      complianceOfficerAlerts: data.complianceOfficerAlerts ?? "",
+      auditTrailRetentionYears: data.auditTrailRetentionYears ?? undefined,
+
+      managementReports: data.managementReports ?? "",
+    }));
   }, [countriesRiskData]);
   return (
     <ExchangeLayout>
@@ -1055,7 +1110,15 @@ const ExchangeComplianceConfig = () => {
                         Screen against global sanctions lists
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch
+                      checked={complianceFormData?.realTimeSanctionsCheck}
+                      onCheckedChange={(checked) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          realTimeSanctionsCheck: checked,
+                        }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
@@ -1066,7 +1129,15 @@ const ExchangeComplianceConfig = () => {
                         Check politically exposed persons
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch
+                      checked={complianceFormData?.pepDatabaseScreening}
+                      onCheckedChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          pepDatabaseScreening: value,
+                        }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
@@ -1077,7 +1148,15 @@ const ExchangeComplianceConfig = () => {
                         Monitor negative news and events
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch
+                      checked={complianceFormData?.adverseMediaMonitoring}
+                      onCheckedChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          adverseMediaMonitoring: value,
+                        }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
@@ -1088,7 +1167,15 @@ const ExchangeComplianceConfig = () => {
                         Additional checks for high-risk entities
                       </p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch
+                      checked={complianceFormData?.enhancedDueDiligence}
+                      onCheckedChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          enhancedDueDiligence: value,
+                        }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -1102,41 +1189,65 @@ const ExchangeComplianceConfig = () => {
                     <Label htmlFor="sanctions-frequency">
                       Sanctions List Update
                     </Label>
-                    <Select defaultValue="daily">
+                    <Select
+                      value={complianceFormData?.sanctionsListUpdate}
+                      onValueChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          sanctionsListUpdate: value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select sanctions update" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="realtime">Real-time</SelectItem>
-                        <SelectItem value="hourly">Hourly</SelectItem>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="REAL_TIME">Real-time</SelectItem>
+                        <SelectItem value="HOURLY">Hourly</SelectItem>
+                        <SelectItem value="DAILY">Daily</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pep-frequency">PEP Database Refresh</Label>
-                    <Select defaultValue="weekly">
+                    <Select
+                      value={complianceFormData?.pepDatabaseRefresh}
+                      onValueChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          pepDatabaseRefresh: value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select PEP Database Refresh" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="DAILY">Daily</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="media-frequency">Adverse Media Check</Label>
-                    <Select defaultValue="weekly">
+                    <Select
+                      value={complianceFormData?.adverseMediaCheck}
+                      onValueChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          adverseMediaCheck: value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select adverse media check" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="DAILY">Daily</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1228,8 +1339,8 @@ const ExchangeComplianceConfig = () => {
                       className="w-full justify-start text-left font-normal"
                     >
                       <Globe className="mr-2 h-4 w-4 shrink-0" />
-                      {countryRiskFormData?.highRiskCountries?.length > 0
-                        ? `${countryRiskFormData?.highRiskCountries?.length} country(s) selected`
+                      {complianceFormData?.highRiskCountries?.length > 0
+                        ? `${complianceFormData?.highRiskCountries?.length} country(s) selected`
                         : "Select high risk countries..."}
                     </Button>
                   </PopoverTrigger>
@@ -1241,14 +1352,14 @@ const ExchangeComplianceConfig = () => {
                         <CommandGroup>
                           {countries?.map((country) => {
                             const isSelected =
-                              countryRiskFormData?.highRiskCountries?.includes(
+                              complianceFormData?.highRiskCountries?.includes(
                                 country?.isoCode,
                               );
                             return (
                               <CommandItem
                                 key={country?.id}
                                 onSelect={() => {
-                                  setCountryRiskFormData((prev) => {
+                                  setComplianceFormData((prev) => {
                                     const newCountries = isSelected
                                       ? prev.highRiskCountries.filter(
                                           (c) => c !== country?.isoCode,
@@ -1298,8 +1409,8 @@ const ExchangeComplianceConfig = () => {
                       className="w-full justify-start text-left font-normal"
                     >
                       <Globe className="mr-2 h-4 w-4 shrink-0" />
-                      {countryRiskFormData?.prohibitedCountries?.length > 0
-                        ? `${countryRiskFormData?.prohibitedCountries?.length} country(s) selected`
+                      {complianceFormData?.prohibitedCountries?.length > 0
+                        ? `${complianceFormData?.prohibitedCountries?.length} country(s) selected`
                         : "Select prohibited countries..."}
                     </Button>
                   </PopoverTrigger>
@@ -1311,14 +1422,14 @@ const ExchangeComplianceConfig = () => {
                         <CommandGroup>
                           {countries.map((country) => {
                             const isSelected =
-                              countryRiskFormData?.prohibitedCountries?.includes(
+                              complianceFormData?.prohibitedCountries?.includes(
                                 country?.isoCode,
                               );
                             return (
                               <CommandItem
                                 key={country?.id}
                                 onSelect={() => {
-                                  setCountryRiskFormData((prev) => {
+                                  setComplianceFormData((prev) => {
                                     const newCountries = isSelected
                                       ? prev.prohibitedCountries.filter(
                                           (c) => c !== country?.isoCode,
@@ -1368,9 +1479,9 @@ const ExchangeComplianceConfig = () => {
                       className="w-full justify-start text-left font-normal"
                     >
                       <Globe className="mr-2 h-4 w-4 shrink-0" />
-                      {countryRiskFormData?.enhancedMonitoringCountries
-                        ?.length > 0
-                        ? `${countryRiskFormData?.enhancedMonitoringCountries?.length} country(s) selected`
+                      {complianceFormData?.enhancedMonitoringCountries?.length >
+                      0
+                        ? `${complianceFormData?.enhancedMonitoringCountries?.length} country(s) selected`
                         : "Select countries..."}
                     </Button>
                   </PopoverTrigger>
@@ -1382,14 +1493,14 @@ const ExchangeComplianceConfig = () => {
                         <CommandGroup>
                           {countries.map((country) => {
                             const isSelected =
-                              countryRiskFormData?.enhancedMonitoringCountries?.includes(
+                              complianceFormData?.enhancedMonitoringCountries?.includes(
                                 country?.isoCode,
                               );
                             return (
                               <CommandItem
                                 key={country?.id}
                                 onSelect={() => {
-                                  setCountryRiskFormData((prev) => {
+                                  setComplianceFormData((prev) => {
                                     const newCountries = isSelected
                                       ? prev.enhancedMonitoringCountries.filter(
                                           (c) => c !== country?.isoCode,
@@ -1452,20 +1563,45 @@ const ExchangeComplianceConfig = () => {
                     <Input
                       id="large-transaction"
                       type="number"
-                      defaultValue="55000"
+                      value={complianceFormData?.largeTransactionThreshold}
+                      onChange={(e) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          largeTransactionThreshold: e.target.value,
+                        }))
+                      }
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="suspicious-activity">
                       Suspicious Activity Reports
                     </Label>
-                    <Switch id="suspicious-activity" defaultChecked />
+                    <Switch
+                      id="suspicious-activity"
+                      checked={complianceFormData?.suspiciousActivityReports}
+                      onCheckedChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          suspiciousActivityReports: value,
+                        }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="monthly-returns">
                       Monthly Statistical Returns
                     </Label>
-                    <Switch id="monthly-returns" defaultChecked />
+                    <Switch
+                      id="monthly-returns"
+                      checked={complianceFormData?.monthlyStatisticalReturns}
+                      onCheckedChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          monthlyStatisticalReturns: value,
+                        }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -1479,14 +1615,26 @@ const ExchangeComplianceConfig = () => {
                     <Label htmlFor="compliance-officer">
                       Compliance Officer Alerts
                     </Label>
-                    <Select defaultValue="immediate">
+                    <Select
+                      value={complianceFormData?.complianceOfficerAlerts}
+                      onValueChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          complianceOfficerAlerts: value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select compliance officer alerts" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="immediate">Immediate</SelectItem>
-                        <SelectItem value="daily">Daily Digest</SelectItem>
-                        <SelectItem value="weekly">Weekly Summary</SelectItem>
+                        <SelectItem value="IMMEDIATE">Immediate</SelectItem>
+                        <SelectItem value="DAILY_DIGEST">
+                          Daily Digest
+                        </SelectItem>
+                        <SelectItem value="WEEKLY_SUMMARY">
+                          Weekly Summary
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1500,20 +1648,36 @@ const ExchangeComplianceConfig = () => {
                       defaultValue="7"
                       min="5"
                       max="10"
+                      value={complianceFormData?.auditTrailRetentionYears}
+                      onChange={(e) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          auditTrailRetentionYears: e.target.value,
+                        }))
+                      }
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="management-reports">
                       Management Reports
                     </Label>
-                    <Select defaultValue="monthly">
+                    <Select
+                      value={complianceFormData?.managementReports}
+                      onValueChange={(value) =>
+                        setComplianceFormData((prev: any) => ({
+                          ...prev,
+                          managementReports: value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select management report" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                        <SelectItem value="QUARTERLY">Quarterly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1529,7 +1693,7 @@ const ExchangeComplianceConfig = () => {
           <Button variant="outline">Reset to Defaults</Button>
           <Button
             variant="business"
-            onClick={() => handleCountryRiskConfiguration()}
+            onClick={() => handleComplianceConfiguration()}
             disabled={loading}
           >
             <Save className="h-4 w-4 mr-2" />

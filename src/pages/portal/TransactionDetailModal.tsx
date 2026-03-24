@@ -331,13 +331,6 @@ const handleDownloadReceipt = (transaction: any) => {
 <body>
 
 <div class="container">
-
-  <!-- Top -->
-  <div class="top-bar">
-    <div class="link" onclick="window.print()">Print</div>
-    <div class="link" onclick="window.close()">Close</div>
-  </div>
-
   <!-- Header -->
   <div class="header">
     <div class="logo-section">
