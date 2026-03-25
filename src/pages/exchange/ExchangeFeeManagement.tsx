@@ -260,6 +260,8 @@ const ExchangeFeeManagement = () => {
   useEffect(() => {
     getPayoutCountryList();
   }, []);
+
+  
   const getCountriesData = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
@@ -503,7 +505,6 @@ const ExchangeFeeManagement = () => {
                       clearFormError("transactionType");
                     }}
                   >
-                    {" "}
                     {formErrors.transactionType && (
                       <p className="text-sm text-red-500 mt-1">
                         {formErrors.transactionType}
@@ -521,6 +522,7 @@ const ExchangeFeeManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div>
                   <Label>
                     Payout Country <span className="text-red-500">*</span>
@@ -549,6 +551,7 @@ const ExchangeFeeManagement = () => {
                     </p>
                   )}
                 </div>
+
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

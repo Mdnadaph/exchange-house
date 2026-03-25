@@ -106,6 +106,7 @@ const ExchangeComplianceConfig = () => {
   const [createErrors, setCreateErrors] = useState<{ [key: string]: string }>(
     {},
   );
+  const [payoutCountryData, setPayoutCountryData] = useState([]);
   const [complianceFormData, setComplianceFormData] =
     useState<ComplianceFormData>({
       highRiskCountries: [],
@@ -160,6 +161,28 @@ const ExchangeComplianceConfig = () => {
     if (!createForm.category) errors.category = "Category is required";
     return errors;
   };
+
+  const getPayoutCountryList = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/payout/config/beneficiary/enabled`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setPayoutCountryData(res?.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to payout country list",
+        description: "Could not sync with the server.",
+      });
+    }
+  };
+  useEffect(() => {
+    getPayoutCountryList();
+  }, []);
+
   const fetchCountries = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
@@ -182,6 +205,7 @@ const ExchangeComplianceConfig = () => {
       });
     }
   };
+
   const fetchRules = async (
     page: number,
     activeFilter: "all" | "active" | "inactive",
@@ -485,6 +509,14 @@ const ExchangeComplianceConfig = () => {
       managementReports: data.managementReports ?? "",
     }));
   }, [countriesRiskData]);
+
+  // Add this inside ExchangeComplianceConfig component
+  const getCountryName = (code: string): string => {
+    const country = payoutCountryData.find(
+      (c: any) => c?.countryCode === code || c?.isoCode === code,
+    );
+    return country ? country.countryName || country.name || code : code;
+  };
   return (
     <ExchangeLayout>
       <div className="space-y-6">
@@ -536,7 +568,7 @@ const ExchangeComplianceConfig = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>
-                        Transaction Type{" "}
+                        Transaction Type
                         <span className="text-destructive">*</span>
                       </Label>
                       <Select
@@ -563,43 +595,10 @@ const ExchangeComplianceConfig = () => {
                         </p>
                       )}
                     </div>
+
                     <div>
                       <Label>
-                        Payout Country{" "}
-                        <span className="text-destructive">*</span>
-                      </Label>
-                      <Select
-                        value={createForm.payoutCountry}
-                        onValueChange={(v) => {
-                          setCreateForm({ ...createForm, payoutCountry: v });
-                          clearFormError("payoutCountry");
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries.map((country) => (
-                            <SelectItem
-                              key={country.isoCode}
-                              value={country.isoCode}
-                            >
-                              {country.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {createErrors.payoutCountry && (
-                        <p className="text-sm text-destructive mt-1">
-                          {createErrors.payoutCountry}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>
-                        Threshold Amount{" "}
+                        Threshold Amount
                         <span className="text-destructive">*</span>
                       </Label>
                       <Input
@@ -609,7 +608,7 @@ const ExchangeComplianceConfig = () => {
                         onChange={(e) => {
                           setCreateForm({
                             ...createForm,
-                            thresholdAmount: parseFloat(e.target.value) || 0,
+                            thresholdAmount: parseFloat(e.target.value),
                           });
                           clearFormError("thresholdAmount");
                         }}
@@ -620,17 +619,71 @@ const ExchangeComplianceConfig = () => {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>
+                        Payout Country <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={createForm.payoutCountry}
+                        onValueChange={(v) => {
+                          // Find the selected country from payoutCountryData
+                          const selectedCountry = payoutCountryData.find(
+                            (c: any) => (c?.countryCode || c?.isoCode) === v,
+                          );
+
+                          // Auto-set currency using "payoutCurrency" from API
+                          const autoCurrency =
+                            selectedCountry?.payoutCurrency || "";
+
+                          setCreateForm({
+                            ...createForm,
+                            payoutCountry: v,
+                            currency: autoCurrency,
+                          });
+
+                          clearFormError("payoutCountry");
+                          if (autoCurrency) clearFormError("currency");
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {payoutCountryData?.map((c: any) => {
+                            const code = c?.countryCode || c?.isoCode || "";
+                            const name =
+                              c?.countryName || c?.name || "Unknown Country";
+                            return (
+                              <SelectItem key={c?.id || code} value={code}>
+                                {name} ({c?.payoutCurrency || ""})
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+
+                      {createErrors.payoutCountry && (
+                        <p className="text-sm text-destructive mt-1">
+                          {createErrors.payoutCountry}
+                        </p>
+                      )}
+                    </div>
+
                     <div>
                       <Label>
                         Currency <span className="text-destructive">*</span>
                       </Label>
                       <Input
+                        disabled
                         placeholder="AED"
                         value={createForm.currency}
                         onChange={(e) => {
                           setCreateForm({
                             ...createForm,
-                            currency: e.target.value,
+                            currency: e.target.value.toUpperCase(),
                           });
                           clearFormError("currency");
                         }}
@@ -963,31 +1016,7 @@ const ExchangeComplianceConfig = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>Payout Country</Label>
-                    <Select
-                      value={editForm.payoutCountry}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, payoutCountry: v })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {countries.map((country) => (
-                          <SelectItem
-                            key={country.isoCode}
-                            value={country.isoCode}
-                          >
-                            {country.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+
                   <div>
                     <Label>Threshold Amount</Label>
                     <Input
@@ -1002,17 +1031,62 @@ const ExchangeComplianceConfig = () => {
                       }
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Payout Country</Label>
+                    <Select
+                      value={editForm?.payoutCountry || ""}
+                      onValueChange={(v) => {
+                        const selectedCountry = payoutCountryData.find(
+                          (c: any) => (c?.countryCode || c?.isoCode) === v,
+                        );
+
+                        setEditForm({
+                          ...editForm,
+                          payoutCountry: v,
+                          currency:
+                            selectedCountry?.payoutCurrency ||
+                            editForm?.currency ||
+                            "",
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {payoutCountryData?.map((c: any) => {
+                          const code = c?.countryCode || c?.isoCode || "";
+                          const name =
+                            c?.countryName || c?.name || "Unknown Country";
+                          return (
+                            <SelectItem key={c?.id || code} value={code}>
+                              {name} ({c?.payoutCurrency || ""})
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div>
                     <Label>Currency</Label>
                     <Input
+                      disabled
                       placeholder="AED"
-                      value={editForm.currency || ""}
+                      value={editForm?.currency || ""}
                       onChange={(e) =>
-                        setEditForm({ ...editForm, currency: e.target.value })
+                        setEditForm({
+                          ...editForm,
+                          currency: e.target.value.toUpperCase(),
+                        })
                       }
                     />
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Action</Label>
