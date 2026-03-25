@@ -55,6 +55,10 @@ interface Transaction {
   discountAmount: string | String;
   beneficiaryName?: string;
   businessName?: string;
+
+  complianceRules?: any[];
+  complianceStatus?: string;
+  convertedAmount?: number;
 }
 
 interface TransactionDetailModalProps {
@@ -110,109 +114,6 @@ const getTypeColor = (type: string) => {
   };
   return colors[type] ?? "bg-gray-100 text-gray-800";
 };
-
-/** Generates and triggers a PDF download using the browser's print dialog */
-// const handleDownloadReceipt = (transaction: Transaction) => {
-//   const status = getStatusBadge(transaction.status);
-
-//   const html = `<!DOCTYPE html>
-// <html lang="en">
-// <head>
-//   <meta charset="UTF-8" />
-//   <title>Receipt – ${transaction.referenceNumber}</title>
-//   <style>
-//     * { box-sizing: border-box; margin: 0; padding: 0; }
-//     body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
-//     .receipt { max-width: 680px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-//     .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 32px 36px; }
-//     .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
-//     .header p { font-size: 13px; color: #a0aec0; margin-top: 4px; }
-//     .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); color: #fff; margin-top: 10px; }
-//     .amount-block { background: #f8fafc; padding: 24px 36px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-//     .amount-block .main { font-size: 28px; font-weight: 800; color: #0f3460; }
-//     .amount-block .sub { font-size: 14px; color: #64748b; margin-top: 4px; }
-//     .amount-block .right { text-align: right; }
-//     .section { padding: 20px 36px; border-bottom: 1px solid #f1f5f9; }
-//     .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 14px; }
-//     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
-//     .field label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 3px; }
-//     .field p { font-size: 13px; font-weight: 600; color: #1e293b; }
-//     .field p.mono { font-family: 'Courier New', monospace; font-size: 12px; }
-//     .failure { color: #dc2626 !important; }
-//     .footer { padding: 20px 36px; background: #f8fafc; text-align: center; }
-//     .footer p { font-size: 11px; color: #94a3b8; line-height: 1.6; }
-//     @media print {
-//       body { padding: 0; }
-//       .receipt { border: none; border-radius: 0; max-width: 100%; }
-//     }
-//   </style>
-// </head>
-// <body>
-// <div class="receipt">
-//   <div class="header">
-//     <h1>Payment Receipt</h1>
-//     <p>Transaction Reference: ${transaction.referenceNumber}</p>
-//     <span class="badge">${status.label}</span>
-//   </div>
-
-//   <div class="amount-block">
-//     <div>
-//       <div class="main">${transaction.currency.toUpperCase()} ${transaction.amount}</div>
-//       <div class="sub">${transaction.localCurrency} ${transaction.localAmount}</div>
-//     </div>
-//     <div class="right">
-//       <div class="sub">Total Debit</div>
-//       <div class="main" style="font-size:20px">AED ${transaction.totalDebit}</div>
-//     </div>
-//   </div>
-
-//   <div class="section">
-//     <div class="section-title">Transaction Info</div>
-//     <div class="grid">
-//       <div class="field"><label>Beneficiary</label><p>${transaction.beneficiary}</p></div>
-//       <div class="field"><label>Type</label><p>${transaction.type === "BULK" ? `Bulk (${transaction.bulkCount})` : "Single"}</p></div>
-//       <div class="field"><label>Purpose</label><p>${transaction.purpose || "—"}</p></div>
-//       <div class="field"><label>Submitted</label><p>${transaction.date}</p></div>
-//       ${transaction.processedDate ? `<div class="field"><label>Processed</label><p>${transaction.processedDate}</p></div>` : ""}
-//       <div class="field"><label>Status</label><p>${status.label}</p></div>
-//     </div>
-//   </div>
-
-//   <div class="section">
-//     <div class="section-title">Branch & Business</div>
-//     <div class="grid">
-//       <div class="field"><label>Branch Name</label><p>${transaction.branchName || "—"}</p></div>
-//       <div class="field"><label>Business ID</label><p>${transaction.businessId || "—"}</p></div>
-//       <div class="field"><label>Business Name</label><p class="mono">${transaction.businessName || "—"}</p></div>
-//       <div class="field"><label>Beneficiary Name</label><p class="mono">${transaction.beneficiaryName || "—"}</p></div>
-//     </div>
-//   </div>
-
-//   <div class="section">
-//     <div class="section-title">Financial Details</div>
-//     <div class="grid">
-//       <div class="field"><label>Exchange Rate</label><p>1 ${transaction.currency.toUpperCase()} = ${transaction.exchangeRate} ${transaction.localCurrency}</p></div>
-//       <div class="field"><label>Fee</label><p>AED ${transaction.fees}${transaction.feeResponsibility ? ` (Paid by: ${transaction.feeResponsibility})` : ""}</p></div>
-//       <div class="field"><label>Discount %</label><p>${transaction.discountValue}</p></div>
-//       <div class="field"><label>Discount Amount</label><p>${transaction.discountAmount === "0.00" ? "—" : `AED ${transaction.discountAmount}`}</p></div>
-//       ${transaction.failureReason ? `<div class="field" style="grid-column:span 2"><label>Failure Reason</label><p class="failure">${transaction.failureReason}</p></div>` : ""}
-//     </div>
-//   </div>
-
-//   <div class="footer">
-//     <p>This is an auto-generated receipt. Please retain for your records.<br/>Generated on ${new Date().toLocaleString()}</p>
-//   </div>
-// </div>
-// <script>window.onload = () => { window.print(); }</script>
-// </body>
-// </html>`;
-
-//   const win = window.open("", "_blank", "width=800,height=900");
-//   if (win) {
-//     win.document.write(html);
-//     win.document.close();
-//   }
-// };
 
 const handleDownloadReceipt = (transaction: any) => {
   const html = `
@@ -581,6 +482,49 @@ export default function TransactionDetailModal({
             </div>
           </section>
 
+          <Separator />
+
+          {/* compliance Rules */}
+          {/* compliance Rules */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+              compliance Rules
+            </p>
+
+            <div className="space-y-4">
+              {transaction.complianceRules &&
+              transaction.complianceRules.length > 0 ? (
+                transaction.complianceRules.map((rule: any, index: number) => (
+                  <div
+                    key={rule.ruleId || index}
+                    className="bg-muted/30 rounded-xl p-4"
+                  >
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <DetailField
+                        label="Rule Name"
+                        value={rule.ruleName || "—"}
+                      />
+                      <DetailField label="Rule ID" value={rule.ruleId} mono />
+                      <DetailField
+                        label="Threshold Amount"
+                        value={`${rule.thresholdAmount || 0} ${rule.currency || "USD"}`}
+                      />
+                      <DetailField label="Action" value={rule.action || "—"} />
+                      <DetailField label="Status" value={rule.status || "—"} />
+                      <DetailField label="Reason" value={rule.reason || "—"} />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-muted/30 rounded-xl p-6 text-center">
+                  <DetailField
+                    label="Compliance Rules"
+                    value="No rules triggered"
+                  />
+                </div>
+              )}
+            </div>
+          </section>
           <Separator />
 
           {/* Financial Details */}
