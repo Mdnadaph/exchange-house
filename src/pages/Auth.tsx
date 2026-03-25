@@ -47,6 +47,7 @@ const Auth: React.FC = () => {
     "passwordChangeToken",
     "tempUserType",
     "legalBusinessName",
+    "currencyCode",
   ]);
 
   const [showPassword, setShowPassword] = useState(false);
