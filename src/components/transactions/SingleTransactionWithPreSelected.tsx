@@ -69,9 +69,13 @@ const SingleTransactionWithPreselected = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [currencyListData, setCurrencyListData] = useState(null);
   const [beneficiariesList, setBeneficiariesList] = useState([]);
-
+  const [feeManagementData, setFeeManagementData] = useState([]);
+  const [receiverAmount, setReceiverAmount] = useState("");
   const [discountCode, setDiscountCode] = useState("");
-
+  const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
+    useState<any>(null);
+  const [transectionSummeryData, setTransectionSummeryData] =
+    useState<any>(null);
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -206,7 +210,13 @@ const SingleTransactionWithPreselected = ({
         }),
       );
   }, [open]);
-
+  const getSelectedBeneficiary = beneficiariesList?.find(
+    (beneficiaries: { id: number }) => beneficiaries?.id == beneficiaryId,
+  );
+  const beneficiariyCurrency = currencyListData?.data?.find(
+    (currency: any) =>
+      currency?.name == getSelectedBeneficiary?.currency.toLowerCase(),
+  );
   useEffect(() => {
     setSelectedBeneficiary(beneficiaryId?.toString());
   }, [beneficiaryId]);
@@ -224,7 +234,7 @@ const SingleTransactionWithPreselected = ({
       purposeCode: transactionPurpose,
       sourceAccountId: selectedSource,
       beneficiaryId: selectedBeneficiary,
-      amount: Number(amount),
+      amount: Number(receiverAmount),
       // discountCode: "",
       currencyId: currency,
       notes,
@@ -300,7 +310,22 @@ const SingleTransactionWithPreselected = ({
       toast({ title: "Error", description: msg, variant: "destructive" });
     }
   };
+  const getFeeManagement = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v3/fees`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      setFeeManagementData(json?.data?.rules);
+    } catch (error) {
+      console.error("Error", error);
+    }
+  };
   useEffect(() => {
+    getFeeManagement();
     getCurrency();
   }, []);
   const getCurrencyName = () => {
@@ -327,6 +352,84 @@ const SingleTransactionWithPreselected = ({
 
   const removeDocument = (index: number) => {
     setUploadedDocuments((prev) => prev.filter((_, i) => i !== index));
+  };
+  useEffect(() => {
+    setCurrency(beneficiariyCurrency?.id);
+  }, [beneficiariyCurrency]);
+
+  const singleTransationFeeManagementData = feeManagementData?.filter(
+    (fee: any) => fee?.transactionType == "SINGLE",
+  );
+  useEffect(() => {
+    const fee = singleTransationFeeManagementData?.filter(
+      (fee: any) => fee?.countryId === getSelectedBeneficiary?.countryId,
+    );
+    const range = fee?.find(
+      (fee: any) =>
+        Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
+    );
+    setSelectedBeneficiaryFee(range);
+    if (amount == "" || fee?.length == 0) {
+      setSelectedBeneficiaryFee(null);
+    }
+  }, [amount]);
+  const fee = singleTransationFeeManagementData?.filter(
+    (fee: any) => fee?.countryId === getSelectedBeneficiary?.countryId,
+  );
+  const range = fee?.find(
+    (fee: any) =>
+      Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
+  );
+  const handleTransationSummary = async () => {
+    const payload = {
+      purposeCode: transactionPurpose,
+      sourceAccountId: selectedSource,
+      beneficiaryId: selectedBeneficiary,
+      amount: Number(receiverAmount),
+      // discountCode: "",
+      currencyId: currency,
+      notes,
+      discountCode: discountCode.trim() || "",
+    };
+
+    const formData = new FormData();
+
+    // ✅ REQUIRED: data as JSON blob
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      }),
+    );
+
+    // ✅ documents
+    uploadedDocuments?.forEach((file) => {
+      formData.append("documents", file);
+    });
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/business/transactions/single/preview`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // ❌ DO NOT SET Content-Type
+          },
+        },
+      );
+      if (!res?.status) {
+        toast({
+          variant: "destructive",
+          title: res?.data?.message || "Transaction failed",
+        });
+      }
+      setTransectionSummeryData(res?.data?.data);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: err?.response?.data?.message || "Transaction failed",
+      });
+    }
   };
   return (
     <>
@@ -543,16 +646,53 @@ const SingleTransactionWithPreselected = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Amount *</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      step="0.01"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-2">
+                    <div>
+                      <h4 className="text-center">Sender</h4>
+                      <Label htmlFor="amount">Amount(AED) *</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setAmount(value);
+                          if (beneficiariyCurrency?.rate) {
+                            const result =
+                              Number(value) / beneficiariyCurrency?.rate;
+                            setReceiverAmount(String(result.toFixed(2)));
+                          }
+                          setTransectionSummeryData(null);
+                        }}
+                        placeholder="0.00"
+                        step="0.01"
+                        onWheel={(e) => e.currentTarget.blur()}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-center">Receiver</h4>
+                      <Label htmlFor="receiverAmount">
+                        Amount {getSelectedBeneficiary?.currency} *
+                      </Label>
+                      <Input
+                        id="receiverAmount"
+                        type="number"
+                        value={receiverAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setReceiverAmount(value);
+                          setTransectionSummeryData(null);
+                          if (beneficiariyCurrency?.rate) {
+                            const result =
+                              Number(value) * beneficiariyCurrency?.rate;
+                            setAmount(String(result?.toFixed(2)));
+                          }
+                        }}
+                        placeholder="0.00"
+                        step="0.01"
+                        onWheel={(e) => e.currentTarget.blur()}
+                      />
+                    </div>
                   </div>
 
                   {/* ← New: Discount Code */}
@@ -569,7 +709,11 @@ const SingleTransactionWithPreselected = ({
 
                   <div>
                     <Label htmlFor="currency">Currency *</Label>
-                    <Select value={currency} onValueChange={setCurrency}>
+                    <Select
+                      value={currency}
+                      onValueChange={setCurrency}
+                      disabled
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
@@ -589,7 +733,13 @@ const SingleTransactionWithPreselected = ({
                   </div>
                 </div>
 
-                {totals && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleTransationSummary()}
+                >
+                  View Transaction Summary
+                </Button>
+                {transectionSummeryData && amount && (
                   <Card className="bg-accent-muted/10 border-accent/20">
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-2 mb-3">
@@ -600,55 +750,151 @@ const SingleTransactionWithPreselected = ({
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Amount:</span>
+                          <span className="text-muted-foreground">
+                            PayIn Amount
+                          </span>
                           <p className="font-medium">
-                            {getCurrencyName()}{" "}
-                            {totals.originalAmount.toLocaleString()}
+                            {transectionSummeryData?.baseAedAmount?.toFixed(2)}
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
-                            Exchange Rate:
+                            Exchange Rate
                           </span>
                           <p className="font-medium">
-                            1 {getCurrencyName()} ={" "}
-                            {
-                              exchangeRates[
-                                currency as keyof typeof exchangeRates
-                              ]?.rate
-                            }{" "}
+                            1 AED ={" "}
+                            {(
+                              1 / transectionSummeryData?.exchangeRate
+                            )?.toFixed(2)}{" "}
+                            {transectionSummeryData?.currency}
+                          </p>
+                        </div>
+                        {transectionSummeryData?.businessFee >= 1 && (
+                          <div>
+                            <span className="text-muted-foreground">
+                              businessFee
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.businessFee?.toLocaleString()}{" "}
+                              AED
+                            </p>
+                          </div>
+                        )}
+                        {transectionSummeryData?.beneficiaryFee >= 1 && (
+                          <div>
+                            <span className="text-muted-foreground">
+                              Beneficiary Fee
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.beneficiaryFee?.toLocaleString()}{" "}
+                              AED
+                            </p>
+                          </div>
+                        )}
+
+                        <div>
+                          <span className="text-muted-foreground">
+                            Discount Amount
+                          </span>
+                          <p className="font-medium">
+                            {transectionSummeryData?.discountAmountAed} AED
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Total Payable
+                          </span>
+                          <p className="font-medium">
+                            {transectionSummeryData?.totalDebit?.toFixed(2)} AED
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Monthly Limit
+                          </span>
+                          <p className="font-medium">
+                            {transectionSummeryData?.monthlyLimit?.toFixed(2)}{" "}
                             AED
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
-                            AED Amount:
+                            Used Limit
                           </span>
                           <p className="font-medium">
-                            AED {totals.aedAmount.toLocaleString()}
+                            {transectionSummeryData?.currentMonthSpend?.toFixed(
+                              2,
+                            )}{" "}
+                            AED
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
+                            Remaining Limit
+                          </span>
+                          <p className="font-medium">
+                            {transectionSummeryData?.monthlyLimit?.toFixed(2) -
+                              transectionSummeryData?.currentMonthSpend?.toFixed(
+                                2,
+                              )}{" "}
+                            AED
+                          </p>
+                        </div>
+                        {/* <div>
+                          <span className="text-muted-foreground">
                             Processing Fee:
                           </span>
                           <p className="font-medium">AED {totals.fees}</p>
-                        </div>
+                        </div> */}
                       </div>
-                      <Separator className="my-3" />
-                      <div className="flex justify-between items-center">
+                      {/* <Separator className="my-3" /> */}
+                      {/* <div className="flex justify-between items-center">
                         <span className="font-medium text-foreground">
                           Total Debit from Source:
                         </span>
                         <span className="text-lg font-bold text-primary">
                           AED {totals.total.toLocaleString()}
                         </span>
-                      </div>
+                      </div> */}
                     </CardContent>
                   </Card>
                 )}
               </CardContent>
             </Card>
+
+            {/*Fee Management */}
+            {range && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Fee Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>Country: {selectedBeneficiaryFee?.countryName}</div>
+                    <div>
+                      Fee Type:{" "}
+                      {selectedBeneficiaryFee?.feeType
+                        ?.charAt(0)
+                        .toUpperCase() +
+                        selectedBeneficiaryFee?.feeType?.slice(1).toLowerCase()}
+                    </div>
+                    <div>Fee Amount: {selectedBeneficiaryFee?.feeValue}</div>
+                    <div>
+                      Status:{" "}
+                      {selectedBeneficiaryFee?.status?.charAt(0).toUpperCase() +
+                        selectedBeneficiaryFee?.status
+                          ?.slice(1)
+                          .toLowerCase()}{" "}
+                    </div>
+                    <div>Min Amount: {selectedBeneficiaryFee?.minAmount} </div>
+                    <div>Max Amount: {selectedBeneficiaryFee?.maxAmount} </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Document Upload */}
             <Card>
