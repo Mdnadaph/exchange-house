@@ -59,6 +59,8 @@ interface Transaction {
   complianceRules?: any[];
   complianceStatus?: string;
   convertedAmount?: number;
+
+   
 }
 
 interface TransactionDetailModalProps {
@@ -485,7 +487,6 @@ export default function TransactionDetailModal({
           <Separator />
 
           {/* compliance Rules */}
-          {/* compliance Rules */}
           <section>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
               compliance Rules
@@ -504,7 +505,7 @@ export default function TransactionDetailModal({
                         label="Rule Name"
                         value={rule.ruleName || "—"}
                       />
-                      <DetailField label="Rule ID" value={rule.ruleId} mono />
+                      {/* <DetailField label="Rule ID" value={rule.ruleId} /> */}
                       <DetailField
                         label="Threshold Amount"
                         value={`${rule.thresholdAmount || 0} ${rule.currency || "USD"}`}
