@@ -42,6 +42,7 @@ import {
   Trash2,
 } from "lucide-react";
 import axios from "axios";
+import { METHODS } from "http";
 
 interface SingleTransactionFormProps {
   trigger?: React.ReactNode;
@@ -70,6 +71,7 @@ const SingleTransactionForm = ({
   const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
     useState<any>(null);
   const [cookie] = useCookies(["token"]);
+  const [transectionSummeryData, setTransectionSummeryData] = useState<any>({});
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Mock data - would come from backend
@@ -218,7 +220,7 @@ const SingleTransactionForm = ({
       purposeCode: transactionPurpose,
       sourceAccountId: selectedSource,
       beneficiaryId: selectedBeneficiary,
-      amount: Number(amount),
+      amount: Number(receiverAmount),
       // discountCode: "",
       currencyId: currency,
       notes,
@@ -259,13 +261,13 @@ const SingleTransactionForm = ({
         toast({ title: "Transaction created successfully" });
       }
       refetch?.();
-
       setOpen(false);
       setShowConfirmation(false);
       setSelectedBeneficiary("");
       setSelectedSource("");
       setTransactionPurpose("");
       setAmount("");
+      setReceiverAmount("");
       setCurrency("");
       setUploadedDocuments([]);
       setNotes("");
@@ -306,6 +308,58 @@ const SingleTransactionForm = ({
       setFeeManagementData(json?.data?.rules);
     } catch (error) {
       console.error("Error", error);
+    }
+  };
+  const handleTransationSummary = async () => {
+    const payload = {
+      purposeCode: transactionPurpose,
+      sourceAccountId: selectedSource,
+      beneficiaryId: selectedBeneficiary,
+      amount: Number(receiverAmount),
+      // discountCode: "",
+      currencyId: currency,
+      notes,
+      discountCode: discountCode.trim() || "",
+    };
+
+    const formData = new FormData();
+
+    // ✅ REQUIRED: data as JSON blob
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      }),
+    );
+
+    // ✅ documents
+    uploadedDocuments?.forEach((file) => {
+      formData.append("documents", file);
+    });
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/business/transactions/single/preview`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // ❌ DO NOT SET Content-Type
+          },
+        },
+      );
+      if (!res?.status) {
+        toast({
+          variant: "destructive",
+          title: res?.data?.message || "Transaction failed",
+        });
+      }
+      console.log("transationSummary", res);
+      setTransectionSummeryData(res?.data?.data);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: err?.response?.data?.message || "Transaction failed",
+      });
     }
   };
   useEffect(() => {
@@ -352,9 +406,9 @@ const SingleTransactionForm = ({
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
-  useEffect(() => {
-    setReceiverAmount(String(Number(amount) * beneficiariyCurrency?.rate));
-  }, [amount, beneficiariyCurrency?.rate]);
+  // useEffect(() => {
+  //   setReceiverAmount(String(Number(amount) * beneficiariyCurrency?.rate));
+  // }, [amount, beneficiariyCurrency?.rate]);
   useEffect(() => {
     const fee = singleTransationFeeManagementData?.filter(
       (fee: any) => fee?.countryId === getSelectedBeneficiriesData?.countryId,
@@ -604,11 +658,12 @@ const SingleTransactionForm = ({
                           const value = e.target.value;
                           setAmount(value);
                           setReceiverAmount(
-                            String(Number(value) * beneficiariyCurrency?.rate),
+                            String(Number(value) / beneficiariyCurrency?.rate),
                           );
                         }}
                         placeholder="0.00"
                         step="0.01"
+                        onWheel={(e) => e.currentTarget.blur()}
                       />
                     </div>
                     <div>
@@ -625,11 +680,12 @@ const SingleTransactionForm = ({
                           const value = e.target.value;
                           setReceiverAmount(value);
                           setAmount(
-                            String(Number(value) / beneficiariyCurrency?.rate),
+                            String(Number(value) * beneficiariyCurrency?.rate),
                           );
                         }}
                         placeholder="0.00"
                         step="0.01"
+                        onWheel={(e) => e.currentTarget.blur()}
                       />
                     </div>
                   </div>
@@ -671,8 +727,13 @@ const SingleTransactionForm = ({
                     </Select>
                   </div>
                 </div>
-
-                {totals && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleTransationSummary()}
+                >
+                  View Transaction Summary
+                </Button>
+                {transectionSummeryData && (
                   <Card className="bg-accent-muted/10 border-accent/20">
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-2 mb-3">
@@ -683,57 +744,66 @@ const SingleTransactionForm = ({
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Amount:</span>
+                          <span className="text-muted-foreground">
+                            PayIn Amount
+                          </span>
                           <p className="font-medium">
-                            {getCurrencyName()}{" "}
-                            {totals.originalAmount.toLocaleString()}
+                            {transectionSummeryData?.baseAedAmount}
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
-                            Exchange Rate:
+                            Exchange Rate
                           </span>
                           <p className="font-medium">
-                            1 {getCurrencyName()} ={" "}
-                            {
-                              exchangeRates[
-                                currency as keyof typeof exchangeRates
-                              ]?.rate
-                            }{" "}
+                            1 AED ={" "}
+                            {(
+                              1 / transectionSummeryData?.exchangeRate
+                            )?.toFixed(4)}{" "}
+                            {transectionSummeryData?.currency}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-muted-foreground">
+                            businessFee
+                          </span>
+                          <p className="font-medium">
+                            {transectionSummeryData?.businessFee?.toLocaleString()}{" "}
                             AED
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
-                            AED Amount:
+                            Discount Amount
                           </span>
                           <p className="font-medium">
-                            AED {totals.aedAmount.toLocaleString()}
+                            {transectionSummeryData?.discountAmountAed} AED
                           </p>
                         </div>
-                        <div>
+                        {/* <div>
                           <span className="text-muted-foreground">
                             Processing Fee:
                           </span>
                           <p className="font-medium">AED {totals.fees}</p>
-                        </div>
+                        </div> */}
                       </div>
-                      <Separator className="my-3" />
-                      <div className="flex justify-between items-center">
+                      {/* <Separator className="my-3" /> */}
+                      {/* <div className="flex justify-between items-center">
                         <span className="font-medium text-foreground">
                           Total Debit from Source:
                         </span>
                         <span className="text-lg font-bold text-primary">
                           AED {totals.total.toLocaleString()}
                         </span>
-                      </div>
+                      </div> */}
                     </CardContent>
                   </Card>
                 )}
               </CardContent>
             </Card>
             {/*Fee Management */}
-            {selectedBeneficiaryFee && (
+            {range && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
