@@ -55,25 +55,65 @@ const roles = [
   { value: "compliance_officer", label: "Compliance Officer" },
 ];
 
-const departments = ["Finance", "Treasury", "Operations", "HR", "Procurement", "Compliance", "IT"];
+const departments = [
+  "Finance",
+  "Treasury",
+  "Operations",
+  "HR",
+  "Procurement",
+  "Compliance",
+  "IT",
+];
 const currencies = ["USD", "AED", "EUR", "GBP"];
 const tiers = ["TIER_1", "TIER_2", "TIER_3"];
 
 const allPermissions = [
-  { id: "create_transactions", label: "Create Transactions", category: "Transactions" },
-  { id: "approve_transactions", label: "Approve Transactions", category: "Transactions" },
-  { id: "manage_beneficiaries", label: "Manage Beneficiaries", category: "Beneficiaries" },
-  { id: "approve_beneficiaries", label: "Approve Beneficiaries", category: "Beneficiaries" },
+  {
+    id: "create_transactions",
+    label: "Create Transactions",
+    category: "Transactions",
+  },
+  {
+    id: "approve_transactions",
+    label: "Approve Transactions",
+    category: "Transactions",
+  },
+  {
+    id: "manage_beneficiaries",
+    label: "Manage Beneficiaries",
+    category: "Beneficiaries",
+  },
+  {
+    id: "approve_beneficiaries",
+    label: "Approve Beneficiaries",
+    category: "Beneficiaries",
+  },
   { id: "view_reports", label: "View Reports", category: "Reports" },
   { id: "export_reports", label: "Export Reports", category: "Reports" },
   { id: "manage_users", label: "Manage Users", category: "Administration" },
   { id: "manage_limits", label: "Manage Limits", category: "Administration" },
-  { id: "manage_compliance", label: "Manage Compliance", category: "Compliance" },
-  { id: "audit_transactions", label: "Audit Transactions", category: "Compliance" },
-  { id: "treasury_operations", label: "Treasury Operations", category: "Treasury" },
+  {
+    id: "manage_compliance",
+    label: "Manage Compliance",
+    category: "Compliance",
+  },
+  {
+    id: "audit_transactions",
+    label: "Audit Transactions",
+    category: "Compliance",
+  },
+  {
+    id: "treasury_operations",
+    label: "Treasury Operations",
+    category: "Treasury",
+  },
 ];
 
-const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => {
+const UserEditForm = ({
+  userId,
+  trigger,
+  onUserUpdated,
+}: UserEditFormProps) => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
@@ -96,7 +136,7 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
     reportingManager: "",
     tier: "",
     transactionLimit: "",
-    currency: "USD",
+    // currency: "USD",
     dailyLimit: "",
     monthlyLimit: "",
     permissions: [] as string[],
@@ -156,10 +196,12 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
         reportingManager: userData.reportingManager || "",
         tier: userData.tier || "",
         transactionLimit: userData.singleTransactionLimit?.toString() || "",
-        currency: userData.currency || "USD",
+        // currency: userData.currency || "USD",
         dailyLimit: userData.dailyLimit?.toString() || "",
         monthlyLimit: userData.monthlyLimit?.toString() || "",
-        permissions: (userData.permissions || []).map((p: string) => p.toLowerCase()),
+        permissions: (userData.permissions || []).map((p: string) =>
+          p.toLowerCase(),
+        ),
         requireTwoFactor: false,
         emailNotifications: true,
         mobileAccess: false,
@@ -179,25 +221,32 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
     const newErrors: Record<string, string[]> = {};
 
     if (step === 1) {
-      if (!formData.firstName.trim()) newErrors.firstName = ["First name is required"];
-      if (!formData.lastName.trim()) newErrors.lastName = ["Last name is required"];
+      if (!formData.firstName.trim())
+        newErrors.firstName = ["First name is required"];
+      if (!formData.lastName.trim())
+        newErrors.lastName = ["Last name is required"];
       if (!formData.email.trim()) {
         newErrors.email = ["Email is required"];
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = ["Invalid email format"];
       }
-      if (!formData.phone.trim()) newErrors.phoneNumber = ["Phone number is required"];
-      if (!formData.employeeId.trim()) newErrors.employeeId = ["Employee ID is required"];
+      if (!formData.phone.trim())
+        newErrors.phoneNumber = ["Phone number is required"];
+      if (!formData.employeeId.trim())
+        newErrors.employeeId = ["Employee ID is required"];
     } else if (step === 2) {
       if (!formData.role) newErrors.role = ["Role is required"];
-      if (!formData.department) newErrors.department = ["Department is required"];
+      if (!formData.department)
+        newErrors.department = ["Department is required"];
       if (!formData.tier) newErrors.tier = ["Tier is required"];
       if (!formData.transactionLimit) {
-        newErrors.singleTransactionLimit = ["Single transaction limit is required"];
+        newErrors.singleTransactionLimit = [
+          "Single transaction limit is required",
+        ];
       } else if (Number(formData.transactionLimit) <= 0) {
         newErrors.singleTransactionLimit = ["Limit must be greater than 0"];
       }
-      if (!formData.currency) newErrors.currency = ["Currency is required"];
+      // if (!formData.currency) newErrors.currency = ["Currency is required"];
     }
 
     setErrors(newErrors);
@@ -226,8 +275,16 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
 
   const handleSubmit = async () => {
     if (!validateStep(1) || !validateStep(2)) {
-      const stepOneKeys = ["firstName", "lastName", "email", "phoneNumber", "employeeId"];
-      setCurrentStep(Object.keys(errors).some((k) => stepOneKeys.includes(k)) ? 1 : 2);
+      const stepOneKeys = [
+        "firstName",
+        "lastName",
+        "email",
+        "phoneNumber",
+        "employeeId",
+      ];
+      setCurrentStep(
+        Object.keys(errors).some((k) => stepOneKeys.includes(k)) ? 1 : 2,
+      );
       return;
     }
 
@@ -244,8 +301,10 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
       tier: formData.tier,
       singleTransactionLimit: Number(formData.transactionLimit),
       dailyLimit: formData.dailyLimit ? Number(formData.dailyLimit) : undefined,
-      monthlyLimit: formData.monthlyLimit ? Number(formData.monthlyLimit) : undefined,
-      currency: formData.currency,
+      monthlyLimit: formData.monthlyLimit
+        ? Number(formData.monthlyLimit)
+        : undefined,
+      // currency: formData.currency,
       permissions: formData.permissions.map((p) => p.toUpperCase()),
     };
 
@@ -261,15 +320,26 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
 
       if (res.ok) {
         const data = await res.json();
-        toast({ title: "Success", description: data.message || "User updated successfully" });
+        toast({
+          title: "Success",
+          description: data.message || "User updated successfully",
+        });
         onUserUpdated?.(); // <-- triggers list refresh in parent
         setIsOpen(false);
       } else {
         const errorData = await res.json().catch(() => ({}));
-        toast({ title: "Error", description: errorData.message || "Error updating user", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: errorData.message || "Error updating user",
+          variant: "destructive",
+        });
       }
     } catch (e) {
-      toast({ title: "Error", description: "Request failed", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Request failed",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -289,7 +359,9 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
             {step}
           </div>
           {step < 3 && (
-            <div className={`w-16 h-0.5 mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"}`} />
+            <div
+              className={`w-16 h-0.5 mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"}`}
+            />
           )}
         </div>
       ))}
@@ -308,24 +380,48 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
+              <Label htmlFor="firstName">
+                First Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) => { setFormData((prev) => ({ ...prev, firstName: e.target.value })); clearFieldError("firstName"); }}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    firstName: e.target.value,
+                  }));
+                  clearFieldError("firstName");
+                }}
                 placeholder="Enter first name"
               />
-              {errors.firstName?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.firstName?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
-              <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
+              <Label htmlFor="lastName">
+                Last Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) => { setFormData((prev) => ({ ...prev, lastName: e.target.value })); clearFieldError("lastName"); }}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    lastName: e.target.value,
+                  }));
+                  clearFieldError("lastName");
+                }}
                 placeholder="Enter last name"
               />
-              {errors.lastName?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.lastName?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
               <Label htmlFor="email">Email Address</Label>
@@ -342,11 +438,16 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
               </div>
             </div>
             <div>
-              <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
+              <Label htmlFor="phone">
+                Phone Number <span className="text-red-500">*</span>
+              </Label>
               <PhoneInput
                 country={"us"}
                 value={formData.phone}
-                onChange={(value) => { setFormData((prev) => ({ ...prev, phone: value })); clearFieldError("phoneNumber"); }}
+                onChange={(value) => {
+                  setFormData((prev) => ({ ...prev, phone: value }));
+                  clearFieldError("phoneNumber");
+                }}
                 inputProps={{ name: "phone", id: "phone", required: true }}
                 containerClass="phone-input-container"
                 buttonClass="phone-flag-button"
@@ -354,17 +455,33 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
                 searchPlaceholder="Search country"
                 preferredCountries={["ae", "in"]}
               />
-              {errors.phoneNumber?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.phoneNumber?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div className="md:col-span-2">
-              <Label htmlFor="employeeId">Employee ID <span className="text-red-500">*</span></Label>
+              <Label htmlFor="employeeId">
+                Employee ID <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="employeeId"
                 value={formData.employeeId}
-                onChange={(e) => { setFormData((prev) => ({ ...prev, employeeId: e.target.value })); clearFieldError("employeeId"); }}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    employeeId: e.target.value,
+                  }));
+                  clearFieldError("employeeId");
+                }}
                 placeholder="Enter employee ID"
               />
-              {errors.employeeId?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.employeeId?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -384,7 +501,9 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="role">Role <span className="text-red-500">*</span></Label>
+              <Label htmlFor="role">
+                Role <span className="text-red-500">*</span>
+              </Label>
               <Select value={formData.role} onValueChange={handleRoleChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -397,44 +516,81 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
                   ))}
                 </SelectContent>
               </Select>
-              {errors.role?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.role?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
-              <Label htmlFor="department">Department <span className="text-red-500">*</span></Label>
-              <Select value={formData.department} onValueChange={(value) => { setFormData((prev) => ({ ...prev, department: value })); clearFieldError("department"); }}>
+              <Label htmlFor="department">
+                Department <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.department}
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, department: value }));
+                  clearFieldError("department");
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
                   {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.department?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.department?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
             <div>
               <Label htmlFor="reportingManager">Reporting Manager</Label>
               <Input
                 id="reportingManager"
                 value={formData.reportingManager}
-                onChange={(e) => setFormData((prev) => ({ ...prev, reportingManager: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    reportingManager: e.target.value,
+                  }))
+                }
                 placeholder="Enter reporting manager name"
               />
             </div>
             <div>
-              <Label htmlFor="tier">Select Tiers <span className="text-red-500">*</span></Label>
-              <Select value={formData.tier} onValueChange={(value) => { setFormData((prev) => ({ ...prev, tier: value })); clearFieldError("tier"); }}>
+              <Label htmlFor="tier">
+                Select Tiers <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.tier}
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, tier: value }));
+                  clearFieldError("tier");
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Tiers" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
                   {tiers.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.tier?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.tier?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -450,17 +606,29 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="transactionLimit">Single Transaction Limit <span className="text-red-500">*</span></Label>
+              <Label htmlFor="transactionLimit">
+                Single Transaction Limit <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="transactionLimit"
                 type="number"
                 value={formData.transactionLimit}
-                onChange={(e) => { setFormData((prev) => ({ ...prev, transactionLimit: e.target.value })); clearFieldError("singleTransactionLimit"); }}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    transactionLimit: e.target.value,
+                  }));
+                  clearFieldError("singleTransactionLimit");
+                }}
                 placeholder="Enter limit amount"
               />
-              {errors.singleTransactionLimit?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
+              {errors.singleTransactionLimit?.map((msg, i) => (
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
+              ))}
             </div>
-            <div>
+            {/* <div>
               <Label htmlFor="currency">Currency <span className="text-red-500">*</span></Label>
               <Select value={formData.currency} onValueChange={(value) => { setFormData((prev) => ({ ...prev, currency: value })); clearFieldError("currency"); }}>
                 <SelectTrigger>
@@ -473,14 +641,19 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
                 </SelectContent>
               </Select>
               {errors.currency?.map((msg, i) => <p key={i} className="text-sm text-destructive mt-1">{msg}</p>)}
-            </div>
+            </div> */}
             <div>
               <Label htmlFor="dailyLimit">Daily Limit</Label>
               <Input
                 id="dailyLimit"
                 type="number"
                 value={formData.dailyLimit}
-                onChange={(e) => setFormData((prev) => ({ ...prev, dailyLimit: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    dailyLimit: e.target.value,
+                  }))
+                }
                 placeholder="Enter daily limit"
               />
             </div>
@@ -490,7 +663,12 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
                 id="monthlyLimit"
                 type="number"
                 value={formData.monthlyLimit}
-                onChange={(e) => setFormData((prev) => ({ ...prev, monthlyLimit: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    monthlyLimit: e.target.value,
+                  }))
+                }
                 placeholder="Enter monthly limit"
               />
             </div>
@@ -523,62 +701,130 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
             <div className="flex items-center space-x-2 p-3 bg-accent-muted/20 rounded-lg">
               <Info className="h-4 w-4 text-accent" />
               <p className="text-sm text-muted-foreground">
-                Permissions are pre-configured based on the selected role. You can customize them as needed.
+                Permissions are pre-configured based on the selected role. You
+                can customize them as needed.
               </p>
             </div>
-            {Object.entries(groupedPermissions).map(([category, permissions]) => (
-              <div key={category}>
-                <h4 className="font-medium text-foreground mb-3">{category}</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                  {permissions.map((permission) => (
-                    <div key={permission.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-${permission.id}`}
-                        checked={formData.permissions.includes(permission.id)}
-                        onCheckedChange={(checked) => handlePermissionChange(permission.id, checked as boolean)}
-                      />
-                      <Label htmlFor={`edit-${permission.id}`} className="text-sm">{permission.label}</Label>
-                    </div>
-                  ))}
+            {Object.entries(groupedPermissions).map(
+              ([category, permissions]) => (
+                <div key={category}>
+                  <h4 className="font-medium text-foreground mb-3">
+                    {category}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                    {permissions.map((permission) => (
+                      <div
+                        key={permission.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`edit-${permission.id}`}
+                          checked={formData.permissions.includes(permission.id)}
+                          onCheckedChange={(checked) =>
+                            handlePermissionChange(
+                              permission.id,
+                              checked as boolean,
+                            )
+                          }
+                        />
+                        <Label
+                          htmlFor={`edit-${permission.id}`}
+                          className="text-sm"
+                        >
+                          {permission.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Additional Security Settings</CardTitle>
+            <CardTitle className="text-lg">
+              Additional Security Settings
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="twoFactor">Require Two-Factor Authentication</Label>
-                  <p className="text-sm text-muted-foreground">Enhanced security for sensitive operations</p>
+                  <Label htmlFor="twoFactor">
+                    Require Two-Factor Authentication
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Enhanced security for sensitive operations
+                  </p>
                 </div>
-                <Checkbox id="twoFactor" checked={formData.requireTwoFactor} onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, requireTwoFactor: checked as boolean }))} />
+                <Checkbox
+                  id="twoFactor"
+                  checked={formData.requireTwoFactor}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      requireTwoFactor: checked as boolean,
+                    }))
+                  }
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="emailNotifications">Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive transaction and system notifications</p>
+                  <Label htmlFor="emailNotifications">
+                    Email Notifications
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive transaction and system notifications
+                  </p>
                 </div>
-                <Checkbox id="emailNotifications" checked={formData.emailNotifications} onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, emailNotifications: checked as boolean }))} />
+                <Checkbox
+                  id="emailNotifications"
+                  checked={formData.emailNotifications}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      emailNotifications: checked as boolean,
+                    }))
+                  }
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="mobileAccess">Mobile App Access</Label>
-                  <p className="text-sm text-muted-foreground">Allow access via mobile application</p>
+                  <p className="text-sm text-muted-foreground">
+                    Allow access via mobile application
+                  </p>
                 </div>
-                <Checkbox id="mobileAccess" checked={formData.mobileAccess} onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, mobileAccess: checked as boolean }))} />
+                <Checkbox
+                  id="mobileAccess"
+                  checked={formData.mobileAccess}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mobileAccess: checked as boolean,
+                    }))
+                  }
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="temporaryAccess">Temporary Access</Label>
-                  <p className="text-sm text-muted-foreground">Set expiry date for user access</p>
+                  <p className="text-sm text-muted-foreground">
+                    Set expiry date for user access
+                  </p>
                 </div>
-                <Checkbox id="temporaryAccess" checked={formData.temporaryAccess} onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, temporaryAccess: checked as boolean }))} />
+                <Checkbox
+                  id="temporaryAccess"
+                  checked={formData.temporaryAccess}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      temporaryAccess: checked as boolean,
+                    }))
+                  }
+                />
               </div>
               {formData.temporaryAccess && (
                 <div>
@@ -587,7 +833,12 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
                     id="accessExpiryDate"
                     type="date"
                     value={formData.accessExpiryDate}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, accessExpiryDate: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accessExpiryDate: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               )}
@@ -636,11 +887,24 @@ const UserEditForm = ({ userId, trigger, onUserUpdated }: UserEditFormProps) => 
               </Button>
 
               {currentStep < 3 ? (
-                <Button onClick={handleNext} disabled={submitting} variant="business">Next</Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={submitting}
+                  variant="business"
+                >
+                  Next
+                </Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={submitting} variant="business">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  variant="business"
+                >
                   {submitting ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</>
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
                   ) : (
                     "Update User"
                   )}

@@ -59,8 +59,6 @@ interface Transaction {
   complianceRules?: any[];
   complianceStatus?: string;
   convertedAmount?: number;
-
-   
 }
 
 interface TransactionDetailModalProps {
@@ -117,7 +115,11 @@ const getTypeColor = (type: string) => {
   return colors[type] ?? "bg-gray-100 text-gray-800";
 };
 
-const handleDownloadReceipt = (transaction: any) => {
+const handleDownloadReceipt = (
+  transaction: any,
+  OperatorName?: string,
+  currencyCode?: any,
+) => {
   const html = `
 <!DOCTYPE html>
 <html>
@@ -209,7 +211,10 @@ const handleDownloadReceipt = (transaction: any) => {
     }
 
     .amount {
-      text-align: right;
+      width:"100%"
+      display: flex;
+  justify-content: space-between;
+  align-items: center;
     }
 
     .footer {
@@ -252,7 +257,7 @@ const handleDownloadReceipt = (transaction: any) => {
   </div>
 
   <!-- Title -->
-  <div class="title">Bolt Remit Receipt - SWT</div>
+  <div class="title">${transaction.branchName || ""} Receipt</div>
 
   <!-- Basic Info -->
   <div class="section">
@@ -268,29 +273,25 @@ const handleDownloadReceipt = (transaction: any) => {
     <div class="box">
       <div class="label">Remitter Details</div>
       <div class="row"><b>Name:</b> ${transaction.businessName}</div>
-      <div class="row"><b>Phone:</b> ${transaction.phone || "-"}</div>
+      <div class="row"><b>Phone:</b> ${transaction.businessPhone || "-"}</div>
       <div class="row"><b>Address:</b> ${transaction.address || "-"}</div>
-
-      <div class="label">Bank Details</div>
-      <div class="row"><b>Account:</b> ${transaction.accountNumber || "-"}</div>
-      <div class="row"><b>Bank:</b> ${transaction.bankName || "-"}</div>
-      <div class="row"><b>Branch:</b> ${transaction.branchName || "-"}</div>
     </div>
 
     <!-- RIGHT SIDE -->
     <div class="box">
       <div class="label">Beneficiary Details</div>
-      <div class="row"><b>Name:</b> ${transaction.beneficiaryName}</div>
-      <div class="row"><b>Phone:</b> ${transaction.beneficiaryPhone || "-"}</div>
-      <div class="row"><b>Address:</b> ${transaction.beneficiaryAddress || "-"}</div>
+      <div class="row"><b>Name:</b> ${transaction.singleBeneficiary?.name}</div>
+      <div class="row"><b>Phone:</b> ${transaction.singleBeneficiary?.phone || "-"}</div>
+      <div class="row"><b>Address:</b> ${transaction.singleBeneficiary?.address || "-"}</div>
+       <div class="row"><b>Address:</b> ${transaction.singleBeneficiary?.email || "-"}</div>
 
       <div class="label">Payment Details</div>
-      <div class="row amount">PayIn Amount: ${transaction.amount} ${transaction.currency}</div>
-      <div class="row amount">Charges: ${transaction.fees}</div>
+      <div class="row amount">PayIn Amount: ${transaction.convertedAmount} ${currencyCode}</div>
+      <div class="row amount">Charges: ${transaction.fees} ${currencyCode}</div>
       <div class="row amount">VAT: 0</div>
-      <div class="row amount"><b>Total Payable: ${transaction.totalDebit}</b></div>
+      <div class="row amount"><b>Total Payable: ${transaction.totalDebit} ${currencyCode}</b></div>
       <div class="row amount">Exchange Rate: ${transaction.exchangeRate}</div>
-      <div class="row amount"><b>Payout Amount: ${transaction.localAmount} ${transaction.localCurrency}</b></div>
+      <div class="row amount"><b>Actual Payout Amount: ${transaction?.sourceAmount} ${transaction?.currency}</b></div>
     </div>
 
   </div>
@@ -304,7 +305,7 @@ const handleDownloadReceipt = (transaction: any) => {
   <!-- Signatures -->
   <div class="signatures">
     <div>Remitter Signature</div>
-    <div>Operator</div>
+    <div>${OperatorName}</div>
     <div>Cashier</div>
   </div>
 

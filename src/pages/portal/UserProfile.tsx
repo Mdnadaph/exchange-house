@@ -53,6 +53,7 @@ interface BusinessProfile {
   createdDate: string;
   createdBy: string;
   profileImage: File;
+  logoUrl: string;
 }
 
 interface Document {
@@ -127,6 +128,7 @@ const UserProfile = () => {
     supportedCurrencies: [],
     createdDate: "",
     createdBy: "",
+    logoUrl: "",
   });
 
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -249,6 +251,7 @@ const UserProfile = () => {
 
         setBusinessProfile({
           id: data?.id || 0,
+          logoUrl: data?.logoUrl,
           companyName: data?.companyName || "",
           legalForm: data?.legalForm || "",
           businessType: data?.businessType || "",
@@ -722,16 +725,27 @@ const UserProfile = () => {
                   />
 
                   {/* Clickable Image */}
-                  <label htmlFor="profileUpload" className="cursor-pointer">
+                  {isEditing ? (
+                    <label htmlFor="profileUpload" className="cursor-pointer">
+                      <img
+                        src={
+                          profileImage
+                            ? profileImage
+                            : businessProfile?.logoUrl
+                              ? businessProfile.logoUrl
+                              : "https://i.fbcd.co/products/original/f8b30a80c3dd7846280debe018062435fb0273b9a391c2d05b1783ac5a473077.jpg"
+                        }
+                        alt="Profile"
+                        className="h-20 w-20 rounded-full object-cover border"
+                      />
+                    </label>
+                  ) : (
                     <img
-                      src={
-                        profileImage ||
-                        "https://i.fbcd.co/products/original/f8b30a80c3dd7846280debe018062435fb0273b9a391c2d05b1783ac5a473077.jpg"
-                      }
+                      src={businessProfile?.logoUrl || ""}
                       alt="Profile"
                       className="h-20 w-20 rounded-full object-cover border"
                     />
-                  </label>
+                  )}
                 </div>
 
                 <div className="space-y-2">

@@ -141,7 +141,14 @@ const UserTransactions = () => {
   const [error, setError] = useState<string | null>(null);
   const [disableButton, setDisableButton] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [cookies] = useCookies(["token", "email", "fullName"]);
+  const [cookies] = useCookies([
+    "token",
+    "email",
+    "fullName",
+    "firstName",
+    "lastName",
+    "currencyCode",
+  ]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [page, setPage] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
@@ -153,6 +160,10 @@ const UserTransactions = () => {
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const fullname = cookies.fullName;
+  const firstName = cookies.firstName;
+  const lastName = cookies.lastName;
+  const operatorName = firstName + lastName;
+  const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
 
   const fetchTransactions = async (searchValue?: string) => {
@@ -184,7 +195,6 @@ const UserTransactions = () => {
       if (data?.data?.dashboard) {
         setDashboardData(data?.data?.dashboard);
       }
-
       if (data.status && data.data) {
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => {
@@ -204,8 +214,11 @@ const UserTransactions = () => {
             }
 
             return {
+              businessPhone: apiTx?.businessPhone,
               id: apiTx.reference,
+              sourceAmount: apiTx.sourceAmount,
               branchName: apiTx.branchName || "",
+              convertedAmount: apiTx?.convertedAmount,
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "Beneficiary",
               amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
@@ -245,6 +258,12 @@ const UserTransactions = () => {
               discountAmount: discountAmountDisplay,
               beneficiaryName: apiTx.beneficiaryName,
               businessName: apiTx.businessName,
+              singleBeneficiary: {
+                name: apiTx?.singleBeneficiary?.name,
+                phone: apiTx?.singleBeneficiary?.phone,
+                email: apiTx?.singleBeneficiary?.email,
+                address: apiTx?.singleBeneficiary?.addressLine1,
+              },
             };
           });
 
@@ -689,7 +708,7 @@ const UserTransactions = () => {
                                 Fee Details:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.fees}
+                                {transaction.fees} AED
                               </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
@@ -703,7 +722,7 @@ const UserTransactions = () => {
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.totalDebit}
+                                {transaction.totalDebit} AED
                               </p>
                             </div>
 
@@ -789,7 +808,11 @@ const UserTransactions = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  handleDownloadReceipt(transaction)
+                                  handleDownloadReceipt(
+                                    transaction,
+                                    operatorName,
+                                    currencyCode,
+                                  )
                                 }
                               >
                                 <Download className="h-4 w-4 mr-1" />
