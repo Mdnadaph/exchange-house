@@ -683,9 +683,8 @@ const ExchangeTransactions = () => {
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
-                                    ).toFixed(4)
-                                  : "-"}
-                                {transaction.localCurrency}{" "}
+                                    ).toFixed(2)
+                                  : "-"}{" "}
                                 {transaction.currency.toUpperCase()}
                               </p>
                             </div>

@@ -342,6 +342,8 @@ const BusinessUserTransaction = () => {
     );
   });
 
+  console.log("transactionData", transactions);
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       COMPLETED: {
@@ -728,9 +730,13 @@ const BusinessUserTransaction = () => {
                                   Exchange Rate:
                                 </span>
                                 <p className="font-medium">
-                                  1 {transaction.currency.toUpperCase()} =
-                                  {transaction.exchangeRate}
-                                  {transaction.localCurrency} AED
+                                  1 AED =
+                                  {transaction?.exchangeRate
+                                    ? (
+                                        1 / Number(transaction?.exchangeRate)
+                                      ).toFixed(2)
+                                    : "-"}
+                                  {transaction.currency.toUpperCase()}
                                 </p>
                               </div>
 
