@@ -1258,6 +1258,10 @@ const BusinessOnboardingForm = ({
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([
     "AED",
   ]);
+  const [countryOptions, setCountryOptions] = useState<
+    { id: number; name: string; currencyCode: string }[]
+  >([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoOpen, setInfoOpen] = useState(false);
   const [branchLoading, setBranchLoading] = useState(false);
@@ -1614,6 +1618,26 @@ const BusinessOnboardingForm = ({
       fetchKybTypeMappings();
     }
   }, [infoOpen]);
+
+  const fetchCountries = async () => {
+    setCountriesLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v3/config/countries`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data?.status === true && Array.isArray(res.data.data)) {
+        setCountryOptions(res.data.data);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load countries",
+        variant: "destructive",
+      });
+    } finally {
+      setCountriesLoading(false);
+    }
+  };
   const fetchBranches = async () => {
     try {
       setBranchLoading(true);
@@ -1638,6 +1662,7 @@ const BusinessOnboardingForm = ({
   useEffect(() => {
     if (open) {
       fetchBranches();
+      fetchCountries();
       setErrors({});
       setSelectedCurrencies(["AED"]);
       setFormData({
@@ -2022,19 +2047,20 @@ const BusinessOnboardingForm = ({
                     <CommandList>
                       <CommandEmpty>No country found.</CommandEmpty>
                       <CommandGroup>
-                        {countries.map((country) => {
-                          const isSelected =
-                            formData.countryName.includes(country);
+                        {countryOptions.map((country) => {
+                          const isSelected = formData.countryName.includes(
+                            country.name,
+                          );
                           return (
                             <CommandItem
-                              key={country}
+                              key={country.id}
                               onSelect={() => {
                                 setFormData((prev) => {
                                   const newCountries = isSelected
                                     ? prev.countryName.filter(
-                                        (c) => c !== country,
+                                        (c) => c !== country.name,
                                       )
-                                    : [...prev.countryName, country];
+                                    : [...prev.countryName, country.name];
                                   return { ...prev, countryName: newCountries };
                                 });
                                 clearError("countryName");
@@ -2050,7 +2076,7 @@ const BusinessOnboardingForm = ({
                                   isSelected ? "opacity-100" : "opacity-0",
                                 )}
                               />
-                              {country}
+                              {country.name}
                             </CommandItem>
                           );
                         })}
