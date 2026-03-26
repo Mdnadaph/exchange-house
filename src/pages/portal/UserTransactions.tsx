@@ -127,6 +127,16 @@ interface Transaction {
   discountAmount: String;
   beneficiaryName: string;
   businessName: string;
+  singleBeneficiary: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    dateOfBirth: string;
+    nationality: string;
+    city: string;
+    state: string;
+  };
 }
 
 const UserTransactions = () => {
@@ -263,6 +273,10 @@ const UserTransactions = () => {
                 phone: apiTx?.singleBeneficiary?.phone,
                 email: apiTx?.singleBeneficiary?.email,
                 address: apiTx?.singleBeneficiary?.addressLine1,
+                dateOfBirth: apiTx?.singleBeneficiary?.dateOfBirth,
+                nationality: apiTx?.singleBeneficiary?.nationality,
+                city: apiTx?.singleBeneficiary?.city,
+                state: apiTx?.singleBeneficiary?.state,
               },
             };
           });

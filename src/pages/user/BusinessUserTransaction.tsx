@@ -141,6 +141,16 @@ interface Transaction {
   discountAmount: String;
   beneficiaryName?: string;
   businessName?: string;
+  singleBeneficiary: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    dateOfBirth: string;
+    nationality: string;
+    city: string;
+    state: string;
+  };
 }
 
 const BusinessUserTransaction = () => {
@@ -220,7 +230,7 @@ const BusinessUserTransaction = () => {
         setDashboardStats(data.data?.dashboard);
 
         setTotalTransactionsData(data.data?.pagination?.totalItems);
-
+        console.log("data", data?.data?.transactions);
         const transformedTransactions: Transaction[] =
           data.data.transactions.map((apiTx: any) => {
             // --- Discount logic ---
@@ -243,6 +253,7 @@ const BusinessUserTransaction = () => {
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "Beneficiary",
+              convertedAmount: apiTx?.convertedAmount,
               amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -280,6 +291,16 @@ const BusinessUserTransaction = () => {
               // New discount fields
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
+              singleBeneficiary: {
+                name: apiTx?.singleBeneficiary?.name,
+                phone: apiTx?.singleBeneficiary?.phone,
+                email: apiTx?.singleBeneficiary?.email,
+                address: apiTx?.singleBeneficiary?.addressLine1,
+                dateOfBirth: apiTx?.singleBeneficiary?.dateOfBirth,
+                nationality: apiTx?.singleBeneficiary?.nationality,
+                city: apiTx?.singleBeneficiary?.city,
+                state: apiTx?.singleBeneficiary?.state,
+              },
             };
           });
 

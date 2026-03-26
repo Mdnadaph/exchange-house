@@ -124,7 +124,16 @@ interface Transaction {
   netPayoutAmount: string;
   complianceStatus: string;
   totalDebit: number;
-
+  singleBeneficiary: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    dateOfBirth: string;
+    nationality: string;
+    city: string;
+    state: string;
+  };
   discountValue: string;
 
   discountAmount: String;
@@ -206,6 +215,7 @@ const ExchangeTransactions = () => {
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "",
+              convertedAmount: apiTx?.convertedAmount,
               amount: apiTx?.sourceAmount?.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -254,6 +264,16 @@ const ExchangeTransactions = () => {
                 }) || "0.00",
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
+              singleBeneficiary: {
+                name: apiTx?.singleBeneficiary?.name,
+                phone: apiTx?.singleBeneficiary?.phone,
+                email: apiTx?.singleBeneficiary?.email,
+                address: apiTx?.singleBeneficiary?.addressLine1,
+                dateOfBirth: apiTx?.singleBeneficiary?.dateOfBirth,
+                nationality: apiTx?.singleBeneficiary?.nationality,
+                city: apiTx?.singleBeneficiary?.city,
+                state: apiTx?.singleBeneficiary?.state,
+              },
             };
           });
         setTransactions(transformedTransactions);

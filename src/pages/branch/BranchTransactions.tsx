@@ -143,6 +143,16 @@ interface Transaction {
   discountAmount: String;
   beneficiaryName?: string;
   businessName?: string;
+  singleBeneficiary: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    dateOfBirth: string;
+    nationality: string;
+    city: string;
+    state: string;
+  };
 }
 
 const BranchTransactions = () => {
@@ -240,6 +250,7 @@ const BranchTransactions = () => {
                 maximumFractionDigits: 2,
               }),
               currency: apiTx.sourceCurrency,
+              convertedAmount: apiTx?.convertedAmount,
               exchangeRate: apiTx?.exchangeRate?.toFixed(3),
               localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
@@ -283,6 +294,16 @@ const BranchTransactions = () => {
               // Add the discount fields
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
+              singleBeneficiary: {
+                name: apiTx?.singleBeneficiary?.name,
+                phone: apiTx?.singleBeneficiary?.phone,
+                email: apiTx?.singleBeneficiary?.email,
+                address: apiTx?.singleBeneficiary?.addressLine1,
+                dateOfBirth: apiTx?.singleBeneficiary?.dateOfBirth,
+                nationality: apiTx?.singleBeneficiary?.nationality,
+                city: apiTx?.singleBeneficiary?.city,
+                state: apiTx?.singleBeneficiary?.state,
+              },
             };
           });
 

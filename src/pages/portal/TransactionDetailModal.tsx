@@ -18,6 +18,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { object } from "yup";
 
 interface TransactionDocument {
   id: number;
@@ -59,6 +60,16 @@ interface Transaction {
   complianceRules?: any[];
   complianceStatus?: string;
   convertedAmount?: number;
+  singleBeneficiary: {
+    address: string;
+    email: string;
+    name: string;
+    phone: string;
+    dateOfBirth: string;
+    nationality: string;
+    city: string;
+    state: string;
+  };
 }
 
 interface TransactionDetailModalProps {
@@ -361,7 +372,6 @@ export default function TransactionDetailModal({
 
   const status = getStatusBadge(transaction.status);
   const StatusIcon = status.icon;
-  console.log("transactionData", transaction);
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
@@ -522,6 +532,63 @@ export default function TransactionDetailModal({
                   <DetailField
                     label="Compliance Rules"
                     value="No rules triggered"
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+          <Separator />
+
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+              Beneficiary
+            </p>
+
+            <div className="space-y-4">
+              {transaction.singleBeneficiary &&
+              Object.keys(transaction.singleBeneficiary).length >= 1 ? (
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <DetailField
+                      label="Name"
+                      value={transaction.singleBeneficiary?.name || "—"}
+                    />
+                    {/* <DetailField label="Rule ID" value={rule.ruleId} /> */}
+                    <DetailField
+                      label="Email"
+                      value={transaction.singleBeneficiary?.email || "—"}
+                    />
+                    <DetailField
+                      label="Address"
+                      value={transaction.singleBeneficiary?.address || "—"}
+                    />
+                    <DetailField
+                      label="Phone Number"
+                      value={transaction.singleBeneficiary?.phone || "—"}
+                    />
+                    <DetailField
+                      label="Date of Birth"
+                      value={transaction.singleBeneficiary?.dateOfBirth || "—"}
+                    />
+                    <DetailField
+                      label="City"
+                      value={transaction.singleBeneficiary?.city || "—"}
+                    />
+                    <DetailField
+                      label="state"
+                      value={transaction.singleBeneficiary?.state || "—"}
+                    />
+                    <DetailField
+                      label="nationality"
+                      value={transaction.singleBeneficiary?.nationality || "—"}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-muted/30 rounded-xl p-6 text-center">
+                  <DetailField
+                    label="Beneficiary"
+                    value="No beneficiary triggered"
                   />
                 </div>
               )}

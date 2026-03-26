@@ -230,58 +230,58 @@ const UserProfile = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchBusinessProfile = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/v3/business/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = response?.data?.data;
-        if (!data) {
-          toast({
-            title: "Error",
-            description: "No data received from server",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        setBusinessProfile({
-          id: data?.id || 0,
-          logoUrl: data?.logoUrl,
-          companyName: data?.companyName || "",
-          legalForm: data?.legalForm || "",
-          businessType: data?.businessType || "",
-          tradeLicense: data?.tradeLicense || "",
-          taxNumber: data?.taxNumber || "",
-          country: data?.country || "",
-          branchId: data?.branchId || 0,
-          branchName: data?.branchName || "",
-          businessEmail: data?.businessEmail || "",
-          businessPhone: data?.businessPhone || "",
-          status: data?.status || "PENDING",
-          kybStatus: data?.kybStatus, // Added - getting from this API
-          monthlyLimit: data?.monthlyLimit || 0,
-          dealValidityDays: data?.dealValidityDays || 0,
-          supportedCurrencies: data?.supportedCurrencies || [],
-          createdDate: data?.createdDate || "",
-          createdBy: data?.createdBy || "",
-          profileImage: data?.profileUrl || "",
-        });
-      } catch (error) {
+  const fetchBusinessProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BASE_URL}/api/v3/business/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response?.data?.data;
+      if (!data) {
         toast({
           title: "Error",
-          description: "Failed to load business profile",
+          description: "No data received from server",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
 
+      setBusinessProfile({
+        id: data?.id || 0,
+        logoUrl: data?.logoUrl,
+        companyName: data?.companyName || "",
+        legalForm: data?.legalForm || "",
+        businessType: data?.businessType || "",
+        tradeLicense: data?.tradeLicense || "",
+        taxNumber: data?.taxNumber || "",
+        country: data?.country || "",
+        branchId: data?.branchId || 0,
+        branchName: data?.branchName || "",
+        businessEmail: data?.businessEmail || "",
+        businessPhone: data?.businessPhone || "",
+        status: data?.status || "PENDING",
+        kybStatus: data?.kybStatus, // Added - getting from this API
+        monthlyLimit: data?.monthlyLimit || 0,
+        dealValidityDays: data?.dealValidityDays || 0,
+        supportedCurrencies: data?.supportedCurrencies || [],
+        createdDate: data?.createdDate || "",
+        createdBy: data?.createdBy || "",
+        profileImage: data?.profileUrl || "",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load business profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBusinessProfile();
   }, [id, toast, token]);
 
@@ -523,10 +523,11 @@ const UserProfile = () => {
           },
         },
       );
-
+      fetchBusinessProfile();
       if (response.data?.status) {
         setIsEditing(false);
         setShowSaveConfirmation(false);
+
         toast({
           title: "Profile Updated",
           description: "Your business profile has been updated successfully.",
