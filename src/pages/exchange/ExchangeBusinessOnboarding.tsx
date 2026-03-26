@@ -189,7 +189,7 @@ const ExchangeBusinessOnboarding = () => {
           {/*<BusinessOnboardingForm onSuccess={refreshData} />*/}
 
           <PermissionGate permission="BTN_ONBOARD_BUSINESS">
-            <BusinessOnboardingForm />
+            <BusinessOnboardingForm onSuccess={refreshData} />
           </PermissionGate>
 
           {/*{role === "ROLE_EXCHANGE_USER" && can("BTN_ONBOARD_BUSINESS") ? (
