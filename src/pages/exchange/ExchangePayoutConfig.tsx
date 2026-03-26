@@ -622,7 +622,7 @@ const ExchangePayoutConfig = () => {
       country: "",
     }));
   };
-  
+
   const handleMechanismToggle = (mechanism: string) => {
     setErrors((prev: any) => ({
       ...prev,
@@ -1238,7 +1238,6 @@ const ExchangePayoutConfig = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog> */}
-
 
         <Dialog open={addDestinationOpen} onOpenChange={setAddDestinationOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
