@@ -478,15 +478,24 @@ const UserDealRequests = () => {
                           </p>
                         </div>
                       )}
+
                       <div className="space-y-1">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {deal.dealStatus === "APPROVED" ? "Expires:" : "Submitted:"}
+                          Approved Date:
                         </span>
                         <p className="font-medium">
-                          {deal.status === "APPROVED"
-                            ? formateDateTime(deal?.expiresAt)
-                            : formateDateTime(deal?.submittedAt)}
+                          {deal?.approvedAt}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Expire Date:
+                        </span>
+                        <p className="font-medium">
+                          {deal?.expiryDate}
                         </p>
                       </div>
                     </div>

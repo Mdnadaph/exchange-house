@@ -759,6 +759,7 @@ const UserBeneficiaries = () => {
               </CardContent>
             </Card>
           </div>
+          
           {/* Tabs for Beneficiaries and Groups */}
           <Tabs
             value={activeTab}
@@ -1288,3 +1289,872 @@ const UserBeneficiaries = () => {
 };
 
 export default UserBeneficiaries;
+
+
+
+// import UserLayout from "@/components/layout/UserLayout";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import BeneficiaryRegistrationForm from "@/components/beneficiary/BeneficiaryRegistrationForm";
+// import BeneficiaryProfile from "@/components/beneficiary/BeneficiaryProfile";
+// import BeneficiaryGroupForm from "@/components/beneficiary/BeneficiaryGroupForm";
+// import {
+//   Users,
+//   Plus,
+//   Search,
+//   Edit,
+//   Trash2,
+//   CheckCircle,
+//   Clock,
+//   AlertCircle,
+//   Building,
+//   MapPin,
+//   Banknote,
+//   Eye,
+//   Filter,
+//   Globe,
+//   CreditCard,
+//   Wallet,
+//   FolderPlus,
+//   Layers,
+//   User,
+//   RefreshCw,
+//   Loader2,
+// } from "lucide-react";
+// import { useState, useEffect } from "react";
+
+// import BASE_URL from "@/config/config";
+// import { useCookies } from "react-cookie";
+// import { useToast } from "@/hooks/use-toast";
+// import { useLanguage } from "@/contexts/LanguageContext";
+// import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
+
+// // Type definitions
+// interface Beneficiary {
+//   id: number;
+//   name: string;
+//   type: "INDIVIDUAL" | "BUSINESS";
+//   countryId: number;
+//   countryName: string;
+//   currency: string;
+//   bankName: string;
+//   maskedAccount: string;
+//   relationshipType: string;
+//   monthlyLimit: number;
+//   payoutMethod: string;
+//   active: boolean;
+//   approvalStatus: string;
+//   totalPayments: number | null;
+//   lastPaymentDate: string | null;
+//   totalSent: number | null;
+//   avgAmount: number | null;
+//   email?: string;
+//   phone?: string;
+//   address: {
+//     line1: string;
+//     line2?: string;
+//     city: string;
+//     country: string;
+//     postalCode?: string;
+//   };
+//   documents: Array<{ type: string; status: string; uploadDate: string }>;
+//   riskLevel: string;
+//   registrationDate: string;
+//   bankDetails: Array<{
+//     bankName: string;
+//     accountNumber: string;
+//     accountName: string;
+//     swift?: string;
+//     currency: string;
+//   }>;
+//   relationship: string;
+//   status: string;
+//   verificationStatus: string;
+//   lastUsed: string;
+//   transactionCount: number;
+//   averageTransaction?: string;
+// }
+
+// interface BeneficiaryGroup {
+//   id: number;
+//   name: string;
+//   description: string;
+//   memberCount: number;
+//   beneficiaries: Array<{
+//     id: number;
+//     name: string;
+//     type: "INDIVIDUAL" | "BUSINESS";
+//   }>;
+// }
+
+// interface DashboardData {
+//   totalBeneficiaries: number;
+//   newThisMonth: number;
+//   groups: number;
+//   active: number;
+//   pending: number;
+//   needAction: number;
+//   highRisk: number;
+// }
+
+// const UserBeneficiaries = () => {
+//   const [cookies] = useCookies(["token"]);
+//   const token = cookies.token;
+//   const { toast } = useToast();
+
+//   const [view, setView] = useState<"list" | "register" | "profile">("list");
+//   const [selectedBeneficiary, setSelectedBeneficiary] =
+//     useState<Beneficiary | null>(null);
+//   const [filterStatus, setFilterStatus] = useState<string>("all");
+//   const [activeTab, setActiveTab] = useState<"beneficiaries" | "groups">(
+//     "beneficiaries",
+//   );
+
+//   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
+//   const [beneficiaryGroups, setBeneficiaryGroups] = useState<
+//     BeneficiaryGroup[]
+//   >([]);
+//   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+//     null,
+//   );
+//   const [searchInput, setSearchInput] = useState("");
+//   const [appliedSearch, setAppliedSearch] = useState("");
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const [beneficiariesPage, setBeneficiariesPage] = useState(0);
+//   const [beneficiariesSize] = useState(10);
+//   const [beneficiariesTotalPages, setBeneficiariesTotalPages] = useState(1);
+//   const [beneficiariesTotalItems, setBeneficiariesTotalItems] = useState(0);
+
+//   const [groupsPage, setGroupsPage] = useState(0);
+//   const [groupsSize] = useState(10);
+//   const [groupsTotalPages, setGroupsTotalPages] = useState(1);
+//   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
+//   const [payOutConfigData, setPayOutConfigData] = useState(null);
+//   const [payOutId, setPayOutId] = useState<null | number>(null);
+//   const [page, setPage] = useState(0);
+
+//   const { t, language } = useLanguage();
+
+//   // Fetch beneficiaries
+//   const fetchBeneficiaries = async () => {
+//     try {
+//       setLoading(true);
+//       let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}`;
+//       if (appliedSearch) {
+//         url += `&search=${encodeURIComponent(appliedSearch)}`;
+//       }
+
+//       let approvalStatus = "";
+//       if (filterStatus === "active") approvalStatus = "APPROVED";
+//       if (filterStatus === "pending_approval") approvalStatus = "PENDING";
+//       if (approvalStatus) url += `&approvalStatus=${approvalStatus}`;
+
+//       const res = await fetch(url, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+//       const json = await res.json();
+//       if (json.status !== true || !json.data?.beneficiaries) {
+//         throw new Error("Unexpected response format");
+//       }
+
+//       setDashboardData(json.data.dashboard);
+
+//       const mappedData = json.data.beneficiaries.map((item: any) => ({
+//         id: item.id,
+//         name: item.name,
+//         type: item.type,
+//         email: item?.email,
+//         phone: item?.phoneNumber,
+//         address: {
+//           line1: "",
+//           city: "",
+//           country: item.countryName || "",
+//           postalCode: "",
+//         },
+//         bankDetails: [
+//           {
+//             bankName: item.bankName,
+//             accountNumber: item.maskedAccount || "N/A",
+//             accountName: item.name,
+//             swift: "",
+//             currency: item.currency,
+//           },
+//         ],
+//         relationship: item.relationshipType,
+//         status: item.active ? "active" : "inactive",
+//         verificationStatus: item.approvalStatus === "APPROVED" ? "verified" : "pending",
+//         lastUsed: item.lastPaymentDate || "Never",
+//         totalSent: item.totalSent ? String(item.totalSent) : "0",
+//         transactionCount: item.totalPayments || 0,
+//         payoutMethod: item.payoutMethod,
+//         registrationDate: "",
+//         documents: [],
+//         riskLevel: "medium",
+//         monthlyLimit: item.monthlyLimit || 0,
+//         averageTransaction: item.avgAmount ? String(item.avgAmount) : "0",
+//       }));
+//       setBeneficiaries(mappedData);
+//       setBeneficiariesTotalPages(json.data.pagination.totalPages);
+//       setBeneficiariesTotalItems(json.data.pagination.totalItems);
+//     } catch (err: any) {
+//       setError(err.message || "Failed to fetch beneficiaries");
+//       toast({
+//         title: "Error",
+//         description: err?.message,
+//         variant: "destructive",
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Fetch groups - FIXED MAPPING
+//   const fetchGroups = async () => {
+//     try {
+//       let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
+
+//       const res = await fetch(url, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+//       const json = await res.json();
+//       if (json.status !== true || !json.data?.groups) {
+//         throw new Error("Unexpected response format");
+//       }
+
+//       // Fixed mapping - using beneficiaries directly from API
+//       const mappedGroups = json.data.groups.map((group: any) => ({
+//         id: group.id,
+//         name: group.groupName,
+//         description: group.description,
+//         memberCount: group.totalBeneficiaries,
+//         beneficiaries: (group.beneficiaries || []).map((ben: any) => ({
+//           id: ben.id,
+//           name: ben.name,
+//           type: ben.type,
+//         })),
+//       }));
+
+//       setBeneficiaryGroups(mappedGroups);
+//       setGroupsTotalPages(json.data.pagination.totalPages);
+//       setGroupsTotalItems(json.data.pagination.totalItems);
+//     } catch (err: any) {
+//       toast({
+//         title: "Error",
+//         description: err?.message || "Failed to fetch groups",
+//         variant: "destructive",
+//       });
+//     }
+//   };
+
+//   const getPayOutConfig = async () => {
+//     try {
+//       const res = await fetch(
+//         `${BASE_URL}/api/v1/payout/config?page=${page}&size=10`,
+//         {
+//           headers: { Authorization: `Bearer ${token}` },
+//         },
+//       );
+//       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+//       const json = await res.json();
+//       if (json?.status !== true || !json.data) {
+//         throw new Error("Unexpected response format");
+//       }
+//       setPayOutConfigData(json);
+//     } catch (error: any) {
+//       const msg = error.message || "Failed to load payout config";
+//       toast({ title: "Error", description: msg, variant: "destructive" });
+//     }
+//   };
+
+//   useEffect(() => {
+//     getPayOutConfig();
+//   }, [page]);
+
+//   useEffect(() => {
+//     fetchBeneficiaries();
+//   }, [token, beneficiariesPage, appliedSearch, filterStatus]);
+
+//   useEffect(() => {
+//     fetchGroups();
+//   }, [token, groupsPage]);
+
+//   const handleSearch = () => {
+//     setAppliedSearch(searchInput);
+//     setBeneficiariesPage(0);
+//   };
+
+//   const filteredBeneficiaries = beneficiaries;
+
+//   const getStatusBadge = (status: string) => {
+//     const statusMap = {
+//       active: { variant: "default" as const, label: "Active", icon: CheckCircle },
+//       pending_approval: { variant: "secondary" as const, label: "Pending Approval", icon: Clock },
+//       verification_required: { variant: "destructive" as const, label: "Verification Required", icon: AlertCircle },
+//       inactive: { variant: "outline" as const, label: "Inactive", icon: AlertCircle },
+//     };
+//     return statusMap[status as keyof typeof statusMap] || statusMap.pending_approval;
+//   };
+
+//   const getVerificationBadge = (status: string) => {
+//     const statusMap = {
+//       verified: { variant: "default" as const, label: "Verified" },
+//       pending: { variant: "secondary" as const, label: "Pending" },
+//       expired: { variant: "destructive" as const, label: "Expired" },
+//       rejected: { variant: "destructive" as const, label: "Rejected" },
+//     };
+//     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
+//   };
+
+//   const getAvailabePayoutDestinationStatusBadge = (status: string) => {
+//     const statusMap = {
+//       ACTIVE: { variant: "default" as const, label: t("active") || "Active", icon: CheckCircle },
+//       MAINTENANCE: { variant: "secondary" as const, label: t("maintenance") || "Maintenance", icon: Clock },
+//       INACTIVE: { variant: "destructive" as const, label: t("inactive") || "Inactive", icon: AlertCircle },
+//     };
+//     return statusMap[status as keyof typeof statusMap] || statusMap.ACTIVE;
+//   };
+
+//   const getRiskColor = (risk: string) => {
+//     const colors = {
+//       low: "bg-green-100 text-green-800",
+//       medium: "bg-yellow-100 text-yellow-800",
+//       high: "bg-red-100 text-red-800",
+//     };
+//     return colors[risk as keyof typeof colors] || colors.medium;
+//   };
+
+//   const handleDeleteBeneficiary = async (id: string) => {
+//     // Implement if needed
+//   };
+
+//   const handleGroupCreated = (group: any) => {
+//     fetchGroups();
+//   };
+
+//   const handleDeleteGroup = (groupId: number) => {
+//     setBeneficiaryGroups((prev) => prev.filter((g) => g.id !== groupId));
+//     fetchGroups();
+//   };
+
+//   // Loading state
+//   if (loading) {
+//     return (
+//       <UserLayout>
+//         <div className="flex items-center justify-center h-screen">
+//           <div className="text-center">
+//             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//             <p className="mt-4 text-muted-foreground">Loading beneficiaries...</p>
+//           </div>
+//         </div>
+//       </UserLayout>
+//     );
+//   }
+
+//   // Error state
+//   if (error) {
+//     return (
+//       <UserLayout>
+//         <div className="flex items-center justify-center h-screen">
+//           <div className="text-center">
+//             <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+//             <p className="mt-4 text-destructive">{error}</p>
+//             <Button className="mt-4" onClick={fetchBeneficiaries}>
+//               Retry
+//             </Button>
+//           </div>
+//         </div>
+//       </UserLayout>
+//     );
+//   }
+
+//   return (
+//     <UserLayout>
+//       {view === "list" && (
+//         <div className="space-y-8">
+//           {/* Header */}
+//           <div className="flex items-center justify-between">
+//             <div>
+//               <h1 className="text-3xl font-bold text-foreground">Beneficiaries</h1>
+//               <p className="text-muted-foreground">
+//                 Manage your payment recipients, groups, and verification status
+//               </p>
+//             </div>
+//             <div className="flex gap-2">
+//               <BeneficiaryGroupForm
+//                 onGroupCreated={handleGroupCreated}
+//                 trigger={
+//                   <Button variant="outline">
+//                     <FolderPlus className="h-4 w-4 mr-2" />
+//                     Create Group
+//                   </Button>
+//                 }
+//               />
+//               <Button variant="business" onClick={() => setView("register")}>
+//                 <Plus className="h-4 w-4 mr-2" />
+//                 Register Beneficiary
+//               </Button>
+//             </div>
+//           </div>
+
+//           {/* Payout Destinations & Exchange Rates Information */}
+//           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//             <Card className="shadow-card">
+//               <CardHeader>
+//                 <CardTitle className="flex items-center gap-2">
+//                   <Globe className="h-5 w-5 text-primary" />
+//                   Available Payout Destinations
+//                 </CardTitle>
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
+//                   {payOutConfigData?.data?.countries?.length > 0 ? (
+//                     payOutConfigData?.data?.countries?.map((destination: any) => {
+//                       const status = getAvailabePayoutDestinationStatusBadge(destination?.status);
+//                       const StatusIcon = status.icon;
+//                       return (
+//                         <div
+//                           key={destination.countryId}
+//                           onClick={() => setPayOutId(destination?.id)}
+//                           className="cursor-pointer flex items-center justify-between p-3 border rounded-lg"
+//                         >
+//                           <div className="flex items-center space-x-3">
+//                             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+//                               <span className="text-xs font-bold text-primary">
+//                                 {destination?.currency}
+//                               </span>
+//                             </div>
+//                             <div>
+//                               <p className="font-medium text-foreground">
+//                                 {destination?.countryName}
+//                               </p>
+//                             </div>
+//                           </div>
+//                           <div className="text-right">
+//                             <Badge variant={status?.variant} className="flex items-center gap-1">
+//                               <StatusIcon className="h-3 w-3" />
+//                               {status?.label}
+//                             </Badge>
+//                           </div>
+//                         </div>
+//                       );
+//                     })
+//                   ) : (
+//                     <p className="text-center font-medium text-gray-400 text-xl">No Data Found</p>
+//                   )}
+//                 </div>
+//               </CardContent>
+//             </Card>
+
+//             <Card className="shadow-card">
+//               <CardHeader>
+//                 <CardTitle className="flex items-center gap-2">
+//                   <CreditCard className="h-5 w-5 text-primary" />
+//                   Supported Payout Mechanisms
+//                 </CardTitle>
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="space-y-4">
+//                   {payOutConfigData?.data?.countries?.find(
+//                     (data: any) => data?.id == payOutId
+//                   )?.mechanisms?.map((mechanisms: any) => (
+//                     <div key={mechanisms.name} className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
+//                       <Banknote className="h-6 w-6 text-primary" />
+//                       <div>
+//                         <p className="font-medium text-foreground">
+//                           {mechanisms?.name?.toLowerCase().split("_").map((word: string) => word[0].toUpperCase() + word.slice(1)).join(" ")}
+//                         </p>
+//                         <p className="text-sm text-muted-foreground">Fee Range: {mechanisms?.feeRange}</p>
+//                         <p className="text-sm text-muted-foreground">Processing Time: {mechanisms?.processingTime}</p>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           </div>
+
+//           {/* Statistics Cards */}
+//           <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+//             <Card className="shadow-card">
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Beneficiaries</CardTitle>
+//                 <Users className="h-5 w-5 text-primary" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold">{dashboardData?.totalBeneficiaries || 0}</div>
+//                 <p className="text-xs text-muted-foreground">{dashboardData?.active || 0} active</p>
+//               </CardContent>
+//             </Card>
+//             <Card className="shadow-card">
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium text-muted-foreground">Groups</CardTitle>
+//                 <Layers className="h-5 w-5 text-primary" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold">{dashboardData?.groups || 0}</div>
+//                 <p className="text-xs text-muted-foreground">For bulk payments</p>
+//               </CardContent>
+//             </Card>
+//             <Card className="shadow-card">
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+//                 <CheckCircle className="h-5 w-5 text-success" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-success">{dashboardData?.active || 0}</div>
+//                 <p className="text-xs text-muted-foreground">Verified & active</p>
+//               </CardContent>
+//             </Card>
+//             <Card className="shadow-card">
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+//                 <Clock className="h-5 w-5 text-orange-600" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-orange-600">{dashboardData?.pending || 0}</div>
+//                 <p className="text-xs text-muted-foreground">Awaiting approval</p>
+//               </CardContent>
+//             </Card>
+//             <Card className="shadow-card">
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium text-muted-foreground">Need Action</CardTitle>
+//                 <AlertCircle className="h-5 w-5 text-destructive" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-destructive">{dashboardData?.needAction || 0}</div>
+//                 <p className="text-xs text-muted-foreground">Require verification</p>
+//               </CardContent>
+//             </Card>
+//             <Card className="shadow-card">
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium text-muted-foreground">High Risk</CardTitle>
+//                 <AlertCircle className="h-5 w-5 text-warning" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-warning">{dashboardData?.highRisk || 0}</div>
+//                 <p className="text-xs text-muted-foreground">Enhanced monitoring</p>
+//               </CardContent>
+//             </Card>
+//           </div>
+
+//           {/* Tabs */}
+//           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "beneficiaries" | "groups")}>
+//             <TabsList className="grid w-full max-w-md grid-cols-2">
+//               <TabsTrigger value="beneficiaries" className="flex items-center gap-2">
+//                 <Users className="h-4 w-4" />
+//                 Beneficiaries
+//               </TabsTrigger>
+//               <TabsTrigger value="groups" className="flex items-center gap-2">
+//                 <Layers className="h-4 w-4" />
+//                 Groups
+//               </TabsTrigger>
+//             </TabsList>
+
+//             {/* GROUPS TAB - FIXED RENDERING */}
+//             <TabsContent value="groups" className="mt-6">
+//               <Card className="shadow-card">
+//                 <CardHeader>
+//                   <div className="flex items-center justify-between">
+//                     <CardTitle className="flex items-center gap-2">
+//                       <Layers className="h-5 w-5" />
+//                       Beneficiary Groups
+//                     </CardTitle>
+//                     <BeneficiaryGroupForm onGroupCreated={handleGroupCreated} />
+//                   </div>
+//                 </CardHeader>
+//                 <CardContent>
+//                   {beneficiaryGroups.length === 0 ? (
+//                     <div className="text-center py-8 text-muted-foreground">
+//                       <Layers className="h-12 w-12 mx-auto mb-3 opacity-50" />
+//                       <p>No groups created yet</p>
+//                       <p className="text-sm">Create groups to organize beneficiaries for bulk transactions</p>
+//                     </div>
+//                   ) : (
+//                     <div className="space-y-4">
+//                       {beneficiaryGroups.map((group: any) => (
+//                         <Card key={group.id} className="border-l-4 border-l-primary">
+//                           <CardContent className="p-4">
+//                             <div className="flex items-start justify-between">
+//                               <div className="flex-1">
+//                                 <div className="flex items-center gap-3 mb-2">
+//                                   <h3 className="font-semibold text-lg">{group.name}</h3>
+//                                   <Badge variant="secondary">
+//                                     {group.memberCount} members
+//                                   </Badge>
+//                                 </div>
+//                                 {group.description && (
+//                                   <p className="text-sm text-muted-foreground mb-3">
+//                                     {group.description}
+//                                   </p>
+//                                 )}
+//                                 <div className="flex flex-wrap gap-2">
+//                                   {group.beneficiaries.slice(0, 5).map((ben: any) => (
+//                                     <Badge
+//                                       key={ben.id}
+//                                       variant="outline"
+//                                       className="flex items-center gap-1"
+//                                     >
+//                                       {ben.type === "BUSINESS" ? (
+//                                         <Building className="h-3 w-3" />
+//                                       ) : (
+//                                         <User className="h-3 w-3" />
+//                                       )}
+//                                       {ben.name}
+//                                     </Badge>
+//                                   ))}
+//                                   {group.beneficiaries.length > 5 && (
+//                                     <Badge variant="outline">
+//                                       +{group.beneficiaries.length - 5} more
+//                                     </Badge>
+//                                   )}
+//                                 </div>
+//                               </div>
+//                               <div className="flex gap-2">
+//                                 <Button variant="outline" size="sm">
+//                                   <Edit className="h-4 w-4" />
+//                                 </Button>
+//                                 <Button
+//                                   variant="outline"
+//                                   size="sm"
+//                                   onClick={() => handleDeleteGroup(group.id)}
+//                                 >
+//                                   <Trash2 className="h-4 w-4" />
+//                                 </Button>
+//                               </div>
+//                             </div>
+//                           </CardContent>
+//                         </Card>
+//                       ))}
+//                     </div>
+//                   )}
+
+//                   {/* Pagination for groups */}
+//                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
+//                     <p className="text-sm text-muted-foreground">
+//                       Showing {beneficiaryGroups.length} of {groupsTotalItems} groups
+//                     </p>
+//                     <div className="flex space-x-2">
+//                       <Button
+//                         variant="outline"
+//                         size="sm"
+//                         disabled={groupsPage === 0}
+//                         onClick={() => setGroupsPage(groupsPage - 1)}
+//                       >
+//                         Previous
+//                       </Button>
+//                       <Button
+//                         variant="outline"
+//                         size="sm"
+//                         disabled={groupsPage >= groupsTotalPages - 1}
+//                         onClick={() => setGroupsPage(groupsPage + 1)}
+//                       >
+//                         Next
+//                       </Button>
+//                     </div>
+//                   </div>
+//                 </CardContent>
+//               </Card>
+//             </TabsContent>
+
+//             {/* Beneficiaries Tab - unchanged */}
+//             <TabsContent value="beneficiaries" className="mt-6 space-y-6">
+//               {/* Search and Filters */}
+//               <Card className="shadow-card">
+//                 <CardContent className="p-6">
+//                   <div className="flex flex-col sm:flex-row gap-4">
+//                     <div className="flex-1">
+//                       <Label htmlFor="search">Search Beneficiaries</Label>
+//                       <div className="relative flex gap-2">
+//                         <div className="relative flex-1">
+//                           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+//                           <Input
+//                             id="search"
+//                             placeholder="Search by name, account, bank, or country..."
+//                             className="pl-9"
+//                             value={searchInput}
+//                             onChange={(e) => setSearchInput(e.target.value)}
+//                             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+//                           />
+//                         </div>
+//                         <Button onClick={handleSearch} className="mt-auto" disabled={!searchInput.trim()}>
+//                           Search
+//                         </Button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </CardContent>
+//               </Card>
+
+//               {/* Beneficiaries List */}
+//               <Card className="shadow-card">
+//                 <CardHeader>
+//                   <CardTitle>Registered Beneficiaries</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   {filteredBeneficiaries.length === 0 ? (
+//                     <div className="text-center py-8 text-muted-foreground">
+//                       <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+//                       <p>No beneficiaries found</p>
+//                     </div>
+//                   ) : (
+//                     <div className="space-y-4">
+//                       {filteredBeneficiaries.map((beneficiary: any) => {
+//                         const status = getStatusBadge(beneficiary.status);
+//                         const verification = getVerificationBadge(beneficiary.verificationStatus);
+//                         const StatusIcon = status.icon;
+//                         return (
+//                           <Card key={beneficiary.id} className="border-l-4 border-l-primary hover:shadow-md transition-smooth">
+//                             <CardContent className="p-6">
+//                               <div className="flex items-start justify-between">
+//                                 <div className="space-y-4 flex-1">
+//                                   <div className="flex items-center space-x-4">
+//                                     <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+//                                       {beneficiary.type === "BUSINESS" ? (
+//                                         <Building className="h-6 w-6 text-muted-foreground" />
+//                                       ) : (
+//                                         <Users className="h-6 w-6 text-muted-foreground" />
+//                                       )}
+//                                     </div>
+//                                     <div className="flex-1">
+//                                       <div className="flex items-center gap-3 mb-1">
+//                                         <h3 className="font-semibold text-foreground">{beneficiary.name}</h3>
+//                                         <Badge variant="outline" className="text-xs">
+//                                           {beneficiary.type === "BUSINESS" ? "Business" : "Individual"}
+//                                         </Badge>
+//                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(beneficiary.riskLevel)}`}>
+//                                           {beneficiary.riskLevel?.toUpperCase()} RISK
+//                                         </span>
+//                                       </div>
+//                                     </div>
+//                                   </div>
+
+//                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+//                                     <div className="space-y-1">
+//                                       <div className="flex items-center text-muted-foreground">
+//                                         <Banknote className="h-3 w-3 mr-1" />
+//                                         Primary Bank:
+//                                       </div>
+//                                       <p className="font-medium">{beneficiary.bankDetails[0]?.bankName || "N/A"}</p>
+//                                       <p className="text-xs">{beneficiary.bankDetails[0]?.accountNumber}</p>
+//                                     </div>
+//                                     <div className="space-y-1">
+//                                       <div className="flex items-center text-muted-foreground">
+//                                         <MapPin className="h-3 w-3 mr-1" />
+//                                         Location:
+//                                       </div>
+//                                       <p className="font-medium">{beneficiary.address.country || "N/A"}</p>
+//                                       <p className="text-xs">{beneficiary.bankDetails[0]?.currency} Account</p>
+//                                     </div>
+//                                     <div className="space-y-1">
+//                                       <span className="text-muted-foreground">Transaction History:</span>
+//                                       <p className="font-medium">{beneficiary.transactionCount} payments</p>
+//                                       <p className="text-xs">Last: {beneficiary.lastUsed}</p>
+//                                     </div>
+//                                     <div className="space-y-1">
+//                                       <span className="text-muted-foreground">Total Sent:</span>
+//                                       <p className="font-medium">
+//                                         {beneficiary.bankDetails[0]?.currency} {Number(beneficiary.totalSent).toLocaleString()}
+//                                       </p>
+//                                       <p className="text-xs">
+//                                         Avg: {beneficiary.averageTransaction ? beneficiary.bankDetails[0]?.currency + " " + Number(beneficiary.averageTransaction).toLocaleString() : "N/A"}
+//                                       </p>
+//                                     </div>
+//                                   </div>
+//                                 </div>
+
+//                                 <div className="flex flex-col space-y-2 ml-4">
+//                                   <Button
+//                                     variant="outline"
+//                                     size="sm"
+//                                     onClick={() => {
+//                                       setSelectedBeneficiary(beneficiary);
+//                                       setView("profile");
+//                                     }}
+//                                   >
+//                                     <Eye className="h-4 w-4 mr-1" />
+//                                     View Profile
+//                                   </Button>
+//                                   <Button variant="outline" size="sm">
+//                                     <Edit className="h-4 w-4 mr-1" />
+//                                     Edit Details
+//                                   </Button>
+//                                   {beneficiary.status === "active" && (
+//                                     <Button variant="business" size="sm">
+//                                       Send Payment
+//                                     </Button>
+//                                   )}
+//                                 </div>
+//                               </div>
+//                             </CardContent>
+//                           </Card>
+//                         );
+//                       })}
+//                     </div>
+//                   )}
+
+//                   {/* Pagination */}
+//                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
+//                     <p className="text-sm text-muted-foreground">
+//                       Showing {filteredBeneficiaries.length} of {beneficiariesTotalItems} beneficiaries
+//                     </p>
+//                     <div className="flex space-x-2">
+//                       <Button
+//                         variant="outline"
+//                         size="sm"
+//                         disabled={beneficiariesPage === 0}
+//                         onClick={() => setBeneficiariesPage(beneficiariesPage - 1)}
+//                       >
+//                         Previous
+//                       </Button>
+//                       <Button
+//                         variant="outline"
+//                         size="sm"
+//                         disabled={beneficiariesPage >= beneficiariesTotalPages - 1}
+//                         onClick={() => setBeneficiariesPage(beneficiariesPage + 1)}
+//                       >
+//                         Next
+//                       </Button>
+//                     </div>
+//                   </div>
+//                 </CardContent>
+//               </Card>
+//             </TabsContent>
+//           </Tabs>
+//         </div>
+//       )}
+
+//       {view === "register" && (
+//         <div className="space-y-8">
+//           <Button variant="outline" onClick={() => setView("list")}>
+//             Back to List
+//           </Button>
+//           <BeneficiaryRegistrationForm onSuccess={fetchBeneficiaries} setView={setView} />
+//         </div>
+//       )}
+
+//       {view === "profile" && selectedBeneficiary && (
+//         <div className="space-y-8">
+//           <Button variant="outline" onClick={() => setView("list")}>
+//             Back to List
+//           </Button>
+//           <BeneficiaryProfile beneficiary={selectedBeneficiary} />
+//         </div>
+//       )}
+//     </UserLayout>
+//   );
+// };
+
+// export default UserBeneficiaries;
