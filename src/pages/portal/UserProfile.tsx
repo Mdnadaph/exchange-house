@@ -861,6 +861,8 @@ const UserProfile = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Updated KYB Status display using businessProfile.kybStatus */}
+
+                
                 <div className="flex justify-center py-4">
                   {businessProfile.kybStatus ? (
                     <Badge

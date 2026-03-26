@@ -258,19 +258,6 @@ const UserDocuments = () => {
     );
   }
 
-  if (error) {
-    return (
-      <UserLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center text-destructive">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-            <p>Error loading documents: {error}</p>
-          </div>
-        </div>
-      </UserLayout>
-    );
-  }
-
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -420,9 +407,7 @@ const UserDocuments = () => {
                   <h3 className="text-lg font-semibold text-foreground mb-2">
                     No documents found
                   </h3>
-                  <p className="text-muted-foreground">
-                    Try adjusting your search or filter
-                  </p>
+                  <p className="text-red-400">{error}</p>
                 </div>
               ) : (
                 filteredDocuments.map((doc) => {

@@ -33,9 +33,8 @@ const UserDealRequests = () => {
   const { toast } = useToast();
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
 
-
   const [searchTerm, setSearchTerm] = useState("");
-   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
   const [showDeclineConfirmation, setShowDeclineConfirmation] = useState(false);
   const [counterDeal, setCounterDeal] = useState<any>(null);
@@ -387,7 +386,9 @@ const UserDealRequests = () => {
                   All Status
                 </Button>
                 <Button
-                  variant={statusFilter === "PENDING_REVIEW" ? "default" : "outline"}
+                  variant={
+                    statusFilter === "PENDING_REVIEW" ? "default" : "outline"
+                  }
                   onClick={() => handleStatusFilter("PENDING_REVIEW")}
                 >
                   Pending
@@ -464,9 +465,10 @@ const UserDealRequests = () => {
                           {deal.currentMarketRate} {deal.payoutCurrency}
                         </p>
                       </div>
-                      {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
-                        deal?.dealStatus,
-                      ) && (
+                      {[
+                        "COUNTER_PROPOSAL",
+                        "COUNTER_PROPOSAL_ACCEPTED",
+                      ].includes(deal?.dealStatus) && (
                         <div className="space-y-1">
                           <span className="text-muted-foreground flex items-center gap-1">
                             <MessageSquare className="h-3 w-3" />
@@ -478,28 +480,21 @@ const UserDealRequests = () => {
                           </p>
                         </div>
                       )}
-
                       <div className="space-y-1">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           Approved Date:
                         </span>
-                        <p className="font-medium">
-                          {deal?.approvedAt}
-                        </p>
+                        <p className="font-medium">{deal?.approvedAt}</p>
                       </div>
-
                       <div className="space-y-1">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           Expire Date:
                         </span>
-                        <p className="font-medium">
-                          {deal?.expiryDate}
-                        </p>
+                        <p className="font-medium">{deal?.expiryDate}</p>
                       </div>
                     </div>
-
                     {/* Counter Proposal Message */}
                     {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
                       deal?.dealStatus,
@@ -520,7 +515,6 @@ const UserDealRequests = () => {
                         </CardContent>
                       </Card>
                     )}
-
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-2 border-t">
                       <div className="flex gap-2">
@@ -537,7 +531,6 @@ const UserDealRequests = () => {
                           {selectedDeal === deal.id ? "Hide" : "View"} Timeline
                         </Button>
                       </div>
-
                       {deal?.dealStatus === "COUNTER_PROPOSAL" && (
                         <div className="flex gap-2">
                           <Button
@@ -558,7 +551,6 @@ const UserDealRequests = () => {
                           </Button>
                         </div>
                       )}
-
                       {deal?.dealStatus === "APPROVED" && (
                         <Badge
                           variant="default"
@@ -569,7 +561,6 @@ const UserDealRequests = () => {
                         </Badge>
                       )}
                     </div>
-
                     {/* Timeline */}
                     {selectedDeal === deal?.id && (
                       <div className="pt-4 border-t">
