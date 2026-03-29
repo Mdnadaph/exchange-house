@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import axios from "axios";
 import BASE_URL from "@/config/config";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 interface ComplianceStatusProps {
   open: boolean;
   onClose: () => void;
@@ -29,11 +36,11 @@ const ComplianceStatus = ({
 }: ComplianceStatusProps) => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
-  const [compliance, setCompliance] = useState<string | null>("");
+  const [compliance, setCompliance] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleComplianceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCompliance(e.target.value);
+  const handleComplianceChange = (value: string) => {
+    setCompliance(value);
   };
   const handleSubmit = async () => {
     if (!compliance) {
@@ -96,7 +103,7 @@ const ComplianceStatus = ({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="complianceStatus">Select Compliance Status</Label>
-            <select
+            {/* <select
               id="complianceStatus"
               value={compliance}
               onChange={handleComplianceChange}
@@ -112,7 +119,25 @@ const ComplianceStatus = ({
               <option value="REVIEW_REQUIRED">REVIEW_REQUIRED</option>
               <option value="REPORTED">REPORTED</option>
               <option value="BLOCKED">BLOCKED</option>
-            </select>
+            </select> */}
+            <Select
+              value={compliance}
+              onValueChange={(value) => handleComplianceChange(value)}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="-- Select status --" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="CLEAR">CLEAR</SelectItem>
+                <SelectItem value="FLAGGED">FLAGGED</SelectItem>
+                <SelectItem value="MANUAL_REVIEW">MANUAL REVIEW</SelectItem>
+                <SelectItem value="REVIEW_REQUIRED">REVIEW REQUIRED</SelectItem>
+                <SelectItem value="REPORTED">REPORTED</SelectItem>
+                <SelectItem value="BLOCKED">BLOCKED</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

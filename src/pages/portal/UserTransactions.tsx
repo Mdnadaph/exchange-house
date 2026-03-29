@@ -37,6 +37,7 @@ import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
+import ComplianceStatus from "@/components/transactions/ComplianceStatus";
 
 interface TransactionDocument {
   id: number;
@@ -151,6 +152,7 @@ const UserTransactions = () => {
   const [error, setError] = useState<string | null>(null);
   const [disableButton, setDisableButton] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
   const [cookies] = useCookies([
     "token",
     "email",
@@ -167,6 +169,9 @@ const UserTransactions = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
+  const [openCompliance, setOpenCompliance] = useState(false);
+  const [complianceTransaction, setComplianceTransaction] =
+    useState<Transaction | null>(null);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const fullname = cookies.fullName;
@@ -176,7 +181,7 @@ const UserTransactions = () => {
   const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
 
-  const fetchTransactions = async (searchValue?: string) => {
+  const fetchTransactions = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -193,10 +198,7 @@ const UserTransactions = () => {
         timeout: 10000,
       };
 
-      let url = `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&size=10`;
-      if (searchValue) {
-        url += `&query=${encodeURIComponent(searchValue)}`;
-      }
+      let url = `${BASE_URL}/api/v1/transactions?query=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10`;
 
       const response = await axios.get<ApiResponse>(url, config);
       const data = response.data;
@@ -323,27 +325,15 @@ const UserTransactions = () => {
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page]);
-
-  const handleSearch = () => {
-    setPage(0);
-    fetchTransactions(searchTerm);
-  };
-
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  }, [token, transactionType, page, debouncedSearch]);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -428,19 +418,6 @@ const UserTransactions = () => {
   };
 
   const statistics = calculateStatistics();
-
-  if (isLoading) {
-    return (
-      <UserLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </UserLayout>
-    );
-  }
 
   return (
     <UserLayout>
@@ -554,16 +531,8 @@ const UserTransactions = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       disabled={error !== null}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     />
                   </div>
-                  <Button
-                    onClick={handleSearch}
-                    className="mt-auto"
-                    disabled={!searchTerm.trim()}
-                  >
-                    Search
-                  </Button>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -602,7 +571,12 @@ const UserTransactions = () => {
             <CardTitle>Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
-            {error ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary mb-4" />
+                <p className="text-muted-foreground">Loading transactions...</p>
+              </div>
+            ) : error ? (
               <div className="text-center py-12">
                 <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -610,7 +584,7 @@ const UserTransactions = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : transactions.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -626,7 +600,7 @@ const UserTransactions = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
+                {transactions.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status.icon;
 
@@ -865,6 +839,17 @@ const UserTransactions = () => {
                                   <ChevronDown className="h-4 w-4 ml-1" />
                                 )}
                               </Button>
+                              <Button
+                                variant="outline"
+                                // type="button"
+                                // className="w-full bg-green-700 hover:bg-green-900"
+                                onClick={() => {
+                                  setComplianceTransaction(transaction);
+                                  setOpenCompliance(true);
+                                }}
+                              >
+                                Change Compliance Status
+                              </Button>
 
                               {transaction.status === "failed" && (
                                 <Button variant="default" size="sm">
@@ -887,7 +872,23 @@ const UserTransactions = () => {
                               )}
                             </div>
                           </div>
-
+                          {openCompliance && complianceTransaction && (
+                            <ComplianceStatus
+                              open={openCompliance}
+                              onClose={() => {
+                                setOpenCompliance(false);
+                                setComplianceTransaction(null);
+                              }}
+                              transactionReference={
+                                complianceTransaction.referenceNumber
+                              }
+                              onSuccess={() => {
+                                setOpenCompliance(false);
+                                setComplianceTransaction(null);
+                                fetchTransactions(); // Refresh the transaction list
+                              }}
+                            />
+                          )}
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">

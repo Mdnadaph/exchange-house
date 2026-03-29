@@ -1037,7 +1037,7 @@ const BusinessUserTransaction = () => {
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
                       Showing {transactions?.length} of {totalTransactionsData}{" "}
-                      beneficiaries
+                      transactions
                     </p>
                     <div className="flex space-x-2">
                       <Button
