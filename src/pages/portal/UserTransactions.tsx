@@ -198,7 +198,7 @@ const UserTransactions = () => {
         timeout: 10000,
       };
 
-      let url = `${BASE_URL}/api/v1/transactions?query=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10`;
+      let url = `${BASE_URL}/api/v1/transactions?search=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10`;
 
       const response = await axios.get<ApiResponse>(url, config);
       const data = response.data;

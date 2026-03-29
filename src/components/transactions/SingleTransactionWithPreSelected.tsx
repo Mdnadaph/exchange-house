@@ -107,22 +107,37 @@ const SingleTransactionWithPreselected = ({
     },
   ];
 
+  // const transactionSources = [
+  //   {
+  //     id: "1",
+  //     name: "Emirates NBD Business Account",
+  //     accountNumber: "AE070331234567890123456",
+  //     balance: "245,000",
+  //     currency: "AED",
+  //     type: "current_account",
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "FAB USD Account",
+  //     accountNumber: "AE070331987654321098765",
+  //     balance: "85,000",
+  //     currency: "USD",
+  //     type: "foreign_currency",
+  //   },
+  // ];
+
   const transactionSources = [
     {
       id: "1",
-      name: "Emirates NBD Business Account",
-      accountNumber: "AE070331234567890123456",
-      balance: "245,000",
-      currency: "AED",
-      type: "current_account",
+      name: "Cheque",
     },
     {
       id: "2",
-      name: "FAB USD Account",
-      accountNumber: "AE070331987654321098765",
-      balance: "85,000",
-      currency: "USD",
-      type: "foreign_currency",
+      name: "Online Transfer",
+    },
+    {
+      id: "3",
+      name: "Cash",
     },
   ];
 
@@ -137,13 +152,6 @@ const SingleTransactionWithPreselected = ({
     { value: "LOAN_REPAYMENT", label: "Loan Repayment", requiresDoc: false },
     { value: "OTHER", label: "Other", requiresDoc: false },
   ];
-
-  const exchangeRates = {
-    USD: { rate: "3.673", fees: "15.00" },
-    EUR: { rate: "3.985", fees: "18.00" },
-    GBP: { rate: "4.651", fees: "20.00" },
-    INR: { rate: "0.044", fees: "12.00" },
-  };
 
   const getSelectedBeneficiaryDetails = () => {
     return beneficiaries.find((b) => b.id === selectedBeneficiary);
@@ -526,10 +534,10 @@ const SingleTransactionWithPreselected = ({
                         <SelectItem key={source.id} value={source.id}>
                           <div className="flex flex-col">
                             <span className="font-medium">{source.name}</span>
-                            <span className="text-xs text-muted-foreground">
+                            {/* <span className="text-xs text-muted-foreground">
                               Balance: {source.currency}{" "}
                               {Number(source.balance).toLocaleString()}
-                            </span>
+                            </span> */}
                           </div>
                         </SelectItem>
                       ))}
@@ -537,7 +545,7 @@ const SingleTransactionWithPreselected = ({
                   </Select>
                 </div>
 
-                {getSelectedSourceDetails() && (
+                {/* {getSelectedSourceDetails() && (
                   <Card className="border-l-4 border-l-primary">
                     <CardContent className="p-3">
                       <div className="grid grid-cols-2 gap-4 text-sm">
@@ -563,7 +571,7 @@ const SingleTransactionWithPreselected = ({
                       </div>
                     </CardContent>
                   </Card>
-                )}
+                )} */}
               </CardContent>
             </Card>
 
