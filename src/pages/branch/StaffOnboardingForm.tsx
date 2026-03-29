@@ -60,24 +60,18 @@ import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import { cn } from "@/lib/utils";
+
 const StaffOnboardingForm = ({
   trigger,
   refetch,
 }: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
 
-  const [cookies] = useCookies(["token", "branchId", "role", "branchName"]); // Added "role"
+  const [cookies] = useCookies(["token", "branchId", "role", "branchName"]);
   const token = cookies.token;
   const branchId = cookies.branchId;
   const branchName = cookies.branchName;
   const userRole = cookies.role;
-
-  //   console.log("Branch Id :-", branchId);
-  //   console.log("Staff Token:-", Token);
-  //   console.log("Current User Role:", userRole);
-
-  //   const [cookies] = useCookies(["Token", "branchId"]);
-  //   const Token = cookies.Token;
 
   const navigate = useNavigate();
   const uuid = useParams();
@@ -92,6 +86,10 @@ const StaffOnboardingForm = ({
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  
+  // Countries state
+  const [countries, setCountries] = useState<string[]>([]);
+
   const [formData, setFormData] = useState({
     // Business Information
     companyName: "",
@@ -159,25 +157,47 @@ const StaffOnboardingForm = ({
     { value: "other", label: "Other" },
   ];
 
-  const countries = [
-    "United Arab Emirates",
-    "India",
-    "Pakistan",
-    "Philippines",
-    "Bangladesh",
-    "Sri Lanka",
-    "Nepal",
-    "Egypt",
-    "United Kingdom",
-    "United States",
-    "China",
-    "Saudi Arabia",
-    "Qatar",
-    "Kuwait",
-    "Bahrain",
-    "Oman",
-    "Jordan",
-  ];
+  // Fetch countries from API
+  const fetchCountries = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v3/config/countries`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Countries API Response:", response.data);
+
+      const countriesList =
+        response.data?.data
+          ?.map((country: any) => country?.name)
+          ?.filter((name: string) => name && typeof name === "string") || [];
+
+      console.log("Final Countries List from API:", countriesList);
+
+      setCountries(countriesList);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+
+      const fallbackCountries = [
+        "United Arab Emirates",
+        "India",
+        "Nepal",
+      ];
+      setCountries(fallbackCountries);
+    }
+  };
+
+  // Load countries on component mount
+  useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
+    if (branchId) {
+      setFormData((prev) => ({ ...prev, branchId: branchId }));
+    }
+  }, [branchId]);
 
   const toggleCurrency = (currency: string) => {
     setSelectedCurrencies((prev) =>
@@ -207,7 +227,6 @@ const StaffOnboardingForm = ({
         monthlyLimit: Number(formData.monthlyLimit),
         dealValidityDays: Number(formData.dealValidityDays),
         supportedCurrencies: selectedCurrencies,
-        // Optional fields if API supports them
         alternatePhone: formData.alternatePhone,
         businessAddress: formData.businessAddress,
         addressLine2: formData.addressLine2,
@@ -234,14 +253,6 @@ const StaffOnboardingForm = ({
           type: "application/json",
         }),
       );
-
-      // idDocuments.forEach((doc) => {
-      //   if (doc.file) {
-      //     apiFormData.append("documents", doc.file);
-      //     apiFormData.append("documentTypes", doc.type); // Assuming IDDocument has 'type' property
-      //     apiFormData.append("documentNumbers", doc.number); // Assuming IDDocument has 'number' property
-      //   }
-      // });
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/business/create`,
@@ -287,8 +298,6 @@ const StaffOnboardingForm = ({
           monthlyLimit: "",
           dealValidityDays: "7",
         });
-
-        // Optionally navigate or reload if needed
       } else {
         toast({
           title: "Onboarding Failed",
@@ -311,12 +320,7 @@ const StaffOnboardingForm = ({
       setLoading(false);
     }
   };
-  console.log("apierror", apiErrors);
-  useEffect(() => {
-    if (branchId) {
-      setFormData((prev) => ({ ...prev, branchId: branchId }));
-    }
-  }, [branchId]);
+
   const validateStep1 = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -329,10 +333,8 @@ const StaffOnboardingForm = ({
       newErrors.tradeLicense = "Trade License Number is required";
     if (!formData.taxNumber.trim())
       newErrors.taxNumber = "Tax Registration Number is required";
-    if (!formData.countryName)
+    if (!formData.countryName || formData.countryName.length === 0)
       newErrors.countryName = "Country of Trade is required";
-    // if (!formData.branchId)
-    //   newErrors.branchId = "Registered Branch is required";
     if (!formData.businessEmail.trim())
       newErrors.businessEmail = "Business Email is required";
     if (!formData.businessPhone.trim())
@@ -404,6 +406,7 @@ const StaffOnboardingForm = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   const clearError = (field: string) => {
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -411,6 +414,7 @@ const StaffOnboardingForm = ({
       return newErrors;
     });
   };
+
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
       {[1, 2, 3].map((step) => (
@@ -481,7 +485,6 @@ const StaffOnboardingForm = ({
               )}
             </div>
 
-            {/* Legal Form - WorkerAppz API Field */}
             <div>
               <Label htmlFor="legalForm">Legal Form *</Label>
               <Select
@@ -515,8 +518,6 @@ const StaffOnboardingForm = ({
                 </p>
               )}
             </div>
-
-            {/* Business Type - WorkerAppz API Field */}
 
             <div>
               <Label htmlFor="businessType">Type of Business *</Label>
@@ -611,7 +612,7 @@ const StaffOnboardingForm = ({
               )}
             </div>
 
-            {/* Country of Trade - WorkerAppz API Field */}
+            {/* Country of Trade using API data */}
             <div className="">
               <Label htmlFor="countryOfTrade">Country of Trade *</Label>
               <Popover>
@@ -728,27 +729,21 @@ const StaffOnboardingForm = ({
                 <PhoneInput
                   country={"us"}
                   value={formData.businessPhone}
-                  onChange={(value, country) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({ ...prev, businessPhone: value }));
                     clearError("businessPhone");
                     setApiErrors((prev: any) => ({
                       ...prev,
                       businessPhone: "",
                     }));
-                    // Optionally store country data if needed later
                   }}
                   inputProps={{
                     name: "businessPhone",
                     id: "businessPhone",
                     required: true,
                   }}
-                  containerClass="phone-input-container" // optional custom class
-                  //inputClass="!pl-12" // adjust padding for the flag button
-                  buttonClass="phone-flag-button"
                   enableSearch={true}
-                  searchPlaceholder="Search country"
-                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
-                  preferredCountries={["ae", "in"]} // show these at top
+                  preferredCountries={["ae", "in"]}
                 />
               </div>
               {errors.businessPhone && (
@@ -769,23 +764,15 @@ const StaffOnboardingForm = ({
                 <PhoneInput
                   country={"us"}
                   value={formData.alternatePhone}
-                  onChange={(value, country) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({ ...prev, alternatePhone: value }));
-
-                    // Optionally store country data if needed later
                   }}
                   inputProps={{
                     name: "alternatePhone",
                     id: "alternatePhone",
-                    required: true,
                   }}
-                  containerClass="phone-input-container" // optional custom class
-                  //inputClass="!pl-12" // adjust padding for the flag button
-                  buttonClass="phone-flag-button"
                   enableSearch={true}
-                  searchPlaceholder="Search country"
-                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
-                  preferredCountries={["ae", "in"]} // show these at top
+                  preferredCountries={["ae", "in"]}
                 />
               </div>
             </div>
@@ -839,23 +826,6 @@ const StaffOnboardingForm = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* ID Documents Section */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Business Documents
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <IDDocumentForm
-            documents={idDocuments}
-            onChange={setIdDocuments}
-            showHeader={false}
-          />
-        </CardContent>
-      </Card> */}
     </div>
   );
 
@@ -950,17 +920,17 @@ const StaffOnboardingForm = ({
                   placeholder="admin@company.ae"
                   className="pl-9"
                 />
-                {errors.adminEmail && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.adminEmail}
-                  </p>
-                )}
-                {apiErrors?.adminEmail && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {apiErrors?.adminEmail}
-                  </p>
-                )}
               </div>
+              {errors.adminEmail && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.adminEmail}
+                </p>
+              )}
+              {apiErrors?.adminEmail && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminEmail}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="adminPhone">Phone Number *</Label>
@@ -969,39 +939,33 @@ const StaffOnboardingForm = ({
                 <PhoneInput
                   country={"us"}
                   value={formData.adminPhone}
-                  onChange={(value, country) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({ ...prev, adminPhone: value }));
                     clearError("adminPhone");
                     setApiErrors((prev: any) => ({
                       ...prev,
                       adminPhone: "",
                     }));
-                    // Optionally store country data if needed later
                   }}
                   inputProps={{
                     name: "adminPhone",
                     id: "adminPhone",
                     required: true,
                   }}
-                  containerClass="phone-input-container" // optional custom class
-                  //inputClass="!pl-12" // adjust padding for the flag button
-                  buttonClass="phone-flag-button"
                   enableSearch={true}
-                  searchPlaceholder="Search country"
-                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
-                  preferredCountries={["ae", "in"]} // show these at top
+                  preferredCountries={["ae", "in"]}
                 />
-                {errors.adminPhone && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.adminPhone}
-                  </p>
-                )}
-                {apiErrors?.adminPhone && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {apiErrors?.adminPhone}
-                  </p>
-                )}
               </div>
+              {errors.adminPhone && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.adminPhone}
+                </p>
+              )}
+              {apiErrors?.adminPhone && (
+                <p className="text-sm text-red-500 mt-1">
+                  {apiErrors?.adminPhone}
+                </p>
+              )}
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="adminDesignation">Designation *</Label>
@@ -1128,7 +1092,6 @@ const StaffOnboardingForm = ({
             </div>
           </div>
 
-          {/* Multi-Currency Selection - WorkerAppz API Field */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
@@ -1196,11 +1159,15 @@ const StaffOnboardingForm = ({
             </div>
             <div>
               <p className="text-muted-foreground">Country of Trade</p>
-              <p className="font-medium">{formData.countryName || "-"}</p>
+              <p className="font-medium">
+                {formData.countryName.length > 0
+                  ? formData.countryName.join(", ")
+                  : "-"}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground">Branch</p>
-              <p className="font-medium">{formData.branchId || "-"}</p>
+              <p className="font-medium">{branchName || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Admin User</p>
@@ -1229,22 +1196,6 @@ const StaffOnboardingForm = ({
                   : "-"}
               </p>
             </div>
-            <div>
-              <p className="text-muted-foreground">ID Documents</p>
-              <p className="font-medium">
-                {idDocuments.length > 0
-                  ? `${idDocuments.length} document(s)`
-                  : "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Deal Validity</p>
-              <p className="font-medium">
-                {formData.dealValidityDays
-                  ? `${formData.dealValidityDays} days`
-                  : "-"}
-              </p>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -1254,14 +1205,6 @@ const StaffOnboardingForm = ({
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        {/* <DialogTrigger asChild>
-          {trigger || (
-            <Button variant="default">
-              <Plus className="h-4 w-4 mr-2" />
-              Onboard Business
-            </Button>
-          )}
-        </DialogTrigger> */}
         <DialogTrigger asChild>
           {trigger || (
             <Button
