@@ -51,6 +51,7 @@ import { PermissionGate } from "@/contexts/PermissionGate";
 
 // --- Types ---
 interface FeeRule {
+  vat: number;
   id: string | number;
   transactionType: string;
   payoutCountry: string;
@@ -98,8 +99,7 @@ const ExchangeFeeManagement = () => {
   const [newFeeRule, setNewFeeRule] = useState({
     transactionType: "SINGLE",
     payoutCountry: "",
-    minAmount: "",
-    maxAmount: "",
+    vat: "",
     feeType: "FLAT",
     feeValue: "",
     feeResponsibility: "BUSINESS",
@@ -130,19 +130,19 @@ const ExchangeFeeManagement = () => {
       errors.payoutCountry = "Payout country is required";
     }
 
-    // Min Amount
-    if (!newFeeRule.minAmount) {
-      errors.minAmount = "Min amount is required";
-    } else if (Number(newFeeRule.minAmount) < 0) {
-      errors.minAmount = "Min amount cannot be negative";
+    // VAT
+    if (!newFeeRule.vat) {
+      errors.minAmount = "VAT is required";
+    } else if (Number(newFeeRule.vat) < 0) {
+      errors.minAmount = "VAT cannot be negative";
     }
 
     // Max Amount
-    if (!newFeeRule.maxAmount) {
-      errors.maxAmount = "Max amount is required";
-    } else if (Number(newFeeRule.maxAmount) <= 0) {
-      errors.maxAmount = "Max amount must be greater than 0";
-    }
+    // if (!newFeeRule.maxAmount) {
+    //   errors.maxAmount = "Max amount is required";
+    // } else if (Number(newFeeRule.maxAmount) <= 0) {
+    //   errors.maxAmount = "Max amount must be greater than 0";
+    // }
 
     // Fee Responsibility
     if (!newFeeRule.feeResponsibility) {
@@ -261,7 +261,6 @@ const ExchangeFeeManagement = () => {
     getPayoutCountryList();
   }, []);
 
-  
   const getCountriesData = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v3/config/countries`, {
@@ -298,8 +297,8 @@ const ExchangeFeeManagement = () => {
       let payload: any = {
         transactionType: newFeeRule.transactionType,
         payoutCountry: newFeeRule.payoutCountry,
-        minAmount: Number(newFeeRule.minAmount) || 0,
-        maxAmount: Number(newFeeRule.maxAmount) || 999999,
+        vat: Number(newFeeRule.vat) || 0,
+        // maxAmount: Number(newFeeRule.maxAmount) || 999999,
         feeResponsibility: newFeeRule.feeResponsibility,
       };
 
@@ -314,21 +313,45 @@ const ExchangeFeeManagement = () => {
       }
 
       if (isEditing && editId) {
-        await axios.put(`${BASE_URL}/api/v3/fees/update/${editId}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast({
-          title: "Success",
-          description: "Fee rule updated successfully",
-        });
+        const res = await axios.put(
+          `${BASE_URL}/api/v3/fees/update/${editId}`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        if (res?.data?.status) {
+          toast({
+            title: "Success",
+            description: res?.data?.message || "Fee rule updated successfully",
+          });
+        } else {
+          toast({
+            title: "Action Failed",
+            description: res?.data?.message || "Failed to update Fee rule.",
+            variant: "destructive",
+          });
+        }
       } else {
-        await axios.post(`${BASE_URL}/api/v3/fees/create`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast({
-          title: "Success",
-          description: "Fee rule created successfully",
-        });
+        const res = await axios.post(
+          `${BASE_URL}/api/v3/fees/create`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        if (res?.data?.status) {
+          toast({
+            title: "Success",
+            description: res?.data?.message || "Fee rule created successfully",
+          });
+        } else {
+          toast({
+            title: "Action Failed",
+            description: res?.data?.message || "Failed to create Fee rule.",
+            variant: "destructive",
+          });
+        }
       }
 
       handleCloseFormDialog();
@@ -374,8 +397,8 @@ const ExchangeFeeManagement = () => {
     setNewFeeRule({
       transactionType: "SINGLE",
       payoutCountry: "",
-      minAmount: "",
-      maxAmount: "",
+      vat: "",
+      // maxAmount: "",
       feeType: "FLAT",
       feeValue: "",
       feeResponsibility: "BUSINESS",
@@ -391,17 +414,16 @@ const ExchangeFeeManagement = () => {
     setIsEditing(true);
     setEditId(rule.id);
     setNewFeeRule({
-      transactionType: rule.transactionType,
-      payoutCountry: rule.payoutCountry,
-      minAmount: rule.minAmount.toString(),
-      maxAmount: rule.maxAmount.toString(),
-      feeType: rule.feeType || "FLAT",
-      feeValue: rule.feeValue?.toString() || "",
-      feeResponsibility: rule.feeResponsibility,
-      businessFeeType: rule.businessFeeType || "",
-      businessFeeValue: rule.businessFeeValue?.toString() || "",
-      beneficiaryFeeType: rule.beneficiaryFeeType || "",
-      beneficiaryFeeValue: rule.beneficiaryFeeValue?.toString() || "",
+      transactionType: rule?.transactionType,
+      payoutCountry: rule?.payoutCountry,
+      vat: rule?.vat?.toString(),
+      feeType: rule?.feeType || "FLAT",
+      feeValue: rule?.feeValue?.toString() || "",
+      feeResponsibility: rule?.feeResponsibility,
+      businessFeeType: rule?.businessFeeType || "",
+      businessFeeValue: rule?.businessFeeValue?.toString() || "",
+      beneficiaryFeeType: rule?.beneficiaryFeeType || "",
+      beneficiaryFeeValue: rule?.beneficiaryFeeValue?.toString() || "",
     });
     setIsFormDialogOpen(true);
   };
@@ -551,9 +573,27 @@ const ExchangeFeeManagement = () => {
                     </p>
                   )}
                 </div>
-
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>VAT</Label> <span className="text-red-500">*</span>
+                <Input
+                  type="number"
+                  placeholder="Enter VAT"
+                  value={newFeeRule.vat}
+                  onChange={(e) => {
+                    setNewFeeRule({
+                      ...newFeeRule,
+                      vat: e.target.value,
+                    });
+                    clearFormError("vat");
+                  }}
+                  onWheel={(e) => e.currentTarget.blur()}
+                />
+                {formErrors.minAmount && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.vat}</p>
+                )}
+              </div>
+              {/* <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Min Amount (AED)</Label>{" "}
                   <span className="text-red-500">*</span>
@@ -596,7 +636,7 @@ const ExchangeFeeManagement = () => {
                     </p>
                   )}
                 </div>
-              </div>
+              </div> */}
               <div>
                 <Label>
                   Fee Responsibility <span className="text-red-500">*</span>
@@ -668,6 +708,7 @@ const ExchangeFeeManagement = () => {
                         : "(in AED)"}
                     </Label>
                     <Input
+                      onWheel={(e) => e.currentTarget.blur()}
                       type="number"
                       placeholder={
                         newFeeRule.feeType === "BPS" ? "50 (0.5%)" : "25"
@@ -774,6 +815,7 @@ const ExchangeFeeManagement = () => {
                           : "(AED)"}
                       </Label>
                       <Input
+                        onWheel={(e) => e.currentTarget.blur()}
                         type="number"
                         placeholder={
                           newFeeRule.beneficiaryFeeType === "BPS"
@@ -889,7 +931,7 @@ const ExchangeFeeManagement = () => {
                     <TableHead>Transaction Type</TableHead>
                     <TableHead>Country</TableHead>
                     <TableHead className="hidden sm:table-cell">
-                      Amount Range (AED)
+                      VAT (%)
                     </TableHead>
                     <TableHead className="hidden md:table-cell">
                       Fee Structure
@@ -928,8 +970,7 @@ const ExchangeFeeManagement = () => {
                           {countryLabel(rule.payoutCountry)}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-sm">
-                          {rule.minAmount.toLocaleString()} -{" "}
-                          {rule.maxAmount.toLocaleString()}
+                          {rule?.vat?.toFixed(2)}
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-sm">
                           {rule.feeResponsibility === "SHARED"

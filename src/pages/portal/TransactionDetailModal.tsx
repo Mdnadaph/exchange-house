@@ -257,7 +257,7 @@ const handleDownloadReceipt = (
       <div class="company-info">
         ${transaction.branchName || ""}<br/>
         ${transaction.businessName || ""}<br/>
-        Phone: ${transaction.phone || "-"}
+        Phone: ${transaction.businessPhone || "-"}
       </div>
     </div>
 

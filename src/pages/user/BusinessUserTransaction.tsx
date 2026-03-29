@@ -181,7 +181,14 @@ const BusinessUserTransaction = () => {
   const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [reviewActionData, setReviewActionData] = useState<any>({});
-  const [cookies] = useCookies(["token", "email", "fullName"]);
+  const [cookies] = useCookies([
+    "token",
+    "email",
+    "fullName",
+    "firstName",
+    "lastName",
+    "currencyCode",
+  ]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [totalTransactionsData, setTotalTransactionsData] = useState<number>(0);
 
@@ -199,6 +206,10 @@ const BusinessUserTransaction = () => {
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const fullname = cookies.fullName;
+  const firstName = cookies.firstName;
+  const lastName = cookies.lastName;
+  const operatorName = firstName + lastName;
+  const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
 
   const fetchTransactions = async () => {
@@ -250,6 +261,9 @@ const BusinessUserTransaction = () => {
 
             return {
               id: apiTx.reference,
+              businessPhone: apiTx?.businessPhone,
+              sourceAmount: apiTx?.sourceAmount,
+              businessName: apiTx?.businessName,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "Beneficiary",
@@ -945,7 +959,11 @@ const BusinessUserTransaction = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    handleDownloadReceipt(transaction)
+                                    handleDownloadReceipt(
+                                      transaction,
+                                      operatorName,
+                                      currencyCode,
+                                    )
                                   }
                                 >
                                   <Download className="h-4 w-4 mr-1" />

@@ -50,9 +50,6 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const refreshToken = cookies.refreshToken;
   const legalBusinessName = cookies.legalBusinessName;
 
-  console.log(fullName);
-  console.log(legalBusinessName);
-
   const clearAllCookies = () => {
     removeCookie("token", { path: "/" });
     removeCookie("token", { path: "/" });

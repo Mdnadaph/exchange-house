@@ -227,6 +227,7 @@ const UserTransactions = () => {
 
             return {
               businessPhone: apiTx?.businessPhone,
+              businessName: apiTx?.businessName,
               id: apiTx.reference,
               sourceAmount: apiTx.sourceAmount,
               branchName: apiTx.branchName || "",
@@ -269,7 +270,6 @@ const UserTransactions = () => {
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
               beneficiaryName: apiTx.beneficiaryName,
-              businessName: apiTx.businessName,
               singleBeneficiary: {
                 name: apiTx?.singleBeneficiary?.name,
                 phone: apiTx?.singleBeneficiary?.phone,
