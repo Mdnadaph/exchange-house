@@ -1493,6 +1493,7 @@ const ExchangePayoutConfig = () => {
                 <div className="space-y-2">
                   <Label>{t("country") || "Country"}</Label>
                   <Select
+                    disabled
                     value={destinationForm.country}
                     onValueChange={handleCountryChange}
                   >
