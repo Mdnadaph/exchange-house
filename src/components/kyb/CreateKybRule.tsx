@@ -2447,7 +2447,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
 
                   <Button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || businessTypes?.length == 0}
                     className="px-8 h-11 bg-primary text-primary-foreground hover:bg-blue-800 text-white shadow-md hover:shadow-lg transition-shadow"
                   >
                     {isSubmitting ? (
