@@ -83,10 +83,11 @@ const StaffOnboardingForm = ({
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([
     "AED",
   ]);
+  const [businessTypeData, setBusinessTypeData] = useState([]);
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  
+
   // Countries state
   const [countries, setCountries] = useState<string[]>([]);
 
@@ -142,20 +143,25 @@ const StaffOnboardingForm = ({
     { value: "prjsc", label: "Private Joint Stock Company (PrJSC)" },
   ];
 
-  const businessTypes = [
-    { value: "trading", label: "Trading" },
-    { value: "manufacturing", label: "Manufacturing" },
-    { value: "services", label: "Services" },
-    { value: "construction", label: "Construction" },
-    { value: "real_estate", label: "Real Estate" },
-    { value: "technology", label: "Technology" },
-    { value: "healthcare", label: "Healthcare" },
-    { value: "hospitality", label: "Hospitality" },
-    { value: "transport", label: "Transport & Logistics" },
-    { value: "retail", label: "Retail" },
-    { value: "wholesale", label: "Wholesale" },
-    { value: "other", label: "Other" },
-  ];
+  const getBusinessType = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setBusinessTypeData(res?.data?.data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to fetch business type",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch countries from API
   const fetchCountries = async () => {
@@ -166,24 +172,16 @@ const StaffOnboardingForm = ({
         },
       });
 
-      console.log("Countries API Response:", response.data);
-
       const countriesList =
         response.data?.data
           ?.map((country: any) => country?.name)
           ?.filter((name: string) => name && typeof name === "string") || [];
 
-      console.log("Final Countries List from API:", countriesList);
-
       setCountries(countriesList);
     } catch (error) {
       console.error("Error fetching countries:", error);
 
-      const fallbackCountries = [
-        "United Arab Emirates",
-        "India",
-        "Nepal",
-      ];
+      const fallbackCountries = ["United Arab Emirates", "India", "Nepal"];
       setCountries(fallbackCountries);
     }
   };
@@ -191,6 +189,7 @@ const StaffOnboardingForm = ({
   // Load countries on component mount
   useEffect(() => {
     fetchCountries();
+    getBusinessType();
   }, []);
 
   useEffect(() => {
@@ -217,7 +216,7 @@ const StaffOnboardingForm = ({
       const business = {
         companyName: formData.companyName,
         legalForm: formData.legalForm.toUpperCase(),
-        businessType: formData.businessType.toUpperCase(),
+        businessTypeId: Number(formData.businessType),
         tradeLicense: formData.tradeLicense,
         taxNumber: formData.taxNumber,
         countryName: formData.countryName,
@@ -528,7 +527,7 @@ const StaffOnboardingForm = ({
                   clearError("businessType");
                   setApiErrors((prev: any) => ({
                     ...prev,
-                    businessType: "",
+                    businessTypeId: "",
                   }));
                 }}
               >
@@ -536,9 +535,9 @@ const StaffOnboardingForm = ({
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {businessTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                  {businessTypeData.map((type) => (
+                    <SelectItem key={type?.id} value={type?.id}>
+                      {type?.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -548,9 +547,9 @@ const StaffOnboardingForm = ({
                   {errors.businessType}
                 </p>
               )}
-              {apiErrors?.businessType && (
+              {apiErrors?.businessTypeId && (
                 <p className="text-sm text-red-500 mt-1">
-                  {apiErrors?.businessType}
+                  {apiErrors?.businessTypeId}
                 </p>
               )}
             </div>
@@ -922,9 +921,7 @@ const StaffOnboardingForm = ({
                 />
               </div>
               {errors.adminEmail && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.adminEmail}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{errors.adminEmail}</p>
               )}
               {apiErrors?.adminEmail && (
                 <p className="text-sm text-red-500 mt-1">
@@ -957,9 +954,7 @@ const StaffOnboardingForm = ({
                 />
               </div>
               {errors.adminPhone && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.adminPhone}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{errors.adminPhone}</p>
               )}
               {apiErrors?.adminPhone && (
                 <p className="text-sm text-red-500 mt-1">
@@ -1153,8 +1148,8 @@ const StaffOnboardingForm = ({
             <div>
               <p className="text-muted-foreground">Business Type</p>
               <p className="font-medium">
-                {businessTypes.find((t) => t.value === formData.businessType)
-                  ?.label || "-"}
+                {businessTypeData.find((t) => t.id == formData.businessType)
+                  ?.name || "-"}
               </p>
             </div>
             <div>

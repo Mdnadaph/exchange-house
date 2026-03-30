@@ -157,7 +157,7 @@ const BranchDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Branch Dashboard
+              {dashboardData?.branchInfo?.name}
             </h1>
             <p className="text-muted-foreground">
               Welcome back, {cookies.fullName}! Here's your KYB workload

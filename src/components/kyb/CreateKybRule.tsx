@@ -1490,7 +1490,7 @@ const Step1: React.FC<Step1Props> = ({
             onValueChange={(value: string) =>
               setFieldValue("businessType", value)
             }
-            disabled={businessTypes.length === 0}
+            // disabled={businessTypes.length === 0}
           >
             <SelectTrigger
               id="businessType"
@@ -2145,7 +2145,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
   const [businessTypes, setBusinessTypes] = useState<BusinessTypeOption[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentTypeOption[]>([]);
   const [riskTypes, setRiskTypes] = useState<RiskTypeOption[]>([]);
-
+  console.log("dhfhhf", ruleToEdit);
   // Pre-fill form when editing
   const getInitialFormValues = (): KYBRuleFormValues => {
     if (isEdit && ruleToEdit) {
@@ -2155,10 +2155,15 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
         autoApprovalLimit: ruleToEdit.autoApprovalLimit || 100000,
         reviewTiers: ruleToEdit.reviewTiers || 2,
         maxProcessingHours: ruleToEdit.maxProcessingHours || 48,
-        documents: (ruleToEdit.requiredDocuments || []).map((doc: string) => ({
-          documentCode: doc,
-          required: true,
-        })),
+        documents: (ruleToEdit.requiredDocuments || []).map(
+          (docName: string) => {
+            const matchedDoc = documentTypes.find((d) => d.name === docName);
+            return {
+              documentCode: matchedDoc ? matchedDoc.code : "",
+              required: true,
+            };
+          },
+        ),
         risks: ruleToEdit.risks || [],
         escalation: ruleToEdit.escalation || {
           highRisk: 50000,
@@ -2188,7 +2193,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
       } else {
         // Create new rule
@@ -2200,7 +2205,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
       }
 
@@ -2209,7 +2214,9 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           title: "Success",
           description:
             response?.data?.message ||
-            (isEdit ? "KYB Rule updated successfully!" : "KYB Rule created successfully!"),
+            (isEdit
+              ? "KYB Rule updated successfully!"
+              : "KYB Rule created successfully!"),
         });
 
         setTimeout(() => {
@@ -2223,8 +2230,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
       } else {
         toast({
           title: "Error",
-          description:
-            response?.data?.message || "Operation failed",
+          description: response?.data?.message || "Operation failed",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -2250,7 +2256,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
 
         const [businessTypesRes, documentTypesRes, riskTypesRes] =
           await Promise.all([
-            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/business-types`, {
+            axios.get(`${BASE_URL}/api/v3/admin/kyb/master/kyb-types`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
             axios.get(`${BASE_URL}/api/v3/admin/kyb/master/documents`, {
@@ -2265,13 +2271,11 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
           setBusinessTypes(businessTypesRes.data.data);
         if (documentTypesRes.data?.data)
           setDocumentTypes(documentTypesRes.data.data);
-        if (riskTypesRes.data?.data)
-          setRiskTypes(riskTypesRes.data.data);
-
+        if (riskTypesRes.data?.data) setRiskTypes(riskTypesRes.data.data);
       } catch (error: any) {
         setErrorMessage(
           error.response?.data?.message ||
-            "Failed to fetch master data. Please try again."
+            "Failed to fetch master data. Please try again.",
         );
       } finally {
         setIsLoading(false);
@@ -2443,7 +2447,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
 
                   <Button
                     type="submit"
-                    disabled={isSubmitting || businessTypes.length === 0}
+                    disabled={isSubmitting}
                     className="px-8 h-11 bg-primary text-primary-foreground hover:bg-blue-800 text-white shadow-md hover:shadow-lg transition-shadow"
                   >
                     {isSubmitting ? (
@@ -2456,8 +2460,10 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
                         Next
                         <FiChevronRight className="ml-2 h-4 w-4" />
                       </>
+                    ) : isEdit ? (
+                      "Update KYB Rule"
                     ) : (
-                      isEdit ? "Update KYB Rule" : "Create KYB Rule"
+                      "Create KYB Rule"
                     )}
                   </Button>
                 </div>

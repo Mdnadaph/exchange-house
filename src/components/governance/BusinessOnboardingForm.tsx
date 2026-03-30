@@ -1258,6 +1258,7 @@ const BusinessOnboardingForm = ({
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([
     "AED",
   ]);
+  const [businessTypeData, setBusinessTypeData] = useState([]);
   const [countryOptions, setCountryOptions] = useState<
     { id: number; name: string; currencyCode: string }[]
   >([]);
@@ -1333,21 +1334,6 @@ const BusinessOnboardingForm = ({
     { value: "branch", label: "Branch of Foreign Company" },
     { value: "pjsc", label: "Public Joint Stock Company (PJSC)" },
     { value: "prjsc", label: "Private Joint Stock Company (PrJSC)" },
-  ];
-
-  const businessTypes = [
-    { value: "trading", label: "Trading" },
-    { value: "manufacturing", label: "Manufacturing" },
-    { value: "services", label: "Services" },
-    { value: "construction", label: "Construction" },
-    { value: "real_estate", label: "Real Estate" },
-    { value: "technology", label: "Technology" },
-    { value: "healthcare", label: "Healthcare" },
-    { value: "hospitality", label: "Hospitality" },
-    { value: "transport", label: "Transport & Logistics" },
-    { value: "retail", label: "Retail" },
-    { value: "wholesale", label: "Wholesale" },
-    { value: "other", label: "Other" },
   ];
 
   const countries = [
@@ -1485,7 +1471,7 @@ const BusinessOnboardingForm = ({
       const business = {
         companyName: formData.companyName,
         legalForm: formData.legalForm.toUpperCase(),
-        businessType: formData.businessType.toUpperCase(),
+        businessTypeId: Number(formData.businessType),
         tradeLicense: formData.tradeLicense,
         taxNumber: formData.taxNumber,
         countryName: formData.countryName,
@@ -1613,6 +1599,27 @@ const BusinessOnboardingForm = ({
       setKybLoading(false);
     }
   };
+
+  const getBusinessType = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setBusinessTypeData(res?.data?.data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to fetch business type",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (infoOpen) {
       fetchKybTypeMappings();
@@ -1663,6 +1670,7 @@ const BusinessOnboardingForm = ({
     if (open) {
       fetchBranches();
       fetchCountries();
+      getBusinessType();
       setErrors({});
       setSelectedCurrencies(["AED"]);
       setFormData({
@@ -1906,7 +1914,7 @@ const BusinessOnboardingForm = ({
                   clearError("businessType");
                   setApiErrors((prev: any) => ({
                     ...prev,
-                    businessType: "",
+                    businessTypeId: "",
                   }));
                 }}
               >
@@ -1914,9 +1922,9 @@ const BusinessOnboardingForm = ({
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {businessTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                  {businessTypeData.map((type) => (
+                    <SelectItem key={type?.id} value={type?.id}>
+                      {type?.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1926,9 +1934,9 @@ const BusinessOnboardingForm = ({
                   {errors.businessType}
                 </p>
               )}
-              {apiErrors?.businessType && (
+              {apiErrors?.businessTypeId && (
                 <p className="text-sm text-red-500 mt-1">
-                  {apiErrors?.businessType}
+                  {apiErrors?.businessTypeId}
                 </p>
               )}
             </div>
@@ -2648,8 +2656,8 @@ const BusinessOnboardingForm = ({
             <div>
               <p className="text-muted-foreground">Business Type</p>
               <p className="font-medium">
-                {businessTypes.find((t) => t.value === formData.businessType)
-                  ?.label || "-"}
+                {businessTypeData?.find((t) => t?.id === formData.businessType)
+                  ?.name || "-"}
               </p>
             </div>
             <div>
@@ -2658,7 +2666,11 @@ const BusinessOnboardingForm = ({
             </div>
             <div>
               <p className="text-muted-foreground">Branch</p>
-              <p className="font-medium">{formData.branchId || "-"}</p>
+              <p className="font-medium">
+                {branchList?.find(
+                  (branch) => branch?.branchId == formData?.branchId,
+                )?.name || "-"}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground">Admin User</p>

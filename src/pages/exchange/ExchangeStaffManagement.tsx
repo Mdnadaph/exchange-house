@@ -212,12 +212,20 @@ const ExchangeStaffManagement = () => {
           },
         },
       );
-
-      toast({
-        title: "Success",
-        description:
-          response?.data?.message || "Staff member created successfully",
-      });
+      if (response?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            response?.data?.message || "Staff member created successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description:
+            response?.data?.message || "Failed to create staff member",
+          variant: "destructive",
+        });
+      }
 
       setIsCreateModalOpen(false);
       setStaffForm({
@@ -266,12 +274,19 @@ const ExchangeStaffManagement = () => {
           },
         },
       );
-
-      toast({
-        title: "Success",
-        description:
-          response?.data?.message || "Staff member edited successfully",
-      });
+      if (response?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            response?.data?.message || "Staff member edited successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response?.data?.message || "failed to edit staff",
+          variant: "destructive",
+        });
+      }
 
       setIsEditStaffModalOpen(false);
       setStaffUUID("");

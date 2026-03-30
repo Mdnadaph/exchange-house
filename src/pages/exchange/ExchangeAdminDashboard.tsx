@@ -407,9 +407,9 @@ const ExchangeAdminDashboard = () => {
 
   const [statsData, setStatsData] = useState<any[]>([]);
   const [recentKYBApplications, setRecentKYBApplications] = useState<any[]>([]);
-  console.log("recentKYBApplications", recentKYBApplications);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fullName = cookies?.fullName;
   const navigate = useNavigate();
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -574,9 +574,7 @@ const ExchangeAdminDashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Exchange House Dashboard
-            </h1>
+            <h1 className="text-3xl font-bold text-foreground">{fullName}</h1>
             <p className="text-muted-foreground">
               Manage KYB applications and branch operations across all locations
             </p>

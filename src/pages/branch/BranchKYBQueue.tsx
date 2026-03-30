@@ -1127,18 +1127,21 @@ const ExchangeKYBReview = () => {
                                     >
                                       {docStatus.label}
                                     </Badge>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleViewDocument(doc, application)
-                                      }
-                                      disabled={!doc.viewUrl}
-                                      title="View Document"
-                                    >
-                                      <Eye className="h-3 w-3" />
-                                    </Button>
+                                    {doc.status !== "approved" && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleViewDocument(doc, application)
+                                        }
+                                        disabled={!doc.viewUrl}
+                                        title="View Document"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                      </Button>
+                                    )}
+
                                     <Button
                                       type="button"
                                       variant="outline"
