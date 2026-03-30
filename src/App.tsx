@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
+import AdminKybMapping from "./pages/admin/AdminKybMapping";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDealSettings from "./pages/admin/AdminDealSettings";
@@ -198,7 +199,7 @@ function App() {
                   element={<UserTwoFALogin />}
                 />
 
-                {/* ─── PROTECTED ROUTES ────────────────────────────────────── */}
+                {/* ─── PROTECTED ROUTES ─────────────────────────── */}
 
                 {/* Admin (super admin) */}
                 <Route
@@ -216,6 +217,8 @@ function App() {
                       path="/admin/exchange-houses/:id"
                       element={<AdminExchangeHouseDetails />}
                     />
+                    <Route path="/admin/onmapping" element={<AdminKybMapping />} />
+
                     <Route path="onboarding" element={<AdminOnboarding />} />
                     <Route
                       path="deal-settings"

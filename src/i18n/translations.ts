@@ -14,8 +14,9 @@ export const translations = {
     heroTitle: "Transform Your",
     heroTitleHighlight: "Cross-Border Payments",
     heroSubtitle:
-      "Streamline your business transactions with our secure, compliant digital platform. No more branch visits—manage payments, beneficiaries, and approvals from anywhere.",
-    uaeCentralBankCompliant: "UAE Central Bank Compliant",
+      "Streamline your business transactions with our secure, compliant digital platform. No more branch visits manage payments, beneficiaries, and approvals from anywhere.",
+    // uaeCentralBankCompliant: "UAE Central Bank Compliant",
+    regulatoryCompliant: "Regulatory Compliant",
     instantProcessing: "Instant Processing",
     globalReach: "Global Reach",
     bankGradeSecurity: "Bank-Grade Security",
@@ -164,7 +165,7 @@ export const translations = {
     termsOfService: "Terms of Service",
     compliance: "Compliance",
     licensedByUae:
-      "Licensed by UAE Central Bank | Regulated Financial Institution",
+      "Licensed by Central Bank | Regulated Financial Institution",
 
     // Common
     dashboard: "Dashboard",
@@ -619,7 +620,8 @@ export const translations = {
     heroTitleHighlight: "مدفوعاتك العابرة للحدود",
     heroSubtitle:
       "قم بتبسيط معاملات عملك من خلال منصتنا الرقمية الآمنة والمتوافقة. لا مزيد من زيارات الفروع - أدر المدفوعات والمستفيدين والموافقات من أي مكان.",
-    uaeCentralBankCompliant: "متوافق مع البنك المركزي الإماراتي",
+    // uaeCentralBankCompliant: "متوافق مع البنك المركزي الإماراتي",
+    regulatoryCompliant: "متوافق مع اللوائح التنظيمية",
     instantProcessing: "معالجة فورية",
     globalReach: "وصول عالمي",
     bankGradeSecurity: "أمان على مستوى البنوك",
@@ -766,7 +768,8 @@ export const translations = {
     privacyPolicy: "سياسة الخصوصية",
     termsOfService: "شروط الخدمة",
     compliance: "الامتثال",
-    licensedByUae: "مرخص من البنك المركزي الإماراتي | مؤسسة مالية منظمة",
+    // licensedByUae: "مرخص من البنك المركزي الإماراتي | مؤسسة مالية منظمة",
+    licensedByUae : "مرخص من البنك المركزي الإماراتي | مؤسسة مالية منظمة",
 
     // Common
     dashboard: "لوحة التحكم",

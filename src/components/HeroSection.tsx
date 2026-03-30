@@ -25,7 +25,7 @@ const HeroSection = () => {
           {/* Badge */}
           <div className={`inline-flex items-center px-4 py-2 rounded-full bg-accent-muted border border-accent/20 text-accent-foreground text-sm font-medium mb-6 animate-fade-in ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Shield className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            {t('uaeCentralBankCompliant')}
+            {t('regulatoryCompliant')}
           </div>
 
           {/* Main Heading */}

@@ -33,9 +33,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       href: "/admin/exchange-houses",
       icon: Landmark,
     },
+
+    { name: "KYB Mappning", href: "/admin/onmapping", icon: FileCheck },
     // { name: "KYB Onboarding", href: "/admin/onboarding", icon: FileCheck },
     // { name: "Deal Settings", href: "/admin/deal-settings", icon: Handshake },
     // { name: "Settings & Rules", href: "/admin/settings", icon: Settings },
+    
   ];
 
   const [cookies, , removeCookie] = useCookies([
