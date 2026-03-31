@@ -44,18 +44,19 @@ const SecuritySection = () => {
   ];
 
   const compliance = [
-    {
-      icon: Gavel,
-      titleKey: "uaeCentralBankLicensedTitle" as const,
-      descKey: "uaeCentralBankLicensedDesc" as const,
-      certifications: ["msbLicense", "crossBorderPayments", "kybCompliance"] as const
-    },
+    // {
+    //   icon: Gavel,
+    //   titleKey: "uaeCentralBankLicensedTitle" as const,
+    //   descKey: "uaeCentralBankLicensedDesc" as const,
+    //   certifications: ["msbLicense", "crossBorderPayments", "kybCompliance"] as const
+    // },
     {
       icon: Server,
       titleKey: "dataProtection" as const,
       descKey: "dataProtectionDesc" as const,
-      certifications: ["gdprCompliant", "uaeDpl", "dataResidency"] as const
+      certifications: ["gdprCompliant",  "dataResidency"] as const
     },
+    
     {
       icon: Award,
       titleKey: "internationalStandards" as const,
@@ -124,7 +125,7 @@ const SecuritySection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {compliance.map((item, index) => {
               const Icon = item.icon;
               return (

@@ -22,14 +22,14 @@ export const translations = {
     bankGradeSecurity: "Bank-Grade Security",
     startYourJourney: "Start Your Journey",
     scheduleDemo: "Schedule Demo",
-    uaeCentralBankLicensed: "UAE Central Bank Licensed",
+    uaeCentralBankLicensed: "Regulatory and Compliant Infrastructure",
     iso27001Certified: "ISO 27001 Certified",
     support247: "24/7 Support",
 
     // Features Section
     featuresTitle: "Powerful Features for Modern Businesses",
     featuresSubtitle:
-      "Everything you need to manage cross-border payments efficiently, securely, and in full compliance with UAE regulations.",
+      "Everything you need to manage cross-border payments efficiently, securely, and in full compliance with regulatory and compliant infrastructure regulations.",
     userHierarchies: "User Hierarchies & Workflows",
     userHierarchiesDesc:
       "Create internal user hierarchies with customizable approval workflows based on transaction thresholds.",
@@ -41,7 +41,7 @@ export const translations = {
       "Process individual invoice payments or bulk salary disbursements with comprehensive documentation support.",
     regulatoryCompliance: "Regulatory Compliance",
     regulatoryComplianceDesc:
-      "Full UAE Central Bank KYB compliance with automated and manual verification options.",
+      "Full regulatory KYB compliance with automated and manual verification options.",
     seamlessIntegration: "Seamless Integration",
     seamlessIntegrationDesc:
       "Real-time access to payout destinations, exchange rates, and fees through secure API integration.",
@@ -67,7 +67,7 @@ export const translations = {
     // Security Section
     securityTitle: "Security & Compliance First",
     securitySubtitle:
-      "Your business transactions are protected by enterprise-grade security and full regulatory compliance with UAE and international standards.",
+      "Your business transactions are protected by enterprise-grade security and full regulatory compliance with international standards.",
     endToEndEncryption: "End-to-End Encryption",
     endToEndEncryptionDesc:
       "All data transmitted through 256-bit SSL encryption with advanced security protocols.",
@@ -95,7 +95,7 @@ export const translations = {
     kybCompliance: "KYB Compliance",
     dataProtection: "Data Protection",
     dataProtectionDesc:
-      "GDPR compliant data handling with UAE Data Protection Law adherence.",
+      "GDPR compliant data handling with local regulatory data protection Law adherence.",
     gdprCompliant: "GDPR Compliant",
     uaeDpl: "UAE DPL",
     dataResidency: "Data Residency",
@@ -113,7 +113,7 @@ export const translations = {
       "Get started in just four simple steps and transform your cross-border payment operations",
     businessOnboarding: "Business Onboarding",
     businessOnboardingDesc:
-      "Complete UAE Central Bank KYB compliance with our streamlined digital onboarding process.",
+      "Complete regulatory KYB compliance with our streamlined digital onboarding process.",
     uploadBusinessDocs: "Upload business documents",
     automatedVerification: "Automated verification process",
     sourceOfFunds: "Source of funds declaration",
@@ -146,7 +146,7 @@ export const translations = {
 
     // Footer
     footerDesc:
-      "Transforming cross-border payments for businesses across the UAE and beyond. Licensed, secure, and compliant with UAE Central Bank regulations.",
+      "Transforming cross-border payments for businesses across the globe. Licensed, secure, and compliant with regulatory regulations.",
     services: "Services",
     crossBorderPaymentsService: "Cross-Border Payments",
     bulkTransactions: "Bulk Transactions",
@@ -159,7 +159,7 @@ export const translations = {
     integrationGuide: "Integration Guide",
     contactSupport: "Contact Support",
     systemStatus: "System Status",
-    contactCompliance: "Contact & Compliance",
+    contactCompliance: "Contact",
     allRightsReserved: "All rights reserved.",
     privacyPolicy: "Privacy Policy",
     termsOfService: "Terms of Service",
@@ -407,8 +407,7 @@ export const translations = {
 
     // Exchange Dashboard
     exchangeHouseDashboard: "Exchange House Dashboard",
-    manageKYBAndBranches:
-      "Manage KYB applications and branch operations across all locations",
+    manageKYBAndBranches: "Manage KYB applications and branch operations across all locations",
     recentKYBApplications: "Recent KYB Applications",
     branchWorkloadDistribution: "Branch Workload Distribution",
     manager: "Manager",
@@ -627,14 +626,14 @@ export const translations = {
     bankGradeSecurity: "أمان على مستوى البنوك",
     startYourJourney: "ابدأ رحلتك",
     scheduleDemo: "جدولة عرض توضيحي",
-    uaeCentralBankLicensed: "مرخص من البنك المركزي الإماراتي",
+    uaeCentralBankLicensed: " البنية التحتية التنظيمية والمتوافقة",
     iso27001Certified: "حاصل على شهادة ISO 27001",
     support247: "دعم على مدار الساعة",
 
     // Features Section
     featuresTitle: "ميزات قوية للشركات الحديثة",
     featuresSubtitle:
-      "كل ما تحتاجه لإدارة المدفوعات العابرة للحدود بكفاءة وأمان وامتثال كامل للوائح الإمارات.",
+    "كل ما تحتاجه لإدارة المدفوعات العابرة للحدود بكفاءة وأمان وبما يتوافق تماماً مع لوائح البنية التحتية التنظيمية والامتثالية",
     userHierarchies: "تسلسلات المستخدمين وسير العمل",
     userHierarchiesDesc:
       "إنشاء تسلسلات مستخدمين داخلية مع سير عمل موافقات قابل للتخصيص بناءً على عتبات المعاملات.",
@@ -646,7 +645,7 @@ export const translations = {
       "معالجة مدفوعات الفواتير الفردية أو صرف الرواتب بالجملة مع دعم توثيق شامل.",
     regulatoryCompliance: "الامتثال التنظيمي",
     regulatoryComplianceDesc:
-      "امتثال كامل لمتطلبات البنك المركزي الإماراتي مع خيارات التحقق الآلية واليدوية.",
+     "الامتثال التنظيمي الكامل لـ KYB مع خيارات التحقق الآلي واليدوي",
     seamlessIntegration: "تكامل سلس",
     seamlessIntegrationDesc:
       "وصول في الوقت الفعلي إلى وجهات الدفع وأسعار الصرف والرسوم من خلال تكامل واجهة البرمجة الآمنة.",
@@ -671,7 +670,7 @@ export const translations = {
     // Security Section
     securityTitle: "الأمان والامتثال أولاً",
     securitySubtitle:
-      "معاملات عملك محمية بأمان على مستوى المؤسسات وامتثال تنظيمي كامل مع المعايير الإماراتية والدولية.",
+      "معاملاتك التجارية محمية بأمان على مستوى المؤسسات والامتثال التنظيمي الكامل للمعايير الدولية.",
     endToEndEncryption: "تشفير من طرف إلى طرف",
     endToEndEncryptionDesc:
       "جميع البيانات المنقولة من خلال تشفير SSL 256 بت مع بروتوكولات أمان متقدمة.",
@@ -699,7 +698,7 @@ export const translations = {
     kybCompliance: "امتثال اعرف عميلك التجاري",
     dataProtection: "حماية البيانات",
     dataProtectionDesc:
-      "معالجة بيانات متوافقة مع اللائحة العامة لحماية البيانات مع الالتزام بقانون حماية البيانات الإماراتي.",
+      "معالجة البيانات متوافقة مع اللائحة الأوروبية لحماية البيانات (GDPR) مع الالتزام بقوانين حماية البيانات التنظيمية المحلية.",
     gdprCompliant: "متوافق مع اللائحة العامة لحماية البيانات",
     uaeDpl: "قانون حماية البيانات الإماراتي",
     dataResidency: "إقامة البيانات",
@@ -717,7 +716,7 @@ export const translations = {
       "ابدأ في أربع خطوات بسيطة فقط وحول عمليات الدفع العابرة للحدود",
     businessOnboarding: "تسجيل الأعمال",
     businessOnboardingDesc:
-      "أكمل امتثال اعرف عميلك التجاري للبنك المركزي الإماراتي من خلال عملية التسجيل الرقمية المبسطة.",
+      "الامتثال التنظيمي الكامل لـ KYB من خلال عملية الإعداد الرقمي المبسّطة لدينا.",
     uploadBusinessDocs: "تحميل مستندات الأعمال",
     automatedVerification: "عملية التحقق الآلية",
     sourceOfFunds: "إقرار مصدر الأموال",
@@ -750,7 +749,7 @@ export const translations = {
 
     // Footer
     footerDesc:
-      "تحويل المدفوعات العابرة للحدود للشركات في جميع أنحاء الإمارات وخارجها. مرخص وآمن ومتوافق مع لوائح البنك المركزي الإماراتي.",
+      "تحويل المدفوعات العابرة للحدود للشركات حول العالم. مرخصة وآمنة ومتوافقة مع اللوائح التنظيمية.",
     services: "الخدمات",
     crossBorderPaymentsService: "المدفوعات العابرة للحدود",
     bulkTransactions: "المعاملات بالجملة",
@@ -763,7 +762,7 @@ export const translations = {
     integrationGuide: "دليل التكامل",
     contactSupport: "الاتصال بالدعم",
     systemStatus: "حالة النظام",
-    contactCompliance: "الاتصال والامتثال",
+    contactCompliance: "اتصل بنا",
     allRightsReserved: "جميع الحقوق محفوظة.",
     privacyPolicy: "سياسة الخصوصية",
     termsOfService: "شروط الخدمة",

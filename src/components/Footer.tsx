@@ -63,26 +63,26 @@ const Footer = () => {
               <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <MapPin className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
                 <span className="text-background/80">
-                  Dubai International Financial Centre<br />
-                  Dubai, UAE
+                  Meydan Grandstand, 6th Floor, Meydan Road, Nad Al Sheba,<br />
+                  Dubai, United Arab Emirates
                 </span>
               </div>
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              {/* <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Phone className="h-4 w-4 text-accent" />
                 <span className="text-background/80">+971 4 XXX XXXX</span>
-              </div>
+              </div> */}
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Mail className="h-4 w-4 text-accent" />
-                <span className="text-background/80">support@bizpayaxis.ae</span>
+                <span className="text-background/80">connect@tijarasoft.com</span>
               </div>
             </div>
             
             {/* Compliance Badges */}
             <div className="mt-6 space-y-2">
-              <div className={`flex items-center gap-2 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}>
+              {/* <div className={`flex items-center gap-2 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Shield className="h-4 w-4 text-accent" />
                 <span className="text-background/80">{t('uaeCentralBankLicensed')}</span>
-              </div>
+              </div> */}
               <div className={`flex items-center gap-2 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Award className="h-4 w-4 text-accent" />
                 <span className="text-background/80">{t('iso27001Certified')}</span>
