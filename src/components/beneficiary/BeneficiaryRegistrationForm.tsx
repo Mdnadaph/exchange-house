@@ -798,6 +798,9 @@ const BeneficiaryRegistrationForm = ({
                         }
                         clearFieldError("dateOfBirth");
                       }}
+                      captionLayout="dropdown" // 👈 ADD THIS
+                      fromYear={1900} // 👈 MIN YEAR
+                      toYear={new Date().getFullYear()} //
                       disabled={(date) =>
                         date > new Date() || date < new Date("1900-01-01")
                       }

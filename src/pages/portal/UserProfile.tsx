@@ -742,7 +742,11 @@ const UserProfile = () => {
                     </label>
                   ) : (
                     <img
-                      src={businessProfile?.logoUrl || ""}
+                      src={
+                        businessProfile?.logoUrl
+                          ? businessProfile?.logoUrl
+                          : "https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383.jpg?semt=ais_incoming&w=740&q=80"
+                      }
                       alt="Profile"
                       className="h-20 w-20 rounded-full object-cover border"
                     />
@@ -863,7 +867,6 @@ const UserProfile = () => {
               <CardContent className="space-y-4">
                 {/* Updated KYB Status display using businessProfile.kybStatus */}
 
-                
                 <div className="flex justify-center py-4">
                   {businessProfile.kybStatus ? (
                     <Badge
