@@ -74,7 +74,7 @@ interface MappingItem {
   default: boolean;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────
 
 const kybTypeBadgeColor: Record<string, string> = {
   SME: "bg-blue-100 text-blue-700 border-blue-200",
@@ -89,14 +89,14 @@ const kybTypeBadgeColor: Record<string, string> = {
 const getKybBadgeClass = (code: string) =>
   kybTypeBadgeColor[code] ?? "bg-gray-100 text-gray-700 border-gray-200";
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────────────
 
 const AdminKybMapping = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
 
-  // ── Data state ──────────────────────────────────────────────────────────────
+  // ── Data state ─────────────────────────────────────────────────────────
   const [mappings, setMappings] = useState<MappingItem[]>([]);
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [kybTypes, setKybTypes] = useState<KybType[]>([]);
