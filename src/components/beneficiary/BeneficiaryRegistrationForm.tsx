@@ -82,6 +82,8 @@ const BeneficiaryRegistrationForm = ({
   const [proofOfAddress, setProofOfAddress] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+
   const clearFieldError = (field: string) => {
     setErrors((prev) => {
       const next = { ...prev };
@@ -144,6 +146,9 @@ const BeneficiaryRegistrationForm = ({
     if (!formData.addressLine1.trim())
       newErrors.addressLine1 = ["Address line 1 is required"];
     if (!formData.city.trim()) newErrors.city = ["City is required"];
+
+    if (!selectedCurrency)
+      newErrors.selectedCurrency = ["Payout currency is required"];
 
     // Beneficiary type specific
     if (beneficiaryType === "individual") {
@@ -371,6 +376,8 @@ const BeneficiaryRegistrationForm = ({
       state: formData.state,
       postalCode: formData.postalCode,
       addressCountryId: beneficiaryCountry == "AE" ? 1 : beneficiaryCountry,
+
+      payoutCurrency: selectedCurrency,
     };
 
     if (beneficiaryType === "individual") {
@@ -610,22 +617,29 @@ const BeneficiaryRegistrationForm = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-1">
                 <Label htmlFor="country">
                   Beneficiary Country <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={beneficiaryCountry}
+                  // value={beneficiaryCountry}
+                  // onValueChange={(value) => {
+                  //   setBeneficiaryCountry(value);
+                  //   clearFieldError("beneficiaryCountry");
+                  // }}
+
                   onValueChange={(value) => {
                     setBeneficiaryCountry(value);
+                    setSelectedCurrency(""); // reset currency on country change
                     clearFieldError("beneficiaryCountry");
+                    clearFieldError("selectedCurrency");
                   }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select destination country" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border border-border z-50">
+                  {/* <SelectContent className="bg-background border border-border z-50">
                     {beneficiariesCountries?.data
                       .filter((dest: any) => dest?.payoutCurrency !== "AED")
                       .map((country: any) => (
@@ -633,6 +647,13 @@ const BeneficiaryRegistrationForm = ({
                           {country?.countryName}
                         </SelectItem>
                       ))}
+                  </SelectContent> */}
+                  <SelectContent className="bg-background border border-border z-50">
+                    {beneficiariesCountries?.data.map((country: any) => (
+                      <SelectItem key={country.id} value={String(country.id)}>
+                        {country.countryName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {errors.beneficiaryCountry?.map((msg, i) => (
@@ -641,6 +662,50 @@ const BeneficiaryRegistrationForm = ({
                   </p>
                 ))}
               </div>
+
+              <div className="md:col-span-1">
+              {beneficiaryCountry &&
+                (() => {
+                  const selectedCountryData = beneficiariesCountries?.data.find(
+                    (c: any) => String(c.id) === beneficiaryCountry,
+                  );
+                  return selectedCountryData?.payoutCurrency?.length > 0 ? (
+                    <div className="md:col-span-1 space-y-0">
+                      <Label>
+                        Payout Currency <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={selectedCurrency}
+                        onValueChange={(value) => {
+                          setSelectedCurrency(value);
+                          clearFieldError("selectedCurrency");
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payout currency" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50">
+                          {selectedCountryData.payoutCurrency.map(
+                            (currency: string) => (
+                              <SelectItem key={currency} value={currency}>
+                                {currency}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {errors.selectedCurrency?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null;
+              })()}
+              </div>
+
+
+              
 
               {beneficiaryCountry && getExchangeInfo() && (
                 <div className="md:col-span-2">

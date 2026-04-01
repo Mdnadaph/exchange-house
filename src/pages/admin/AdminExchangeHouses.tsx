@@ -117,11 +117,11 @@ const AdminExchangeHouses = () => {
   const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
-
   const { t, isRTL } = useLanguage();
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [selectedHouseId, setSelectedHouseId] = useState<number | null>(null);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
@@ -143,9 +143,7 @@ const AdminExchangeHouses = () => {
     suspended: 0,
   });
 
-  // const [errors, setErrors] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-
   const [loading, setLoading] = useState(true);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -210,7 +208,7 @@ const AdminExchangeHouses = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&size=${pageSize}&query=${encodeURIComponent(searchQuery)}`,
+        `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&size=${pageSize}&query=${encodeURIComponent(debouncedSearch)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -242,8 +240,21 @@ const AdminExchangeHouses = () => {
   };
 
   useEffect(() => {
-    fetchExchangeAdmins();
-  }, [token, currentPage, searchQuery]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 2. Reset page when debounced search changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearch]);
+
+  // 3. THE FIX: depend on BOTH currentPage AND debouncedSearch
+  useEffect(() => {
+    if (token) fetchExchangeAdmins();
+  }, [token, currentPage, debouncedSearch]);
 
   const handleSubmitOnboarding = async () => {
     setFormSubmitting(true);
