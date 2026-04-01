@@ -58,7 +58,7 @@ const SingleTransactionForm = ({
   const [selectedSource, setSelectedSource] = useState("");
   const [transactionPurpose, setTransactionPurpose] = useState("");
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("");
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -67,7 +67,9 @@ const SingleTransactionForm = ({
   const [beneficiariesList, setBeneficiariesList] = useState([]);
   const [feeManagementData, setFeeManagementData] = useState([]);
   const [discountCode, setDiscountCode] = useState("");
+  const [feeRule, setFeeRule] = useState<any>({});
   const [receiverAmount, setReceiverAmount] = useState("");
+  const [feeResponsibility, setFeeResponsibility] = useState("");
   const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
     useState<any>(null);
   const [cookie] = useCookies(["token"]);
@@ -134,6 +136,21 @@ const SingleTransactionForm = ({
     {
       id: "3",
       name: "Cash",
+    },
+  ];
+
+  const feeResponsibilityList = [
+    {
+      value: "BUSINESS",
+      label: "Business",
+    },
+    {
+      value: "BENEFICIARY",
+      label: "Beneficiary",
+    },
+    {
+      value: "SHARED",
+      label: "Shared",
     },
   ];
 
@@ -214,7 +231,6 @@ const SingleTransactionForm = ({
         }),
       );
   }, [open]);
-
   const submitTransaction = async () => {
     // if (selectedPurpose?.doc && documents.length === 0) {
     //   toast({
@@ -230,6 +246,7 @@ const SingleTransactionForm = ({
       sourceAccountId: selectedSource,
       beneficiaryId: selectedBeneficiary,
       amount: Number(receiverAmount),
+      feeResponsibility,
       // discountCode: "",
       currencyId: currency,
       notes,
@@ -284,6 +301,25 @@ const SingleTransactionForm = ({
       toast({
         variant: "destructive",
         title: err?.response?.data?.message || "Transaction failed",
+      });
+    }
+  };
+  const fetchFeeRulesForTransaction = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/fees/${currency}/get-fee-rules-for-transaction`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setFeeRule(res?.data?.data);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err?.message,
+        variant: "destructive",
       });
     }
   };
@@ -414,6 +450,9 @@ const SingleTransactionForm = ({
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
+  useEffect(() => {
+    fetchFeeRulesForTransaction();
+  }, [currency]);
   // useEffect(() => {
   //   setReceiverAmount(String(Number(amount) * beneficiariyCurrency?.rate));
   // }, [amount, beneficiariyCurrency?.rate]);
@@ -660,6 +699,83 @@ const SingleTransactionForm = ({
               </CardContent>
             </Card>
 
+            {feeRule?.id && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Fee Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {/* Business */}
+                    <div className="p-4 border rounded-2xl shadow-sm bg-white">
+                      <h2 className="text-lg font-semibold mb-3">Business</h2>
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <p>
+                          <span className="font-medium">Fee Type:</span>{" "}
+                          {feeRule?.businessFee?.businessFeeType || "-"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Fee Value:</span>{" "}
+                          {feeRule?.businessFee?.businessFeeValue || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Beneficiary */}
+                    <div className="p-4 border rounded-2xl shadow-sm bg-white">
+                      <h2 className="text-lg font-semibold mb-3">
+                        Beneficiary
+                      </h2>
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <p>
+                          <span className="font-medium">Fee Type:</span>{" "}
+                          {feeRule?.beneficiaryFee?.beneficiaryFeeType || "-"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Fee Value:</span>{" "}
+                          {feeRule?.beneficiaryFee?.beneficiaryFeeValue || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Shared */}
+                    <div className="p-4 border rounded-2xl shadow-sm bg-white">
+                      <h2 className="text-lg font-semibold mb-3">Shared</h2>
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <p>
+                          <span className="font-medium">
+                            Business Fee Type:
+                          </span>{" "}
+                          {feeRule?.shareFee?.sharedBusinessFeeType || "-"}
+                        </p>
+                        <p>
+                          <span className="font-medium">
+                            Business Fee Value:
+                          </span>{" "}
+                          {feeRule?.shareFee?.sharedBusinessFeeValue || "-"}
+                        </p>
+                        <p>
+                          <span className="font-medium">
+                            Beneficiary Fee Type:
+                          </span>{" "}
+                          {feeRule?.shareFee?.sharedBeneficiaryFeeType || "-"}
+                        </p>
+                        <p>
+                          <span className="font-medium">
+                            Beneficiary Fee Value:
+                          </span>{" "}
+                          {feeRule?.shareFee?.sharedBeneficiaryFeeValue || "-"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Transaction Amount */}
             {selectedBeneficiary && (
               <Card>
@@ -732,7 +848,39 @@ const SingleTransactionForm = ({
                         maxLength={12}
                       />
                     </div>
-
+                    <div>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label htmlFor="source">
+                            Select Source Account *
+                          </Label>
+                          <Select
+                            value={feeResponsibility}
+                            onValueChange={setFeeResponsibility}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Choose source account" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border border-border z-50">
+                              {feeResponsibilityList?.map(
+                                (feeResponsibility, index) => (
+                                  <SelectItem
+                                    key={index}
+                                    value={feeResponsibility.value}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">
+                                        {feeResponsibility.label}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ),
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </CardContent>
+                    </div>
                     <div>
                       <Label htmlFor="currency">Currency *</Label>
                       <Select
