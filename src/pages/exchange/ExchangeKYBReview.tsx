@@ -125,6 +125,9 @@ const ExchangeKYBReview = () => {
     fetchKYBApplications(currentPage, searchTerm, filterStatus);
   }, [currentPage, filterStatus]);
   useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm]);
+  useEffect(() => {
     const timer = setTimeout(() => {
       fetchKYBApplications(0, searchTerm, filterStatus);
     }, 500);

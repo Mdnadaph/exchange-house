@@ -102,6 +102,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       code: "NAV_KYB_CONFIG",
     },
     {
+      name: "KYB Mappning",
+      href: "/exchange/onmapping",
+      icon: FileCheck,
+      code: "NAV_KYB_MAPPING",
+    },
+    {
       name: "Transactions",
       href: "/exchange/transactions",
       icon: CreditCard,

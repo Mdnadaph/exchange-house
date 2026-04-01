@@ -136,7 +136,6 @@ const ExchangeComplianceConfig = () => {
     });
   };
   const actions = [
-    "FLAG",
     "MANUAL_REVIEW",
     "ENHANCED_SCREENING",
     "AUTO_REPORT_CBUAE",

@@ -89,6 +89,7 @@ import ExchangeAdminUser from "./pages/exchange/ExchangeAdminUser";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ExchangeKybMapping from "./pages/exchange/ExchangeKybMaping";
 
 const queryClient = new QueryClient();
 
@@ -213,11 +214,15 @@ function App() {
                       path="/admin/exchange-houses"
                       element={<AdminExchangeHouses />}
                     />
+
                     <Route
                       path="/admin/exchange-houses/:id"
                       element={<AdminExchangeHouseDetails />}
                     />
-                    <Route path="/admin/onmapping" element={<AdminKybMapping />} />
+                    <Route
+                      path="/admin/onmapping"
+                      element={<AdminKybMapping />}
+                    />
 
                     <Route path="onboarding" element={<AdminOnboarding />} />
                     <Route
@@ -289,6 +294,7 @@ function App() {
                     />
                     <Route path="kyb-review" element={<ExchangeKYBReview />} />
                     <Route path="kyb-config" element={<ExchangeKYBConfig />} />
+                    <Route path="onmapping" element={<ExchangeKybMapping />} />
                     <Route path="create-kyb-rule" element={<CreateKybRule />} />
                     <Route
                       path="transactions"

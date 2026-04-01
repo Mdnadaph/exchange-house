@@ -38,11 +38,26 @@ import {
   Building,
   Trash2,
   X,
+  Check,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { usePermission } from "@/hooks/usePermission";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 interface PayoutDestination {
   id: string;
@@ -75,7 +90,6 @@ type MechanismConfig = {
 
 type DestinationForm = {
   country: string;
-  currency: string;
   status: "active" | "maintenance" | "inactive";
   partners: string;
   volume: string;
@@ -114,6 +128,7 @@ const ExchangePayoutConfig = () => {
   const token = cookies?.token;
 
   const [countries, setCountries] = useState([]);
+  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
@@ -260,7 +275,6 @@ const ExchangePayoutConfig = () => {
 
   const [destinationForm, setDestinationForm] = useState<DestinationForm>({
     country: "",
-    currency: "",
     status: "active",
     partners: "",
     volume: "",
@@ -329,9 +343,9 @@ const ExchangePayoutConfig = () => {
     //   partners: "",
     //   volume: "",
     // });
+    setSelectedCurrencies([]);
     setDestinationForm({
       country: "",
-      currency: "",
       status: "active",
       partners: "",
       volume: "",
@@ -343,7 +357,7 @@ const ExchangePayoutConfig = () => {
   const buildPayload = () => {
     return {
       countryId: Number(destinationForm.country),
-      payoutCurrency: destinationForm.currency,
+      payoutCurrencies: selectedCurrencies,
       status: destinationForm.status.toUpperCase(),
       partnersCount: Number(destinationForm.partners),
       monthlyVolumeUsd: Number(destinationForm.volume),
@@ -543,9 +557,9 @@ const ExchangePayoutConfig = () => {
   };
   const openEditDialog = (destinationEditableData: any) => {
     setId(destinationEditableData?.id);
+    setSelectedCurrencies(destinationEditableData?.currencies);
     setDestinationForm({
       country: destinationEditableData?.countryId,
-      currency: destinationEditableData?.currency,
       status: destinationEditableData?.status.toLowerCase(),
       mechanisms: destinationEditableData?.mechanisms?.map(
         (item: any) => item?.name,
@@ -615,8 +629,8 @@ const ExchangePayoutConfig = () => {
     setDestinationForm((prev) => ({
       ...prev,
       country,
-      currency: countryData?.currencyCode,
     }));
+    setSelectedCurrencies((prev) => [...prev, countryData?.currencyCode]);
     setErrors((prev: any) => ({
       ...prev,
       country: "",
@@ -817,10 +831,20 @@ const ExchangePayoutConfig = () => {
                                 <h4 className="text-lg font-semibold text-foreground">
                                   {destination?.countryName}
                                 </h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {t("currency") || "Currency"}:{" "}
-                                  {destination.currency}
-                                </p>
+                                <div className="text-sm text-muted-foreground w-full flex items-center gap-3">
+                                  <div> Currencies: </div>
+                                  <div className="flex gap-2 items-center">
+                                    {destination?.currencies?.map(
+                                      (currency: string) => (
+                                        <div className="px-2 py-1 bg-blue-900 rounded-md">
+                                          <span className="text-white">
+                                            {currency}
+                                          </span>
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                               <Badge
                                 variant={status?.variant}
@@ -1278,18 +1302,74 @@ const ExchangePayoutConfig = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("currency") || "Currency"}</Label>
-                  <Input
-                    disabled
-                    value={destinationForm?.currency}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        currency: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., INR"
-                  />
+                  <Label>Currency</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <Globe className="mr-2 h-4 w-4 shrink-0" />
+
+                        {selectedCurrencies.length > 0
+                          ? selectedCurrencies.join(", ")
+                          : "Select currencies..."}
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-full p-2" align="start">
+                      <Command className="w-full">
+                        <CommandInput placeholder="Search currencies..." />
+                        <CommandList
+                          className="w-full max-h-60 overflow-y-auto"
+                          onWheel={(e) => e.stopPropagation()}
+                        >
+                          <CommandEmpty>No currency found.</CommandEmpty>
+                          <CommandGroup className="w-full">
+                            {countries?.map((country) => {
+                              const isSelected = selectedCurrencies.includes(
+                                country.currencyCode,
+                              );
+
+                              return (
+                                <CommandItem
+                                  key={country.id}
+                                  onSelect={() => {
+                                    setSelectedCurrencies((prev) => {
+                                      const exists = prev.includes(
+                                        country.currencyCode,
+                                      );
+
+                                      return exists
+                                        ? prev.filter(
+                                            (c) => c !== country.currencyCode,
+                                          )
+                                        : [...prev, country.currencyCode];
+                                    });
+                                  }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4",
+                                      isSelected ? "opacity-100" : "opacity-0",
+                                    )}
+                                  />
+
+                                  {country.currencyCode}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Error */}
+                  {errors.currencies && (
+                    <p className="text-red-500 text-xs">{errors.currencies}</p>
+                  )}
                 </div>
               </div>
 
@@ -1511,8 +1591,81 @@ const ExchangePayoutConfig = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("currency") || "Currency"}</Label>
-                  <Input
+                  <div className="space-y-2">
+                    <Label>Currency</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <Globe className="mr-2 h-4 w-4 shrink-0" />
+
+                          {selectedCurrencies.length > 0
+                            ? selectedCurrencies.join(", ")
+                            : "Select currencies..."}
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-full p-2" align="start">
+                        <Command className="w-full">
+                          <CommandInput placeholder="Search currencies..." />
+                          <CommandList
+                            className="w-full max-h-60 overflow-y-auto"
+                            onWheel={(e) => e.stopPropagation()}
+                          >
+                            <CommandEmpty>No currency found.</CommandEmpty>
+                            <CommandGroup className="w-full">
+                              {countries?.map((country) => {
+                                const isSelected = selectedCurrencies.includes(
+                                  country.currencyCode,
+                                );
+
+                                return (
+                                  <CommandItem
+                                    key={country.id}
+                                    onSelect={() => {
+                                      setSelectedCurrencies((prev) => {
+                                        const exists = prev.includes(
+                                          country.currencyCode,
+                                        );
+
+                                        return exists
+                                          ? prev.filter(
+                                              (c) => c !== country.currencyCode,
+                                            )
+                                          : [...prev, country.currencyCode];
+                                      });
+                                    }}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "h-4 w-4",
+                                        isSelected
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+
+                                    {country.currencyCode}
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Error */}
+                    {errors.currencies && (
+                      <p className="text-red-500 text-xs">
+                        {errors.currencies}
+                      </p>
+                    )}
+                  </div>
+                  {/* <Input
                     disabled
                     value={destinationForm.currency}
                     onChange={(e) =>
@@ -1521,7 +1674,7 @@ const ExchangePayoutConfig = () => {
                         currency: e.target.value,
                       }))
                     }
-                  />
+                  /> */}
                 </div>
               </div>
 

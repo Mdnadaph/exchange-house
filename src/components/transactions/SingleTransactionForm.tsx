@@ -447,10 +447,13 @@ const SingleTransactionForm = ({
     (currency: any) =>
       currency?.name == getSelectedBeneficiriesData?.currency.toLowerCase(),
   );
+
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
+
   useEffect(() => {
+    if (!currency) return;
     fetchFeeRulesForTransaction();
   }, [currency]);
   // useEffect(() => {
@@ -704,7 +707,7 @@ const SingleTransactionForm = ({
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
-                    Fee Management
+                    Fee Rule
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -852,14 +855,14 @@ const SingleTransactionForm = ({
                       <CardContent className="space-y-4">
                         <div>
                           <Label htmlFor="source">
-                            Select Source Account *
+                            Select Fee Responsibility *
                           </Label>
                           <Select
                             value={feeResponsibility}
                             onValueChange={setFeeResponsibility}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Choose source account" />
+                              <SelectValue placeholder="Choose fee responsibility" />
                             </SelectTrigger>
                             <SelectContent className="bg-background border border-border z-50">
                               {feeResponsibilityList?.map(

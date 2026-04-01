@@ -142,21 +142,64 @@ const ExchangeFeeManagement = () => {
 
     // VAT
     if (!newFeeRule.vat) {
-      errors.minAmount = "VAT is required";
+      errors.vat = "VAT is required"; // ✅ FIXED KEY
     } else if (Number(newFeeRule.vat) < 0) {
-      errors.minAmount = "VAT cannot be negative";
+      errors.vat = "VAT cannot be negative";
     }
 
-    // Max Amount
-    // if (!newFeeRule.maxAmount) {
-    //   errors.maxAmount = "Max amount is required";
-    // } else if (Number(newFeeRule.maxAmount) <= 0) {
-    //   errors.maxAmount = "Max amount must be greater than 0";
-    // }
+    // Business Fee
+    if (!newFeeRule.businessFeeType) {
+      errors.businessFeeType = "Business fee type is required";
+    }
 
-    // Fee Responsibility
+    if (!newFeeRule.businessFeeValue) {
+      errors.businessFeeValue = "Business fee value is required";
+    } else if (Number(newFeeRule.businessFeeValue) <= 0) {
+      errors.businessFeeValue = "Must be greater than 0";
+    }
+
+    // Beneficiary Fee
+    if (!newFeeRule.beneficiaryFeeType) {
+      errors.beneficiaryFeeType = "Beneficiary fee type is required";
+    }
+
+    if (!newFeeRule.transactionType) {
+      errors.transactionType = "Transaction type is required";
+    }
+
+    if (!newFeeRule.beneficiaryFeeValue) {
+      errors.beneficiaryFeeValue = "Beneficiary fee value is required";
+    } else if (Number(newFeeRule.beneficiaryFeeValue) <= 0) {
+      errors.beneficiaryFeeValue = "Must be greater than 0";
+    }
+
+    // Shared - Business
+    if (!newFeeRule.sharedBusinessFeeType) {
+      errors.sharedBusinessFeeType = "Shared Business Fee Type is Required";
+    }
+
+    if (!newFeeRule.sharedBusinessFeeValue) {
+      errors.sharedBusinessFeeValue = "Shared Business Fee Value is Required";
+    } else if (Number(newFeeRule.sharedBusinessFeeValue) <= 0) {
+      errors.sharedBusinessFeeValue = "Must be greater than 0";
+    }
+
+    // Shared - Beneficiary
+    if (!newFeeRule.sharedBeneficiaryFeeType) {
+      errors.sharedBeneficiaryFeeType = "Shared Beneficiary Type is Required";
+    }
+
+    if (!newFeeRule.sharedBeneficiaryFeeValue) {
+      errors.sharedBeneficiaryFeeValue =
+        "Shared Beneficiary Fee Value is Required";
+    } else if (Number(newFeeRule.sharedBeneficiaryFeeValue) <= 0) {
+      errors.sharedBeneficiaryFeeValue = "Must be greater than 0";
+    }
 
     setFormErrors(errors);
+
+    console.log("Validation Errors:", errors); // 🔍 debug
+
     return Object.keys(errors).length === 0;
   };
 
@@ -266,7 +309,7 @@ const ExchangeFeeManagement = () => {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "Please fix the errors before submitting.",
+        description: "Please fill all required field before submitting.",
       });
       return;
     }
@@ -568,11 +611,6 @@ const ExchangeFeeManagement = () => {
                       clearFormError("transactionType");
                     }}
                   >
-                    {formErrors.transactionType && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {formErrors.transactionType}
-                      </p>
-                    )}
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -584,6 +622,11 @@ const ExchangeFeeManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.transactionType && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors.transactionType}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -630,7 +673,7 @@ const ExchangeFeeManagement = () => {
                   }}
                   onWheel={(e) => e.currentTarget.blur()}
                 />
-                {formErrors.minAmount && (
+                {formErrors.vat && (
                   <p className="text-sm text-red-500 mt-1">{formErrors.vat}</p>
                 )}
               </div>
@@ -704,7 +747,7 @@ const ExchangeFeeManagement = () => {
                     value={newFeeRule.businessFeeType}
                     onValueChange={(v) => {
                       setNewFeeRule({ ...newFeeRule, businessFeeType: v });
-                      clearFormError("feeResponsibility");
+                      clearFormError("businessFeeType");
                     }}
                   >
                     <SelectTrigger>
@@ -715,6 +758,11 @@ const ExchangeFeeManagement = () => {
                       <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.businessFeeType && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors.businessFeeType}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label>
@@ -730,12 +778,13 @@ const ExchangeFeeManagement = () => {
                       newFeeRule.businessFeeType === "BPS" ? "50 (0.5%)" : "25"
                     }
                     value={newFeeRule.businessFeeValue}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewFeeRule({
                         ...newFeeRule,
                         businessFeeValue: e.target.value,
-                      })
-                    }
+                      });
+                      clearFormError("businessFeeValue");
+                    }}
                   />
                   {formErrors.businessFeeValue && (
                     <p className="text-sm text-red-500 mt-1">
@@ -773,7 +822,7 @@ const ExchangeFeeManagement = () => {
                     value={newFeeRule?.beneficiaryFeeType}
                     onValueChange={(v) => {
                       setNewFeeRule({ ...newFeeRule, beneficiaryFeeType: v });
-                      clearFormError("feeResponsibility");
+                      clearFormError("beneficiaryFeeType");
                     }}
                   >
                     <SelectTrigger>
@@ -784,6 +833,11 @@ const ExchangeFeeManagement = () => {
                       <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.beneficiaryFeeType && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors.beneficiaryFeeType}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label>
@@ -802,12 +856,13 @@ const ExchangeFeeManagement = () => {
                         : "25"
                     }
                     value={newFeeRule.beneficiaryFeeValue}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewFeeRule({
                         ...newFeeRule,
                         beneficiaryFeeValue: e.target.value,
-                      })
-                    }
+                      });
+                      clearFormError("beneficiaryFeeValue");
+                    }}
                   />
                   {formErrors.beneficiaryFeeValue && (
                     <p className="text-sm text-red-500 mt-1">
@@ -823,11 +878,6 @@ const ExchangeFeeManagement = () => {
                 </Label>
                 <Input value="SHARED" disabled onChange={() => {}} />
 
-                {formErrors.feeType && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {formErrors.feeType}
-                  </p>
-                )}
                 {/* <p className="text-xs text-muted-foreground mt-1">
                   {newFeeRule.feeResponsibility === "SHARED" &&
                     "Business pays known portion; Beneficiary portion deducted from payout (not shown to Business)"}
@@ -845,12 +895,13 @@ const ExchangeFeeManagement = () => {
                     <Label>Business Fee Type *</Label>
                     <Select
                       value={newFeeRule.sharedBusinessFeeType}
-                      onValueChange={(v) =>
+                      onValueChange={(v) => {
                         setNewFeeRule({
                           ...newFeeRule,
                           sharedBusinessFeeType: v,
-                        })
-                      }
+                        });
+                        clearFormError("sharedBusinessFeeType");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -865,6 +916,11 @@ const ExchangeFeeManagement = () => {
                     {/* <p className="text-xs text-muted-foreground mt-1">
                       "Fee added to transaction cost (visible to Business)"
                     </p> */}
+                    {formErrors.sharedBusinessFeeType && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.sharedBusinessFeeType}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label>
@@ -881,13 +937,19 @@ const ExchangeFeeManagement = () => {
                           : "35"
                       }
                       value={newFeeRule.sharedBusinessFeeValue}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setNewFeeRule({
                           ...newFeeRule,
                           sharedBusinessFeeValue: e.target.value,
-                        })
-                      }
+                        });
+                        clearFormError("sharedBusinessFeeValue");
+                      }}
                     />
+                    {formErrors.sharedBusinessFeeValue && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.sharedBusinessFeeValue}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -895,12 +957,13 @@ const ExchangeFeeManagement = () => {
                     <Label>Beneficiary Fee Type *</Label>
                     <Select
                       value={newFeeRule.sharedBeneficiaryFeeType}
-                      onValueChange={(v) =>
+                      onValueChange={(v) => {
                         setNewFeeRule({
                           ...newFeeRule,
                           sharedBeneficiaryFeeType: v,
-                        })
-                      }
+                        });
+                        clearFormError("sharedBeneficiaryFeeType");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -915,6 +978,11 @@ const ExchangeFeeManagement = () => {
                     {/* <p className="text-xs text-muted-foreground mt-1">
                       "Fee deducted from payout amount (not shown to Business)"
                     </p> */}
+                    {formErrors.sharedBeneficiaryFeeType && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.sharedBeneficiaryFeeType}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label>
@@ -932,13 +1000,19 @@ const ExchangeFeeManagement = () => {
                           : "10"
                       }
                       value={newFeeRule.sharedBeneficiaryFeeValue}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setNewFeeRule({
                           ...newFeeRule,
                           sharedBeneficiaryFeeValue: e.target.value,
-                        })
-                      }
+                        });
+                        clearFormError("sharedBeneficiaryFeeValue");
+                      }}
                     />
+                    {formErrors.sharedBeneficiaryFeeValue && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.sharedBeneficiaryFeeValue}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

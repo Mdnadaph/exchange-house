@@ -122,6 +122,7 @@ const AdminExchangeHouses = () => {
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [selectedHouseId, setSelectedHouseId] = useState<number | null>(null);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
@@ -210,7 +211,7 @@ const AdminExchangeHouses = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&size=${pageSize}&query=${encodeURIComponent(searchQuery)}`,
+        `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&size=${pageSize}&query=${encodeURIComponent(debouncedSearch)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -243,7 +244,18 @@ const AdminExchangeHouses = () => {
 
   useEffect(() => {
     fetchExchangeAdmins();
-  }, [token, currentPage, searchQuery]);
+  }, [token, currentPage, debouncedSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery]);
 
   const handleSubmitOnboarding = async () => {
     setFormSubmitting(true);
