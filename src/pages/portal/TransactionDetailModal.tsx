@@ -175,9 +175,11 @@ const handleDownloadReceipt = (
     }
 
     .logo {
-      font-size: 22px;
-      font-weight: bold;
-    }
+  height: 100px;
+  width: 100px; /* important for perfect circle */
+  border-radius: 50%;
+  object-fit: cover; /* keeps image nicely cropped */
+}
 
     .company-info {
       font-size: 12px;
@@ -253,7 +255,7 @@ const handleDownloadReceipt = (
   <!-- Header -->
   <div class="header">
     <div class="logo-section">
-      <div class="logo">WorkerAppz</div>
+     <img   src="${transaction?.logoUrl ? transaction.logoUrl : "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}"  class="logo" alt="logo"/>
       <div class="company-info">
         ${transaction.branchName || ""}<br/>
         ${transaction.businessName || ""}<br/>

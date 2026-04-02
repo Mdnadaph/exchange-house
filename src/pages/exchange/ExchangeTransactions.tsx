@@ -226,6 +226,7 @@ const ExchangeTransactions = () => {
               businessPhone: apiTx?.businessPhone,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
+              logoUrl: apiTx?.logoUrl,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "",

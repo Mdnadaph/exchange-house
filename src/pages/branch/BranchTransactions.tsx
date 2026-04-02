@@ -253,6 +253,7 @@ const BranchTransactions = () => {
               id: apiTx.reference,
               bulkCount: apiTx?.itemCount,
               businessPhone: apiTx?.businessPhone,
+              logoUrl: apiTx?.logoUrl,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
               branchName: apiTx.branchName || "",

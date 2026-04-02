@@ -307,7 +307,7 @@ const SingleTransactionForm = ({
   const fetchFeeRulesForTransaction = async () => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v3/fees/${currency}/get-fee-rules-for-transaction`,
+        `${BASE_URL}/api/v3/fees/${selectedBeneficiary}/get-fee-rules-for-transaction`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -453,9 +453,9 @@ const SingleTransactionForm = ({
   }, [beneficiariyCurrency]);
 
   useEffect(() => {
-    if (!currency) return;
+    if (!selectedBeneficiary) return;
     fetchFeeRulesForTransaction();
-  }, [currency]);
+  }, [selectedBeneficiary]);
   // useEffect(() => {
   //   setReceiverAmount(String(Number(amount) * beneficiariyCurrency?.rate));
   // }, [amount, beneficiariyCurrency?.rate]);
@@ -480,6 +480,7 @@ const SingleTransactionForm = ({
     (fee: any) =>
       Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
   );
+  console.log("selectedBeneficiary", selectedBeneficiary);
   return (
     <>
       <Dialog

@@ -1337,6 +1337,7 @@ interface EscalationType {
 interface BusinessTypeOption {
   code: string;
   name: string;
+  id: number;
 }
 
 interface DocumentTypeOption {
@@ -1351,7 +1352,7 @@ interface RiskTypeOption {
 }
 
 interface KYBRuleFormValues {
-  businessType: string;
+  businessTypeId: string;
   name: string;
   autoApprovalLimit: number;
   reviewTiers: number;
@@ -1370,7 +1371,7 @@ interface CreateKybRuleProps {
 }
 
 const Step1Schema = Yup.object().shape({
-  businessType: Yup.string().required("Business type is required"),
+  businessTypeId: Yup.string().required("Business type is required"),
   name: Yup.string()
     .min(3, "Name must be at least 3 characters")
     .max(100, "Name must not exceed 100 characters")
@@ -1428,7 +1429,7 @@ const Step2Schema = Yup.object().shape({
 });
 
 const initialValues: KYBRuleFormValues = {
-  businessType: "",
+  businessTypeId: "",
   name: "",
   autoApprovalLimit: 100000,
   reviewTiers: 2,
@@ -1486,9 +1487,9 @@ const Step1: React.FC<Step1Props> = ({
             Business Type <span className="text-red-500">*</span>
           </Label>
           <Select
-            value={values.businessType}
+            value={values.businessTypeId}
             onValueChange={(value: string) =>
-              setFieldValue("businessType", value)
+              setFieldValue("businessTypeId", value)
             }
             // disabled={businessTypes.length === 0}
           >
@@ -1506,14 +1507,14 @@ const Step1: React.FC<Step1Props> = ({
             </SelectTrigger>
             <SelectContent>
               {businessTypes.map((type) => (
-                <SelectItem key={type.code} value={type.code}>
+                <SelectItem key={type.code} value={String(type?.id)}>
                   <span className="font-medium">{type.name}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.businessType && touched.businessType && (
-            <div className="text-red-600 text-sm">{errors.businessType}</div>
+          {errors.businessTypeId && touched.businessTypeId && (
+            <div className="text-red-600 text-sm">{errors.businessTypeId}</div>
           )}
         </div>
 
@@ -2145,12 +2146,11 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
   const [businessTypes, setBusinessTypes] = useState<BusinessTypeOption[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentTypeOption[]>([]);
   const [riskTypes, setRiskTypes] = useState<RiskTypeOption[]>([]);
-  console.log("dhfhhf", ruleToEdit);
   // Pre-fill form when editing
   const getInitialFormValues = (): KYBRuleFormValues => {
     if (isEdit && ruleToEdit) {
       return {
-        businessType: ruleToEdit.businessType || "",
+        businessTypeId: ruleToEdit.businessTypeId?.toString() || "",
         name: ruleToEdit.name || "",
         autoApprovalLimit: ruleToEdit.autoApprovalLimit || 100000,
         reviewTiers: ruleToEdit.reviewTiers || 2,
@@ -2174,7 +2174,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
     }
     return initialValues;
   };
-
+  console.log("businessTypes", businessTypes);
   const handleSubmit = async (values: KYBRuleFormValues) => {
     try {
       setIsSubmitting(true);

@@ -461,7 +461,7 @@ const SingleTransactionWithPreselected = ({
   const fetchFeeRulesForTransaction = async () => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v3/fees/${currency}/get-fee-rules-for-transaction`,
+        `${BASE_URL}/api/v3/fees/${beneficiaryId}/get-fee-rules-for-transaction`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -478,9 +478,9 @@ const SingleTransactionWithPreselected = ({
     }
   };
   useEffect(() => {
-    if (!currency) return;
+    if (!beneficiaryId) return;
     fetchFeeRulesForTransaction();
-  }, [currency]);
+  }, [beneficiaryId]);
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
