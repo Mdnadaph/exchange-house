@@ -18,6 +18,7 @@ interface BusinessUser {
   active: boolean;
   businessId: number;
   businessName: string | null;
+  currencyCode: string;
 }
 
 interface BusinessAdmin {
@@ -71,6 +72,7 @@ const UserVerifyTwoFALogin: React.FC = () => {
     "email",
     "businessAdminId",
     "businessName",
+    "currencyCode",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -198,6 +200,7 @@ const UserVerifyTwoFALogin: React.FC = () => {
         setCookie("fullName", businessUser.fullName, { path: "/" });
         setCookie("email", businessUser.email, { path: "/" });
         setCookie("businessName", businessUser.businessName, { path: "/" });
+        setCookie("currencyCode", businessUser?.currencyCode, { path: "/" });
       }
 
       if (businessAdmin) {

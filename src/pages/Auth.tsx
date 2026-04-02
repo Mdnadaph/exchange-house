@@ -77,7 +77,6 @@ const Auth: React.FC = () => {
     { setSubmitting }: any,
   ) => {
     setErrorMessage("");
-
     try {
       const res = await axios.post(
         `${BASE_URL}/api/v3/unified/login`,
@@ -140,6 +139,9 @@ const Auth: React.FC = () => {
 
         if (data.refreshToken) {
           setCookie("refreshToken", data.refreshToken, { path: "/" });
+        }
+        if (data?.exchangeAdmin?.currencyCode) {
+          setCookie("currencyCode", data?.exchangeAdmin?.currencyCode);
         }
 
         if (data.fullName) {

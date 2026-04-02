@@ -342,6 +342,7 @@ const AdminExchangeHouses = () => {
         });
       }
     } catch (err: any) {
+      console.log("err", err);
       if (
         err.response?.data?.data &&
         typeof err.response.data.data === "object"
@@ -363,14 +364,12 @@ const AdminExchangeHouses = () => {
         //   description: "Please check the highlighted fields",
         //   variant: "destructive",
         // });
-      } else {
-        // Handle other errors (network issues, server errors, etc.)
-        toast({
-          title: "Error",
-          description: err.response?.data?.message || "Something went wrong",
-          variant: "destructive",
-        });
       }
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setFormSubmitting(false);
     }

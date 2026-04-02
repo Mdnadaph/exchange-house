@@ -43,6 +43,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     "businessName",
     "refreshToken",
     "exchangeHouseName",
+    "currencyCode",
   ]);
 
   const id = cookie.businessId;
@@ -86,6 +87,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     removeCookie("businessId", { path: "/" });
     removeCookie("businessName", { path: "/" });
     removeCookie("refreshToken", { path: "/" });
+    removeCookie("currencyCode", { path: "/" });
   };
 
   const handleLogout = async () => {
@@ -143,7 +145,8 @@ const UserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                Business Admin - ({fullName ? fullName : `${firstName || ""} ${lastName || ""}`})
+                Business Admin - (
+                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`})
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
