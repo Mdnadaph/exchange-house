@@ -757,6 +757,7 @@ const ApprovalRuleForm = ({
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: editRule?.name || "",
+    currencyCode: editRule?.currency || "",
     description: editRule?.description || "",
     currencyId: editRule?.currencyId ? String(editRule.currencyId) : "",
     minAmount: editRule?.minAmount || "",
@@ -772,6 +773,7 @@ const ApprovalRuleForm = ({
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [currencies, setCurrencies] = useState([]);
+  const [payoutConfigId, setPayOutConfigId] = useState<number>();
 
   const clearFieldError = (field: string) => {
     setErrors((prev) => {
@@ -788,8 +790,8 @@ const ApprovalRuleForm = ({
       newErrors.ruleName = ["Rule name is required"];
     }
 
-    if (!formData.currencyId) {
-      newErrors.currencyId = ["Currency is required"];
+    if (!formData.currencyCode) {
+      newErrors.currencyCode = ["Currency is required"];
     }
 
     if (formData.transactionTypes.length === 0) {
@@ -815,10 +817,13 @@ const ApprovalRuleForm = ({
 
   const fetchCurrency = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/v1/payout/config?`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCurrencies(res?.data?.data?.countries);
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/payout/config/governance-currencies`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setCurrencies(res?.data?.data);
     } catch (error) {
       console.error("error", error);
     }
@@ -862,6 +867,7 @@ const ApprovalRuleForm = ({
     setFormData({
       name: "",
       description: "",
+      currencyCode: "",
       currencyId: "",
       minAmount: "",
       maxAmount: "",
@@ -942,7 +948,8 @@ const ApprovalRuleForm = ({
 
     const payload = {
       ruleName: formData.name.trim(),
-      currencyId: Number(formData.currencyId),
+      currencyId: payoutConfigId,
+      currencyCode: formData?.currencyCode,
       description: formData.description.trim(),
       minAmount: formData.minAmount ? Number(formData.minAmount) : 0,
       maxAmount: formData.maxAmount ? Number(formData.maxAmount) : 1000000,
@@ -1030,6 +1037,7 @@ const ApprovalRuleForm = ({
         name: editRule.name || "",
         description: editRule.description || "",
         currencyId: editRule.currencyId ? String(editRule.currencyId) : "",
+        currencyCode: editRule?.currency || "",
         minAmount: editRule.minAmount?.toString() || "",
         maxAmount: editRule.maxAmount?.toString() || "",
         department: editRule.department || "All",
@@ -1059,6 +1067,12 @@ const ApprovalRuleForm = ({
       setSuccess(false);
     }
   }, [open]);
+  useEffect(() => {
+    const payoutConfigId = currencies?.find(
+      (c: any) => c?.currencyCode == formData?.currencyCode,
+    )?.payoutConfigId;
+    setPayOutConfigId(payoutConfigId);
+  }, [formData?.currencyCode]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -1096,6 +1110,7 @@ const ApprovalRuleForm = ({
                     Rule Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
+                    disabled={editRule?.id}
                     id="ruleName"
                     value={formData.name}
                     onChange={(e) => {
@@ -1118,9 +1133,10 @@ const ApprovalRuleForm = ({
                     Currency <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={formData.currencyId}
+                    disabled={editRule?.id}
+                    value={formData.currencyCode}
                     onValueChange={(value) => {
-                      setFormData((prev) => ({ ...prev, currencyId: value }));
+                      setFormData((prev) => ({ ...prev, currencyCode: value }));
                       clearFieldError("currencyId");
                     }}
                   >
@@ -1129,13 +1145,16 @@ const ApprovalRuleForm = ({
                     </SelectTrigger>
                     <SelectContent>
                       {currencies.map((c) => (
-                        <SelectItem key={c?.id} value={String(c?.id)}>
-                          {c?.countryName} ({c?.currency})
+                        <SelectItem
+                          key={c?.currencyCode}
+                          value={String(c?.currencyCode)}
+                        >
+                          {c?.countryName} ({c?.currencyCode})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.currencyId?.map((msg, i) => (
+                  {errors.currencyCode?.map((msg, i) => (
                     <p key={i} className="text-sm text-destructive mt-1">
                       {msg}
                     </p>

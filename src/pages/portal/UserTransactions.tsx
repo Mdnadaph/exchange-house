@@ -247,6 +247,7 @@ const UserTransactions = () => {
               }),
               localCurrency: apiTx.targetCurrency,
               status: apiTx.status,
+              logoUrl: apiTx?.logoUrl,
               type: apiTx?.type,
               bulkCount: apiTx?.itemCount,
               purpose: apiTx.purpose || "Transaction",
@@ -323,7 +324,6 @@ const UserTransactions = () => {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);

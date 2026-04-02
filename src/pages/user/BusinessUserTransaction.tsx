@@ -299,6 +299,7 @@ const BusinessUserTransaction = () => {
               fees: apiTx?.feeAmount?.toFixed(2),
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
+              logoUrl: apiTx?.logoUrl,
               failureReason: apiTx.failureReason || "",
               documents: apiTx.documents,
               bulkCount: apiTx?.itemCount,
