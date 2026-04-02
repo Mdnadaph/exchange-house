@@ -42,6 +42,10 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
     "id",
     "refreshToken",
     "businessName",
+    "currencyCode",
+    "exchangeHouseName",
+    "twoFactorMethod",
+    "currencyCode",
   ]);
 
   const id = cookie.businessId;
@@ -77,11 +81,14 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
     removeCookie("email", { path: "/" });
     removeCookie("uuid", { path: "/" });
     removeCookie("id", { path: "/" });
-
     removeCookie("firstName", { path: "/" });
     removeCookie("lastName", { path: "/" });
     removeCookie("requiresTwoFactor", { path: "/" });
     removeCookie("businessId", { path: "/" });
+    removeCookie("currencyCode", { path: "/" });
+    removeCookie("exchangeHouseName", { path: "/" });
+    removeCookie("twoFactorMethod", { path: "/" });
+    removeCookie("currencyCode", { path: "/" });
   };
 
   const handleLogout = async () => {
@@ -140,7 +147,8 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
               <LanguageSwitcher />
               <ThemeToggle />
               <span className="text-sm text-muted-foreground">
-                Business User - ({fullName ? fullName : `${firstName || ""} ${lastName || ""}`})
+                Business User - (
+                {fullName ? fullName : `${firstName || ""} ${lastName || ""}`})
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -161,10 +169,11 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${isActive(item.href)
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
+                    isActive(item.href)
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
+                  }`}
                 >
                   <Icon className="h-5 w-5" />
                   <span className="font-medium">{item.name}</span>

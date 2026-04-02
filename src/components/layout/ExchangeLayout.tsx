@@ -40,6 +40,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     "refreshToken",
     "accessToken",
     "legalBusinessName",
+    "currencyCode",
   ]);
 
   const fullName = cookies.fullName;
@@ -59,6 +60,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     removeCookie("refreshToken", { path: "/" });
     removeCookie("accessToken", { path: "/" });
     removeCookie("legalBusinessName", { path: "/" });
+    removeCookie("currencyCode", { path: "/" });
   };
 
   const handleLogout = async () => {

@@ -21,6 +21,7 @@ const VerifyTwoFALogin: React.FC = () => {
     "roleName",
     "branchName",
     "refreshToken",
+    "currencyCode",
   ]);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -90,7 +91,8 @@ const VerifyTwoFALogin: React.FC = () => {
         return;
       }
 
-      const { accessToken, expiresIn, staff, refreshToken } = response.data.data;
+      const { accessToken, expiresIn, staff, refreshToken } =
+        response.data.data;
 
       /* ===== STORE TOKEN ===== */
       setCookie("token", accessToken, {
@@ -114,7 +116,7 @@ const VerifyTwoFALogin: React.FC = () => {
       setCookie("roleName", staff.roleName, { path: "/" });
       setCookie("role", staff.roleName, { path: "/" });
       setCookie("contactNumber", staff.contactNumber, { path: "/" });
-
+      (setCookie("currencyCode", staff?.currencyCode), { path: "/" });
       /* ===== CLEAR TEMP TOKEN ===== */
       setCookie("tempToken", "", { path: "/", maxAge: 0 });
 
