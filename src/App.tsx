@@ -90,6 +90,7 @@ import ExchangeAdminUser from "./pages/exchange/ExchangeAdminUser";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ExchangeKybMapping from "./pages/exchange/ExchangeKybMaping";
+import AdminCountryCurrency from "./pages/admin/AdminCountryCurrency";
 
 const queryClient = new QueryClient();
 
@@ -223,6 +224,7 @@ function App() {
                       path="/admin/onmapping"
                       element={<AdminKybMapping />}
                     />
+                    <Route path="/admin/county-currency" element={<AdminCountryCurrency />} />
 
                     <Route path="onboarding" element={<AdminOnboarding />} />
                     <Route
