@@ -91,6 +91,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ExchangeKybMapping from "./pages/exchange/ExchangeKybMaping";
 import AdminCountryCurrency from "./pages/admin/AdminCountryCurrency";
+import AdminPayoutMechanism from "./pages/admin/AdminPayoutMechanism";
 
 const queryClient = new QueryClient();
 
@@ -224,9 +225,17 @@ function App() {
                       path="/admin/onmapping"
                       element={<AdminKybMapping />}
                     />
-                    <Route path="/admin/county-currency" element={<AdminCountryCurrency />} />
+                    <Route
+                      path="/admin/county-currency"
+                      element={<AdminCountryCurrency />}
+                    />
+                    <Route
+                      path="payout-mechanism"
+                      element={<AdminPayoutMechanism />}
+                    />
 
                     <Route path="onboarding" element={<AdminOnboarding />} />
+
                     <Route
                       path="deal-settings"
                       element={<AdminDealSettings />}
