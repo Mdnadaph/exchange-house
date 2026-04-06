@@ -39,6 +39,7 @@ import {
   Trash2,
   X,
   Check,
+  Minus,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -109,19 +110,6 @@ const AVAILABLE_MECHANISMS = [
   // "Remitly",
 ];
 
-const COUNTRIES = [
-  { name: "India", currency: "INR" },
-  { name: "Philippines", currency: "PHP" },
-  { name: "Pakistan", currency: "PKR" },
-  { name: "Bangladesh", currency: "BDT" },
-  { name: "Nepal", currency: "NPR" },
-  { name: "Sri Lanka", currency: "LKR" },
-  { name: "Egypt", currency: "EGP" },
-  { name: "Indonesia", currency: "IDR" },
-  { name: "Vietnam", currency: "VND" },
-  { name: "Thailand", currency: "THB" },
-];
-
 const ExchangePayoutConfig = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
@@ -133,6 +121,7 @@ const ExchangePayoutConfig = () => {
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
   const [errors, setErrors] = useState<any>({});
+
   //  const [destinations, setDestinations] = useState<PayoutDestination[]>([
   //   {
   //     id: "1",
@@ -259,19 +248,65 @@ const ExchangePayoutConfig = () => {
     useState<PayoutDestination | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Form state for add/edit destination
-  // const [destinationForm, setDestinationForm] = useState({
-  //   country: "",
-  //   currency: "",
-  //   status: "active" as "active" | "maintenance" | "inactive",
-  //   mechanisms: [] as string[],
-  //   feeMin: "",
-  //   feeMax: "",
-  //   processingMin: "",
-  //   processingMax: "",
-  //   partners: "",
-  //   volume: "",
-  // });
+  //for input field
+  const [mechanismLists, setMechanismLists] = useState<
+    Record<string, string[]>
+  >({});
+  const [mechanismInformation, setMechanismInformation] = useState<
+    Record<string, string[]>
+  >({});
+
+  const addToList = (mechanism: string) => {
+    setMechanismLists((prev) => ({
+      ...prev,
+      [mechanism]: [...(prev[mechanism] || [""]), ""],
+    }));
+  };
+
+  const removeFromList = (mechanism: string, index: number) => {
+    setMechanismLists((prev) => {
+      const current = prev[mechanism] || [""];
+      if (current.length === 1) return prev;
+      const updated = current.filter((_, i) => i !== index);
+      return { ...prev, [mechanism]: updated };
+    });
+  };
+
+  const updateListField = (mechanism: string, index: number, value: string) => {
+    setMechanismLists((prev) => {
+      const current = prev[mechanism] || [""];
+      const updated = [...current];
+      updated[index] = value;
+      return { ...prev, [mechanism]: updated };
+    });
+  };
+
+  const addToInformation = (mechanism: string) => {
+    setMechanismInformation((prev) => ({
+      ...prev,
+      [mechanism]: [...(prev[mechanism] || [""]), ""],
+    }));
+  };
+  const removeFromInfromation = (mechanism: string, index: number) => {
+    setMechanismInformation((prev) => {
+      const current = prev[mechanism] || [""];
+      if (current.length === 1) return prev;
+      const updated = current.filter((_, i) => i !== index);
+      return { ...prev, [mechanism]: updated };
+    });
+  };
+  const updateInformation = (
+    mechanism: string,
+    index: number,
+    value: string,
+  ) => {
+    setMechanismInformation((prev) => {
+      const current = prev[mechanism] || [""];
+      const updated = [...current];
+      updated[index] = value;
+      return { ...prev, [mechanism]: updated };
+    });
+  };
 
   const [destinationForm, setDestinationForm] = useState<DestinationForm>({
     country: "",
@@ -352,6 +387,8 @@ const ExchangePayoutConfig = () => {
       mechanisms: [],
       mechanismConfigs: {},
     });
+    setMechanismLists({});
+    setMechanismInformation({});
   };
 
   const buildPayload = () => {
@@ -372,6 +409,8 @@ const ExchangePayoutConfig = () => {
           processingMaxMinutes: Number(c.processingMax),
         };
       }),
+      //mechanismLists: mechanismLists,
+      //mechanismInformation: mechanismInformation,
     };
   };
 
@@ -630,7 +669,15 @@ const ExchangePayoutConfig = () => {
       ...prev,
       country,
     }));
-    setSelectedCurrencies((prev) => [...prev, countryData?.currencyCode]);
+
+    //setSelectedCurrencies((prev) => [...prev, countryData?.currencyCode]);
+    //setErrors((prev: any) => ({
+    //  ...prev,
+    //  country: "",
+    //}));
+    setSelectedCurrencies(
+      countryData?.currencyCode ? [countryData.currencyCode] : [],
+    );
     setErrors((prev: any) => ({
       ...prev,
       country: "",
@@ -995,273 +1042,7 @@ const ExchangePayoutConfig = () => {
           </CardContent>
         </Card>
 
-        {/* Payout Mechanisms */}
-        {/* <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Banknote className="h-5 w-5 text-primary" />
-              {t("payoutMechanisms") || "Payout Mechanisms"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {payoutMechanisms.map((mechanism, index) => {
-                const Icon = mechanism.icon;
-                return (
-                  <Card
-                    key={index}
-                    className="hover:shadow-md transition-smooth"
-                  >
-                    <CardContent className="p-6 text-center">
-                      <Icon className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <h4 className="text-lg font-semibold text-foreground mb-2">
-                        {mechanism.type}
-                      </h4>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {mechanism.description}
-                      </p>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            {t("countries") || "Countries"}:
-                          </span>
-                          <span className="font-medium">
-                            {mechanism.countries}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            {t("avgFee") || "Avg. Fee"}:
-                          </span>
-                          <span className="font-medium">
-                            {mechanism.averageFee}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card> */}
-
         {/* Add Destination Dialog */}
-        {/* <Dialog open={addDestinationOpen} onOpenChange={setAddDestinationOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {t("addDestination") || "Add Destination"}
-              </DialogTitle>
-              <DialogDescription>
-                {t("addDestinationDesc") ||
-                  "Configure a new payout destination with mechanisms and fee settings."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("country") || "Country"} *</Label>
-                  <Select
-                    value={destinationForm.country}
-                    onValueChange={handleCountryChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t("selectCountry") || "Select country"}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countries?.map((country) => (
-                        <SelectItem key={country?.id} value={country?.id}>
-                          {country?.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("currency") || "Currency"}</Label>
-                  <Input
-                    value={destinationForm.currency}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        currency: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., INR"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t("status") || "Status"}</Label>
-                <Select
-                  value={destinationForm.status}
-                  onValueChange={(
-                    value: "active" | "maintenance" | "inactive",
-                  ) =>
-                    setDestinationForm((prev) => ({ ...prev, status: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">
-                      {t("active") || "Active"}
-                    </SelectItem>
-                    <SelectItem value="maintenance">
-                      {t("maintenance") || "Maintenance"}
-                    </SelectItem>
-                    <SelectItem value="inactive">
-                      {t("inactive") || "Inactive"}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>
-                  {t("availableMechanisms") || "Available Mechanisms"} *
-                </Label>
-                <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg max-h-40 overflow-y-auto">
-                  {AVAILABLE_MECHANISMS.map((mechanism) => (
-                    <div
-                      key={mechanism}
-                      className="flex items-center space-x-2"
-                    >
-                      <Checkbox
-                        id={mechanism}
-                        checked={destinationForm.mechanisms.includes(mechanism)}
-                        onCheckedChange={() => handleMechanismToggle(mechanism)}
-                      />
-                      <label
-                        htmlFor={mechanism}
-                        className="text-sm cursor-pointer"
-                      >
-                        {mechanism}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("feeRangeMin") || "Fee Range Min (%)"}</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={destinationForm.feeMin}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        feeMin: e.target.value,
-                      }))
-                    }
-                    placeholder="0.5"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("feeRangeMax") || "Fee Range Max (%)"}</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={destinationForm.feeMax}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        feeMax: e.target.value,
-                      }))
-                    }
-                    placeholder="2.5"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>
-                    {t("processingMin") || "Processing Min (minutes)"}
-                  </Label>
-                  <Input
-                    type="number"
-                    value={destinationForm.processingMin}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        processingMin: e.target.value,
-                      }))
-                    }
-                    placeholder="5"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>
-                    {t("processingMax") || "Processing Max (minutes)"}
-                  </Label>
-                  <Input
-                    type="number"
-                    value={destinationForm.processingMax}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        processingMax: e.target.value,
-                      }))
-                    }
-                    placeholder="30"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("partnerCount") || "Partner Count"}</Label>
-                  <Input
-                    type="number"
-                    value={destinationForm.partners}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        partners: e.target.value,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("initialVolume") || "Initial Volume"}</Label>
-                  <Input
-                    value={destinationForm.volume}
-                    onChange={(e) =>
-                      setDestinationForm((prev) => ({
-                        ...prev,
-                        volume: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., 0 USD"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setAddDestinationOpen(false)}
-              >
-                {t("cancel") || "Cancel"}
-              </Button>
-              <Button variant="business" onClick={handleAddDestination}>
-                {t("addDestination") || "Add Destination"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog> */}
 
         <Dialog open={addDestinationOpen} onOpenChange={setAddDestinationOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1301,7 +1082,7 @@ const ExchangePayoutConfig = () => {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                {/*<div className="space-y-2">
                   <Label>Currency</Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -1366,7 +1147,22 @@ const ExchangePayoutConfig = () => {
                     </PopoverContent>
                   </Popover>
 
-                  {/* Error */}
+                  {errors.currencies && (
+                    <p className="text-red-500 text-xs">{errors.currencies}</p>
+                  )}
+                </div>*/}
+
+                <div className="space-y-2">
+                  <Label>Currency</Label>
+
+                  <div className="px-3 py-2 border rounded-md bg-muted/30 text-sm flex items-center">
+                    <Globe className="mr-2 h-4 w-4 shrink-0" />
+                    {selectedCurrencies.length > 0
+                      ? selectedCurrencies.join(", ")
+                      : destinationForm.country
+                        ? "Loading..."
+                        : "Select a country first"}
+                  </div>
                   {errors.currencies && (
                     <p className="text-red-500 text-xs">{errors.currencies}</p>
                   )}
@@ -1455,45 +1251,77 @@ const ExchangePayoutConfig = () => {
                     <h4 className="font-semibold">
                       {formatEnumText(m)} Configuration
                     </h4>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        type="number"
-                        placeholder="Fee Min %"
-                        value={c?.feeMin}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                feeMin: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Fee Max %"
-                        value={c?.feeMax}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                feeMax: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
+                    {/* NEW DYNAMIC FIELDS SECTION */}
+                    <div className="mt-6 border-t pt-4">
+                      <p className="font-serif">List</p>
+                      {(mechanismLists[m] || [""]).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mt-2">
+                          <Input
+                            type="text"
+                            placeholder={`Field ${idx + 1}`}
+                            value={field}
+                            onChange={(e) =>
+                              updateListField(m, idx, e.target.value)
+                            }
+                            className="w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addToList(m)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          {(mechanismLists[m] || [""]).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromList(m, idx)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6 border-t pt-4">
+                      <p className="font-serif">Customer Information</p>
+                      {(mechanismInformation[m] || [""]).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mt-2">
+                          <Input
+                            type="text"
+                            placeholder={`Field ${idx + 1}`}
+                            value={field}
+                            onChange={(e) =>
+                              updateInformation(m, idx, e.target.value)
+                            }
+                            className="w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addToInformation(m)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          {(mechanismInformation[m] || [""]).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromInfromation(m, idx)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    {/*<div className="grid grid-cols-2 gap-4">
                       <Input
                         type="number"
                         placeholder="Processing Min (minutes)"
@@ -1528,7 +1356,7 @@ const ExchangePayoutConfig = () => {
                           }))
                         }
                       />
-                    </div>
+                    </div>*/}
                   </div>
                 );
               })}
@@ -1590,7 +1418,7 @@ const ExchangePayoutConfig = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                {/*<div className="space-y-2">
                   <div className="space-y-2">
                     <Label>Currency</Label>
                     <Popover>
@@ -1658,7 +1486,7 @@ const ExchangePayoutConfig = () => {
                       </PopoverContent>
                     </Popover>
 
-                    {/* Error */}
+                    
                     {errors.currencies && (
                       <p className="text-red-500 text-xs">
                         {errors.currencies}
@@ -1674,7 +1502,22 @@ const ExchangePayoutConfig = () => {
                         currency: e.target.value,
                       }))
                     }
-                  /> */}
+                  /> 
+                </div>*/}
+                <div className="space-y-2">
+                  <Label>Currency</Label>
+
+                  <div className="px-3 py-2 border rounded-md bg-muted/30 text-sm flex items-center">
+                    <Globe className="mr-2 h-4 w-4 shrink-0" />
+                    {selectedCurrencies.length > 0
+                      ? selectedCurrencies.join(", ")
+                      : destinationForm.country
+                        ? "Loading..."
+                        : "Select a country first"}
+                  </div>
+                  {errors.currencies && (
+                    <p className="text-red-500 text-xs">{errors.currencies}</p>
+                  )}
                 </div>
               </div>
 
