@@ -37,10 +37,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
     { name: "KYB Mappning", href: "/admin/onmapping", icon: FileCheck },
     { name: "Country & Currency", href: "/admin/county-currency", icon: Globe },
+    {
+      name: "Payout Mechanism",
+      href: "/admin/payout-mechanism",
+      icon: Handshake,
+    },
     // { name: "KYB Onboarding", href: "/admin/onboarding", icon: FileCheck },
     // { name: "Deal Settings", href: "/admin/deal-settings", icon: Handshake },
     // { name: "Settings & Rules", href: "/admin/settings", icon: Settings },
-    
   ];
 
   const [cookies, , removeCookie] = useCookies([
