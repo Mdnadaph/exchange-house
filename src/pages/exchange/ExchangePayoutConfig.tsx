@@ -97,18 +97,18 @@ type DestinationForm = {
   mechanisms: string[];
   mechanismConfigs: Record<string, MechanismConfig>;
 };
-const AVAILABLE_MECHANISMS = [
-  "BANK_TRANSFER",
-  "MOBILE_WALLET",
-  "UPI",
-  "CASH_PICKUP",
-  "GCASH",
-  "JAZZCASH",
-  "EASYPaisa",
-  "BKASH",
-  "NAGAD",
-  // "Remitly",
-];
+//const AVAILABLE_MECHANISMS = [
+//  "BANK_TRANSFER",
+//  "MOBILE_WALLET",
+//  "UPI",
+//  "CASH_PICKUP",
+//  "GCASH",
+//  "JAZZCASH",
+//  "EASYPaisa",
+//  "BKASH",
+//  "NAGAD",
+//  // "Remitly",
+//];
 
 const ExchangePayoutConfig = () => {
   const { toast } = useToast();
@@ -117,11 +117,17 @@ const ExchangePayoutConfig = () => {
 
   const [countries, setCountries] = useState([]);
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
   const [errors, setErrors] = useState<any>({});
-
+  const [avaliable_machanisms, setAvaliable_machanisms] = useState<string[]>(
+    [],
+  );
+  const [mechanismIdMap, setMechanismIdMap] = useState<Record<string, string>>(
+    {},
+  );
   //  const [destinations, setDestinations] = useState<PayoutDestination[]>([
   //   {
   //     id: "1",
@@ -216,6 +222,75 @@ const ExchangePayoutConfig = () => {
   useEffect(() => {
     getPayOutConfig();
   }, [page]);
+
+  const getMechanismList = async (countryId: number) => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout-mechanism/country/${countryId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) throw new Error(`no avabiable`);
+
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      // Extract mechanism names from the objects
+      const mechanismsData = json.data?.mechanisms || [];
+      const mechanismNames = mechanismsData
+        .map((item: any) => item.payoutType?.name)
+        .filter(Boolean);
+      setAvaliable_machanisms(mechanismNames);
+
+      // Build mapping: name -> id
+      const map: Record<string, string> = {};
+      mechanismsData.forEach((item: any) => {
+        const name = item.payoutType?.name;
+        const id = item.mechanisms?.id; // ✅ Adjust if your API uses a different property, e.g., "mechanismId"
+        if (name && id) {
+          map[name] = String(id);
+        }
+      });
+      setMechanismIdMap(map);
+    } catch (error) {
+      const msg = error.message || "Failed to load mechanism list";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+
+  const getCurrenciesForCountry = async (countryId: number) => {
+    setLoadingCurrencies(true);
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout-mechanism/currency/${countryId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) throw new Error(`No currencies found for country`);
+
+      const json = await res.json();
+
+      if (json?.status !== true) {
+        setSelectedCurrencies([]);
+        // optional toast
+        return;
+      }
+
+      const currencies =
+        json.data?.map((item: any) => item.code).filter(Boolean) || [];
+      setSelectedCurrencies(currencies);
+    } catch (error) {
+      const msg = error.message || "Failed to load currencies";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setSelectedCurrencies([]);
+    } finally {
+      setLoadingCurrencies(false);
+    }
+  };
+
   const summaryData = destinations?.summary;
   const totalPayOutConfigDataList = destinations?.totalElements;
   function formatEnumText(value?: string): string {
@@ -317,33 +392,6 @@ const ExchangePayoutConfig = () => {
     mechanismConfigs: {},
   });
 
-  const payoutMechanisms = [
-    {
-      type: "Bank Transfer",
-      description: t("bankTransferDesc") || "Direct bank account transfers",
-      countries: 47,
-      averageFee: "1.2%",
-      status: "active",
-      icon: Building,
-    },
-    {
-      type: "Mobile Wallets",
-      description: t("mobileWalletDesc") || "Digital wallet transfers",
-      countries: 23,
-      averageFee: "1.8%",
-      status: "active",
-      icon: Smartphone,
-    },
-    {
-      type: "Cash Pickup",
-      description: t("cashPickupDesc") || "Physical cash collection points",
-      countries: 35,
-      averageFee: "3.2%",
-      status: "active",
-      icon: MapPin,
-    },
-  ];
-
   const getStatusBadge = (status: string) => {
     const statusMap = {
       ACTIVE: {
@@ -389,28 +437,37 @@ const ExchangePayoutConfig = () => {
     });
     setMechanismLists({});
     setMechanismInformation({});
+    setAvaliable_machanisms([]);
+    setLoadingCurrencies(false);
   };
 
   const buildPayload = () => {
+    // Convert mechanismLists keys from names to IDs
+    const mechanismListsById: Record<string, string[]> = {};
+    Object.entries(mechanismLists).forEach(([mechanismName, list]) => {
+      const id = mechanismIdMap[mechanismName];
+      if (id && list.length > 0 && list[0] !== "") {
+        // Remove empty strings from the list
+        mechanismListsById[id] = list.filter((item) => item.trim() !== "");
+      }
+    });
+
+    // Convert mechanismInformation keys from names to IDs
+    const mechanismInfoById: Record<string, string[]> = {};
+    Object.entries(mechanismInformation).forEach(([mechanismName, info]) => {
+      const id = mechanismIdMap[mechanismName];
+      if (id && info.length > 0 && info[0] !== "") {
+        mechanismInfoById[id] = info.filter((item) => item.trim() !== "");
+      }
+    });
+
     return {
       countryId: Number(destinationForm.country),
-      payoutCurrencies: selectedCurrencies,
       status: destinationForm.status.toUpperCase(),
       partnersCount: Number(destinationForm.partners),
       monthlyVolumeUsd: Number(destinationForm.volume),
-      mechanisms: destinationForm.mechanisms.map((m) => {
-        const c = destinationForm.mechanismConfigs[m];
-        return {
-          mechanism: m,
-          enabled: true,
-          feeMinPercent: Number(c.feeMin),
-          feeMaxPercent: Number(c.feeMax),
-          processingMinMinutes: Number(c.processingMin),
-          processingMaxMinutes: Number(c.processingMax),
-        };
-      }),
-      //mechanismLists: mechanismLists,
-      //mechanismInformation: mechanismInformation,
+      mechanismLists: mechanismListsById,
+      mechanismInformation: mechanismInfoById,
     };
   };
 
@@ -670,18 +727,17 @@ const ExchangePayoutConfig = () => {
       country,
     }));
 
-    //setSelectedCurrencies((prev) => [...prev, countryData?.currencyCode]);
-    //setErrors((prev: any) => ({
-    //  ...prev,
-    //  country: "",
-    //}));
-    setSelectedCurrencies(
-      countryData?.currencyCode ? [countryData.currencyCode] : [],
-    );
     setErrors((prev: any) => ({
       ...prev,
       country: "",
     }));
+
+    if (countryData?.id) {
+      getCurrenciesForCountry(Number(countryData.id));
+      getMechanismList(Number(countryData.id));
+    } else {
+      setAvaliable_machanisms([]);
+    }
   };
 
   const handleMechanismToggle = (mechanism: string) => {
@@ -883,7 +939,10 @@ const ExchangePayoutConfig = () => {
                                   <div className="flex gap-2 items-center">
                                     {destination?.currencies?.map(
                                       (currency: string) => (
-                                        <div className="px-2 py-1 bg-blue-900 rounded-md">
+                                        <div
+                                          key={currency}
+                                          className="px-2 py-1 bg-blue-900 rounded-md"
+                                        >
                                           <span className="text-white">
                                             {currency}
                                           </span>
@@ -929,7 +988,7 @@ const ExchangePayoutConfig = () => {
                                 :
                               </span>
                               <div className="space-y-4">
-                                {destination?.mechanisms.map(
+                                {destination?.mechanisms?.map(
                                   (mechanism: any, mechIndex: number) => (
                                     <div
                                       key={mechIndex}
@@ -1154,14 +1213,17 @@ const ExchangePayoutConfig = () => {
 
                 <div className="space-y-2">
                   <Label>Currency</Label>
-
                   <div className="px-3 py-2 border rounded-md bg-muted/30 text-sm flex items-center">
                     <Globe className="mr-2 h-4 w-4 shrink-0" />
-                    {selectedCurrencies.length > 0
-                      ? selectedCurrencies.join(", ")
-                      : destinationForm.country
-                        ? "Loading..."
-                        : "Select a country first"}
+                    {selectedCurrencies.length > 0 ? (
+                      selectedCurrencies.join(", ")
+                    ) : destinationForm.country ? (
+                      <span className="text-muted-foreground">
+                        No currencies available
+                      </span>
+                    ) : (
+                      "Select a country first"
+                    )}
                   </div>
                   {errors.currencies && (
                     <p className="text-red-500 text-xs">{errors.currencies}</p>
@@ -1227,23 +1289,31 @@ const ExchangePayoutConfig = () => {
               {/* MECHANISMS */}
               <div className="mt-6">
                 <Label>Available Mechanisms *</Label>
-                <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
-                  {AVAILABLE_MECHANISMS.map((m) => (
-                    <div key={m} className="flex items-center gap-2">
-                      <Checkbox
-                        checked={destinationForm.mechanisms.includes(m)}
-                        onCheckedChange={() => handleMechanismToggle(m)}
-                      />
-                      <span>{formatEnumText(m)}</span>
+                <div className="border rounded-lg p-4 mt-2">
+                  {avaliable_machanisms.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-4">
+                      No mechanisms available
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {avaliable_machanisms.map((m) => (
+                        <div key={m} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={destinationForm.mechanisms.includes(m)}
+                            onCheckedChange={() => handleMechanismToggle(m)}
+                          />
+                          <span>{formatEnumText(m)}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
                 {errors?.mechanisms && (
                   <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
                 )}
               </div>
 
-              {destinationForm.mechanisms.map((m) => {
+              {destinationForm?.mechanisms?.map((m) => {
                 const c = destinationForm?.mechanismConfigs[m];
 
                 return (
@@ -1506,14 +1576,19 @@ const ExchangePayoutConfig = () => {
                 </div>*/}
                 <div className="space-y-2">
                   <Label>Currency</Label>
-
                   <div className="px-3 py-2 border rounded-md bg-muted/30 text-sm flex items-center">
                     <Globe className="mr-2 h-4 w-4 shrink-0" />
-                    {selectedCurrencies.length > 0
-                      ? selectedCurrencies.join(", ")
-                      : destinationForm.country
-                        ? "Loading..."
-                        : "Select a country first"}
+                    {!destinationForm.country ? (
+                      "Select a country first"
+                    ) : loadingCurrencies ? (
+                      "Loading..."
+                    ) : selectedCurrencies.length > 0 ? (
+                      selectedCurrencies.join(", ")
+                    ) : (
+                      <span className="text-muted-foreground">
+                        No currencies available
+                      </span>
+                    )}
                   </div>
                   {errors.currencies && (
                     <p className="text-red-500 text-xs">{errors.currencies}</p>
@@ -1553,7 +1628,7 @@ const ExchangePayoutConfig = () => {
                   {t("availableMechanisms") || "Available Mechanisms"}
                 </Label>
                 <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg max-h-40 overflow-y-auto">
-                  {AVAILABLE_MECHANISMS.map((mechanism) => (
+                  {avaliable_machanisms?.map((mechanism) => (
                     <div
                       key={mechanism}
                       className="flex items-center space-x-2"
