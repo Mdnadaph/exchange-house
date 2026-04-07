@@ -97,18 +97,6 @@ type DestinationForm = {
   mechanisms: string[];
   mechanismConfigs: Record<string, MechanismConfig>;
 };
-//const AVAILABLE_MECHANISMS = [
-//  "BANK_TRANSFER",
-//  "MOBILE_WALLET",
-//  "UPI",
-//  "CASH_PICKUP",
-//  "GCASH",
-//  "JAZZCASH",
-//  "EASYPaisa",
-//  "BKASH",
-//  "NAGAD",
-//  // "Remitly",
-//];
 
 const ExchangePayoutConfig = () => {
   const { toast } = useToast();
@@ -128,52 +116,9 @@ const ExchangePayoutConfig = () => {
   const [mechanismIdMap, setMechanismIdMap] = useState<Record<string, string>>(
     {},
   );
-  //  const [destinations, setDestinations] = useState<PayoutDestination[]>([
-  //   {
-  //     id: "1",
-  //     country: "India",
-  //     currency: "INR",
-  //     status: "active",
-  //     mechanisms: ["Bank Transfer", "UPI", "Mobile Wallet", "Cash Pickup"],
-  //     volume: "2.4M USD",
-  //     partners: 12,
-  //     fees: "0.5-2.5%",
-  //     processingTime: "5-30 minutes",
-  //   },
-  //   {
-  //     id: "2",
-  //     country: "Philippines",
-  //     currency: "PHP",
-  //     status: "active",
-  //     mechanisms: ["Bank Transfer", "GCash", "Remitly", "Cash Pickup"],
-  //     volume: "1.8M USD",
-  //     partners: 8,
-  //     fees: "0.8-3.0%",
-  //     processingTime: "15-60 minutes",
-  //   },
-  //   {
-  //     id: "3",
-  //     country: "Pakistan",
-  //     currency: "PKR",
-  //     status: "active",
-  //     mechanisms: ["Bank Transfer", "JazzCash", "EasyPaisa", "Cash Pickup"],
-  //     volume: "1.2M USD",
-  //     partners: 6,
-  //     fees: "1.0-3.5%",
-  //     processingTime: "10-45 minutes",
-  //   },
-  //   {
-  //     id: "4",
-  //     country: "Bangladesh",
-  //     currency: "BDT",
-  //     status: "maintenance",
-  //     mechanisms: ["Bank Transfer", "bKash", "Nagad"],
-  //     volume: "800K USD",
-  //     partners: 4,
-  //     fees: "1.2-4.0%",
-  //     processingTime: "30-120 minutes",
-  //   },
-  // ]);
+  const [mechanismIdToNameMap, setMechanismIdToNameMap] = useState<
+    Record<string, string>
+  >({});
   const [destinations, setDestinations] = useState(null);
   const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
@@ -247,8 +192,8 @@ const ExchangePayoutConfig = () => {
       // Build mapping: name -> id
       const map: Record<string, string> = {};
       mechanismsData.forEach((item: any) => {
-        const name = item.payoutType?.name;
-        const id = item.mechanisms?.id; // ✅ Adjust if your API uses a different property, e.g., "mechanismId"
+        const name = item?.payoutType?.name;
+        const id = item.mechanisms?.id;
         if (name && id) {
           map[name] = String(id);
         }
@@ -988,51 +933,37 @@ const ExchangePayoutConfig = () => {
                                 :
                               </span>
                               <div className="space-y-4">
-                                {destination?.mechanisms?.map(
-                                  (mechanism: any, mechIndex: number) => (
-                                    <div
-                                      key={mechIndex}
-                                      className="rounded-xl border bg-background p-4 sm:p-5 space-y-4"
-                                    >
-                                      {/* Header */}
-                                      <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          {formatEnumText(mechanism?.name)}
-                                        </Badge>
+                                {Object.keys(
+                                  destination?.mechanismLists || {},
+                                ).map((mechanismName, mechIndex) => (
+                                  <div
+                                    key={mechIndex}
+                                    className="rounded-xl border bg-background p-4 sm:p-5 space-y-4"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {mechanismName}
+                                      </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-2 text-sm">
+                                      <div className="text-muted-foreground">
+                                        {"List fields"}:{" "}
+                                        {destination?.mechanismLists[
+                                          mechanismName
+                                        ]?.join(", ") || "-"}
                                       </div>
-
-                                      {/* Details */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {/* Fee Range */}
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            {t("feeRange") || "Fee Range"}
-                                          </p>
-                                          <p className="font-medium text-sm sm:text-base">
-                                            {mechanism?.feeMinPercent} –{" "}
-                                            {mechanism?.feeMaxPercent} %
-                                          </p>
-                                        </div>
-
-                                        {/* Processing Time */}
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            {t("processingTime") ||
-                                              "Processing Time"}
-                                          </p>
-                                          <p className="font-medium text-sm sm:text-base">
-                                            {mechanism?.processingMinMinutes} –{" "}
-                                            {mechanism?.processingMaxMinutes}{" "}
-                                            min
-                                          </p>
-                                        </div>
+                                      <div className="text-muted-foreground">
+                                        {"Customer information"}:{" "}
+                                        {destination?.mechanismInformation[
+                                          mechanismName
+                                        ]?.join(", ") || "-"}
                                       </div>
                                     </div>
-                                  ),
-                                )}
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           </div>
@@ -1715,86 +1646,82 @@ const ExchangePayoutConfig = () => {
                 </div>
               </div> */}
               {destinationForm?.mechanisms?.map((m) => {
-                const c = destinationForm?.mechanismConfigs[m];
-
                 return (
                   <div key={m} className="border rounded-lg p-4 mt-4 space-y-4">
                     <h4 className="font-semibold">
                       {formatEnumText(m)} Configuration
                     </h4>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        type="number"
-                        placeholder="Fee Min %"
-                        value={c?.feeMin}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                feeMin: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Fee Max %"
-                        value={c?.feeMax}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                feeMax: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
+                    {/* List Section */}
+                    <div className="mt-6 border-t pt-4">
+                      <p className="font-serif">List</p>
+                      {(mechanismLists[m] || [""]).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mt-2">
+                          <Input
+                            type="text"
+                            placeholder={`Field ${idx + 1}`}
+                            value={field}
+                            onChange={(e) =>
+                              updateListField(m, idx, e.target.value)
+                            }
+                            className="w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addToList(m)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          {(mechanismLists[m] || [""]).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromList(m, idx)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        type="number"
-                        placeholder="Processing Min (minutes)"
-                        value={c?.processingMin}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                processingMin: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Processing Max (minutes)"
-                        value={c?.processingMax}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                processingMax: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
+                    {/* Customer Information Section */}
+                    <div className="mt-6 border-t pt-4">
+                      <p className="font-serif">Customer Information</p>
+                      {(mechanismInformation[m] || [""]).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mt-2">
+                          <Input
+                            type="text"
+                            placeholder={`Field ${idx + 1}`}
+                            value={field}
+                            onChange={(e) =>
+                              updateInformation(m, idx, e.target.value)
+                            }
+                            className="w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addToInformation(m)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          {(mechanismInformation[m] || [""]).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromInfromation(m, idx)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
