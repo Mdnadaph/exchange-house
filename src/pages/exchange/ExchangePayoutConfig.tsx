@@ -193,7 +193,8 @@ const ExchangePayoutConfig = () => {
       const map: Record<string, string> = {};
       mechanismsData.forEach((item: any) => {
         const name = item?.payoutType?.name;
-        const id = item.mechanisms?.id;
+        const id = item?.id;
+
         if (name && id) {
           map[name] = String(id);
         }
@@ -275,7 +276,8 @@ const ExchangePayoutConfig = () => {
   const [mechanismInformation, setMechanismInformation] = useState<
     Record<string, string[]>
   >({});
-
+  const [mechanismSupportCurrenciesMap, setMechanismSupportCurrenciesMap] =
+    useState<Record<string, string[]>>({});
   const addToList = (mechanism: string) => {
     setMechanismLists((prev) => ({
       ...prev,
@@ -386,33 +388,62 @@ const ExchangePayoutConfig = () => {
     setLoadingCurrencies(false);
   };
 
-  const buildPayload = () => {
-    // Convert mechanismLists keys from names to IDs
-    const mechanismListsById: Record<string, string[]> = {};
-    Object.entries(mechanismLists).forEach(([mechanismName, list]) => {
-      const id = mechanismIdMap[mechanismName];
-      if (id && list.length > 0 && list[0] !== "") {
-        // Remove empty strings from the list
-        mechanismListsById[id] = list.filter((item) => item.trim() !== "");
-      }
-    });
+  //const buildPayload = () => {
+  //  // Convert mechanismLists keys from names to IDs
+  //  const mechanismListsById: Record<string, string[]> = {};
+  //  Object.entries(mechanismLists).forEach(([mechanismName, list]) => {
+  //    const id = mechanismIdMap[mechanismName];
+  //    if (id && list.length > 0 && list[0] !== "") {
+  //      // Remove empty strings from the list
+  //      mechanismListsById[id] = list.filter((item) => item.trim() !== "");
+  //    }
+  //  });
 
-    // Convert mechanismInformation keys from names to IDs
-    const mechanismInfoById: Record<string, string[]> = {};
-    Object.entries(mechanismInformation).forEach(([mechanismName, info]) => {
-      const id = mechanismIdMap[mechanismName];
-      if (id && info.length > 0 && info[0] !== "") {
-        mechanismInfoById[id] = info.filter((item) => item.trim() !== "");
-      }
-    });
+  //  // Convert mechanismInformation keys from names to IDs
+  //  const mechanismInfoById: Record<string, string[]> = {};
+  //  Object.entries(mechanismInformation).forEach(([mechanismName, info]) => {
+  //    const id = mechanismIdMap[mechanismName];
+  //    if (id && info.length > 0 && info[0] !== "") {
+  //      mechanismInfoById[id] = info.filter((item) => item.trim() !== "");
+  //    }
+  //  });
+
+  //  return {
+  //    countryId: Number(destinationForm.country),
+  //    status: destinationForm.status.toUpperCase(),
+  //    partnersCount: Number(destinationForm.partners),
+  //    monthlyVolumeUsd: Number(destinationForm.volume),
+  //    mechanismLists: mechanismListsById,
+  //    mechanismInformation: mechanismInfoById,
+  //  };
+  //};
+  const buildPayload = () => {
+    // Build an array of mechanism objects
+    const mechanismsArray = destinationForm.mechanisms
+      .map((mechanismName) => {
+        const mechanismId = mechanismIdMap[mechanismName];
+        if (!mechanismId) return null;
+
+        const lists = mechanismLists[mechanismName] || [];
+        const info = mechanismInformation[mechanismName] || [];
+
+        // Only include if at least one list item or info item has content
+        if (lists.length === 0 && info.length === 0) return null;
+
+        return {
+          payoutMechanismId: Number(mechanismId),
+          mechanismLists: lists.filter((item) => item.trim() !== ""),
+          mechanismInformation: info.filter((item) => item.trim() !== ""),
+        };
+      })
+      .filter(Boolean); // remove null entries
 
     return {
       countryId: Number(destinationForm.country),
       status: destinationForm.status.toUpperCase(),
       partnersCount: Number(destinationForm.partners),
       monthlyVolumeUsd: Number(destinationForm.volume),
-      mechanismLists: mechanismListsById,
-      mechanismInformation: mechanismInfoById,
+      mechanisms: mechanismsArray,
     };
   };
 
@@ -598,17 +629,31 @@ const ExchangePayoutConfig = () => {
   };
   const openEditDialog = (destinationEditableData: any) => {
     setId(destinationEditableData?.id);
-    setSelectedCurrencies(destinationEditableData?.currencies);
+    setSelectedCurrencies(destinationEditableData?.currencies || []);
+
     setDestinationForm({
       country: destinationEditableData?.countryId,
-      status: destinationEditableData?.status.toLowerCase(),
-      mechanisms: destinationEditableData?.mechanisms?.map(
-        (item: any) => item?.name,
-      ),
+      status: destinationEditableData?.status?.toLowerCase(),
+      //mechanisms:
+      //  destinationEditableData?.mechanisms?.map((item: any) => item?.name) ||
+      //  [],
+      mechanisms: Object.keys(destinationEditableData?.mechanismLists || {}), // ✅ get mechanism names from keys
       mechanismConfigs: buildMechanismConfigs(destinationEditableData),
-      partners: destinationEditableData.partners.toString(),
-      volume: destinationEditableData?.volumeUsd,
+      partners: destinationEditableData.partners?.toString() || "",
+      volume: destinationEditableData?.volumeUsd?.toString() || "",
     });
+
+    // ✅ Load the dynamic List & Customer Information fields
+    setMechanismLists(destinationEditableData?.mechanismLists || {});
+    setMechanismInformation(
+      destinationEditableData?.mechanismInformation || {},
+    );
+
+    // ✅ Fetch available mechanisms for this country (to build ID map and show checkboxes)
+    if (destinationEditableData?.countryId) {
+      getMechanismList(Number(destinationEditableData.countryId));
+    }
+
     setEditDestinationOpen(true);
   };
 
@@ -1264,7 +1309,6 @@ const ExchangePayoutConfig = () => {
                             onChange={(e) =>
                               updateListField(m, idx, e.target.value)
                             }
-                            className="w-56"
                           />
                           <Button
                             type="button"
@@ -1298,7 +1342,6 @@ const ExchangePayoutConfig = () => {
                             onChange={(e) =>
                               updateInformation(m, idx, e.target.value)
                             }
-                            className="w-56"
                           />
                           <Button
                             type="button"
