@@ -307,7 +307,7 @@ export default function AdminCountryCurrency() {
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-primary" />
-                Countries 3
+                Countries
               </CardTitle>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -326,6 +326,8 @@ export default function AdminCountryCurrency() {
                 <div className="text-center font-medium text-gray-600 text-xl">
                   Loading...
                 </div>
+              ) : countryAndCurrencyList?.length == 0 ? (
+                <p className="text-center font-medium text-xl">No Data Found</p>
               ) : (
                 countryAndCurrencyList?.map((cc) => (
                   <Card
