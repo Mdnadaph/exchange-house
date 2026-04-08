@@ -122,7 +122,20 @@ const ExchangePayoutConfig = () => {
   const [supportedCurrencies, setSupportedCurrencies] = useState<
     Record<string, string[]>
   >({});
-  const [destinations, setDestinations] = useState(null);
+  //const [destinations, setDestinations] = useState(null);
+  const [payoutData, setPayoutData] = useState({
+    countries: [],
+    summary: {
+      activeCountries: 0,
+      totalPartners: 0,
+      totalMonthlyVolumeUsd: 0,
+      maintenanceCountries: 0,
+    },
+    totalElements: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 10,
+  });
   const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
     try {
@@ -160,7 +173,19 @@ const ExchangePayoutConfig = () => {
       if (json?.status !== true || !json.data) {
         throw new Error("Unexpected response format");
       }
-      setDestinations(json?.data);
+      setPayoutData({
+        countries: json?.data?.countries || [],
+        summary: json?.data?.summary || {
+          activeCountries: 0,
+          totalPartners: 0,
+          totalMonthlyVolumeUsd: 0,
+          maintenanceCountries: 0,
+        },
+        totalElements: json?.totalElements || 0,
+        totalPages: json?.totalPages || 0,
+        currentPage: json?.currentPage || 0,
+        pageSize: json?.pageSize || 10,
+      });
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -259,8 +284,11 @@ const ExchangePayoutConfig = () => {
     }
   };
 
-  const summaryData = destinations?.summary;
-  const totalPayOutConfigDataList = destinations?.totalElements;
+  //const summaryData = destinations?.summary;
+  const summaryData = payoutData?.summary;
+  //const totalPayOutConfigDataList = destinations?.totalElements;
+  const totalPayOutConfigDataList = payoutData?.totalElements;
+
   function formatEnumText(value?: string): string {
     if (typeof value !== "string") return "-";
     return value
@@ -925,9 +953,9 @@ const ExchangePayoutConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {destinations?.countries?.length > 0 ? (
-                destinations?.countries?.map((destination: any) => {
+            <div className="space-y-10">
+              {payoutData?.countries?.length > 0 ? (
+                payoutData?.countries?.map((destination: any) => {
                   const status = getStatusBadge(destination?.status);
                   const StatusIcon = status.icon;
                   return (
@@ -1070,11 +1098,11 @@ const ExchangePayoutConfig = () => {
                 </p>
               )}
             </div>
-            {totalPayOutConfigDataList > 10 && (
+            {payoutData?.totalPages > 1 && (
               <div className="flex items-center justify-between mt-6 pt-6 border-t">
                 <p className="text-sm text-muted-foreground">
-                  Showing {destinations?.countries?.length} of{" "}
-                  {totalPayOutConfigDataList} beneficiaries
+                  Showing {payoutData.countries.length} of{" "}
+                  {payoutData.totalElements} beneficiaries
                 </p>
                 <div className="flex space-x-2">
                   <Button
@@ -1088,7 +1116,10 @@ const ExchangePayoutConfig = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={(page + 1) * 10 >= totalPayOutConfigDataList}
+                    disabled={
+                      (page + 1) * payoutData.pageSize >=
+                      payoutData.totalElements
+                    }
                     onClick={() => setPage(page + 1)}
                   >
                     Next

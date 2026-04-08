@@ -1897,7 +1897,7 @@ const BusinessOnboardingForm = ({
                 <Label htmlFor="businessType" className="mb-0">
                   Type of Business <span className="text-red-500">*</span>
                 </Label>
-                <Button
+                {/*<Button
                   type="button"
                   variant="ghost"
                   size="icon"
@@ -1905,7 +1905,7 @@ const BusinessOnboardingForm = ({
                   onClick={() => setInfoOpen(true)}
                 >
                   <Info className="h-4 w-4 text-green-600" />
-                </Button>
+                </Button>*/}
               </div>
               <Select
                 value={formData.businessType}
