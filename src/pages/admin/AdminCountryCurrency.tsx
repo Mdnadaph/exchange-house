@@ -37,6 +37,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -60,7 +68,6 @@ export default function AdminCountryCurrency() {
   const token = cookies?.token;
   const [countries, setCountries] = useState([]);
   const [currenciesData, setCurrenciesData] = useState([]);
-  const [search, setSearch] = useState("");
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [countryId, setCountryId] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -69,23 +76,15 @@ export default function AdminCountryCurrency() {
   const [loading, setLoading] = useState<boolean>(false);
   const [countryAndCurrencyList, setCountryAndCurrencyList] = useState([]);
   const [editableCountryData, setEditableCountryData] = useState<any>({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const pageSize = 10;
   const [errors, setErrors] = useState<{
     countryId?: string;
     currencies?: string;
   }>({});
-
-  const countryAndCurrencyData = [
-    {
-      id: 1,
-      countryName: "Nepal",
-      currencies: ["DZD", "ARS"],
-    },
-    {
-      id: 2,
-      countryName: "India",
-      currencies: ["INR", "ARS"],
-    },
-  ];
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -151,12 +150,15 @@ export default function AdminCountryCurrency() {
   const getCurrencyAndCountry = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/v1/country-currency`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCountryAndCurrencyList(res?.data?.data);
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/country-currency?page=${currentPage}&size=${pageSize}&query=${encodeURIComponent(debouncedSearch)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setCountryAndCurrencyList(res?.data?.data?.content);
+      setTotalPages(res?.data?.data?.totalPages);
     } catch (err) {
-      console.log("error", err);
       toast({
         title: "Error",
         description:
@@ -172,11 +174,26 @@ export default function AdminCountryCurrency() {
   useEffect(() => {
     getCountriesData();
     getCurrenciesData();
-    getCurrencyAndCountry();
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 2. Reset page when debounced search changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    getCurrencyAndCountry();
+  }, [currentPage, debouncedSearch]);
+
   const handleCountryChange = (country: string) => {
-    const countryData = countries.find((c) => c?.id === country);
+    const countryData = countries?.find((c) => c?.id === country);
     const currency = currenciesData?.find(
       (cc) => cc?.code == countryData?.currencyCode,
     );
@@ -313,8 +330,8 @@ export default function AdminCountryCurrency() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by country or currency…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
                 />
               </div>
@@ -329,73 +346,128 @@ export default function AdminCountryCurrency() {
               ) : countryAndCurrencyList?.length == 0 ? (
                 <p className="text-center font-medium text-xl">No Data Found</p>
               ) : (
-                countryAndCurrencyList?.map((cc) => (
-                  <Card
-                    key={cc?.countryId}
-                    className="border-l-4 border-l-primary"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex flex-col gap-4">
-                        <div className="space-y-4 flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                              <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-lg font-semibold text-foreground">
-                                {cc?.country?.name}
-                              </h4>
-                              <div className="text-sm text-muted-foreground w-full flex items-center gap-3">
-                                <div> Currencies: </div>
-                                <div className="flex gap-2 items-center">
-                                  {cc?.supportedCurrencies?.map(
-                                    (currency: {
-                                      code: string;
-                                      id: number;
-                                    }) => (
-                                      <div
-                                        className="px-2 py-1 bg-blue-900 rounded-md"
-                                        key={currency?.id}
-                                      >
-                                        <span className="text-white">
-                                          {currency?.code}
-                                        </span>
-                                      </div>
-                                    ),
-                                  )}
+                <div>
+                  {countryAndCurrencyList?.map((cc) => (
+                    <Card
+                      key={cc?.countryId}
+                      className="border-l-4 border-l-primary"
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex flex-col gap-4">
+                          <div className="space-y-4 flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                                <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-lg font-semibold text-foreground">
+                                  {cc?.country?.name}
+                                </h4>
+                                <div className="text-sm text-muted-foreground w-full flex items-center gap-3">
+                                  <div> Currencies: </div>
+                                  <div className="flex gap-2 items-center">
+                                    {cc?.supportedCurrencies?.map(
+                                      (currency: {
+                                        code: string;
+                                        id: number;
+                                      }) => (
+                                        <div
+                                          className="px-2 py-1 bg-blue-900 rounded-md"
+                                          key={currency?.id}
+                                        >
+                                          <span className="text-white">
+                                            {currency?.code}
+                                          </span>
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex flex-wrap gap-2 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setIsEditOpen(true);
-                              setEditableCountryData(cc);
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setIsEditOpen(true);
+                                setEditableCountryData(cc);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 sm:mr-1" />
+                              <span className="hidden sm:inline">Edit</span>
+                            </Button>
+
+                            <Button
+                              disabled
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsDeleteOpen(true)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <Pagination className="mt-6">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage > 0)
+                                setCurrentPage(currentPage - 1);
                             }}
-                          >
-                            <Edit className="h-4 w-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Edit</span>
-                          </Button>
-
-                          <Button
-                            disabled
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setIsDeleteOpen(true)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                            aria-disabled={currentPage <= 0}
+                            className={
+                              currentPage <= 0
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
+                          />
+                        </PaginationItem>
+                        {[...Array(totalPages)].map((_, i) => (
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(i);
+                              }}
+                              isActive={currentPage === i}
+                            >
+                              {i + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage < totalPages - 1)
+                                setCurrentPage(currentPage + 1);
+                            }}
+                            aria-disabled={currentPage >= totalPages - 1}
+                            className={
+                              currentPage >= totalPages - 1
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </div>
               )}
             </div>
           </CardContent>
