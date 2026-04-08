@@ -119,6 +119,9 @@ const ExchangePayoutConfig = () => {
   const [mechanismIdToNameMap, setMechanismIdToNameMap] = useState<
     Record<string, string>
   >({});
+  const [supportedCurrencies, setSupportedCurrencies] = useState<
+    Record<string, string[]>
+  >({});
   const [destinations, setDestinations] = useState(null);
   const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
