@@ -187,22 +187,41 @@ const ExchangePayoutConfig = () => {
       }
       // Extract mechanism names from the objects
       const mechanismsData = json.data?.mechanisms || [];
-      const mechanismNames = mechanismsData
-        .map((item: any) => item.payoutType?.name)
-        .filter(Boolean);
-      setAvaliable_machanisms(mechanismNames);
+      //const mechanismNames = mechanismsData
+      //  .map((item: any) => item.payoutType?.name)
+      //  .filter(Boolean);
+      //setAvaliable_machanisms(mechanismNames);
 
-      // Build mapping: name -> id
-      const map: Record<string, string> = {};
+      //// Build mapping: name -> id
+      //const map: Record<string, string> = {};
+      //mechanismsData.forEach((item: any) => {
+      //  const name = item?.payoutType?.name;
+      //  const id = item?.id;
+
+      //  if (name && id) {
+      //    map[name] = String(id);
+      //  }
+      //});
+      //setMechanismIdMap(map);
+      const mechanismNames: string[] = [];
+      const nameToIdMap: Record<string, string> = {};
+      const nameToCurrenciesMap: Record<string, string[]> = {};
+
       mechanismsData.forEach((item: any) => {
         const name = item?.payoutType?.name;
         const id = item?.id;
-
+        const currencies =
+          item?.supportedCurrencies?.map((c: any) => c.code) || [];
         if (name && id) {
-          map[name] = String(id);
+          mechanismNames.push(name);
+          nameToIdMap[name] = String(id);
+          nameToCurrenciesMap[name] = currencies;
         }
       });
-      setMechanismIdMap(map);
+
+      setAvaliable_machanisms(mechanismNames);
+      setMechanismIdMap(nameToIdMap);
+      setSupportedCurrencies(nameToCurrenciesMap);
     } catch (error) {
       const msg = error.message || "Failed to load mechanism list";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -1275,13 +1294,29 @@ const ExchangePayoutConfig = () => {
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      {avaliable_machanisms.map((m) => (
+                      {/*{avaliable_machanisms.map((m) => (
                         <div key={m} className="flex items-center gap-2">
                           <Checkbox
                             checked={destinationForm.mechanisms.includes(m)}
                             onCheckedChange={() => handleMechanismToggle(m)}
                           />
                           <span>{formatEnumText(m)}</span>
+                        </div>
+                      ))}*/}
+                      {avaliable_machanisms.map((m) => (
+                        <div key={m} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={destinationForm.mechanisms.includes(m)}
+                            onCheckedChange={() => handleMechanismToggle(m)}
+                          />
+                          <span>
+                            {formatEnumText(m)}
+                            {supportedCurrencies[m]?.length > 0 && (
+                              <span className="text-muted-foreground text-xs ml-1">
+                                ({supportedCurrencies[m].join(", ")})
+                              </span>
+                            )}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1605,6 +1640,26 @@ const ExchangePayoutConfig = () => {
                   {t("availableMechanisms") || "Available Mechanisms"}
                 </Label>
                 <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg max-h-40 overflow-y-auto">
+                  {/*{avaliable_machanisms?.map((mechanism) => (
+                    <div
+                      key={mechanism}
+                      className="flex items-center space-x-2"
+                    >
+                      <Checkbox
+                        id={`edit-${mechanism}`}
+                        checked={destinationForm?.mechanisms?.includes(
+                          mechanism,
+                        )}
+                        onCheckedChange={() => handleMechanismToggle(mechanism)}
+                      />
+                      <label
+                        htmlFor={`edit-${mechanism}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        {mechanism}
+                      </label>
+                    </div>
+                  ))}*/}
                   {avaliable_machanisms?.map((mechanism) => (
                     <div
                       key={mechanism}
@@ -1622,6 +1677,11 @@ const ExchangePayoutConfig = () => {
                         className="text-sm cursor-pointer"
                       >
                         {mechanism}
+                        {supportedCurrencies[mechanism]?.length > 0 && (
+                          <span className="text-muted-foreground text-xs ml-1">
+                            ({supportedCurrencies[mechanism].join(", ")})
+                          </span>
+                        )}
                       </label>
                     </div>
                   ))}
