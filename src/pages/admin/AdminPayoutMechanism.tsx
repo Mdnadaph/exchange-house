@@ -62,18 +62,22 @@ export default function AdminPayoutMechanism() {
   const [formData, setFormData] = useState({
     countryId: "",
     mechanisms: [] as {
+      mechanismId?: number;
       payoutTypeId: number;
       currencyIds: number[];
     }[],
   });
-  const [search, setSearch] = useState("");
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const pageSize = 10;
   const [errors, setErrors] = useState<{
     countryId?: string;
-    currencies?: string;
-    payoutMechanism?: string;
+    mechanisms?: [];
   }>({});
 
   const getCountriesData = async () => {
@@ -124,7 +128,6 @@ export default function AdminPayoutMechanism() {
           },
         },
       );
-      console.log("res", res?.data?.data);
       setCurrencyList(res?.data?.data);
     } catch (error) {
       const msg = error?.response?.data?.message;
@@ -135,12 +138,15 @@ export default function AdminPayoutMechanism() {
   const getAllPayoutMechanism = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/v1/payout-mechanism`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/payout-mechanism?page=${currentPage}&size=${pageSize}&query=${encodeURIComponent(debouncedSearch)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
-      setAllPayoutMechanism(res?.data?.data);
+      );
+      setAllPayoutMechanism(res?.data?.data?.content);
     } catch (error) {
       const msg = error?.response?.data?.message;
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -149,13 +155,27 @@ export default function AdminPayoutMechanism() {
     }
   };
 
-  console.log("allPayoutMechanism", allPayoutMechanism);
-
   useEffect(() => {
-    getAllPayoutMechanism();
     getCountriesData();
     getPayout();
   }, []);
+
+  useEffect(() => {
+    getAllPayoutMechanism();
+  }, [currentPage, debouncedSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 2. Reset page when debounced search changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearch]);
+
   useEffect(() => {
     if (!formData?.countryId) return;
     getCurrencyByCountry();
@@ -175,17 +195,15 @@ export default function AdminPayoutMechanism() {
       newErrors.countryId = "Country is required";
     }
 
-    if (!formData?.mechanisms) {
-      newErrors.payoutMechanism = "Payout mechanism is required";
+    if (!formData?.mechanisms?.length) {
+      newErrors.mechanisms = "Select at least one  mechanism";
     }
 
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
   };
-  const clearError = (
-    field: "countryId" | "currencies" | "payoutMechanism",
-  ) => {
+  const clearError = (field: "countryId" | "mechanisms") => {
     setErrors((prev) => {
       const newErr = { ...prev };
       delete newErr[field];
@@ -195,6 +213,7 @@ export default function AdminPayoutMechanism() {
 
   const handleCreatePayoutMechanism = async () => {
     if (!validateForm()) return;
+    setLoading(true);
     try {
       const res = await axios.post(
         `${BASE_URL}/api/v1/payout-mechanism`,
@@ -227,12 +246,20 @@ export default function AdminPayoutMechanism() {
     } catch (error) {
       const msg = error?.response?.data?.message;
       toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    console.log("payload", formData);
   };
 
   const handleUpdatePayoutMechanism = async () => {
     if (!validateForm()) return;
+    // const payload = {
+    //   mechanims: formData?.mechanisms?.map((m: any) => ({
+    //     ...(m?.mechanismId ? { mechanismId: m.mechanismId } : {}), // ✅ correct
+    //     payoutTypeId: m?.payoutTypeId,
+    //     currencyIds: m?.currencyIds,
+    //   })),
+    // };
     setLoading(true);
     try {
       const res = await axios.put(
@@ -272,30 +299,17 @@ export default function AdminPayoutMechanism() {
     }
   };
 
-  console.log("editAb", editablePayoutMechanismData);
-
   useEffect(() => {
     setFormData({
       countryId: editablePayoutMechanismData?.country?.id,
       mechanisms: editablePayoutMechanismData?.mechanisms?.map((mec) => ({
+        mechanismId: mec?.id,
         payoutTypeId: mec?.payoutType?.id,
         currencyIds: mec?.supportedCurrencies?.map((sc) => sc?.id),
       })),
     });
   }, [editablePayoutMechanismData?.countryId]);
 
-  const isMechanismSelected = (name: string) => {
-    return formData?.mechanisms?.some((mec) => {
-      const mech = payoutList?.find((p) => p?.id === mec?.payoutTypeId);
-      return mech?.name === name;
-    });
-  };
-  const getMechanismByName = (name: string) => {
-    return formData?.mechanisms?.find((m) => {
-      const payout = payoutList?.find((p) => p?.id === m?.payoutTypeId);
-      return payout?.name === name;
-    });
-  };
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -326,8 +340,8 @@ export default function AdminPayoutMechanism() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by country or currency…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
               />
             </div>
@@ -438,17 +452,19 @@ export default function AdminPayoutMechanism() {
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Payout Mechansim</DialogTitle>
+            <DialogTitle>Add New Payout Mechanism</DialogTitle>
           </DialogHeader>
+
           <div className="w-full">
+            {/* COUNTRY */}
             <div className="space-y-2">
-              <Label>{"Country"} *</Label>
+              <Label>Country *</Label>
               <Select
                 value={formData?.countryId}
                 onValueChange={(value) => handleCountryChange(value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={"Select country"} />
+                  <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
                   {countries?.map((country) => (
@@ -458,12 +474,16 @@ export default function AdminPayoutMechanism() {
                   ))}
                 </SelectContent>
               </Select>
+
               {errors.countryId && (
                 <p className="text-red-500 text-xs">{errors.countryId}</p>
               )}
             </div>
+
+            {/* MECHANISMS */}
             <div className="mt-6">
               <Label>Payout Mechanisms *</Label>
+
               <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
                 {payoutList?.map((m) => (
                   <div key={m?.id}>
@@ -473,10 +493,12 @@ export default function AdminPayoutMechanism() {
                           (mec) => mec.payoutTypeId === m.id,
                         )}
                         onCheckedChange={() => {
+                          clearError("mechanisms");
                           setFormData((prev) => {
                             const exists = prev?.mechanisms?.find(
                               (mec) => mec?.payoutTypeId === m.id,
                             );
+
                             if (exists) {
                               return {
                                 ...prev,
@@ -485,6 +507,7 @@ export default function AdminPayoutMechanism() {
                                 ),
                               };
                             }
+
                             return {
                               ...prev,
                               mechanisms: [
@@ -500,175 +523,106 @@ export default function AdminPayoutMechanism() {
                   </div>
                 ))}
               </div>
-              {/* {errors?.mechanisms && (
-                             <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
-                           )} */}
+              {errors?.mechanisms && (
+                <p className="text-red-500 text-xs mt-2">
+                  {errors?.mechanisms}
+                </p>
+              )}
             </div>
-            {isMechanismSelected("Bank Transfer") && (
-              <div className="space-y-2 mt-6">
-                <Label>Bank Transfer Currency</Label>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Globe className="mr-2 h-4 w-4" />
+            {/* ✅ DYNAMIC CURRENCY SELECTION */}
+            {formData?.mechanisms?.map((mechanism) => {
+              const payout = payoutList?.find(
+                (p) => p.id === mechanism.payoutTypeId,
+              );
 
-                      {(() => {
-                        const mech = getMechanismByName("Bank Transfer");
+              if (!payout) return null;
 
-                        return mech?.currencyIds?.length
+              return (
+                <div key={mechanism?.payoutTypeId} className="space-y-2 mt-6">
+                  <Label>{payout.name} Currency</Label>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <Globe className="mr-2 h-4 w-4" />
+
+                        {mechanism?.currencyIds?.length
                           ? currencyList
-                              .filter((c) => mech.currencyIds.includes(c.id))
-                              .map((c) => c.code)
-                              .join(", ")
-                          : "Select currencies...";
-                      })()}
-                    </Button>
-                  </PopoverTrigger>
-
-                  <PopoverContent className="w-full p-2">
-                    <Command>
-                      <CommandInput placeholder="Search currencies..." />
-                      <CommandList className="max-h-60 overflow-y-auto">
-                        <CommandEmpty>No currency found.</CommandEmpty>
-                        <CommandGroup>
-                          {currencyList?.map((currency) => {
-                            const mech = getMechanismByName("Bank Transfer");
-
-                            const isSelected = mech?.currencyIds.includes(
-                              currency.id,
-                            );
-
-                            return (
-                              <CommandItem
-                                key={currency.id}
-                                onSelect={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    mechanisms: prev.mechanisms.map((m) => {
-                                      const payout = payoutList.find(
-                                        (p) => p.id === m.payoutTypeId,
-                                      );
-
-                                      if (payout?.name !== "Bank Transfer")
-                                        return m;
-
-                                      const exists = m.currencyIds.includes(
-                                        currency.id,
-                                      );
-
-                                      return {
-                                        ...m,
-                                        currencyIds: exists
-                                          ? m.currencyIds.filter(
-                                              (id) => id !== currency.id,
-                                            )
-                                          : [...m.currencyIds, currency.id],
-                                      };
-                                    }),
-                                  }));
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4",
-                                    isSelected ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {currency.code}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-            {isMechanismSelected("Mobile Wallet") && (
-              <div className="space-y-2 mt-6">
-                <Label>Wallet Currency</Label>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Globe className="mr-2 h-4 w-4" />
-
-                      {(() => {
-                        const mech = getMechanismByName("Mobile Wallet");
-                        return mech?.currencyIds?.length
-                          ? currencyList
-                              ?.filter((c) =>
-                                mech?.currencyIds?.includes(c?.id),
+                              .filter((c) =>
+                                mechanism?.currencyIds?.includes(c?.id),
                               )
                               .map((c) => c?.code)
                               .join(", ")
-                          : "Select currencies...";
-                      })()}
-                    </Button>
-                  </PopoverTrigger>
+                          : "Select currencies..."}
+                      </Button>
+                    </PopoverTrigger>
 
-                  <PopoverContent className="w-full p-2">
-                    <Command>
-                      <CommandInput placeholder="Search currencies..." />
-                      <CommandList className="max-h-60 overflow-y-auto">
-                        <CommandEmpty>No currency found.</CommandEmpty>
-                        <CommandGroup>
-                          {currencyList?.map((currency) => {
-                            const mech = getMechanismByName("Mobile Wallet");
-                            const isSelected = mech?.currencyIds?.includes(
-                              currency?.id,
-                            );
+                    <PopoverContent className="w-full p-2">
+                      <Command>
+                        <CommandInput placeholder="Search currencies..." />
 
-                            return (
-                              <CommandItem
-                                key={currency.id}
-                                onSelect={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    mechanisms: prev.mechanisms.map((m) => {
-                                      const payout = payoutList.find(
-                                        (p) => p.id === m.payoutTypeId,
-                                      );
+                        <CommandList className="max-h-60 overflow-y-auto">
+                          <CommandEmpty>No currency found.</CommandEmpty>
 
-                                      if (payout?.name !== "Mobile Wallet")
-                                        return m;
+                          <CommandGroup>
+                            {currencyList?.map((currency) => {
+                              const isSelected =
+                                mechanism?.currencyIds?.includes(currency?.id);
 
-                                      const exists = m.currencyIds.includes(
-                                        currency.id,
-                                      );
+                              return (
+                                <CommandItem
+                                  key={currency?.id}
+                                  onSelect={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      mechanisms: prev.mechanisms.map((m) => {
+                                        if (
+                                          m?.payoutTypeId !==
+                                          mechanism?.payoutTypeId
+                                        )
+                                          return m;
 
-                                      return {
-                                        ...m,
-                                        currencyIds: exists
-                                          ? m.currencyIds.filter(
-                                              (id) => id !== currency.id,
-                                            )
-                                          : [...m.currencyIds, currency.id],
-                                      };
-                                    }),
-                                  }));
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4",
-                                    isSelected ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {currency?.code}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
+                                        const exists = m?.currencyIds?.includes(
+                                          currency?.id,
+                                        );
+
+                                        return {
+                                          ...m,
+                                          currencyIds: exists
+                                            ? m?.currencyIds?.filter(
+                                                (id) => id !== currency?.id,
+                                              )
+                                            : [...m?.currencyIds, currency?.id],
+                                        };
+                                      }),
+                                    }));
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4",
+                                      isSelected ? "opacity-100" : "opacity-0",
+                                    )}
+                                  />
+                                  {currency?.code}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              );
+            })}
           </div>
+
+          {/* FOOTER */}
           <DialogFooter className="mt-4">
             <Button
               variant="outline"
@@ -680,11 +634,14 @@ export default function AdminPayoutMechanism() {
                 });
                 setSelectedCurrencies([]);
                 setErrors({});
+                setCurrencyList([]);
               }}
             >
               Cancel
             </Button>
-            <Button onClick={handleCreatePayoutMechanism}>Create</Button>
+            <Button onClick={handleCreatePayoutMechanism} disabled={loading}>
+              Create
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -707,15 +664,15 @@ export default function AdminPayoutMechanism() {
             <DialogTitle>Update Payout Mechansim</DialogTitle>
           </DialogHeader>
           <div className="w-full">
+            {/* COUNTRY */}
             <div className="space-y-2">
-              <Label>{"Country"} *</Label>
+              <Label>Country *</Label>
               <Select
-                disabled
                 value={formData?.countryId}
                 onValueChange={(value) => handleCountryChange(value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={"Select country"} />
+                  <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
                   {countries?.map((country) => (
@@ -725,213 +682,148 @@ export default function AdminPayoutMechanism() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.countryId && (
-                <p className="text-red-500 text-xs">{errors.countryId}</p>
+              {errors?.countryId && (
+                <p className="text-red-500 text-xs">{errors?.countryId}</p>
               )}
             </div>
+            {/* MECHANISMS */}
             <div className="mt-6">
               <Label>Payout Mechanisms *</Label>
               <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
                 {payoutList?.map((m) => (
-                  <div key={m?.id} className="flex items-center gap-2">
-                    <Checkbox
-                      checked={formData?.mechanisms?.some(
-                        (mec) => mec.payoutTypeId === m.id,
-                      )}
-                      onCheckedChange={() => {
-                        setFormData((prev) => {
-                          const exists = prev?.mechanisms?.find(
-                            (mec) => mec?.payoutTypeId === m.id,
-                          );
-                          if (exists) {
+                  <div key={m?.id}>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={formData?.mechanisms?.some(
+                          (mec) => mec?.payoutTypeId === m?.id,
+                        )}
+                        onCheckedChange={() => {
+                          clearError("mechanisms");
+                          setFormData((prev) => {
+                            const exists = prev?.mechanisms?.find(
+                              (mec) => mec?.payoutTypeId === m?.id,
+                            );
+
+                            if (exists) {
+                              return {
+                                ...prev,
+                                mechanisms: prev?.mechanisms?.filter(
+                                  (mec) => mec?.payoutTypeId !== m?.id,
+                                ),
+                              };
+                            }
+
                             return {
                               ...prev,
-                              mechanisms: prev?.mechanisms?.filter(
-                                (mec) => mec.payoutTypeId !== m.id,
-                              ),
+                              mechanisms: [
+                                ...(prev?.mechanisms || []),
+                                { payoutTypeId: m?.id, currencyIds: [] },
+                              ],
                             };
-                          }
-                          return {
-                            ...prev,
-                            mechanisms: [
-                              ...prev.mechanisms,
-                              { payoutTypeId: m?.id, currencyIds: [] },
-                            ],
-                          };
-                        });
-                      }}
-                    />
-                    <span>{m?.name}</span>
+                          });
+                        }}
+                      />
+                      <span>{m?.name}</span>
+                    </div>
                   </div>
                 ))}
               </div>
-              {/* {errors?.mechanisms && (
-                             <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
-                           )} */}
+              {errors?.mechanisms && (
+                <p className="text-red-500 text-xs mt-2">
+                  {errors?.mechanisms}
+                </p>
+              )}
             </div>
-            {formData?.mechanisms?.some((m) => m.payoutTypeId === 1) && (
-              <div className="space-y-2 mt-6">
-                <Label>Bank Transfer Currency</Label>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Globe className="mr-2 h-4 w-4" />
+            {/* ✅ DYNAMIC CURRENCY SELECTION */}
+            {formData?.mechanisms?.map((mechanism) => {
+              const payout = payoutList?.find(
+                (p) => p?.id === mechanism?.payoutTypeId,
+              );
 
-                      {(() => {
-                        const mech = formData.mechanisms.find(
-                          (m) => m.payoutTypeId === 1,
-                        );
+              if (!payout) return null;
 
-                        return mech?.currencyIds.length
+              return (
+                <div key={mechanism?.payoutTypeId} className="space-y-2 mt-6">
+                  <Label>{payout?.name} Currency</Label>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <Globe className="mr-2 h-4 w-4" />
+
+                        {mechanism?.currencyIds?.length
                           ? currencyList
-                              .filter((c) => mech.currencyIds.includes(c.id))
-                              .map((c) => c.code)
-                              .join(", ")
-                          : "Select currencies...";
-                      })()}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-2">
-                    <Command>
-                      <CommandInput placeholder="Search currencies..." />
-                      <CommandList className="max-h-60 overflow-y-auto">
-                        <CommandEmpty>No currency found.</CommandEmpty>
-                        <CommandGroup>
-                          {currencyList?.map((currency) => {
-                            const mech = formData.mechanisms.find(
-                              (m) => m.payoutTypeId === 1,
-                            );
-
-                            const isSelected = mech?.currencyIds.includes(
-                              currency.id,
-                            );
-
-                            return (
-                              <CommandItem
-                                key={currency.id}
-                                onSelect={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    mechanisms: prev.mechanisms.map((m) => {
-                                      if (m.payoutTypeId !== 1) return m;
-
-                                      const exists = m.currencyIds.includes(
-                                        currency.id,
-                                      );
-
-                                      return {
-                                        ...m,
-                                        currencyIds: exists
-                                          ? m.currencyIds.filter(
-                                              (id) => id !== currency.id,
-                                            )
-                                          : [...m.currencyIds, currency.id],
-                                      };
-                                    }),
-                                  }));
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4",
-                                    isSelected ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {currency.code}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-            {formData?.mechanisms?.some((m) => m?.payoutTypeId === 2) && (
-              <div className="space-y-2 mt-6">
-                <Label>Wallet Currency</Label>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Globe className="mr-2 h-4 w-4" />
-
-                      {(() => {
-                        const mech = formData?.mechanisms?.find(
-                          (m) => m?.payoutTypeId === 2,
-                        );
-
-                        return mech?.currencyIds?.length
-                          ? currencyList
-                              ?.filter((c) =>
-                                mech?.currencyIds?.includes(c?.id),
+                              .filter((c) =>
+                                mechanism?.currencyIds?.includes(c?.id),
                               )
                               .map((c) => c?.code)
                               .join(", ")
-                          : "Select currencies...";
-                      })()}
-                    </Button>
-                  </PopoverTrigger>
+                          : "Select currencies..."}
+                      </Button>
+                    </PopoverTrigger>
 
-                  <PopoverContent className="w-full p-2">
-                    <Command>
-                      <CommandInput placeholder="Search currencies..." />
-                      <CommandList className="max-h-60 overflow-y-auto">
-                        <CommandEmpty>No currency found.</CommandEmpty>
-                        <CommandGroup>
-                          {currencyList?.map((currency) => {
-                            const mech = formData?.mechanisms?.find(
-                              (m) => m?.payoutTypeId === 2,
-                            );
+                    <PopoverContent className="w-full p-2">
+                      <Command>
+                        <CommandInput placeholder="Search currencies..." />
 
-                            const isSelected = mech?.currencyIds?.includes(
-                              currency?.id,
-                            );
+                        <CommandList className="max-h-60 overflow-y-auto">
+                          <CommandEmpty>No currency found.</CommandEmpty>
+                          <CommandGroup>
+                            {currencyList?.map((currency) => {
+                              const isSelected =
+                                mechanism?.currencyIds?.includes(currency?.id);
 
-                            return (
-                              <CommandItem
-                                key={currency.id}
-                                onSelect={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    mechanisms: prev?.mechanisms?.map((m) => {
-                                      if (m?.payoutTypeId !== 2) return m;
+                              return (
+                                <CommandItem
+                                  key={currency?.id}
+                                  onSelect={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      mechanisms: prev.mechanisms.map((m) => {
+                                        if (
+                                          m.payoutTypeId !==
+                                          mechanism.payoutTypeId
+                                        )
+                                          return m;
 
-                                      const exists = m?.currencyIds?.includes(
-                                        currency?.id,
-                                      );
+                                        const exists = m.currencyIds.includes(
+                                          currency.id,
+                                        );
 
-                                      return {
-                                        ...m,
-                                        currencyIds: exists
-                                          ? m?.currencyIds?.filter(
-                                              (id) => id !== currency?.id,
-                                            )
-                                          : [...m?.currencyIds, currency?.id],
-                                      };
-                                    }),
-                                  }));
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4",
-                                    isSelected ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {currency?.code}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
+                                        return {
+                                          ...m,
+                                          currencyIds: exists
+                                            ? m?.currencyIds.filter(
+                                                (id) => id !== currency.id,
+                                              )
+                                            : [...m.currencyIds, currency.id],
+                                        };
+                                      }),
+                                    }));
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4",
+                                      isSelected ? "opacity-100" : "opacity-0",
+                                    )}
+                                  />
+                                  {currency?.code}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              );
+            })}
           </div>
           <DialogFooter className="mt-4">
             <Button
@@ -944,11 +836,14 @@ export default function AdminPayoutMechanism() {
                 });
                 setSelectedCurrencies([]);
                 setErrors({});
+                setCurrencyList([]);
               }}
             >
               Cancel
             </Button>
-            <Button onClick={handleUpdatePayoutMechanism}>Update</Button>
+            <Button onClick={handleUpdatePayoutMechanism} disabled={loading}>
+              Update
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
