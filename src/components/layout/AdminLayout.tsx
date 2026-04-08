@@ -35,7 +35,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: Landmark,
     },
 
-    { name: "KYB Mappning", href: "/admin/onmapping", icon: FileCheck },
+    // { name: "KYB Mappning", href: "/admin/onmapping", icon: FileCheck },
     { name: "Country & Currency", href: "/admin/county-currency", icon: Globe },
     {
       name: "Payout Mechanism",

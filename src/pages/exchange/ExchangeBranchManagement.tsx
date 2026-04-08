@@ -433,7 +433,7 @@ const ExchangeBranchManagement = () => {
 
                   <div>
                     <Label htmlFor="emirate">
-                      Emirate <span className="text-red-500">*</span>
+                      city <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={form.emirate}

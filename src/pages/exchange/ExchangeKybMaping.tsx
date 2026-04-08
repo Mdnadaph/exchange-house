@@ -589,9 +589,9 @@ const ExchangeKybMapping = () => {
                     <thead>
                       <tr className="border-b text-muted-foreground text-left">
                         <th className="pb-3 pr-4 font-medium">Business Type</th>
-                        <th className="pb-3 pr-4 font-medium">Code</th>
+                        {/* <th className="pb-3 pr-4 font-medium">Code</th> */}
                         <th className="pb-3 pr-4 font-medium">KYB Type</th>
-                        <th className="pb-3 pr-4 font-medium">KYB Code</th>
+                        {/* <th className="pb-3 pr-4 font-medium">KYB Code</th> */}
                         <th className="pb-3 pr-4 font-medium">Description</th>
                         <th className="pb-3 pr-4 font-medium">Status</th>
                         <th className="pb-3 pr-4 font-medium">Default</th>
@@ -607,11 +607,11 @@ const ExchangeKybMapping = () => {
                           <td className="py-3 pr-4 font-medium">
                             {m.businessType}
                           </td>
-                          <td className="py-3 pr-4">
+                          {/* <td className="py-3 pr-4">
                             <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
                               {m.businessTypeCode}
                             </span>
-                          </td>
+                          </td> */}
                           <td className="py-3 pr-4">
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getKybBadgeClass(m.kybTypeCode)}`}
@@ -619,11 +619,11 @@ const ExchangeKybMapping = () => {
                               {m.kybTypeName}
                             </span>
                           </td>
-                          <td className="py-3 pr-4">
+                          {/* <td className="py-3 pr-4">
                             <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
                               {m.kybTypeCode}
                             </span>
-                          </td>
+                          </td> */}
                           <td
                             className="py-3 pr-4 text-muted-foreground max-w-[200px] truncate"
                             title={m.description}
