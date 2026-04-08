@@ -670,6 +670,7 @@ export default function AdminPayoutMechanism() {
               <Select
                 value={formData?.countryId}
                 onValueChange={(value) => handleCountryChange(value)}
+                disabled
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
