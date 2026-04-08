@@ -1339,7 +1339,7 @@ const ExchangeKYBReview = () => {
 
           {/* Document Viewer Dialog */}
           <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-            <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+            <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-y-auto">
               <DialogHeader className="p-4 border-b">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

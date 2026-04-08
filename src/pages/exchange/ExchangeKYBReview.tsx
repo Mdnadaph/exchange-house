@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Type definitions for API response
 interface KYBDocument {
@@ -118,7 +119,7 @@ const ExchangeKYBReview = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [pageSize] = useState(2);
-
+  const { toast } = useToast();
   const token = cookies.token;
 
   useEffect(() => {
@@ -567,6 +568,7 @@ const ExchangeKYBReview = () => {
         await fetchKYBApplications(currentPage);
         setViewerOpen(false);
         setError(null);
+        toast({ title: "Success", description: response?.data?.message });
       } else {
         setError(response.data?.message || "Approval failed without error");
       }
@@ -626,8 +628,14 @@ const ExchangeKYBReview = () => {
         setViewerOpen(false);
         setRejectionReason("");
         setError(null);
+        toast({ title: "Success", description: response?.data?.message });
       } else {
         setError(response.data?.message || "Rejection failed without error");
+        toast({
+          title: "Error",
+          description: response?.data?.message,
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       console.error("Error rejecting document:", err);
@@ -1357,7 +1365,7 @@ const ExchangeKYBReview = () => {
 
           {/* Document Viewer Dialog */}
           <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-            <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+            <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-y-auto">
               <DialogHeader className="p-4 border-b">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

@@ -63,6 +63,7 @@ const ExchangeBranchManagement = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState<boolean>(false);
   const [form, setForm] = useState({
     name: "",
     emirate: "",
@@ -218,8 +219,9 @@ const ExchangeBranchManagement = () => {
      CREATE BRANCH
   ========================= */
   const createBranch = async () => {
+    setLoading(true);
     try {
-      await axios.post(
+      const res = await axios.post(
         `${BASE_URL}/api/v3/branch/create`,
         {
           name: form.name,
@@ -235,14 +237,22 @@ const ExchangeBranchManagement = () => {
           },
         },
       );
+      console.log("res", res);
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Branch created successfully",
+        });
 
-      toast({
-        title: "Success",
-        description: "Branch created successfully",
-      });
-
-      setIsModalOpen(false);
-      fetchBranches();
+        setIsModalOpen(false);
+        fetchBranches();
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message || "Some thing went wrong",
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -250,6 +260,8 @@ const ExchangeBranchManagement = () => {
           error?.response?.data?.message || "Failed to create branch",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -257,8 +269,9 @@ const ExchangeBranchManagement = () => {
      UPDATE BRANCH
   ========================= */
   const updateBranch = async () => {
+    setLoading(true);
     try {
-      await axios.patch(
+      const res = await axios.patch(
         `${BASE_URL}/api/v3/branch/update/${editingBranchId}`,
         {
           name: form.name,
@@ -275,15 +288,23 @@ const ExchangeBranchManagement = () => {
         },
       );
 
-      toast({
-        title: "Success",
-        description: "Branch updated successfully",
-      });
-
-      setIsModalOpen(false);
-      setIsEditMode(false);
-      setEditingBranchId(null);
-      fetchBranches();
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Branch updated successfully",
+        });
+        setIsModalOpen(false);
+        setIsEditMode(false);
+        setEditingBranchId(null);
+        fetchBranches();
+      } else {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message || "Something went wrong while update",
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -291,6 +312,8 @@ const ExchangeBranchManagement = () => {
           error?.response?.data?.message || "Failed to update branch",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
   /* =========================
@@ -559,7 +582,7 @@ const ExchangeBranchManagement = () => {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleSubmit}>
+                    <Button onClick={handleSubmit} disabled={loading}>
                       {isEditMode ? "Update Branch" : "Create Branch"}
                     </Button>
                   </div>
