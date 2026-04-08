@@ -197,6 +197,7 @@ const ExchangeStaffManagement = () => {
     }
 
     try {
+      setLoading(true);
       const response = await axios.post(
         `${BASE_URL}/api/v3/admin/staff/create`,
         {
@@ -245,6 +246,8 @@ const ExchangeStaffManagement = () => {
         description: error?.response?.data?.message || "Failed to create staff",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -259,6 +262,7 @@ const ExchangeStaffManagement = () => {
     }
 
     try {
+      setLoading(true);
       const response = await axios.put(
         `${BASE_URL}/api/v3/admin/staff/${staffUUID}/edit`,
         {
@@ -307,6 +311,8 @@ const ExchangeStaffManagement = () => {
         description: error?.response?.data?.message || "Failed to update staff",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -665,7 +671,11 @@ const ExchangeStaffManagement = () => {
               >
                 Cancel
               </Button>
-              <Button variant="business" onClick={createStaff}>
+              <Button
+                variant="business"
+                onClick={createStaff}
+                disabled={loading}
+              >
                 Create Staff
               </Button>
             </DialogFooter>
@@ -842,7 +852,7 @@ const ExchangeStaffManagement = () => {
               >
                 Cancel
               </Button>
-              <Button variant="business" onClick={EditStaff}>
+              <Button variant="business" onClick={EditStaff} disabled={loading}>
                 Edit Staff
               </Button>
             </DialogFooter>
