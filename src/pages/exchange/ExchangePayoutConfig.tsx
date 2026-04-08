@@ -97,18 +97,6 @@ type DestinationForm = {
   mechanisms: string[];
   mechanismConfigs: Record<string, MechanismConfig>;
 };
-const AVAILABLE_MECHANISMS = [
-  "BANK_TRANSFER",
-  "MOBILE_WALLET",
-  "UPI",
-  "CASH_PICKUP",
-  "GCASH",
-  "JAZZCASH",
-  "EASYPaisa",
-  "BKASH",
-  "NAGAD",
-  // "Remitly",
-];
 
 const ExchangePayoutConfig = () => {
   const { toast } = useToast();
@@ -117,58 +105,37 @@ const ExchangePayoutConfig = () => {
 
   const [countries, setCountries] = useState([]);
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
   const [errors, setErrors] = useState<any>({});
-
-  //  const [destinations, setDestinations] = useState<PayoutDestination[]>([
-  //   {
-  //     id: "1",
-  //     country: "India",
-  //     currency: "INR",
-  //     status: "active",
-  //     mechanisms: ["Bank Transfer", "UPI", "Mobile Wallet", "Cash Pickup"],
-  //     volume: "2.4M USD",
-  //     partners: 12,
-  //     fees: "0.5-2.5%",
-  //     processingTime: "5-30 minutes",
-  //   },
-  //   {
-  //     id: "2",
-  //     country: "Philippines",
-  //     currency: "PHP",
-  //     status: "active",
-  //     mechanisms: ["Bank Transfer", "GCash", "Remitly", "Cash Pickup"],
-  //     volume: "1.8M USD",
-  //     partners: 8,
-  //     fees: "0.8-3.0%",
-  //     processingTime: "15-60 minutes",
-  //   },
-  //   {
-  //     id: "3",
-  //     country: "Pakistan",
-  //     currency: "PKR",
-  //     status: "active",
-  //     mechanisms: ["Bank Transfer", "JazzCash", "EasyPaisa", "Cash Pickup"],
-  //     volume: "1.2M USD",
-  //     partners: 6,
-  //     fees: "1.0-3.5%",
-  //     processingTime: "10-45 minutes",
-  //   },
-  //   {
-  //     id: "4",
-  //     country: "Bangladesh",
-  //     currency: "BDT",
-  //     status: "maintenance",
-  //     mechanisms: ["Bank Transfer", "bKash", "Nagad"],
-  //     volume: "800K USD",
-  //     partners: 4,
-  //     fees: "1.2-4.0%",
-  //     processingTime: "30-120 minutes",
-  //   },
-  // ]);
-  const [destinations, setDestinations] = useState(null);
+  const [avaliable_machanisms, setAvaliable_machanisms] = useState<string[]>(
+    [],
+  );
+  const [mechanismIdMap, setMechanismIdMap] = useState<Record<string, string>>(
+    {},
+  );
+  const [mechanismIdToNameMap, setMechanismIdToNameMap] = useState<
+    Record<string, string>
+  >({});
+  const [supportedCurrencies, setSupportedCurrencies] = useState<
+    Record<string, string[]>
+  >({});
+  //const [destinations, setDestinations] = useState(null);
+  const [payoutData, setPayoutData] = useState({
+    countries: [],
+    summary: {
+      activeCountries: 0,
+      totalPartners: 0,
+      totalMonthlyVolumeUsd: 0,
+      maintenanceCountries: 0,
+    },
+    totalElements: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 10,
+  });
   const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
     try {
@@ -206,7 +173,19 @@ const ExchangePayoutConfig = () => {
       if (json?.status !== true || !json.data) {
         throw new Error("Unexpected response format");
       }
-      setDestinations(json?.data);
+      setPayoutData({
+        countries: json?.data?.countries || [],
+        summary: json?.data?.summary || {
+          activeCountries: 0,
+          totalPartners: 0,
+          totalMonthlyVolumeUsd: 0,
+          maintenanceCountries: 0,
+        },
+        totalElements: json?.totalElements || 0,
+        totalPages: json?.totalPages || 0,
+        currentPage: json?.currentPage || 0,
+        pageSize: json?.pageSize || 10,
+      });
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -216,8 +195,100 @@ const ExchangePayoutConfig = () => {
   useEffect(() => {
     getPayOutConfig();
   }, [page]);
-  const summaryData = destinations?.summary;
-  const totalPayOutConfigDataList = destinations?.totalElements;
+
+  const getMechanismList = async (countryId: number) => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout-mechanism/country/${countryId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) throw new Error(`no avabiable`);
+
+      const json = await res.json();
+      if (json?.status !== true || !json.data) {
+        throw new Error("Unexpected response format");
+      }
+      // Extract mechanism names from the objects
+      const mechanismsData = json.data?.mechanisms || [];
+      //const mechanismNames = mechanismsData
+      //  .map((item: any) => item.payoutType?.name)
+      //  .filter(Boolean);
+      //setAvaliable_machanisms(mechanismNames);
+
+      //// Build mapping: name -> id
+      //const map: Record<string, string> = {};
+      //mechanismsData.forEach((item: any) => {
+      //  const name = item?.payoutType?.name;
+      //  const id = item?.id;
+
+      //  if (name && id) {
+      //    map[name] = String(id);
+      //  }
+      //});
+      //setMechanismIdMap(map);
+      const mechanismNames: string[] = [];
+      const nameToIdMap: Record<string, string> = {};
+      const nameToCurrenciesMap: Record<string, string[]> = {};
+
+      mechanismsData.forEach((item: any) => {
+        const name = item?.payoutType?.name;
+        const id = item?.id;
+        const currencies =
+          item?.supportedCurrencies?.map((c: any) => c.code) || [];
+        if (name && id) {
+          mechanismNames.push(name);
+          nameToIdMap[name] = String(id);
+          nameToCurrenciesMap[name] = currencies;
+        }
+      });
+
+      setAvaliable_machanisms(mechanismNames);
+      setMechanismIdMap(nameToIdMap);
+      setSupportedCurrencies(nameToCurrenciesMap);
+    } catch (error) {
+      const msg = error.message || "Failed to load mechanism list";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+
+  const getCurrenciesForCountry = async (countryId: number) => {
+    setLoadingCurrencies(true);
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout-mechanism/currency/${countryId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) throw new Error(`No currencies found for country`);
+
+      const json = await res.json();
+
+      if (json?.status !== true) {
+        setSelectedCurrencies([]);
+        // optional toast
+        return;
+      }
+
+      const currencies =
+        json.data?.map((item: any) => item.code).filter(Boolean) || [];
+      setSelectedCurrencies(currencies);
+    } catch (error) {
+      const msg = error.message || "Failed to load currencies";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setSelectedCurrencies([]);
+    } finally {
+      setLoadingCurrencies(false);
+    }
+  };
+
+  //const summaryData = destinations?.summary;
+  const summaryData = payoutData?.summary;
+  //const totalPayOutConfigDataList = destinations?.totalElements;
+  const totalPayOutConfigDataList = payoutData?.totalElements;
+
   function formatEnumText(value?: string): string {
     if (typeof value !== "string") return "-";
     return value
@@ -255,7 +326,8 @@ const ExchangePayoutConfig = () => {
   const [mechanismInformation, setMechanismInformation] = useState<
     Record<string, string[]>
   >({});
-
+  const [mechanismSupportCurrenciesMap, setMechanismSupportCurrenciesMap] =
+    useState<Record<string, string[]>>({});
   const addToList = (mechanism: string) => {
     setMechanismLists((prev) => ({
       ...prev,
@@ -317,33 +389,6 @@ const ExchangePayoutConfig = () => {
     mechanismConfigs: {},
   });
 
-  const payoutMechanisms = [
-    {
-      type: "Bank Transfer",
-      description: t("bankTransferDesc") || "Direct bank account transfers",
-      countries: 47,
-      averageFee: "1.2%",
-      status: "active",
-      icon: Building,
-    },
-    {
-      type: "Mobile Wallets",
-      description: t("mobileWalletDesc") || "Digital wallet transfers",
-      countries: 23,
-      averageFee: "1.8%",
-      status: "active",
-      icon: Smartphone,
-    },
-    {
-      type: "Cash Pickup",
-      description: t("cashPickupDesc") || "Physical cash collection points",
-      countries: 35,
-      averageFee: "3.2%",
-      status: "active",
-      icon: MapPin,
-    },
-  ];
-
   const getStatusBadge = (status: string) => {
     const statusMap = {
       ACTIVE: {
@@ -389,28 +434,66 @@ const ExchangePayoutConfig = () => {
     });
     setMechanismLists({});
     setMechanismInformation({});
+    setAvaliable_machanisms([]);
+    setLoadingCurrencies(false);
   };
 
+  //const buildPayload = () => {
+  //  // Convert mechanismLists keys from names to IDs
+  //  const mechanismListsById: Record<string, string[]> = {};
+  //  Object.entries(mechanismLists).forEach(([mechanismName, list]) => {
+  //    const id = mechanismIdMap[mechanismName];
+  //    if (id && list.length > 0 && list[0] !== "") {
+  //      // Remove empty strings from the list
+  //      mechanismListsById[id] = list.filter((item) => item.trim() !== "");
+  //    }
+  //  });
+
+  //  // Convert mechanismInformation keys from names to IDs
+  //  const mechanismInfoById: Record<string, string[]> = {};
+  //  Object.entries(mechanismInformation).forEach(([mechanismName, info]) => {
+  //    const id = mechanismIdMap[mechanismName];
+  //    if (id && info.length > 0 && info[0] !== "") {
+  //      mechanismInfoById[id] = info.filter((item) => item.trim() !== "");
+  //    }
+  //  });
+
+  //  return {
+  //    countryId: Number(destinationForm.country),
+  //    status: destinationForm.status.toUpperCase(),
+  //    partnersCount: Number(destinationForm.partners),
+  //    monthlyVolumeUsd: Number(destinationForm.volume),
+  //    mechanismLists: mechanismListsById,
+  //    mechanismInformation: mechanismInfoById,
+  //  };
+  //};
   const buildPayload = () => {
+    // Build an array of mechanism objects
+    const mechanismsArray = destinationForm.mechanisms
+      .map((mechanismName) => {
+        const mechanismId = mechanismIdMap[mechanismName];
+        if (!mechanismId) return null;
+
+        const lists = mechanismLists[mechanismName] || [];
+        const info = mechanismInformation[mechanismName] || [];
+
+        // Only include if at least one list item or info item has content
+        if (lists.length === 0 && info.length === 0) return null;
+
+        return {
+          payoutMechanismId: Number(mechanismId),
+          mechanismLists: lists.filter((item) => item.trim() !== ""),
+          mechanismInformation: info.filter((item) => item.trim() !== ""),
+        };
+      })
+      .filter(Boolean); // remove null entries
+
     return {
       countryId: Number(destinationForm.country),
-      payoutCurrencies: selectedCurrencies,
       status: destinationForm.status.toUpperCase(),
       partnersCount: Number(destinationForm.partners),
       monthlyVolumeUsd: Number(destinationForm.volume),
-      mechanisms: destinationForm.mechanisms.map((m) => {
-        const c = destinationForm.mechanismConfigs[m];
-        return {
-          mechanism: m,
-          enabled: true,
-          feeMinPercent: Number(c.feeMin),
-          feeMaxPercent: Number(c.feeMax),
-          processingMinMinutes: Number(c.processingMin),
-          processingMaxMinutes: Number(c.processingMax),
-        };
-      }),
-      //mechanismLists: mechanismLists,
-      //mechanismInformation: mechanismInformation,
+      mechanisms: mechanismsArray,
     };
   };
 
@@ -596,17 +679,31 @@ const ExchangePayoutConfig = () => {
   };
   const openEditDialog = (destinationEditableData: any) => {
     setId(destinationEditableData?.id);
-    setSelectedCurrencies(destinationEditableData?.currencies);
+    setSelectedCurrencies(destinationEditableData?.currencies || []);
+
     setDestinationForm({
       country: destinationEditableData?.countryId,
-      status: destinationEditableData?.status.toLowerCase(),
-      mechanisms: destinationEditableData?.mechanisms?.map(
-        (item: any) => item?.name,
-      ),
+      status: destinationEditableData?.status?.toLowerCase(),
+      //mechanisms:
+      //  destinationEditableData?.mechanisms?.map((item: any) => item?.name) ||
+      //  [],
+      mechanisms: Object.keys(destinationEditableData?.mechanismLists || {}), // ✅ get mechanism names from keys
       mechanismConfigs: buildMechanismConfigs(destinationEditableData),
-      partners: destinationEditableData.partners.toString(),
-      volume: destinationEditableData?.volumeUsd,
+      partners: destinationEditableData.partners?.toString() || "",
+      volume: destinationEditableData?.volumeUsd?.toString() || "",
     });
+
+    // ✅ Load the dynamic List & Customer Information fields
+    setMechanismLists(destinationEditableData?.mechanismLists || {});
+    setMechanismInformation(
+      destinationEditableData?.mechanismInformation || {},
+    );
+
+    // ✅ Fetch available mechanisms for this country (to build ID map and show checkboxes)
+    if (destinationEditableData?.countryId) {
+      getMechanismList(Number(destinationEditableData.countryId));
+    }
+
     setEditDestinationOpen(true);
   };
 
@@ -670,18 +767,17 @@ const ExchangePayoutConfig = () => {
       country,
     }));
 
-    //setSelectedCurrencies((prev) => [...prev, countryData?.currencyCode]);
-    //setErrors((prev: any) => ({
-    //  ...prev,
-    //  country: "",
-    //}));
-    setSelectedCurrencies(
-      countryData?.currencyCode ? [countryData.currencyCode] : [],
-    );
     setErrors((prev: any) => ({
       ...prev,
       country: "",
     }));
+
+    if (countryData?.id) {
+      getCurrenciesForCountry(Number(countryData.id));
+      getMechanismList(Number(countryData.id));
+    } else {
+      setAvaliable_machanisms([]);
+    }
   };
 
   const handleMechanismToggle = (mechanism: string) => {
@@ -857,9 +953,9 @@ const ExchangePayoutConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {destinations?.countries?.length > 0 ? (
-                destinations?.countries?.map((destination: any) => {
+            <div className="space-y-10">
+              {payoutData?.countries?.length > 0 ? (
+                payoutData?.countries?.map((destination: any) => {
                   const status = getStatusBadge(destination?.status);
                   const StatusIcon = status.icon;
                   return (
@@ -883,7 +979,10 @@ const ExchangePayoutConfig = () => {
                                   <div className="flex gap-2 items-center">
                                     {destination?.currencies?.map(
                                       (currency: string) => (
-                                        <div className="px-2 py-1 bg-blue-900 rounded-md">
+                                        <div
+                                          key={currency}
+                                          className="px-2 py-1 bg-blue-900 rounded-md"
+                                        >
                                           <span className="text-white">
                                             {currency}
                                           </span>
@@ -929,51 +1028,37 @@ const ExchangePayoutConfig = () => {
                                 :
                               </span>
                               <div className="space-y-4">
-                                {destination?.mechanisms.map(
-                                  (mechanism: any, mechIndex: number) => (
-                                    <div
-                                      key={mechIndex}
-                                      className="rounded-xl border bg-background p-4 sm:p-5 space-y-4"
-                                    >
-                                      {/* Header */}
-                                      <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          {formatEnumText(mechanism?.name)}
-                                        </Badge>
+                                {Object.keys(
+                                  destination?.mechanismLists || {},
+                                ).map((mechanismName, mechIndex) => (
+                                  <div
+                                    key={mechIndex}
+                                    className="rounded-xl border bg-background p-4 sm:p-5 space-y-4"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {mechanismName}
+                                      </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-2 text-sm">
+                                      <div className="text-muted-foreground">
+                                        {"List fields"}:{" "}
+                                        {destination?.mechanismLists[
+                                          mechanismName
+                                        ]?.join(", ") || "-"}
                                       </div>
-
-                                      {/* Details */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {/* Fee Range */}
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            {t("feeRange") || "Fee Range"}
-                                          </p>
-                                          <p className="font-medium text-sm sm:text-base">
-                                            {mechanism?.feeMinPercent} –{" "}
-                                            {mechanism?.feeMaxPercent} %
-                                          </p>
-                                        </div>
-
-                                        {/* Processing Time */}
-                                        <div className="space-y-1">
-                                          <p className="text-xs text-muted-foreground">
-                                            {t("processingTime") ||
-                                              "Processing Time"}
-                                          </p>
-                                          <p className="font-medium text-sm sm:text-base">
-                                            {mechanism?.processingMinMinutes} –{" "}
-                                            {mechanism?.processingMaxMinutes}{" "}
-                                            min
-                                          </p>
-                                        </div>
+                                      <div className="text-muted-foreground">
+                                        {"Customer information"}:{" "}
+                                        {destination?.mechanismInformation[
+                                          mechanismName
+                                        ]?.join(", ") || "-"}
                                       </div>
                                     </div>
-                                  ),
-                                )}
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           </div>
@@ -1013,11 +1098,11 @@ const ExchangePayoutConfig = () => {
                 </p>
               )}
             </div>
-            {totalPayOutConfigDataList > 10 && (
+            {payoutData?.totalPages > 1 && (
               <div className="flex items-center justify-between mt-6 pt-6 border-t">
                 <p className="text-sm text-muted-foreground">
-                  Showing {destinations?.countries?.length} of{" "}
-                  {totalPayOutConfigDataList} beneficiaries
+                  Showing {payoutData.countries.length} of{" "}
+                  {payoutData.totalElements} beneficiaries
                 </p>
                 <div className="flex space-x-2">
                   <Button
@@ -1031,7 +1116,10 @@ const ExchangePayoutConfig = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={(page + 1) * 10 >= totalPayOutConfigDataList}
+                    disabled={
+                      (page + 1) * payoutData.pageSize >=
+                      payoutData.totalElements
+                    }
                     onClick={() => setPage(page + 1)}
                   >
                     Next
@@ -1154,14 +1242,17 @@ const ExchangePayoutConfig = () => {
 
                 <div className="space-y-2">
                   <Label>Currency</Label>
-
                   <div className="px-3 py-2 border rounded-md bg-muted/30 text-sm flex items-center">
                     <Globe className="mr-2 h-4 w-4 shrink-0" />
-                    {selectedCurrencies.length > 0
-                      ? selectedCurrencies.join(", ")
-                      : destinationForm.country
-                        ? "Loading..."
-                        : "Select a country first"}
+                    {selectedCurrencies.length > 0 ? (
+                      selectedCurrencies.join(", ")
+                    ) : destinationForm.country ? (
+                      <span className="text-muted-foreground">
+                        No currencies available
+                      </span>
+                    ) : (
+                      "Select a country first"
+                    )}
                   </div>
                   {errors.currencies && (
                     <p className="text-red-500 text-xs">{errors.currencies}</p>
@@ -1227,23 +1318,47 @@ const ExchangePayoutConfig = () => {
               {/* MECHANISMS */}
               <div className="mt-6">
                 <Label>Available Mechanisms *</Label>
-                <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
-                  {AVAILABLE_MECHANISMS.map((m) => (
-                    <div key={m} className="flex items-center gap-2">
-                      <Checkbox
-                        checked={destinationForm.mechanisms.includes(m)}
-                        onCheckedChange={() => handleMechanismToggle(m)}
-                      />
-                      <span>{formatEnumText(m)}</span>
+                <div className="border rounded-lg p-4 mt-2">
+                  {avaliable_machanisms.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-4">
+                      No mechanisms available
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {/*{avaliable_machanisms.map((m) => (
+                        <div key={m} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={destinationForm.mechanisms.includes(m)}
+                            onCheckedChange={() => handleMechanismToggle(m)}
+                          />
+                          <span>{formatEnumText(m)}</span>
+                        </div>
+                      ))}*/}
+                      {avaliable_machanisms.map((m) => (
+                        <div key={m} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={destinationForm.mechanisms.includes(m)}
+                            onCheckedChange={() => handleMechanismToggle(m)}
+                          />
+                          <span>
+                            {formatEnumText(m)}
+                            {supportedCurrencies[m]?.length > 0 && (
+                              <span className="text-muted-foreground text-xs ml-1">
+                                ({supportedCurrencies[m].join(", ")})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
                 {errors?.mechanisms && (
                   <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
                 )}
               </div>
 
-              {destinationForm.mechanisms.map((m) => {
+              {destinationForm?.mechanisms?.map((m) => {
                 const c = destinationForm?.mechanismConfigs[m];
 
                 return (
@@ -1263,7 +1378,6 @@ const ExchangePayoutConfig = () => {
                             onChange={(e) =>
                               updateListField(m, idx, e.target.value)
                             }
-                            className="w-56"
                           />
                           <Button
                             type="button"
@@ -1297,7 +1411,6 @@ const ExchangePayoutConfig = () => {
                             onChange={(e) =>
                               updateInformation(m, idx, e.target.value)
                             }
-                            className="w-56"
                           />
                           <Button
                             type="button"
@@ -1506,14 +1619,19 @@ const ExchangePayoutConfig = () => {
                 </div>*/}
                 <div className="space-y-2">
                   <Label>Currency</Label>
-
                   <div className="px-3 py-2 border rounded-md bg-muted/30 text-sm flex items-center">
                     <Globe className="mr-2 h-4 w-4 shrink-0" />
-                    {selectedCurrencies.length > 0
-                      ? selectedCurrencies.join(", ")
-                      : destinationForm.country
-                        ? "Loading..."
-                        : "Select a country first"}
+                    {!destinationForm.country ? (
+                      "Select a country first"
+                    ) : loadingCurrencies ? (
+                      "Loading..."
+                    ) : selectedCurrencies.length > 0 ? (
+                      selectedCurrencies.join(", ")
+                    ) : (
+                      <span className="text-muted-foreground">
+                        No currencies available
+                      </span>
+                    )}
                   </div>
                   {errors.currencies && (
                     <p className="text-red-500 text-xs">{errors.currencies}</p>
@@ -1553,7 +1671,7 @@ const ExchangePayoutConfig = () => {
                   {t("availableMechanisms") || "Available Mechanisms"}
                 </Label>
                 <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg max-h-40 overflow-y-auto">
-                  {AVAILABLE_MECHANISMS.map((mechanism) => (
+                  {/*{avaliable_machanisms?.map((mechanism) => (
                     <div
                       key={mechanism}
                       className="flex items-center space-x-2"
@@ -1570,6 +1688,31 @@ const ExchangePayoutConfig = () => {
                         className="text-sm cursor-pointer"
                       >
                         {mechanism}
+                      </label>
+                    </div>
+                  ))}*/}
+                  {avaliable_machanisms?.map((mechanism) => (
+                    <div
+                      key={mechanism}
+                      className="flex items-center space-x-2"
+                    >
+                      <Checkbox
+                        id={`edit-${mechanism}`}
+                        checked={destinationForm?.mechanisms?.includes(
+                          mechanism,
+                        )}
+                        onCheckedChange={() => handleMechanismToggle(mechanism)}
+                      />
+                      <label
+                        htmlFor={`edit-${mechanism}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        {mechanism}
+                        {supportedCurrencies[mechanism]?.length > 0 && (
+                          <span className="text-muted-foreground text-xs ml-1">
+                            ({supportedCurrencies[mechanism].join(", ")})
+                          </span>
+                        )}
                       </label>
                     </div>
                   ))}
@@ -1640,86 +1783,82 @@ const ExchangePayoutConfig = () => {
                 </div>
               </div> */}
               {destinationForm?.mechanisms?.map((m) => {
-                const c = destinationForm?.mechanismConfigs[m];
-
                 return (
                   <div key={m} className="border rounded-lg p-4 mt-4 space-y-4">
                     <h4 className="font-semibold">
                       {formatEnumText(m)} Configuration
                     </h4>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        type="number"
-                        placeholder="Fee Min %"
-                        value={c?.feeMin}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                feeMin: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Fee Max %"
-                        value={c?.feeMax}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                feeMax: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
+                    {/* List Section */}
+                    <div className="mt-6 border-t pt-4">
+                      <p className="font-serif">List</p>
+                      {(mechanismLists[m] || [""]).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mt-2">
+                          <Input
+                            type="text"
+                            placeholder={`Field ${idx + 1}`}
+                            value={field}
+                            onChange={(e) =>
+                              updateListField(m, idx, e.target.value)
+                            }
+                            className="w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addToList(m)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          {(mechanismLists[m] || [""]).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromList(m, idx)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        type="number"
-                        placeholder="Processing Min (minutes)"
-                        value={c?.processingMin}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                processingMin: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Processing Max (minutes)"
-                        value={c?.processingMax}
-                        onChange={(e) =>
-                          setDestinationForm((p) => ({
-                            ...p,
-                            mechanismConfigs: {
-                              ...p?.mechanismConfigs,
-                              [m]: {
-                                ...p?.mechanismConfigs[m],
-                                processingMax: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                      />
+                    {/* Customer Information Section */}
+                    <div className="mt-6 border-t pt-4">
+                      <p className="font-serif">Customer Information</p>
+                      {(mechanismInformation[m] || [""]).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mt-2">
+                          <Input
+                            type="text"
+                            placeholder={`Field ${idx + 1}`}
+                            value={field}
+                            onChange={(e) =>
+                              updateInformation(m, idx, e.target.value)
+                            }
+                            className="w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addToInformation(m)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          {(mechanismInformation[m] || [""]).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromInfromation(m, idx)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
