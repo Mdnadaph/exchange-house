@@ -20,6 +20,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -37,6 +45,7 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 import {
   Check,
+  ChevronsUpDown,
   Currency,
   Edit,
   Globe,
@@ -298,7 +307,6 @@ export default function AdminPayoutMechanism() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     setFormData({
       countryId: editablePayoutMechanismData?.country?.id,
@@ -308,7 +316,7 @@ export default function AdminPayoutMechanism() {
         currencyIds: mec?.supportedCurrencies?.map((sc) => sc?.id),
       })),
     });
-  }, [editablePayoutMechanismData?.countryId]);
+  }, [editablePayoutMechanismData]);
 
   return (
     <AdminLayout>
@@ -329,113 +337,154 @@ export default function AdminPayoutMechanism() {
           </Button>
         </div>
       </div>
-      <Card className="shadow-card">
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Payout Mechanism
-            </CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by country or currency…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {loading ? (
-              <p className="text-xl text-gray-500 font-medium text-center">
-                Loading...
-              </p>
-            ) : allPayoutMechanism?.length == 0 ? (
-              <p className="text-center text-gray-500 font-medium ">
-                No Data Found
-              </p>
-            ) : (
-              allPayoutMechanism?.map((payout) => (
-                <Card
-                  key={payout?.countryId}
-                  className="border-l-4 border-l-primary"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col gap-4">
-                      <div className="space-y-4 flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                            <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-lg font-semibold text-foreground">
-                              {payout?.country?.name}
-                            </h4>
-                            <div className="text-sm text-muted-foreground">
-                              <div>
-                                {payout?.mechanisms?.map((pm) => (
-                                  <div className="space-y-3 mb-4" key={pm?.id}>
-                                    <div className="flex gap-2">
-                                      <h4>Payout:</h4>
-                                      <p>{pm?.payoutType?.name}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <h4>Currencies:</h4>
-                                      <div className="flex gap-2 items-center">
-                                        {pm?.supportedCurrencies?.map((c) => (
-                                          <div
-                                            className="px-2 py-1 bg-blue-900 rounded-md"
-                                            key={c?.id}
-                                          >
-                                            <span className="text-white">
-                                              {c?.code}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
+      <div className="relative w-64 my-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by country or currency…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+      <div className="space-y-3">
+        {loading ? (
+          <p className="text-xl text-gray-500 font-medium text-center">
+            Loading...
+          </p>
+        ) : allPayoutMechanism?.length == 0 ? (
+          <p className="text-center text-gray-500 font-medium ">
+            No Data Found
+          </p>
+        ) : (
+          <div className="space-y-5">
+            {allPayoutMechanism?.map((payout) => (
+              <Card
+                key={payout?.countryId}
+                className="border-l-4 border-l-primary"
+              >
+                <CardContent className="p-6">
+                  <div className="flex flex-col gap-4">
+                    <div className="space-y-4 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                          <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-foreground">
+                            {payout?.country?.name}
+                          </h4>
+                          <div className="text-sm text-muted-foreground">
+                            <div>
+                              {payout?.mechanisms?.map((pm) => (
+                                <div className="space-y-3 mb-4" key={pm?.id}>
+                                  <div className="flex gap-2">
+                                    <h4>Payout:</h4>
+                                    <p>{pm?.payoutType?.name}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <h4>Currencies:</h4>
+                                    <div className="flex gap-2 items-center">
+                                      {pm?.supportedCurrencies?.map((c) => (
+                                        <div
+                                          className="px-2 py-1 bg-blue-900 rounded-md"
+                                          key={c?.id}
+                                        >
+                                          <span className="text-white">
+                                            {c?.code}
+                                          </span>
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex flex-wrap gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditOpen(true);
-                            setEditablePayoutMechanism(payout);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 sm:mr-1" />
-                          <span className="hidden sm:inline">Edit</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsDeleteOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
+
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditOpen(true);
+                          setEditablePayoutMechanism(payout);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsDeleteOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 0) setCurrentPage(currentPage - 1);
+                      }}
+                      aria-disabled={currentPage <= 0}
+                      className={
+                        currentPage <= 0 ? "pointer-events-none opacity-50" : ""
+                      }
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(i);
+                        }}
+                        isActive={currentPage === i}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages - 1)
+                          setCurrentPage(currentPage + 1);
+                      }}
+                      aria-disabled={currentPage >= totalPages - 1}
+                      className={
+                        currentPage >= totalPages - 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
       {/* ── Create Dialog ─────────────────────────────────────────────────────── */}
       <Dialog
         open={isCreateOpen}
@@ -459,24 +508,55 @@ export default function AdminPayoutMechanism() {
             {/* COUNTRY */}
             <div className="space-y-2">
               <Label>Country *</Label>
-              <Select
-                value={formData?.countryId}
-                onValueChange={(value) => handleCountryChange(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries?.map((country) => (
-                    <SelectItem key={country?.id} value={country?.id}>
-                      {country?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
 
-              {errors.countryId && (
-                <p className="text-red-500 text-xs">{errors.countryId}</p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                  >
+                    {formData?.countryId
+                      ? countries?.find((c) => c?.id === formData?.countryId)
+                          ?.name
+                      : "Select country"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    {/* 🔍 Search Input */}
+                    <CommandInput placeholder="Search country..." />
+
+                    <CommandList>
+                      <CommandEmpty>No country found.</CommandEmpty>
+
+                      <CommandGroup>
+                        {countries?.map((country) => (
+                          <CommandItem
+                            key={country?.id}
+                            value={country?.name}
+                            onSelect={() => handleCountryChange(country?.id)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData?.countryId === country?.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {country?.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {errors?.countryId && (
+                <p className="text-red-500 text-xs">{errors?.countryId}</p>
               )}
             </div>
 
@@ -657,6 +737,7 @@ export default function AdminPayoutMechanism() {
           });
           setSelectedCurrencies([]);
           setCurrencyList([]);
+          setEditablePayoutMechanism(null);
         }}
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -667,22 +748,55 @@ export default function AdminPayoutMechanism() {
             {/* COUNTRY */}
             <div className="space-y-2">
               <Label>Country *</Label>
-              <Select
-                value={formData?.countryId}
-                onValueChange={(value) => handleCountryChange(value)}
-                disabled
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries?.map((country) => (
-                    <SelectItem key={country?.id} value={country?.id}>
-                      {country?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                    disabled
+                  >
+                    {formData?.countryId
+                      ? countries?.find((c) => c?.id === formData?.countryId)
+                          ?.name
+                      : "Select country"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    {/* 🔍 Search Input */}
+                    <CommandInput placeholder="Search country..." />
+
+                    <CommandList>
+                      <CommandEmpty>No country found.</CommandEmpty>
+
+                      <CommandGroup>
+                        {countries?.map((country) => (
+                          <CommandItem
+                            key={country?.id}
+                            value={country?.name}
+                            onSelect={() => handleCountryChange(country?.id)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData?.countryId === country?.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {country.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
               {errors?.countryId && (
                 <p className="text-red-500 text-xs">{errors?.countryId}</p>
               )}
@@ -838,6 +952,7 @@ export default function AdminPayoutMechanism() {
                 setSelectedCurrencies([]);
                 setErrors({});
                 setCurrencyList([]);
+                setEditablePayoutMechanism(null);
               }}
             >
               Cancel

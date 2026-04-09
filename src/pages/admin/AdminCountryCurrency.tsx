@@ -28,6 +28,7 @@ import {
   Check,
   MapPin,
   Edit,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Select,
@@ -317,161 +318,145 @@ export default function AdminCountryCurrency() {
             Add Country
           </Button>
         </div>
-
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by country or currency…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         {/* Country List Card */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-primary" />
-                Countries
-              </CardTitle>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by country or currency…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+
+        <div className="space-y-3">
+          {loading ? (
+            <div className="text-center font-medium text-gray-600 text-xl">
+              Loading...
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center font-medium text-gray-600 text-xl">
-                  Loading...
-                </div>
-              ) : countryAndCurrencyList?.length == 0 ? (
-                <p className="text-center font-medium text-xl">No Data Found</p>
-              ) : (
-                <div>
-                  {countryAndCurrencyList?.map((cc) => (
-                    <Card
-                      key={cc?.countryId}
-                      className="border-l-4 border-l-primary"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex flex-col gap-4">
-                          <div className="space-y-4 flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                                <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="text-lg font-semibold text-foreground">
-                                  {cc?.country?.name}
-                                </h4>
-                                <div className="text-sm text-muted-foreground w-full flex items-center gap-3">
-                                  <div> Currencies: </div>
-                                  <div className="flex gap-2 items-center">
-                                    {cc?.supportedCurrencies?.map(
-                                      (currency: {
-                                        code: string;
-                                        id: number;
-                                      }) => (
-                                        <div
-                                          className="px-2 py-1 bg-blue-900 rounded-md"
-                                          key={currency?.id}
-                                        >
-                                          <span className="text-white">
-                                            {currency?.code}
-                                          </span>
-                                        </div>
-                                      ),
-                                    )}
-                                  </div>
-                                </div>
+          ) : countryAndCurrencyList?.length == 0 ? (
+            <p className="text-center font-medium text-xl">No Data Found</p>
+          ) : (
+            <div className="space-y-4">
+              {countryAndCurrencyList?.map((cc) => (
+                <Card
+                  key={cc?.countryId}
+                  className="border-l-4 border-l-primary"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex flex-col gap-4">
+                      <div className="space-y-4 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                            <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-foreground">
+                              {cc?.country?.name}
+                            </h4>
+                            <div className="text-sm text-muted-foreground w-full flex items-center gap-3">
+                              <div> Currencies: </div>
+                              <div className="flex gap-2 items-center">
+                                {cc?.supportedCurrencies?.map(
+                                  (currency: { code: string; id: number }) => (
+                                    <div
+                                      className="px-2 py-1 bg-blue-900 rounded-md"
+                                      key={currency?.id}
+                                    >
+                                      <span className="text-white">
+                                        {currency?.code}
+                                      </span>
+                                    </div>
+                                  ),
+                                )}
                               </div>
                             </div>
                           </div>
-
-                          <div className="flex flex-wrap gap-2 justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setIsEditOpen(true);
-                                setEditableCountryData(cc);
-                              }}
-                            >
-                              <Edit className="h-4 w-4 sm:mr-1" />
-                              <span className="hidden sm:inline">Edit</span>
-                            </Button>
-
-                            <Button
-                              disabled
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsDeleteOpen(true)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </Button>
-                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <Pagination className="mt-6">
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (currentPage > 0)
-                                setCurrentPage(currentPage - 1);
-                            }}
-                            aria-disabled={currentPage <= 0}
-                            className={
-                              currentPage <= 0
-                                ? "pointer-events-none opacity-50"
-                                : ""
-                            }
-                          />
-                        </PaginationItem>
-                        {[...Array(totalPages)].map((_, i) => (
-                          <PaginationItem key={i}>
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setCurrentPage(i);
-                              }}
-                              isActive={currentPage === i}
-                            >
-                              {i + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (currentPage < totalPages - 1)
-                                setCurrentPage(currentPage + 1);
-                            }}
-                            aria-disabled={currentPage >= totalPages - 1}
-                            className={
-                              currentPage >= totalPages - 1
-                                ? "pointer-events-none opacity-50"
-                                : ""
-                            }
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  )}
-                </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsEditOpen(true);
+                            setEditableCountryData(cc);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Edit</span>
+                        </Button>
+
+                        <Button
+                          disabled
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsDeleteOpen(true)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 0) setCurrentPage(currentPage - 1);
+                        }}
+                        aria-disabled={currentPage <= 0}
+                        className={
+                          currentPage <= 0
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(i);
+                          }}
+                          isActive={currentPage === i}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < totalPages - 1)
+                            setCurrentPage(currentPage + 1);
+                        }}
+                        aria-disabled={currentPage >= totalPages - 1}
+                        className={
+                          currentPage >= totalPages - 1
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               )}
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
 
       {/* ── Create Dialog ─────────────────────────────────────────────────────── */}
@@ -490,27 +475,59 @@ export default function AdminCountryCurrency() {
           </DialogHeader>
           <div className="space-y-1">
             <div className="space-y-2">
-              <Label>{"Country"} *</Label>
-              <Select
-                value={countryId}
-                onValueChange={(value) => handleCountryChange(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={"Select country"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries?.map((country) => (
-                    <SelectItem key={country?.id} value={country?.id}>
-                      {country?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.countryId && (
-                <p className="text-red-500 text-xs">{errors.countryId}</p>
+              <Label>Country *</Label>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                  >
+                    {countryId
+                      ? countries?.find((c) => c?.id === countryId)?.name
+                      : "Select country"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    {/* 🔍 Search input */}
+                    <CommandInput placeholder="Search country..." />
+
+                    <CommandList>
+                      <CommandEmpty>No country found.</CommandEmpty>
+
+                      <CommandGroup>
+                        {countries?.map((country) => (
+                          <CommandItem
+                            key={country?.id}
+                            value={country?.name}
+                            onSelect={() => {
+                              handleCountryChange(country?.id);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                countryId === country?.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {country?.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {errors?.countryId && (
+                <p className="text-red-500 text-xs">{errors?.countryId}</p>
               )}
             </div>
-
             <div className="space-y-2">
               <Label>Currency</Label>
               <Popover>
@@ -617,25 +634,58 @@ export default function AdminCountryCurrency() {
           </DialogHeader>
           <div className="space-y-1">
             <div className="space-y-2">
-              <Label>{"Country"} *</Label>
-              <Select
-                disabled
-                value={countryId}
-                onValueChange={(value) => handleCountryChange(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={"Select country"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries?.map((country) => (
-                    <SelectItem key={country?.id} value={country?.id}>
-                      {country?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.countryId && (
-                <p className="text-red-500 text-xs">{errors.countryId}</p>
+              <Label>Country *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                    disabled
+                  >
+                    {countryId
+                      ? countries?.find((c) => c?.id === countryId)?.name
+                      : "Select country"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    {/* 🔍 Search input */}
+                    <CommandInput placeholder="Search country..." />
+
+                    <CommandList>
+                      <CommandEmpty>No country found.</CommandEmpty>
+
+                      <CommandGroup>
+                        {countries?.map((country) => (
+                          <CommandItem
+                            key={country?.id}
+                            value={country?.name}
+                            onSelect={() => {
+                              handleCountryChange(country?.id);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                countryId === country?.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {country?.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {errors?.countryId && (
+                <p className="text-red-500 text-xs">{errors?.countryId}</p>
               )}
             </div>
 
