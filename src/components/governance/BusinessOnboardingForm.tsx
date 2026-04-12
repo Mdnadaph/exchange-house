@@ -1240,6 +1240,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils"; // adjust path as needed
 const BusinessOnboardingForm = ({
@@ -1262,12 +1263,35 @@ const BusinessOnboardingForm = ({
   const [countryOptions, setCountryOptions] = useState<
     { id: number; name: string; currencyCode: string }[]
   >([]);
+  const [tab, setTab] = useState("INDIVIDUAL");
   const [countriesLoading, setCountriesLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoOpen, setInfoOpen] = useState(false);
   const [branchLoading, setBranchLoading] = useState(false);
   const [kybTypeMappings, setKybTypeMappings] = useState<any[]>([]);
   const [kybLoading, setKybLoading] = useState(false);
+  const [selfList, setSelfList] = useState([
+    {
+      ownershipPercentage: "",
+      fullName: "",
+      dateOfBirth: "",
+      contactNumber: "",
+      address: "",
+      email: "",
+      documents: [],
+    },
+  ]);
+
+  const [orgList, setOrgList] = useState([
+    {
+      ownershipPercentage: "",
+      organizationName: "",
+      address: "",
+      phoneNumber: "",
+      registrationNumber: "",
+      documents: [],
+    },
+  ]);
   interface Branch {
     branchId: string;
     uuid: string;
@@ -1494,6 +1518,23 @@ const BusinessOnboardingForm = ({
         designation: formData.adminDesignation,
       };
 
+      const ubos =
+        tab == "INDIVIDUAL"
+          ? selfList?.map((value) => ({
+              ...value,
+              uboType: tab,
+              documents: value?.documents?.map((doc) => ({
+                fileKey: doc?.name,
+              })),
+            }))
+          : orgList?.map((value) => ({
+              ...value,
+              uboType: tab,
+              documents: value?.documents?.map((docs) => ({
+                fileKey: docs?.name,
+              })),
+            }));
+
       const apiFormData = new FormData();
       apiFormData.append(
         "business",
@@ -1503,6 +1544,26 @@ const BusinessOnboardingForm = ({
         "admin",
         new Blob([JSON.stringify(admin)], { type: "application/json" }),
       );
+      apiFormData.append(
+        "ubos",
+        new Blob([JSON.stringify(ubos)], { type: "application/json" }),
+      );
+
+      selfList?.forEach((item, index) => {
+        if (item?.documents && item?.documents?.length > 0) {
+          item?.documents?.forEach((file: File) => {
+            apiFormData.append("documents", file);
+          });
+        }
+      });
+
+      orgList?.forEach((item) => {
+        if (item?.documents && item?.documents?.length > 0) {
+          item?.documents?.forEach((file: File) => {
+            apiFormData.append("documents", file);
+          });
+        }
+      });
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/business/create`,
@@ -1524,6 +1585,27 @@ const BusinessOnboardingForm = ({
         setCurrentStep(1);
         setIdDocuments([]);
         setSelectedCurrencies(["AED"]);
+        setSelfList([
+          {
+            ownershipPercentage: "",
+            fullName: "",
+            dateOfBirth: "",
+            contactNumber: "",
+            address: "",
+            email: "",
+            documents: [],
+          },
+        ]);
+        setOrgList([
+          {
+            ownershipPercentage: "",
+            organizationName: "",
+            address: "",
+            phoneNumber: "",
+            registrationNumber: "",
+            documents: [],
+          },
+        ]);
         setFormData({
           companyName: "",
           tradeLicense: "",
@@ -1673,6 +1755,27 @@ const BusinessOnboardingForm = ({
       getBusinessType();
       setErrors({});
       setSelectedCurrencies(["AED"]);
+      setSelfList([
+        {
+          ownershipPercentage: "",
+          fullName: "",
+          dateOfBirth: "",
+          contactNumber: "",
+          address: "",
+          email: "",
+          documents: [],
+        },
+      ]);
+      setOrgList([
+        {
+          ownershipPercentage: "",
+          organizationName: "",
+          address: "",
+          phoneNumber: "",
+          registrationNumber: "",
+          documents: [],
+        },
+      ]);
       setFormData({
         companyName: "",
         tradeLicense: "",
@@ -1765,6 +1868,74 @@ const BusinessOnboardingForm = ({
   const validateStep3 = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    if (tab === "INDIVIDUAL") {
+      selfList.forEach((item, index) => {
+        if (!item.fullName) {
+          newErrors[`self_${index}_fullName`] = "Full name is required";
+        }
+
+        if (!item.ownershipPercentage) {
+          newErrors[`self_${index}_ownershipPercentage`] =
+            "Ownership percentage is required";
+        } else if (Number(item.ownershipPercentage) <= 0) {
+          newErrors[`self_${index}_ownershipPercentage`] =
+            "Must be greater than 0";
+        }
+
+        if (!item.dateOfBirth) {
+          newErrors[`self_${index}_dateOfBirth`] = "Date of birth is required";
+        }
+
+        if (!item.contactNumber) {
+          newErrors[`self_${index}_contactNumber`] = "Contact is required";
+        }
+        if (!item.address) {
+          newErrors[`self_${index}_address`] = "Address is required";
+        }
+
+        if (!item.email) {
+          newErrors[`self_${index}_email`] = "Email is required";
+        }
+      });
+    }
+
+    if (tab === "ORGANIZATION") {
+      orgList.forEach((item, index) => {
+        if (!item.organizationName) {
+          newErrors[`org_${index}_organizationName`] =
+            "Organization name is required";
+        }
+
+        if (!item.ownershipPercentage) {
+          newErrors[`org_${index}_ownershipPercentage`] =
+            "Ownership percentage is required";
+        } else if (Number(item.ownershipPercentage) <= 0) {
+          newErrors[`org_${index}_ownershipPercentage`] =
+            "Must be greater than 0";
+        }
+
+        if (!item.address) {
+          newErrors[`org_${index}_address`] = "Address is required";
+        }
+
+        if (!item.phoneNumber) {
+          newErrors[`org_${index}_phoneNumber`] = "Phone number is required";
+        }
+
+        if (!item.registrationNumber) {
+          newErrors[`org_${index}_registrationNumber`] =
+            "Registration number is required";
+        }
+      });
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep4 = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
     if (!formData.monthlyLimit) {
       newErrors.monthlyLimit = "Monthly limit is required";
     } else if (Number(formData.monthlyLimit) <= 0) {
@@ -1787,7 +1958,7 @@ const BusinessOnboardingForm = ({
 
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
-      {[1, 2, 3].map((step) => (
+      {[1, 2, 3, 4].map((step) => (
         <div key={step} className="flex items-center">
           <div
             className={`
@@ -1801,7 +1972,7 @@ const BusinessOnboardingForm = ({
           >
             {step}
           </div>
-          {step < 3 && (
+          {step < 4 && (
             <div
               className={`
               w-16 h-0.5 mx-2
@@ -1813,6 +1984,113 @@ const BusinessOnboardingForm = ({
       ))}
     </div>
   );
+
+  // 🧍 Self handlers
+  const handleSelfChange = (index, field, value) => {
+    const updated = [...selfList];
+    updated[index][field] = value;
+    setSelfList(updated);
+    clearError(`self_${index}_${field}`);
+  };
+
+  const addSelf = () => {
+    setSelfList([
+      ...selfList,
+      {
+        fullName: "",
+        dateOfBirth: "",
+        ownershipPercentage: "",
+        contactNumber: "",
+        address: "",
+        email: "",
+        documents: [],
+      },
+    ]);
+  };
+
+  const removeSelf = (index) => {
+    const updated = selfList.filter((_, i) => i !== index);
+    setSelfList(updated);
+  };
+
+  // 🏢 Organization handlers
+  const handleOrgChange = (index, field, value) => {
+    const updated = [...orgList];
+    updated[index][field] = value;
+    setOrgList(updated);
+    clearError(`org_${index}_${field}`);
+  };
+
+  const handleSelfDocuments = (index, files) => {
+    const updated = [...selfList];
+    updated[index].documents = [...(updated[index].documents || []), ...files];
+    setSelfList(updated);
+  };
+
+  const handleRemoveSelfDocs = (orgIndex, fileIndex) => {
+    const updated = [...selfList];
+    updated[orgIndex].documents.splice(fileIndex, 1);
+    setSelfList(updated);
+  };
+  const handleOrganizationDocuments = (index, files) => {
+    const updated = [...orgList];
+    updated[index].documents = [...(updated[index].documents || []), ...files];
+    setOrgList(updated);
+  };
+
+  const handleRemoveOrganizationDocs = (orgIndex, fileIndex) => {
+    const updated = [...orgList];
+    updated[orgIndex].documents.splice(fileIndex, 1);
+    setOrgList(updated);
+  };
+
+  const addOrg = () => {
+    setOrgList([
+      ...orgList,
+      {
+        organizationName: "",
+        ownershipPercentage: "",
+        address: "",
+        phoneNumber: "",
+        registrationNumber: "",
+        documents: [],
+      },
+    ]);
+  };
+
+  const removeOrg = (index) => {
+    const updated = orgList.filter((_, i) => i !== index);
+    setOrgList(updated);
+  };
+  const handleTabChange = (value: string) => {
+    setTab(value);
+    setErrors({});
+    if (value === "INDIVIDUAL") {
+      setOrgList([
+        {
+          organizationName: "",
+          ownershipPercentage: "",
+          address: "",
+          phoneNumber: "",
+          registrationNumber: "",
+          documents: [],
+        },
+      ]);
+    }
+    if (value === "ORGANIZATION") {
+      setSelfList([
+        {
+          fullName: "",
+          ownershipPercentage: "",
+          dateOfBirth: "",
+          contactNumber: "",
+          email: "",
+          address: "",
+          documents: [],
+        },
+      ]);
+    }
+  };
 
   const renderStep1 = () => (
     <div className="space-y-6">
@@ -2513,6 +2791,373 @@ const BusinessOnboardingForm = ({
   );
 
   const renderStep3 = () => (
+    <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="INDIVIDUAL">Individual</TabsTrigger>
+        <TabsTrigger value="ORGANIZATION">Organization</TabsTrigger>
+      </TabsList>
+
+      {/* 🧍 SELF TAB */}
+      <TabsContent value="INDIVIDUAL" className="space-y-4 mt-4">
+        {selfList.map((item, index) => (
+          <div
+            key={index}
+            className="border p-4 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-3 "
+          >
+            <div className="space-y-1">
+              <Label htmlFor="fullName">
+                Full Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="fullName"
+                placeholder="Full Name"
+                value={item.fullName}
+                onChange={(e) =>
+                  handleSelfChange(index, "fullName", e.target.value)
+                }
+              />
+              {errors[`self_${index}_fullName`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`self_${index}_fullName`]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ownershipPercentage">
+                Ownership Percentage <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="ownershipPercentage"
+                placeholder="Ownership Percentage"
+                type="number"
+                value={item.ownershipPercentage}
+                onChange={(e) =>
+                  handleSelfChange(index, "ownershipPercentage", e.target.value)
+                }
+              />
+              {errors[`self_${index}_ownershipPercentage`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`self_${index}_ownershipPercentage`]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="dateOfBirth">
+                Date of Birth <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="dateOfBirth"
+                placeholder="Date of Birth"
+                type="date"
+                value={item.dateOfBirth}
+                onChange={(e) =>
+                  handleSelfChange(index, "dateOfBirth", e.target.value)
+                }
+              />
+              {errors[`self_${index}_dateOfBirth`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`self_${index}_dateOfBirth`]}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="contactNumber">
+                Contact Number <span className="text-red-500">*</span>
+              </Label>
+
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <PhoneInput
+                  country={"us"}
+                  value={item.contactNumber}
+                  onChange={(value, country) => {
+                    handleSelfChange(index, "contactNumber", value);
+
+                    // Optionally store country data if needed later
+                  }}
+                  inputProps={{
+                    name: "contactNumber",
+                    id: "contactNumber",
+                    required: true,
+                  }}
+                  containerClass="phone-input-container" // optional custom class
+                  //inputClass="!pl-12" // adjust padding for the flag button
+                  buttonClass="phone-flag-button"
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                  preferredCountries={["ae", "in"]} // show these at top
+                />
+              </div>
+              {errors[`self_${index}_contactNumber`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`self_${index}_contactNumber`]}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="email">
+                Email <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="email"
+                placeholder="Email"
+                value={item.email}
+                onChange={(e) =>
+                  handleSelfChange(index, "email", e.target.value)
+                }
+              />
+              {errors[`self_${index}_email`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`self_${index}_email`]}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="address">
+                Address <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="email"
+                placeholder="Email"
+                value={item.address}
+                onChange={(e) =>
+                  handleSelfChange(index, "address", e.target.value)
+                }
+              />
+              {errors[`self_${index}_address`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`self_${index}_address`]}
+                </p>
+              )}
+            </div>
+
+            {/* Documents */}
+            <div>
+              <label className="text-sm font-medium">Upload Documents</label>
+
+              <Input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.png"
+                onChange={(e) =>
+                  handleSelfDocuments(index, Array.from(e.target.files))
+                }
+                className="mt-1"
+              />
+
+              {/* File List */}
+              <div className="mt-2 space-y-1">
+                {item.documents?.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No documents uploaded
+                  </p>
+                )}
+
+                {item.documents?.map((file, fileIndex) => (
+                  <div
+                    key={fileIndex}
+                    className="flex items-center justify-between bg-muted px-2 py-1 rounded-md text-sm"
+                  >
+                    <span className="truncate">{file.name}</span>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSelfDocs(index, fileIndex)}
+                      className="text-red-500 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selfList.length > 1 && (
+              <Button variant="destructive" onClick={() => removeSelf(index)}>
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+
+        <Button onClick={addSelf}>+ Add More</Button>
+      </TabsContent>
+
+      {/* 🏢 ORGANIZATION TAB */}
+      <TabsContent value="ORGANIZATION" className="space-y-4 mt-4">
+        {orgList.map((item, index) => (
+          <div
+            key={index}
+            className="border p-4 rounded-lg grid grid-cols-3  md:grid-cols-2 gap-3"
+          >
+            <div className="space-y-1">
+              <Label htmlFor="organizationName">
+                Organization Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="organizationName"
+                placeholder="Organization Name"
+                value={item.organizationName}
+                onChange={(e) =>
+                  handleOrgChange(index, "organizationName", e.target.value)
+                }
+              />
+              {errors[`org_${index}_organizationName`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`org_${index}_organizationName`]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="organizationName">
+                Ownership Percentage <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="number"
+                id="ownershipPercentage"
+                placeholder="Ownership Percentage"
+                value={item.ownershipPercentage}
+                onChange={(e) =>
+                  handleOrgChange(index, "ownershipPercentage", e.target.value)
+                }
+              />
+              {errors[`org_${index}_ownershipPercentage`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`org_${index}_ownershipPercentage`]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="address">
+                Address <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="address"
+                placeholder="Address"
+                value={item.address}
+                onChange={(e) =>
+                  handleOrgChange(index, "address", e.target.value)
+                }
+              />
+              {errors[`org_${index}_address`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`org_${index}_address`]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="phone Number">
+                Phone Number <span className="text-red-500">*</span>
+              </Label>
+
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <PhoneInput
+                  country={"us"}
+                  value={item.phoneNumber}
+                  onChange={(value, country) => {
+                    handleOrgChange(index, "phoneNumber", value);
+
+                    // Optionally store country data if needed later
+                  }}
+                  inputProps={{
+                    name: "phoneNumber",
+                    id: "phoneNumber",
+                    required: true,
+                  }}
+                  containerClass="phone-input-container" // optional custom class
+                  //inputClass="!pl-12" // adjust padding for the flag button
+                  buttonClass="phone-flag-button"
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+                  preferredCountries={["ae", "in"]} // show these at top
+                />
+              </div>
+              {errors[`org_${index}_phoneNumber`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`org_${index}_phoneNumber`]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="registrationNumber">
+                Registration Number <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                placeholder="Registration Number"
+                type="number"
+                value={item.registrationNumber}
+                onChange={(e) =>
+                  handleOrgChange(index, "registrationNumber", e.target.value)
+                }
+              />
+              {errors[`org_${index}_registrationNumber`] && (
+                <p className="text-red-500 text-xs">
+                  {errors[`org_${index}_registrationNumber`]}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-medium">Upload Documents</label>
+
+              <Input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.png"
+                onChange={(e) =>
+                  handleOrganizationDocuments(index, Array.from(e.target.files))
+                }
+                className="mt-1"
+              />
+
+              {/* File List */}
+              <div className="mt-2 space-y-1">
+                {item.documents?.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No documents uploaded
+                  </p>
+                )}
+
+                {item.documents?.map((file, fileIndex) => (
+                  <div
+                    key={fileIndex}
+                    className="flex items-center justify-between bg-muted px-2 py-1 rounded-md text-sm"
+                  >
+                    <span className="truncate">{file.name}</span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleRemoveOrganizationDocs(index, fileIndex)
+                      }
+                      className="text-red-500 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {orgList.length > 1 && (
+              <Button variant="destructive" onClick={() => removeOrg(index)}>
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+
+        <Button onClick={addOrg}>+ Add More</Button>
+      </TabsContent>
+    </Tabs>
+  );
+
+  const renderStep4 = () => (
     <div className="space-y-6">
       <Card>
         <CardHeader>
@@ -2591,7 +3236,6 @@ const BusinessOnboardingForm = ({
               </p>
             </div>
           </div>
-
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
@@ -2632,7 +3276,6 @@ const BusinessOnboardingForm = ({
           </div>
         </CardContent>
       </Card>
-
       <Card className="border-accent/20 bg-accent-muted/10">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -2749,7 +3392,7 @@ const BusinessOnboardingForm = ({
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
-
+          {currentStep === 4 && renderStep4()}
           <div className="flex justify-between pt-4">
             <Button
               variant="outline"
@@ -2758,16 +3401,17 @@ const BusinessOnboardingForm = ({
             >
               Previous
             </Button>
-            {currentStep < 3 ? (
+            {currentStep < 4 ? (
               <Button
                 onClick={() => {
                   let isValid = false;
                   if (currentStep === 1) isValid = validateStep1();
                   else if (currentStep === 2) isValid = validateStep2();
                   else if (currentStep === 3) isValid = validateStep3();
+                  else if (currentStep === 4) isValid = validateStep4();
 
                   if (isValid) {
-                    setCurrentStep((prev) => Math.min(3, prev + 1));
+                    setCurrentStep((prev) => Math.min(4, prev + 1));
                     setErrors({});
                   }
                 }}
@@ -2780,13 +3424,14 @@ const BusinessOnboardingForm = ({
                   const step1Valid = validateStep1();
                   const step2Valid = validateStep2();
                   const step3Valid = validateStep3();
-
-                  if (step1Valid && step2Valid && step3Valid) {
+                  const step4Valid = validateStep4();
+                  if (step1Valid && step2Valid && step3Valid && step3Valid) {
                     handleSubmit();
                   } else {
                     if (!step1Valid) setCurrentStep(1);
                     else if (!step2Valid) setCurrentStep(2);
                     else if (!step3Valid) setCurrentStep(3);
+                    else if (!step4Valid) setCurrentStep(4);
                   }
                 }}
                 disabled={loading}
