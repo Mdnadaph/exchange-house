@@ -54,6 +54,7 @@ interface BusinessProfile {
   createdBy: string;
   profileImage: File;
   logoUrl: string;
+  ubos: [];
 }
 
 interface Document {
@@ -129,6 +130,7 @@ const UserProfile = () => {
     createdDate: "",
     createdBy: "",
     logoUrl: "",
+    ubos: [],
   });
 
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -269,6 +271,7 @@ const UserProfile = () => {
         createdDate: data?.createdDate || "",
         createdBy: data?.createdBy || "",
         profileImage: data?.profileUrl || "",
+        ubos: data?.ubos || [],
       });
     } catch (error) {
       toast({
@@ -280,7 +283,6 @@ const UserProfile = () => {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     fetchBusinessProfile();
   }, [id, toast, token]);
@@ -963,7 +965,97 @@ const UserProfile = () => {
             </Card>
           </div>
         </div>
-
+        <Card className="">
+          <CardHeader>
+            <CardTitle>UBO</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {businessProfile?.ubos?.map((uboItem: any) => (
+              <div className="w-full" key={uboItem?.uuid}>
+                {uboItem?.uboType == "INDIVIDUAL" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">UBO Type</p>
+                      <p className="font-medium">
+                        {uboItem?.uboType?.charAt(0)?.toUpperCase()}
+                        {uboItem?.uboType?.slice(1)?.toLowerCase()}
+                      </p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Full Name</p>
+                      <p className="font-medium">{uboItem?.fullName}</p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Email</p>
+                      <p className="font-medium">{uboItem?.email}</p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Address</p>
+                      <p className="font-medium">{uboItem?.address}</p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">
+                        OwnerShip Percentage
+                      </p>
+                      <p className="font-medium">
+                        {uboItem?.ownershipPercentage}%
+                      </p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Contact Number</p>
+                      <p className="font-medium">{uboItem?.contactNumber}</p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Date Of Birth</p>
+                      <p className="font-medium">{uboItem?.dateOfBirth}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">UBO Type:</p>
+                      <p className="font-medium">
+                        {" "}
+                        {uboItem?.uboType?.charAt(0)?.toUpperCase()}
+                        {uboItem?.uboType?.slice(1)?.toLowerCase()}
+                      </p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">
+                        Organization Name:
+                      </p>
+                      <p className="font-medium">{uboItem?.organizationName}</p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">
+                        OwnerShip Percentage:
+                      </p>
+                      <p className="font-medium">
+                        {uboItem?.ownershipPercentage}%
+                      </p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Address:</p>
+                      <p className="font-medium">{uboItem?.address}</p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">
+                        Registration Number:
+                      </p>
+                      <p className="font-medium">
+                        {uboItem?.registrationNumber}
+                      </p>
+                    </div>
+                    <div className="flex gap-3 item-center">
+                      <p className="text-muted-foreground">Phone Number:</p>
+                      <p className="font-medium">{uboItem?.phoneNumber}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

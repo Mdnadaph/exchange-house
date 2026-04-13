@@ -558,7 +558,7 @@ const SingleTransactionWithPreselected = ({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  Source of Transaction
+                  Mode of Transaction
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
