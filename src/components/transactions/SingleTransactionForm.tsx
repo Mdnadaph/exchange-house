@@ -316,9 +316,10 @@ const SingleTransactionForm = ({
       );
       setFeeRule(res?.data?.data);
     } catch (err) {
+      console.log("error", err);
       toast({
         title: "Error",
-        description: err?.message,
+        description: err?.response?.data?.message,
         variant: "destructive",
       });
     }
@@ -445,7 +446,7 @@ const SingleTransactionForm = ({
 
   const beneficiariyCurrency = currencyListData?.data?.find(
     (currency: any) =>
-      currency?.name == getSelectedBeneficiriesData?.currency.toLowerCase(),
+      currency?.name == getSelectedBeneficiriesData?.currency?.toLowerCase(),
   );
 
   useEffect(() => {
@@ -561,7 +562,7 @@ const SingleTransactionForm = ({
                         </p>
                         <p className="text-muted-foreground">
                           Please upload relevant documents for{" "}
-                          {getSelectedPurposeDetails()?.label.toLowerCase()}{" "}
+                          {getSelectedPurposeDetails()?.label?.toLowerCase()}{" "}
                           verification.
                         </p>
                       </div>
@@ -1062,7 +1063,9 @@ const SingleTransactionForm = ({
                       {selectedBeneficiaryFee?.feeType
                         ?.charAt(0)
                         .toUpperCase() +
-                        selectedBeneficiaryFee?.feeType?.slice(1).toLowerCase()}
+                        selectedBeneficiaryFee?.feeType
+                          ?.slice(1)
+                          ?.toLowerCase()}
                     </div>
                     <div>Fee Amount: {selectedBeneficiaryFee?.feeValue}</div>
                     <div>
@@ -1070,7 +1073,7 @@ const SingleTransactionForm = ({
                       {selectedBeneficiaryFee?.status?.charAt(0).toUpperCase() +
                         selectedBeneficiaryFee?.status
                           ?.slice(1)
-                          .toLowerCase()}{" "}
+                          ?.toLowerCase()}{" "}
                     </div>
                     <div>Min Amount: {selectedBeneficiaryFee?.minAmount} </div>
                     <div>Max Amount: {selectedBeneficiaryFee?.maxAmount} </div>
