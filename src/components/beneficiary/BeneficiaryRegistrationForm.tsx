@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import {
@@ -66,8 +66,10 @@ interface CountryFormFields {
 /** One filled-in entry for the selected mechanism */
 interface MechanismEntry {
   id: string;
+  payoutMechanismId?: number;
   provider: string;
   currency: string;
+  countryCurrencyId?: number;
   fieldValues: Record<string, string>;
 }
 
@@ -101,18 +103,26 @@ const emptyEntry = (): MechanismEntry => ({
 const BeneficiaryRegistrationForm = ({
   onSuccess,
   setView,
+  editData,
 }: {
   onSuccess: () => void;
   setView: (arg: "list" | "profile" | "register") => void;
+  editData?: any; // pre-populated beneficiary data for edit mode
 }) => {
+  const isEditMode = !!editData;
+
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
 
   // ── UI / selection states ──────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
-  const [beneficiaryType, setBeneficiaryType] = useState<"individual" | "business">("individual");
+  const [beneficiaryType, setBeneficiaryType] = useState<"individual" | "business">(
+    editData?.type === "BUSINESS" ? "business" : "individual"
+  );
   const [residencyType, setResidencyType] = useState<"uae" | "foreign">("foreign");
-  const [beneficiaryCountry, setBeneficiaryCountry] = useState("");
+  const [beneficiaryCountry, setBeneficiaryCountry] = useState(
+    editData?.countryId ? String(editData.countryId) : ""
+  );
   const [beneficiariesCountries, setBeneficiariesCountries] = useState<any>(null);
 
   // ── Dynamic form-fields from API ───────────────────────────────────────────
@@ -124,8 +134,12 @@ const BeneficiaryRegistrationForm = ({
   const [mechanismEntries, setMechanismEntries] = useState<MechanismEntry[]>([emptyEntry()]);
 
   // ── Dates ──────────────────────────────────────────────────────────────────
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
-  const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(undefined);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(
+    editData?.dateOfBirth ? parseISO(editData.dateOfBirth) : undefined
+  );
+  const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(
+    editData?.incorporationDate ? parseISO(editData.incorporationDate) : undefined
+  );
 
   // ── Documents ─────────────────────────────────────────────────────────────
   const [idDocument, setIdDocument] = useState<File | null>(null);
@@ -138,25 +152,31 @@ const BeneficiaryRegistrationForm = ({
 
   // ── Static form fields ─────────────────────────────────────────────────────
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    companyName: "",
-    registrationNumber: "",
-    businessType: "",
-    nationality: "",
-    email: "",
-    phoneNumber: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    dateOfBirth: "",
-    incorporationDate: "",
-    relationshipType: "",
-    purpose: "",
-    expectedMonthlyVolume: "",
-    expectedFrequency: "",
+    firstName: editData?.firstName || "",
+    lastName: editData?.lastName || "",
+    companyName: editData?.companyName || "",
+    registrationNumber: editData?.registrationNumber || "",
+    businessType: editData?.businessType || "",
+    nationality: editData?.nationality || "",
+    email: editData?.email || "",
+    phoneNumber: editData?.phoneNumber || "",
+    addressLine1: editData?.addressLine1 || "",
+    addressLine2: editData?.addressLine2 || "",
+    city: editData?.city || "",
+    state: editData?.state || "",
+    postalCode: editData?.postalCode || "",
+    dateOfBirth: editData?.dateOfBirth || "",
+    incorporationDate: editData?.incorporationDate || "",
+    relationshipType: editData?.relationshipType
+      ? editData.relationshipType.toLowerCase()
+      : "",
+    purpose: editData?.purpose || "",
+    expectedMonthlyVolume: editData?.expectedMonthlyVolume
+      ? String(editData.expectedMonthlyVolume)
+      : "",
+    expectedFrequency: editData?.expectedFrequency
+      ? editData.expectedFrequency.toLowerCase()
+      : "",
   });
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -206,7 +226,7 @@ const BeneficiaryRegistrationForm = ({
       ),
     );
 
-  // Helper: Get countryCurrencyId from currency code
+  // Helper: Get countryCurrencyId from currency code for currently selected mechanism
   const getCountryCurrencyId = (currencyCode: string): number | null => {
     if (!selectedMechanism) return null;
     const found = selectedMechanism.supportedCurrencies.find(
@@ -237,8 +257,6 @@ const BeneficiaryRegistrationForm = ({
   const getCountryFormFields = async (countryId: string) => {
     setFormFieldsLoading(true);
     setCountryFormFields(null);
-    setSelectedMechanism(null);
-    setMechanismEntries([emptyEntry()]);
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/beneficiaries/form-fields/${countryId}`,
@@ -247,7 +265,39 @@ const BeneficiaryRegistrationForm = ({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (json?.status !== true || !json.data) throw new Error("Unexpected response");
-      setCountryFormFields(json.data as CountryFormFields);
+      const fields: CountryFormFields = json.data;
+      setCountryFormFields(fields);
+
+      // ── In edit mode: restore mechanism selection and entries from editData ──
+      if (isEditMode && editData?.payoutDetails?.length > 0) {
+        // Group payoutDetails by payoutMechanismId — pick the first group's mechanismId
+        // to set the selected mechanism (UI supports one mechanism type at a time)
+        const firstDetail = editData.payoutDetails[0];
+        const matchedMechanism = fields.mechanisms.find(
+          (m) => m.payoutMechanismId === firstDetail.payoutMechanismId
+        );
+        if (matchedMechanism) {
+          setSelectedMechanism(matchedMechanism);
+          // Build entries from ALL payoutDetails belonging to this mechanism
+          const detailsForMechanism = editData.payoutDetails.filter(
+            (d: any) => d.payoutMechanismId === matchedMechanism.payoutMechanismId
+          );
+          const restoredEntries: MechanismEntry[] = detailsForMechanism.map((d: any) => ({
+            id: uid(),
+            payoutMechanismId: d.payoutMechanismId,
+            provider: d.providerName || "",
+            currency: d.currencyCode || "",
+            countryCurrencyId: d.countryCurrencyId,
+            fieldValues: d.fieldValues || {},
+          }));
+          setMechanismEntries(restoredEntries.length > 0 ? restoredEntries : [emptyEntry()]);
+        } else {
+          setMechanismEntries([emptyEntry()]);
+        }
+      } else if (!isEditMode) {
+        setSelectedMechanism(null);
+        setMechanismEntries([emptyEntry()]);
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to load country form fields");
     } finally {
@@ -320,17 +370,19 @@ const BeneficiaryRegistrationForm = ({
     if (!validateForm()) return;
     setLoading(true);
 
-    const fullUrl = `${BASE_URL.endsWith("/") ? BASE_URL : BASE_URL + "/"}api/v1/beneficiaries`;
-
-    // Build payoutDetails exactly as per your API example
+    // Build payoutDetails — each entry keeps its own payoutMechanismId
+    // (which may differ across entries if the user switches mechanisms between entries,
+    //  but in normal flow all entries share the selectedMechanism)
     const payoutDetails = mechanismEntries.map((entry) => {
-      const countryCurrencyId = getCountryCurrencyId(entry.currency);
+      // Prefer stored countryCurrencyId (edit restore); else derive from currency code
+      const countryCurrencyId =
+        entry.countryCurrencyId ?? getCountryCurrencyId(entry.currency) ?? 0;
 
       return {
-        payoutMechanismId: selectedMechanism!.payoutMechanismId,
-        providerName: entry.provider,                    // ← providerName at top level
-        countryCurrencyId: countryCurrencyId ?? 0,
-        fieldValues: entry.fieldValues,                  // ← only dynamic fields
+        payoutMechanismId: entry.payoutMechanismId ?? selectedMechanism!.payoutMechanismId,
+        providerName: entry.provider,
+        countryCurrencyId,
+        fieldValues: entry.fieldValues,
       };
     });
 
@@ -369,9 +421,16 @@ const BeneficiaryRegistrationForm = ({
       payoutDetails,
     };
 
+    // Determine URL and HTTP method based on mode
+    const baseUrl = BASE_URL.endsWith("/") ? BASE_URL : BASE_URL + "/";
+    const url = isEditMode
+      ? `${baseUrl}api/v1/beneficiaries/${editData.id}`
+      : `${baseUrl}api/v1/beneficiaries`;
+    const method = isEditMode ? "PUT" : "POST";
+
     try {
-      const response = await fetch(fullUrl, {
-        method: "POST",
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -386,9 +445,14 @@ const BeneficiaryRegistrationForm = ({
 
       const result = await response.json();
       if (result.status || response.ok) {
-        toast.success(result.message || "Beneficiary registered successfully!");
+        toast.success(
+          result.message ||
+            (isEditMode
+              ? "Beneficiary updated successfully!"
+              : "Beneficiary registered successfully!")
+        );
       } else {
-        toast.error(result.message || "Failed to register beneficiary");
+        toast.error(result.message || "Operation failed");
       }
       onSuccess();
       setView("list");
@@ -409,9 +473,13 @@ const BeneficiaryRegistrationForm = ({
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground">Register New Beneficiary</h2>
+        <h2 className="text-2xl font-bold text-foreground">
+          {isEditMode ? "Edit Beneficiary" : "Register New Beneficiary"}
+        </h2>
         <p className="text-muted-foreground">
-          Complete all required information for beneficiary registration and verification
+          {isEditMode
+            ? "Update the beneficiary information below"
+            : "Complete all required information for beneficiary registration and verification"}
         </p>
       </div>
 
@@ -467,7 +535,7 @@ const BeneficiaryRegistrationForm = ({
               }`}
               onClick={() => {
                 setResidencyType("foreign");
-                setBeneficiaryCountry("");
+                if (!isEditMode) setBeneficiaryCountry("");
               }}
             >
               <CardContent className="p-4 flex items-center space-x-3">
@@ -497,6 +565,7 @@ const BeneficiaryRegistrationForm = ({
                 Beneficiary Country <span className="text-red-500">*</span>
               </Label>
               <Select
+                value={beneficiaryCountry}
                 onValueChange={(value) => {
                   setBeneficiaryCountry(value);
                   clearFieldError("beneficiaryCountry");
@@ -554,7 +623,15 @@ const BeneficiaryRegistrationForm = ({
                         }`}
                         onClick={() => {
                           setSelectedMechanism(mechanism);
-                          setMechanismEntries([emptyEntry()]);
+                          // Only reset entries when user manually changes mechanism
+                          // (not during edit restore — restore happens in getCountryFormFields)
+                          if (
+                            !isEditMode ||
+                            mechanism.payoutMechanismId !==
+                              editData?.payoutDetails?.[0]?.payoutMechanismId
+                          ) {
+                            setMechanismEntries([emptyEntry()]);
+                          }
                           clearFieldError("selectedMechanism");
                         }}
                       >
@@ -642,7 +719,14 @@ const BeneficiaryRegistrationForm = ({
                               <Select
                                 value={entry.currency}
                                 onValueChange={(v) => {
-                                  updateEntry(entry.id, { currency: v });
+                                  // Derive and store countryCurrencyId when currency changes
+                                  const found = selectedMechanism.supportedCurrencies.find(
+                                    (c) => c.currencyCode === v
+                                  );
+                                  updateEntry(entry.id, {
+                                    currency: v,
+                                    countryCurrencyId: found?.countryCurrencyId,
+                                  });
                                   clearFieldError(`entry_${idx}_currency`);
                                 }}
                               >
@@ -704,6 +788,33 @@ const BeneficiaryRegistrationForm = ({
                               </div>
                             </div>
                           )}
+
+                          {/* Show free-form fieldValues from edit data when requiredFields is empty */}
+                          {selectedMechanism.requiredFields.length === 0 &&
+                            Object.keys(entry.fieldValues).length > 0 && (
+                              <div>
+                                <p className="text-sm font-medium mb-3 text-muted-foreground">
+                                  Additional Fields
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {Object.entries(entry.fieldValues).map(([key, val]) => (
+                                    <div key={key} className="space-y-2">
+                                      <Label htmlFor={`entry_${entry.id}_extra_${key}`}>
+                                        {humanizeField(key)}
+                                      </Label>
+                                      <Input
+                                        id={`entry_${entry.id}_extra_${key}`}
+                                        value={val}
+                                        onChange={(e) =>
+                                          updateEntryField(entry.id, key, e.target.value)
+                                        }
+                                        placeholder={`Enter ${humanizeField(key).toLowerCase()}`}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                         </CardContent>
                       </Card>
                     ))}
@@ -1049,6 +1160,7 @@ const BeneficiaryRegistrationForm = ({
               Relationship Type <span className="text-red-500">*</span>
             </Label>
             <Select
+              value={formData.relationshipType}
               onValueChange={(v) => {
                 setFormData({ ...formData, relationshipType: v });
                 clearFieldError("relationshipType");
@@ -1108,6 +1220,7 @@ const BeneficiaryRegistrationForm = ({
             <div className="space-y-2">
               <Label>Expected Frequency</Label>
               <Select
+                value={formData.expectedFrequency}
                 onValueChange={(v) => setFormData({ ...formData, expectedFrequency: v })}
               >
                 <SelectTrigger>
@@ -1200,8 +1313,11 @@ const BeneficiaryRegistrationForm = ({
         <Button className="min-w-[150px]" onClick={handleSubmit} disabled={loading}>
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering…
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isEditMode ? "Updating…" : "Registering…"}
             </>
+          ) : isEditMode ? (
+            "Update Beneficiary"
           ) : (
             "Register Beneficiary"
           )}

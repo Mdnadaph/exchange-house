@@ -29,7 +29,6 @@ import {
   Layers,
   User,
   RefreshCw,
-  Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -84,6 +83,32 @@ interface Beneficiary {
   lastUsed: string;
   transactionCount: number;
   averageTransaction?: string;
+  // Raw API fields needed to pre-populate edit form
+  firstName?: string;
+  lastName?: string;
+  nationality?: string;
+  dateOfBirth?: string;
+  companyName?: string;
+  registrationNumber?: string;
+  businessType?: string;
+  incorporationDate?: string;
+  phoneNumber?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  purpose?: string;
+  expectedMonthlyVolume?: number;
+  expectedFrequency?: string;
+  payoutDetails?: Array<{
+    payoutMechanismId: number;
+    payoutTypeName: string;
+    providerName: string;
+    countryCurrencyId: number;
+    currencyCode: string;
+    fieldValues: Record<string, string>;
+  }>;
 }
 
 interface BeneficiaryGroup {
@@ -115,9 +140,12 @@ const UserBeneficiaries = () => {
   const token = cookies.token;
   const { toast } = useToast();
 
-  const [view, setView] = useState<"list" | "register" | "profile">("list");
+  const [view, setView] = useState<"list" | "register" | "profile" | "edit">("list");
   const [selectedBeneficiary, setSelectedBeneficiary] =
     useState<Beneficiary | null>(null);
+  // Beneficiary data used for editing (populated directly from list data)
+  const [editBeneficiary, setEditBeneficiary] = useState<any | null>(null);
+
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"beneficiaries" | "groups">(
     "beneficiaries",
@@ -168,6 +196,7 @@ const UserBeneficiaries = () => {
     return statusMap[approvalStatus] || "pending";
   };
   const { t, language } = useLanguage();
+
   // Fetch beneficiaries from API
   const fetchBeneficiaries = async () => {
     try {
@@ -201,11 +230,31 @@ const UserBeneficiaries = () => {
         type: item.type,
         email: item?.email,
         phone: item?.phoneNumber,
+        // Keep raw fields for edit pre-population
+        firstName: item.firstName,
+        lastName: item.lastName,
+        nationality: item.nationality,
+        dateOfBirth: item.dateOfBirth,
+        companyName: item.companyName,
+        registrationNumber: item.registrationNumber,
+        businessType: item.businessType,
+        incorporationDate: item.incorporationDate,
+        phoneNumber: item.phoneNumber,
+        addressLine1: item.addressLine1,
+        addressLine2: item.addressLine2,
+        city: item.city,
+        state: item.state,
+        postalCode: item.postalCode,
+        purpose: item.purpose,
+        expectedMonthlyVolume: item.expectedMonthlyVolume,
+        expectedFrequency: item.expectedFrequency,
+        payoutDetails: item.payoutDetails || [],
+        countryId: item.countryId,
         address: {
-          line1: "",
-          city: "",
+          line1: item.addressLine1 || "",
+          city: item.city || "",
           country: item.countryName || "",
-          postalCode: "",
+          postalCode: item.postalCode || "",
         },
         bankDetails: [
           {
@@ -224,7 +273,6 @@ const UserBeneficiaries = () => {
         transactionCount: item.totalPayments || 0,
         payoutMethod: item.payoutMethod,
         registrationDate: "",
-        // ✅ Map documents properly (adjust field names to match your API)
         documents:
           item.documents?.map((doc: any) => ({
             type: doc.type || "Unknown",
@@ -276,7 +324,8 @@ const UserBeneficiaries = () => {
   useEffect(() => {
     getPayOutConfig();
   }, [page]);
-  // Fetch groups from API - FIXED
+
+  // Fetch groups from API
   const fetchGroups = async () => {
     try {
       let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
@@ -327,10 +376,11 @@ const UserBeneficiaries = () => {
 
   const handleSearch = () => {
     setAppliedSearch(searchInput);
-    setBeneficiariesPage(0); // reset to first page
+    setBeneficiariesPage(0);
   };
-  // Filter beneficiaries based on status and search - now server-side, so filteredBeneficiaries = beneficiaries
+
   const filteredBeneficiaries = beneficiaries;
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       active: {
@@ -368,6 +418,7 @@ const UserBeneficiaries = () => {
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
+
   const getAvailabePayoutDestinationStatusBadge = (status: string) => {
     const statusMap = {
       ACTIVE: {
@@ -388,6 +439,7 @@ const UserBeneficiaries = () => {
     };
     return statusMap[status as keyof typeof statusMap] || statusMap?.ACTIVE;
   };
+
   const getRiskColor = (risk: string) => {
     const colors = {
       low: "bg-green-100 text-green-800",
@@ -411,18 +463,18 @@ const UserBeneficiaries = () => {
       ),
     };
     setBeneficiaryGroups((prev) => [...prev, groupWithBeneficiaries]);
-    fetchGroups(); // Refetch to update pagination if needed
+    fetchGroups();
   };
 
   const handleDeleteGroup = (groupId: string) => {
     setBeneficiaryGroups((prev) => prev.filter((g: any) => g.id !== groupId));
-    fetchGroups(); // Refetch
+    fetchGroups();
   };
 
-  // Update groups with beneficiary data - FIXED
+  // Update groups with beneficiary data
   const groupsWithBeneficiaryData = beneficiaryGroups?.map((group) => ({
     ...group,
-    beneficiaries: group.beneficiaries || [],   // Use beneficiaries directly from API
+    beneficiaries: group.beneficiaries || [],
   }));
 
   // Export groups for use in BulkTransactionForm
@@ -438,6 +490,7 @@ const UserBeneficiaries = () => {
   useEffect(() => {
     setPayOutId(payOutConfigData?.data?.countries[0]?.id);
   }, [payOutConfigData?.data?.countries]);
+
   // Loading state
   if (loading) {
     return (
@@ -625,6 +678,7 @@ const UserBeneficiaries = () => {
               </CardContent>
             </Card>
           </div>
+
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
             <Card className="shadow-card">
@@ -724,7 +778,7 @@ const UserBeneficiaries = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Tabs for Beneficiaries and Groups */}
           <Tabs
             value={activeTab}
@@ -1089,7 +1143,15 @@ const UserBeneficiaries = () => {
                                     <Eye className="h-4 w-4 mr-1" />
                                     View Profile
                                   </Button>
-                                  <Button variant="outline" size="sm">
+                                  {/* Edit Details — uses data already in list */}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditBeneficiary(beneficiary);
+                                      setView("edit");
+                                    }}
+                                  >
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit Details
                                   </Button>
@@ -1158,6 +1220,7 @@ const UserBeneficiaries = () => {
           </Tabs>
         </div>
       )}
+
       {view === "register" && (
         <div className="space-y-8">
           <Button variant="outline" onClick={() => setView("list")}>
@@ -1169,6 +1232,30 @@ const UserBeneficiaries = () => {
           />
         </div>
       )}
+
+      {/* Edit view — passes editData to form; form uses PUT /beneficiaries/:id */}
+      {view === "edit" && editBeneficiary && (
+        <div className="space-y-8">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setView("list");
+              setEditBeneficiary(null);
+            }}
+          >
+            Back to List
+          </Button>
+          <BeneficiaryRegistrationForm
+            onSuccess={() => {
+              fetchBeneficiaries();
+              setEditBeneficiary(null);
+            }}
+            setView={setView}
+            editData={editBeneficiary}
+          />
+        </div>
+      )}
+
       {view === "profile" && selectedBeneficiary && (
         <div className="space-y-8">
           <Button variant="outline" onClick={() => setView("list")}>
@@ -1177,6 +1264,7 @@ const UserBeneficiaries = () => {
           <BeneficiaryProfile beneficiary={selectedBeneficiary} />
         </div>
       )}
+
       {open && (
         <SingleTransactionWithPreselected
           open={open}
