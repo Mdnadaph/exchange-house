@@ -465,7 +465,7 @@ const SingleTransactionForm = ({
 
   const beneficiariyCurrency = currencyListData?.data?.find(
     (currency: any) =>
-      currency?.name == getSelectedBeneficiriesData?.currency.toLowerCase(),
+      currency?.name?.toLowerCase() === beneficiaryCurrencyCode.toLowerCase(),
   );
 
   useEffect(() => {
