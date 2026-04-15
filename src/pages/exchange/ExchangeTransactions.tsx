@@ -890,11 +890,11 @@ const ExchangeTransactions = () => {
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
-                              {/*<ProofOfPaymentUpload
+                              {/* <ProofOfPaymentUpload
                                 transactionId={transaction.id}
                                 userRole="Exchange"
                                 userName={fullname}
-                              />*/}
+                              /> */}
                               <ProofOfPaymentUpload
                                 transactionId={transaction.id}
                                 userRole="Exchange" // ✅ use role string
