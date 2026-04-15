@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import ComplianceStatus from "@/components/transactions/ComplianceStatus";
+import ProofOfPaymentUploadInBusinessAdmin from "@/components/transactions/ProofOfPaymentUploadInBusinessAdmin";
 
 interface TransactionDocument {
   id: number;
@@ -967,7 +968,14 @@ const UserTransactions = () => {
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
-                              <ProofOfPaymentUpload
+                              {/*<ProofOfPaymentUpload
+                                transactionId={transaction.id}
+                                userRole="Business"
+                                userName={userName}
+                                branchName={transaction.branchName}
+                                initialDocuments={transaction.documents}
+                              />*/}
+                              <ProofOfPaymentUploadInBusinessAdmin
                                 transactionId={transaction.id}
                                 userRole="Business"
                                 userName={userName}
