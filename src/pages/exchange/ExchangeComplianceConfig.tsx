@@ -154,7 +154,7 @@ const ExchangeComplianceConfig = () => {
       errors.payoutCountry = "Payout country is required";
     if (!createForm.thresholdAmount || createForm.thresholdAmount <= 0)
       errors.thresholdAmount = "Threshold amount must be greater than 0";
-    if (!createForm.currency.trim()) errors.currency = "Currency is required";
+    if (!createForm.currency) errors.currency = "Currency is required";
     if (!createForm.action) errors.action = "Action is required";
     if (!createForm.frequency) errors.frequency = "Frequency is required";
     if (!createForm.category) errors.category = "Category is required";
@@ -164,12 +164,13 @@ const ExchangeComplianceConfig = () => {
   const getPayoutCountryList = async () => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v1/payout/config/beneficiary/enabled`,
+        `${BASE_URL}/api/v1/payout/config/compliance-currencies`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
       setPayoutCountryData(res?.data?.data);
+      console.log("res", res);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -244,11 +245,20 @@ const ExchangeComplianceConfig = () => {
 
   const handleCreate = async () => {
     const errors = validateCreateForm();
+    const selectedCountryCode = payoutCountryData?.find(
+      (p) => p?.id == createForm?.payoutCountry,
+    );
     if (Object.keys(errors).length > 0) {
       setCreateErrors(errors);
 
       return;
     }
+
+    const payloadData = {
+      ...createForm,
+      payoutCountry: selectedCountryCode?.countryCode,
+    };
+
     try {
       const res = await fetch(`${BASE_URL}/api/v1/compliance/rules`, {
         method: "POST",
@@ -256,7 +266,7 @@ const ExchangeComplianceConfig = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(createForm),
+        body: JSON.stringify(payloadData),
       });
       if (res.ok) {
         toast({ title: "Success", description: "Rule created successfully" });
@@ -628,15 +638,11 @@ const ExchangeComplianceConfig = () => {
                       <Select
                         value={createForm.payoutCountry}
                         onValueChange={(v) => {
-                          // Find the selected country from payoutCountryData
                           const selectedCountry = payoutCountryData.find(
-                            (c: any) => (c?.countryCode || c?.isoCode) === v,
+                            (c: any) => c?.id === v,
                           );
-
-                          // Auto-set currency using "payoutCurrency" from API
                           const autoCurrency =
-                            selectedCountry?.payoutCurrency || "";
-
+                            selectedCountry?.currencyCode || "";
                           setCreateForm({
                             ...createForm,
                             payoutCountry: v,
@@ -656,8 +662,8 @@ const ExchangeComplianceConfig = () => {
                             const name =
                               c?.countryName || c?.name || "Unknown Country";
                             return (
-                              <SelectItem key={c?.id || code} value={code}>
-                                {name} ({c?.payoutCurrency || ""})
+                              <SelectItem key={c?.id} value={c?.id}>
+                                {name} ({c?.currencyCode || ""})
                               </SelectItem>
                             );
                           })}
@@ -670,7 +676,6 @@ const ExchangeComplianceConfig = () => {
                         </p>
                       )}
                     </div>
-
                     <div>
                       <Label>
                         Currency <span className="text-destructive">*</span>
@@ -1039,7 +1044,7 @@ const ExchangeComplianceConfig = () => {
                       value={editForm?.payoutCountry || ""}
                       onValueChange={(v) => {
                         const selectedCountry = payoutCountryData.find(
-                          (c: any) => (c?.countryCode || c?.isoCode) === v,
+                          (c: any) => c?.id === v,
                         );
 
                         setEditForm({
@@ -1057,12 +1062,11 @@ const ExchangeComplianceConfig = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {payoutCountryData?.map((c: any) => {
-                          const code = c?.countryCode || c?.isoCode || "";
                           const name =
                             c?.countryName || c?.name || "Unknown Country";
                           return (
-                            <SelectItem key={c?.id || code} value={code}>
-                              {name} ({c?.payoutCurrency || ""})
+                            <SelectItem key={c?.id} value={c?.id}>
+                              {name} ({c?.currencyCode || ""})
                             </SelectItem>
                           );
                         })}
