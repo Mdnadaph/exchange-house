@@ -83,6 +83,10 @@ const SingleTransactionForm = ({
   const [selectedPayoutDetailId, setSelectedPayoutDetailId] = useState<
     number | null
   >(null);
+  const [selectedPayoutCurrencyCode, setSelectedPayoutCurrencyCode] =
+    useState<string>("");
+  const [selectedPayoutCurrencyRate, setSelectedPayoutCurrencyRate] =
+    useState<number>(1);
 
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -147,16 +151,34 @@ const SingleTransactionForm = ({
     { value: "LOAN_REPAYMENT", label: "Loan Repayment", requiresDoc: false },
     { value: "OTHER", label: "Other", requiresDoc: false },
   ];
-
+  // Reset form fields when beneficiary changes
+  useEffect(() => {
+    if (selectedBeneficiary) {
+      setAmount("");
+      setReceiverAmount("");
+      setFeeResponsibility("");
+      setDiscountCode("");
+      setNotes("");
+      setTransectionSummeryData(null);
+      // Payout selection is already reset in the fetchPayoutDetails useEffect
+    }
+  }, [selectedBeneficiary]);
   //beneficiaries payout details
   useEffect(() => {
+    //if (!selectedBeneficiary) {
+    //  setPayoutDetails(null);
+    //  setPayoutError(null);
+    //  setSelectedPayoutDetailId(null);
+    //  return;
+    //}
     if (!selectedBeneficiary) {
       setPayoutDetails(null);
       setPayoutError(null);
       setSelectedPayoutDetailId(null);
+      setSelectedPayoutCurrencyCode("");
+      setSelectedPayoutCurrencyRate(1);
       return;
     }
-
     const fetchPayoutDetails = async () => {
       setLoadingPayout(true);
       setPayoutError(null);
@@ -459,7 +481,7 @@ const SingleTransactionForm = ({
     (fee: any) => fee?.transactionType == "SINGLE",
   );
 
-  // Get the first payout method's currency code, fallback to "AED"
+  // Get the first payout method's currency code, fallback to
   const beneficiaryCurrencyCode =
     getSelectedBeneficiriesData?.payoutDetails?.[0]?.currencyCode || "AED";
 
@@ -518,6 +540,8 @@ const SingleTransactionForm = ({
             setUploadedDocuments([]);
             setNotes("");
             setSelectedPayoutDetailId(null);
+            setSelectedPayoutCurrencyCode(""); // <-- ADD
+            setSelectedPayoutCurrencyRate(1); // <-- ADD
           }
         }}
       >
@@ -775,11 +799,35 @@ const SingleTransactionForm = ({
                                     selectedPayoutDetailId ===
                                     method.payoutDetailId
                                   }
-                                  onChange={() =>
+                                  onChange={() => {
                                     setSelectedPayoutDetailId(
                                       method.payoutDetailId,
-                                    )
-                                  }
+                                    );
+                                    setSelectedPayoutCurrencyCode(
+                                      method.currencyCode,
+                                    );
+                                    // Find exchange rate for this currency from currencyListData
+                                    const currencyRate =
+                                      currencyListData?.data?.find(
+                                        (c: any) =>
+                                          c.name?.toLowerCase() ===
+                                          method.currencyCode.toLowerCase(),
+                                      )?.rate || 1;
+                                    setSelectedPayoutCurrencyRate(currencyRate);
+                                    // Also update the currency state to the selected currency's ID (for payload)
+                                    const currencyObj =
+                                      currencyListData?.data?.find(
+                                        (c: any) =>
+                                          c.name?.toLowerCase() ===
+                                          method.currencyCode.toLowerCase(),
+                                      );
+                                    if (currencyObj?.id)
+                                      setCurrency(String(currencyObj.id));
+                                    // Reset amounts when currency changes
+                                    setAmount("");
+                                    setReceiverAmount("");
+                                    setTransectionSummeryData(null);
+                                  }}
                                   className="h-4 w-4"
                                 />
                                 <div className="flex-1 grid grid-cols-3 gap-2 text-sm">
@@ -903,13 +951,23 @@ const SingleTransactionForm = ({
                           id="amount"
                           type="number"
                           value={amount}
+                          //onChange={(e) => {
+                          //  const value = e.target.value;
+                          //  setAmount(value);
+                          //  setTransectionSummeryData(null);
+                          //  if (beneficiariyCurrency?.rate) {
+                          //    const result =
+                          //      Number(value) / beneficiariyCurrency.rate;
+                          //    setReceiverAmount(String(result.toFixed(2)));
+                          //  }
+                          //}}
                           onChange={(e) => {
                             const value = e.target.value;
                             setAmount(value);
                             setTransectionSummeryData(null);
-                            if (beneficiariyCurrency?.rate) {
+                            if (selectedPayoutCurrencyRate) {
                               const result =
-                                Number(value) / beneficiariyCurrency.rate;
+                                Number(value) / selectedPayoutCurrencyRate;
                               setReceiverAmount(String(result.toFixed(2)));
                             }
                           }}
@@ -923,19 +981,29 @@ const SingleTransactionForm = ({
                           Receiver
                         </h5>
                         <Label htmlFor="receiverAmount">
-                          Amount ({beneficiaryCurrencyCode})
+                          Amount ({selectedPayoutCurrencyCode})
                         </Label>
                         <Input
                           id="receiverAmount"
                           type="number"
                           value={receiverAmount}
+                          //onChange={(e) => {
+                          //  const value = e.target.value;
+                          //  setReceiverAmount(value);
+                          //  setTransectionSummeryData(null);
+                          //  setAmount(
+                          //    String(
+                          //      Number(value) * beneficiariyCurrency?.rate,
+                          //    ),
+                          //  );
+                          //}}
                           onChange={(e) => {
                             const value = e.target.value;
                             setReceiverAmount(value);
                             setTransectionSummeryData(null);
                             setAmount(
                               String(
-                                Number(value) * beneficiariyCurrency?.rate,
+                                Number(value) * selectedPayoutCurrencyRate,
                               ),
                             );
                           }}
@@ -991,7 +1059,7 @@ const SingleTransactionForm = ({
                         </div>
                       </CardContent>
                     </div>
-                    <div>
+                    {/*<div>
                       <Label htmlFor="currency">Currency *</Label>
                       <Select
                         value={currency}
@@ -1006,7 +1074,7 @@ const SingleTransactionForm = ({
                           <SelectItem key={curr} value={curr}>
                             {curr}
                           </SelectItem>
-                        ))} */}
+                        ))} 
                           {currencyListData?.data?.map((curr: any) => (
                             <SelectItem key={curr?.id} value={curr?.id}>
                               {curr?.name?.toUpperCase()}
@@ -1014,14 +1082,14 @@ const SingleTransactionForm = ({
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div>*/}
                   </div>
-                  <Button
+                  {/*<Button
                     variant="outline"
                     onClick={() => handleTransationSummary()}
                   >
                     View Transaction Summary
-                  </Button>
+                  </Button>*/}
                   {transectionSummeryData && amount && (
                     <Card className="bg-accent-muted/10 border-accent/20">
                       <CardContent className="p-4">

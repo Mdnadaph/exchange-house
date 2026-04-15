@@ -41,6 +41,7 @@ interface ProofDocument {
   size: string;
   fileUrl: string;
   branchName?: string;
+  apiDocumentType?: string;
 }
 
 interface ProofOfPaymentUploadProps {
@@ -154,6 +155,7 @@ const ProofOfPaymentUpload = ({
           : "Unknown size",
         fileUrl: doc.fileUrl,
         branchName: branchName,
+        apiDocumentType: (doc as any).documentType,
       }));
       setDocuments(transformed);
       return; // ✅ no API call needed
@@ -616,12 +618,26 @@ const ProofOfPaymentUpload = ({
                             <h5 className="font-semibold text-sm truncate max-w-xs">
                               {doc.name}
                             </h5>
-                            <Badge
+                            {/*<Badge
                               variant="outline"
                               className={`text-xs ${getDocumentTypeColor(doc.type)}`}
                             >
                               {getDocumentTypeLabel(doc.type)}
-                            </Badge>
+                            </Badge>*/}
+                            {/*<Badge
+                              variant="outline"
+                              className={`text-xs ${getDocumentTypeColor(doc.type)}`}
+                            >
+                              {getDocumentTypeLabel(doc.type)}
+                            </Badge>*/}
+                            {doc.apiDocumentType && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-purple-100 text-purple-800 border-purple-200"
+                              >
+                                {doc.apiDocumentType.replace(/_/g, " ")}
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1">

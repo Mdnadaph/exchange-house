@@ -46,6 +46,7 @@ interface TransactionDocument {
   fileSize: number | null;
   uploadedAt: string;
   uploadedBy: string;
+  documentType?: string;
 }
 
 interface ApiTransaction {
@@ -138,6 +139,7 @@ interface Transaction {
     city: string;
     state: string;
   };
+  canExecutePayment?: boolean;
 }
 
 const UserTransactions = () => {
@@ -267,7 +269,11 @@ const UserTransactions = () => {
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
               failureReason: apiTx.failureReason || "",
-              documents: apiTx.documents,
+              //documents: apiTx.documents,
+              documents: apiTx.documents?.map((doc: any) => ({
+                ...doc,
+                documentType: doc.documentType,
+              })),
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
               beneficiaryName: apiTx.beneficiaryName,
@@ -281,6 +287,7 @@ const UserTransactions = () => {
                 city: apiTx?.singleBeneficiary?.city,
                 state: apiTx?.singleBeneficiary?.state,
               },
+              canExecutePayment: apiTx.canExecutePayment,
             };
           });
 
@@ -335,57 +342,124 @@ const UserTransactions = () => {
     fetchTransactions();
   }, [token, transactionType, page, debouncedSearch]);
 
+  //const getStatusBadge = (status: string) => {
+  //  const statusMap = {
+  //    COMPLETED: {
+  //      variant: "default" as const,
+  //      label: "Completed",
+  //      icon: CheckCircle,
+  //    },
+  //    PENDING_APPROVAL: {
+  //      variant: "secondary" as const,
+  //      label: "Pending Approval",
+  //      icon: Clock,
+  //    },
+  //    pending_payment: {
+  //      variant: "destructive" as const,
+  //      label: "Pending Payment",
+  //      icon: Wallet,
+  //    },
+  //    payment_verification: {
+  //      variant: "secondary" as const,
+  //      label: "Payment Verification",
+  //      icon: Clock,
+  //    },
+  //    PROCESSING: {
+  //      variant: "destructive" as const,
+  //      label: "Processing",
+  //      icon: Clock,
+  //    },
+  //    FAILED: {
+  //      variant: "destructive" as const,
+  //      label: "Failed",
+  //      icon: AlertCircle,
+  //    },
+  //    APPROVED: {
+  //      variant: "default" as const,
+  //      label: "Approved",
+  //      icon: AlertCircle,
+  //    },
+  //    cancelled: {
+  //      variant: "outline" as const,
+  //      label: "Cancelled",
+  //      icon: AlertCircle,
+  //    },
+  //    COMPLIANCE_REVIEW: {
+  //      variant: "outline" as const,
+  //      label: "Compliance Review",
+  //      icon: AlertCircle,
+  //    },
+  //  };
+  //  return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
+  //};
+
   const getStatusBadge = (status: string) => {
-    const statusMap = {
-      COMPLETED: {
-        variant: "default" as const,
-        label: "Completed",
-        icon: CheckCircle,
+    const statusMap: Record<
+      string,
+      {
+        variant: "default" | "secondary" | "destructive" | "outline";
+        label: string;
+        icon: any;
+      }
+    > = {
+      // Draft
+      DRAFT: {
+        variant: "outline",
+        label: "Draft",
+        icon: FileText,
       },
-      PENDING_APPROVAL: {
-        variant: "secondary" as const,
-        label: "Pending Approval",
-        icon: Clock,
-      },
-      pending_payment: {
-        variant: "destructive" as const,
-        label: "Pending Payment",
+
+      // Payment flow
+      PAYMENT_PENDING: {
+        variant: "secondary",
+        label: "Payment Pending",
         icon: Wallet,
       },
-      payment_verification: {
-        variant: "secondary" as const,
+      PAYMENT_VERIFICATION_PENDING: {
+        variant: "secondary",
         label: "Payment Verification",
         icon: Clock,
       },
+      PENDING_APPROVAL: {
+        variant: "secondary",
+        label: "Pending Approval",
+        icon: Clock,
+      },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "secondary",
         label: "Processing",
         icon: Clock,
       },
+
+      // Final states
+      COMPLETED: {
+        variant: "default",
+        label: "Completed",
+        icon: CheckCircle,
+      },
+      REJECTED: {
+        variant: "destructive",
+        label: "Rejected",
+        icon: AlertCircle,
+      },
       FAILED: {
-        variant: "destructive" as const,
+        variant: "destructive",
         label: "Failed",
         icon: AlertCircle,
       },
-      APPROVED: {
-        variant: "default" as const,
-        label: "Approved",
-        icon: AlertCircle,
-      },
-      cancelled: {
-        variant: "outline" as const,
-        label: "Cancelled",
-        icon: AlertCircle,
-      },
+
+      // Compliance
       COMPLIANCE_REVIEW: {
-        variant: "outline" as const,
+        variant: "outline",
         label: "Compliance Review",
         icon: AlertCircle,
       },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
-  };
 
+    return (
+      statusMap[status] || { variant: "secondary", label: status, icon: Clock }
+    );
+  };
   const getTypeColor = (type: string) => {
     const colors = {
       SINGLE: "bg-blue-100 text-blue-800",
@@ -857,19 +931,20 @@ const UserTransactions = () => {
                                 </Button>
                               )}
 
-                              {transaction.status === "pending_payment" && (
-                                <PaymentExecutionForm
-                                  transaction={{
-                                    id: transaction.id,
-                                    beneficiary: transaction.beneficiary,
-                                    amount: transaction.amount,
-                                    currency: transaction.currency,
-                                    localAmount: transaction.localAmount,
-                                    localCurrency: transaction.localCurrency,
-                                    purpose: transaction.purpose,
-                                  }}
-                                />
-                              )}
+                              {transaction.canExecutePayment &&
+                                transaction.status === "PAYMENT_PENDING" && (
+                                  <PaymentExecutionForm
+                                    transaction={{
+                                      id: transaction.id,
+                                      beneficiary: transaction.beneficiary,
+                                      amount: transaction.amount,
+                                      currency: transaction.currency,
+                                      localAmount: transaction.localAmount,
+                                      localCurrency: transaction.localCurrency,
+                                      purpose: transaction.purpose,
+                                    }}
+                                  />
+                                )}
                             </div>
                           </div>
                           {openCompliance && complianceTransaction && (
