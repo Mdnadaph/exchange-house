@@ -50,8 +50,9 @@
 //   const [open, setOpen] = useState(false);
 //   const [formData, setFormData] = useState({
 //     name: editRule?.name || "",
+//     currencyCode: editRule?.currency || "",
 //     description: editRule?.description || "",
-//     currency: editRule?.currency || "USD",
+//     currencyId: editRule?.currencyId ? String(editRule.currencyId) : "",
 //     minAmount: editRule?.minAmount || "",
 //     maxAmount: editRule?.maxAmount || "",
 //     department: editRule?.department || "All",
@@ -64,8 +65,9 @@
 //   const [error, setError] = useState<string | null>(null);
 //   const [success, setSuccess] = useState(false);
 //   const [errors, setErrors] = useState<Record<string, string[]>>({});
-//   const [successMessage, setSuccessMessage] = useState("");
 //   const [currencies, setCurrencies] = useState([]);
+//   const [payoutConfigId, setPayOutConfigId] = useState<number>();
+
 //   const clearFieldError = (field: string) => {
 //     setErrors((prev) => {
 //       const next = { ...prev };
@@ -73,20 +75,22 @@
 //       return next;
 //     });
 //   };
+
 //   const validateForm = (): boolean => {
 //     const newErrors: Record<string, string[]> = {};
 
-//     // Rule name
 //     if (!formData.name.trim()) {
 //       newErrors.ruleName = ["Rule name is required"];
 //     }
 
-//     // At least one transaction type
+//     if (!formData.currencyCode) {
+//       newErrors.currencyCode = ["Currency is required"];
+//     }
+
 //     if (formData.transactionTypes.length === 0) {
 //       newErrors.transactionTypes = ["Select at least one transaction type"];
 //     }
 
-//     // Tiers validation
 //     formData.tiers.forEach((tier, index) => {
 //       if (!tier.threshold || Number(tier.threshold) <= 0) {
 //         newErrors[`tier-${index}-threshold`] = [
@@ -103,17 +107,21 @@
 //     setErrors(newErrors);
 //     return Object.keys(newErrors).length === 0;
 //   };
+
 //   const fetchCurrency = async () => {
 //     try {
-//       const res = await axios.get(`${BASE_URL}/api/v1/payout/config?`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       setCurrencies(res?.data?.data?.countries);
+//       const res = await axios.get(
+//         `${BASE_URL}/api/v1/payout/config/governance-currencies`,
+//         {
+//           headers: { Authorization: `Bearer ${token}` },
+//         },
+//       );
+//       setCurrencies(res?.data?.data);
 //     } catch (error) {
 //       console.error("error", error);
 //     }
 //   };
+
 //   useEffect(() => {
 //     fetchCurrency();
 //   }, []);
@@ -126,6 +134,7 @@
 //     "HR",
 //     "Procurement",
 //   ];
+
 //   const transactionTypes = [
 //     "Single Transfer",
 //     "Bulk Transfer",
@@ -133,6 +142,7 @@
 //     "Supplier Payment",
 //     "Invoice Payment",
 //   ];
+
 //   const approverRoles = [
 //     "Senior Manager",
 //     "Finance Manager",
@@ -150,7 +160,8 @@
 //     setFormData({
 //       name: "",
 //       description: "",
-//       currency: "USD",
+//       currencyCode: "",
+//       currencyId: "",
 //       minAmount: "",
 //       maxAmount: "",
 //       department: "All",
@@ -221,7 +232,7 @@
 
 //   const handleSubmit = async () => {
 //     if (!validateForm()) {
-//       setLoading(false); // ensure loading is reset if validation fails
+//       setLoading(false);
 //       return;
 //     }
 //     setError(null);
@@ -230,7 +241,8 @@
 
 //     const payload = {
 //       ruleName: formData.name.trim(),
-//       currency: formData.currency,
+//       currencyId: payoutConfigId,
+//       currencyCode: formData?.currencyCode,
 //       description: formData.description.trim(),
 //       minAmount: formData.minAmount ? Number(formData.minAmount) : 0,
 //       maxAmount: formData.maxAmount ? Number(formData.maxAmount) : 1000000,
@@ -270,7 +282,6 @@
 //       return;
 //     }
 
-//     // Determine method and URL based on edit mode
 //     const method = editRule ? "PUT" : "POST";
 //     const url = editRule
 //       ? `${BASE_URL}/api/v1/business/governance-rules/${editRule.id}`
@@ -294,7 +305,6 @@
 //       const result = await response.json();
 //       setSuccess(true);
 
-//       // Close dialog after short delay so user sees success message
 //       setTimeout(() => {
 //         setOpen(false);
 //         resetForm();
@@ -306,20 +316,21 @@
 //       setLoading(false);
 //     }
 //   };
-//   // Optional: reset error/success when dialog is opened again
+
 //   useEffect(() => {
 //     if (open) {
 //       setError(null);
 //       setSuccess(false);
 //     }
 //   }, [open]);
-//   // Populate form when dialog opens in edit mode
+
 //   useEffect(() => {
 //     if (open && editRule) {
 //       setFormData({
 //         name: editRule.name || "",
 //         description: editRule.description || "",
-//         currency: editRule.currency || "USD",
+//         currencyId: editRule.currencyId ? String(editRule.currencyId) : "",
+//         currencyCode: editRule?.currency || "",
 //         minAmount: editRule.minAmount?.toString() || "",
 //         maxAmount: editRule.maxAmount?.toString() || "",
 //         department: editRule.department || "All",
@@ -336,13 +347,12 @@
 //       setError(null);
 //       setSuccess(false);
 //     } else if (open && !editRule) {
-//       // Reset to empty for creation
 //       resetForm();
 //       setError(null);
 //       setSuccess(false);
 //     }
 //   }, [open, editRule]);
-//   // Reset form when dialog closes
+
 //   useEffect(() => {
 //     if (!open) {
 //       resetForm();
@@ -350,6 +360,13 @@
 //       setSuccess(false);
 //     }
 //   }, [open]);
+//   useEffect(() => {
+//     const payoutConfigId = currencies?.find(
+//       (c: any) => c?.currencyCode == formData?.currencyCode,
+//     )?.payoutConfigId;
+//     setPayOutConfigId(payoutConfigId);
+//   }, [formData?.currencyCode]);
+
 //   return (
 //     <Dialog open={open} onOpenChange={setOpen}>
 //       <DialogTrigger asChild>
@@ -380,13 +397,13 @@
 //               </CardTitle>
 //             </CardHeader>
 //             <CardContent className="space-y-4">
-//               {/* ... same as before ... */}
 //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 //                 <div>
 //                   <Label htmlFor="ruleName">
 //                     Rule Name <span className="text-red-500">*</span>
 //                   </Label>
 //                   <Input
+//                     disabled={editRule?.id}
 //                     id="ruleName"
 //                     value={formData.name}
 //                     onChange={(e) => {
@@ -409,22 +426,32 @@
 //                     Currency <span className="text-red-500">*</span>
 //                   </Label>
 //                   <Select
-//                     value={formData.currency}
-//                     onValueChange={(value) =>
-//                       setFormData((prev) => ({ ...prev, currency: value }))
-//                     }
+//                     disabled={editRule?.id}
+//                     value={formData.currencyCode}
+//                     onValueChange={(value) => {
+//                       setFormData((prev) => ({ ...prev, currencyCode: value }));
+//                       clearFieldError("currencyId");
+//                     }}
 //                   >
 //                     <SelectTrigger>
 //                       <SelectValue placeholder="Select currency" />
 //                     </SelectTrigger>
 //                     <SelectContent>
 //                       {currencies.map((c) => (
-//                         <SelectItem key={c?.id} value={c?.currency}>
-//                           {c?.countryName}({c?.currency})
+//                         <SelectItem
+//                           key={c?.currencyCode}
+//                           value={String(c?.currencyCode)}
+//                         >
+//                           {c?.countryName} ({c?.currencyCode})
 //                         </SelectItem>
 //                       ))}
 //                     </SelectContent>
 //                   </Select>
+//                   {errors.currencyCode?.map((msg, i) => (
+//                     <p key={i} className="text-sm text-destructive mt-1">
+//                       {msg}
+//                     </p>
+//                   ))}
 //                 </div>
 //               </div>
 
@@ -449,6 +476,7 @@
 //                   <Input
 //                     type="number"
 //                     value={formData.minAmount}
+//                     onWheel={(e) => e.currentTarget.blur()}
 //                     onChange={(e) =>
 //                       setFormData((prev) => ({
 //                         ...prev,
@@ -463,6 +491,7 @@
 //                   <Input
 //                     type="number"
 //                     value={formData.maxAmount}
+//                     onWheel={(e) => e.currentTarget.blur()}
 //                     onChange={(e) =>
 //                       setFormData((prev) => ({
 //                         ...prev,
@@ -496,7 +525,7 @@
 //             </CardContent>
 //           </Card>
 
-//           {/* Transaction Types – unchanged */}
+//           {/* Transaction Types */}
 //           <Card>
 //             <CardHeader>
 //               <CardTitle className="text-lg flex items-center gap-2">
@@ -530,7 +559,7 @@
 //             </CardContent>
 //           </Card>
 
-//           {/* Approval Tiers – unchanged */}
+//           {/* Approval Tiers */}
 //           <Card>
 //             <CardHeader>
 //               <div className="flex items-center justify-between">
@@ -538,14 +567,18 @@
 //                   <Users className="h-5 w-5" />
 //                   Approval Tiers
 //                 </CardTitle>
-//                 <Button variant="outline" size="sm" onClick={addTier}>
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   onClick={addTier}
+//                   disabled={formData?.tiers?.length == 3}
+//                 >
 //                   <Plus className="h-4 w-4 mr-1" />
 //                   Add Tier
 //                 </Button>
 //               </div>
 //             </CardHeader>
 //             <CardContent>
-//               {/* ... tiers content remains exactly the same ... */}
 //               <div className="space-y-4">
 //                 <div className="flex items-center space-x-2 p-3 bg-accent-muted/20 rounded-lg">
 //                   <Info className="h-4 w-4 text-accent" />
@@ -558,7 +591,6 @@
 //                 {formData.tiers.map((tier, index) => (
 //                   <Card key={index} className="border-l-4 border-l-primary">
 //                     <CardContent className="p-4">
-//                       {/* tier header, threshold, approvers, roles – unchanged */}
 //                       <div className="flex items-center justify-between mb-4">
 //                         <div className="flex items-center space-x-2">
 //                           <Badge variant="outline">Tier {tier.level}</Badge>
@@ -596,6 +628,7 @@
 //                                 : ""
 //                             }
 //                             placeholder="Enter threshold amount"
+//                             onWheel={(e) => e.currentTarget.blur()}
 //                           />
 //                           {errors[`tier-${index}-threshold`]?.map((msg, i) => (
 //                             <p
@@ -654,7 +687,6 @@
 //                             </div>
 //                           ))}
 //                         </div>
-//                         {/* Add error message here */}
 //                         {errors[`tier-${index}-roles`] && (
 //                           <p className="text-sm text-destructive mt-2">
 //                             {errors[`tier-${index}-roles`][0]}
@@ -704,6 +736,8 @@
 // };
 
 // export default ApprovalRuleForm;
+
+
 
 import { useState, useEffect } from "react";
 import {
@@ -758,8 +792,8 @@ const ApprovalRuleForm = ({
   const [formData, setFormData] = useState({
     name: editRule?.name || "",
     currencyCode: editRule?.currency || "",
-    description: editRule?.description || "",
     currencyId: editRule?.currencyId ? String(editRule.currencyId) : "",
+    description: editRule?.description || "",
     minAmount: editRule?.minAmount || "",
     maxAmount: editRule?.maxAmount || "",
     department: editRule?.department || "All",
@@ -772,8 +806,9 @@ const ApprovalRuleForm = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [currencies, setCurrencies] = useState([]);
-  const [payoutConfigId, setPayOutConfigId] = useState<number>();
+  const [currencies, setCurrencies] = useState<
+    { currencyId: number; currencyCode: string }[]
+  >([]);
 
   const clearFieldError = (field: string) => {
     setErrors((prev) => {
@@ -948,8 +983,8 @@ const ApprovalRuleForm = ({
 
     const payload = {
       ruleName: formData.name.trim(),
-      currencyId: payoutConfigId,
-      currencyCode: formData?.currencyCode,
+      currencyId: Number(formData.currencyId),
+      currencyCode: formData.currencyCode,
       description: formData.description.trim(),
       minAmount: formData.minAmount ? Number(formData.minAmount) : 0,
       maxAmount: formData.maxAmount ? Number(formData.maxAmount) : 1000000,
@@ -1067,12 +1102,6 @@ const ApprovalRuleForm = ({
       setSuccess(false);
     }
   }, [open]);
-  useEffect(() => {
-    const payoutConfigId = currencies?.find(
-      (c: any) => c?.currencyCode == formData?.currencyCode,
-    )?.payoutConfigId;
-    setPayOutConfigId(payoutConfigId);
-  }, [formData?.currencyCode]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -1136,8 +1165,17 @@ const ApprovalRuleForm = ({
                     disabled={editRule?.id}
                     value={formData.currencyCode}
                     onValueChange={(value) => {
-                      setFormData((prev) => ({ ...prev, currencyCode: value }));
-                      clearFieldError("currencyId");
+                      const selected = currencies.find(
+                        (c) => c.currencyCode === value,
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        currencyCode: value,
+                        currencyId: selected
+                          ? String(selected.currencyId)
+                          : "",
+                      }));
+                      clearFieldError("currencyCode");
                     }}
                   >
                     <SelectTrigger>
@@ -1146,10 +1184,10 @@ const ApprovalRuleForm = ({
                     <SelectContent>
                       {currencies.map((c) => (
                         <SelectItem
-                          key={c?.currencyCode}
-                          value={String(c?.currencyCode)}
+                          key={c.currencyCode}
+                          value={c.currencyCode}
                         >
-                          {c?.countryName} ({c?.currencyCode})
+                          {c.currencyCode}
                         </SelectItem>
                       ))}
                     </SelectContent>
