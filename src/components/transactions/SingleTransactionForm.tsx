@@ -42,7 +42,7 @@ import {
   Trash2,
 } from "lucide-react";
 import axios from "axios";
-import { METHODS } from "http";
+//import { METHODS } from "http";
 
 interface SingleTransactionFormProps {
   trigger?: React.ReactNode;
@@ -75,35 +75,17 @@ const SingleTransactionForm = ({
   const [cookie] = useCookies(["token"]);
   const [transectionSummeryData, setTransectionSummeryData] =
     useState<any>(null);
+
+  //payoutdetails
+  const [payoutDetails, setPayoutDetails] = useState<any>(null);
+  const [loadingPayout, setLoadingPayout] = useState(false);
+  const [payoutError, setPayoutError] = useState<string | null>(null);
+  const [selectedPayoutDetailId, setSelectedPayoutDetailId] = useState<
+    number | null
+  >(null);
+
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Mock data - would come from backend
-  const beneficiaries = [
-    {
-      id: "BEN-001",
-      name: "Global Suppliers Inc",
-      type: "business",
-      accountNumber: "1234567890",
-      bankName: "Emirates NBD",
-      country: "UAE",
-    },
-    {
-      id: "BEN-002",
-      name: "Tech Solutions Ltd",
-      type: "business",
-      accountNumber: "9876543210",
-      bankName: "ADCB Bank",
-      country: "UAE",
-    },
-    {
-      id: "BEN-003",
-      name: "John Smith",
-      type: "individual",
-      accountNumber: "5555666677",
-      bankName: "State Bank of India",
-      country: "India",
-    },
-  ];
 
   // const transactionSources = [
   //   {
@@ -166,9 +148,41 @@ const SingleTransactionForm = ({
     { value: "OTHER", label: "Other", requiresDoc: false },
   ];
 
-  const getSelectedBeneficiaryDetails = () => {
-    return beneficiaries.find((b) => b.id === selectedBeneficiary);
-  };
+  //beneficiaries payout details
+  useEffect(() => {
+    if (!selectedBeneficiary) {
+      setPayoutDetails(null);
+      setPayoutError(null);
+      setSelectedPayoutDetailId(null);
+      return;
+    }
+
+    const fetchPayoutDetails = async () => {
+      setLoadingPayout(true);
+      setPayoutError(null);
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/api/v1/beneficiaries/${selectedBeneficiary}/payout-details`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (res?.data?.status === true) {
+          setPayoutDetails(res?.data?.data);
+        } else {
+          setPayoutError(res.data?.message || "Failed to load payout details");
+        }
+      } catch (err: any) {
+        setPayoutError(err?.response?.data?.message || err.message);
+      } finally {
+        setLoadingPayout(false);
+      }
+    };
+
+    fetchPayoutDetails();
+  }, [selectedBeneficiary, token]);
+
+  const selectedBeneficiaryData = beneficiariesList?.find(
+    (b: any) => String(b.id) === selectedBeneficiary,
+  );
 
   const getSelectedSourceDetails = () => {
     return transactionSources.find((s) => s.id === selectedSource);
@@ -251,6 +265,7 @@ const SingleTransactionForm = ({
       currencyId: currency,
       notes,
       discountCode: discountCode.trim() || "",
+      beneficiaryPayoutDetailId: selectedPayoutDetailId,
     };
 
     const formData = new FormData();
@@ -443,9 +458,13 @@ const SingleTransactionForm = ({
     (fee: any) => fee?.transactionType == "SINGLE",
   );
 
+  // Get the first payout method's currency code, fallback to "AED"
+  const beneficiaryCurrencyCode =
+    getSelectedBeneficiriesData?.payoutDetails?.[0]?.currencyCode || "AED";
+
   const beneficiariyCurrency = currencyListData?.data?.find(
     (currency: any) =>
-      currency?.name == getSelectedBeneficiriesData?.currency.toLowerCase(),
+      currency?.name?.toLowerCase() === beneficiaryCurrencyCode.toLowerCase(),
   );
 
   useEffect(() => {
@@ -497,6 +516,7 @@ const SingleTransactionForm = ({
             setCurrency("");
             setUploadedDocuments([]);
             setNotes("");
+            setSelectedPayoutDetailId(null);
           }
         }}
       >
@@ -526,7 +546,10 @@ const SingleTransactionForm = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="purpose">Purpose of Transaction *</Label>
+                  <Label htmlFor="purpose">
+                    Purpose of Transaction{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={transactionPurpose}
                     onValueChange={setTransactionPurpose}
@@ -581,7 +604,10 @@ const SingleTransactionForm = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="source">Select Source Account *</Label>
+                  <Label htmlFor="source">
+                    Select Source Account{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={selectedSource}
                     onValueChange={setSelectedSource}
@@ -636,6 +662,7 @@ const SingleTransactionForm = ({
             </Card>
 
             {/* Beneficiary Selection */}
+            {/* Beneficiary Selection */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -645,7 +672,9 @@ const SingleTransactionForm = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="beneficiary">Select Beneficiary *</Label>
+                  <Label htmlFor="beneficiary">
+                    Select Beneficiary <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={selectedBeneficiary}
                     onValueChange={setSelectedBeneficiary}
@@ -655,7 +684,10 @@ const SingleTransactionForm = ({
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
                       {beneficiariesList?.map((beneficiary: any) => (
-                        <SelectItem key={beneficiary.id} value={beneficiary.id}>
+                        <SelectItem
+                          key={beneficiary.id}
+                          value={String(beneficiary.id)}
+                        >
                           <div className="flex items-center space-x-2">
                             {beneficiary.type === "BUSINESS" ? (
                               <Building className="h-4 w-4" />
@@ -664,11 +696,12 @@ const SingleTransactionForm = ({
                             )}
                             <div className="flex flex-col">
                               <span className="font-medium">
-                                {beneficiary?.name}
+                                {beneficiary.name}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                {beneficiary?.bankName} •{" "}
-                                {beneficiary?.countryName}
+                                {beneficiary.bankName ||
+                                  beneficiary.countryName}{" "}
+                                • {beneficiary.countryName}
                               </span>
                             </div>
                           </div>
@@ -678,32 +711,97 @@ const SingleTransactionForm = ({
                   </Select>
                 </div>
 
-                {getSelectedBeneficiaryDetails() && (
+                {/* Show selected beneficiary details (outside dropdown) */}
+                {selectedBeneficiaryData && (
                   <Card className="border-l-4 border-l-accent">
                     <CardContent className="p-3">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      {/*<div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">
                             Account Number:
                           </span>
                           <p className="font-medium font-mono">
-                            {getSelectedBeneficiaryDetails()?.accountNumber}
+                            {selectedBeneficiaryData.accountNumber ||
+                              selectedBeneficiaryData.payoutDetails?.[0]
+                                ?.fieldValues?.["account number1"] ||
+                              "-"}
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Bank:</span>
                           <p className="font-medium">
-                            {getSelectedBeneficiaryDetails()?.bankName}
+                            {selectedBeneficiaryData.bankName ||
+                              selectedBeneficiaryData.payoutDetails?.[0]
+                                ?.providerName ||
+                              "-"}
                           </p>
                         </div>
-                      </div>
+                        <div>
+                          <span className="text-muted-foreground">IBAN:</span>
+                          <p className="font-mono text-sm">
+                            {selectedBeneficiaryData.iban || "-"}
+                          </p>
+                        </div>
+                      </div>*/}
+
+                      {/* Payout Details Section */}
+                      {loadingPayout && (
+                        <div className="mt-3 text-sm text-muted-foreground">
+                          Loading payout details...
+                        </div>
+                      )}
+                      {payoutError && (
+                        <div className="mt-3 text-sm text-destructive">
+                          Error: {payoutError}
+                        </div>
+                      )}
+                      {payoutDetails && payoutDetails.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <h4 className="text-sm font-semibold mb-2">
+                            Select Payout Method
+                          </h4>
+                          <div className="space-y-2">
+                            {payoutDetails.map((method: any, idx: number) => (
+                              <label
+                                key={idx}
+                                className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
+                              >
+                                <input
+                                  type="radio"
+                                  name="payoutMethod"
+                                  value={method.payoutDetailId}
+                                  checked={
+                                    selectedPayoutDetailId ===
+                                    method.payoutDetailId
+                                  }
+                                  onChange={() =>
+                                    setSelectedPayoutDetailId(
+                                      method.payoutDetailId,
+                                    )
+                                  }
+                                  className="h-4 w-4"
+                                />
+                                <div className="flex-1 grid grid-cols-3 gap-2 text-sm">
+                                  <span className="font-medium">
+                                    {method.payoutMechanismType}
+                                  </span>
+                                  <span>{method.currencyCode}</span>
+                                  <span className="text-muted-foreground">
+                                    {method.providerName || "Not specified"}
+                                  </span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}
               </CardContent>
             </Card>
 
-            {feeRule?.id && (
+            {/*{feeRule?.id && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -713,7 +811,7 @@ const SingleTransactionForm = ({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {/* Business */}
+           
                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
                       <h2 className="text-lg font-semibold mb-3">Business</h2>
                       <div className="space-y-1 text-sm text-gray-700">
@@ -728,7 +826,7 @@ const SingleTransactionForm = ({
                       </div>
                     </div>
 
-                    {/* Beneficiary */}
+             
                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
                       <h2 className="text-lg font-semibold mb-3">
                         Beneficiary
@@ -745,7 +843,7 @@ const SingleTransactionForm = ({
                       </div>
                     </div>
 
-                    {/* Shared */}
+                    
                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
                       <h2 className="text-lg font-semibold mb-3">Shared</h2>
                       <div className="space-y-1 text-sm text-gray-700">
@@ -779,6 +877,7 @@ const SingleTransactionForm = ({
                 </CardContent>
               </Card>
             )}
+*/}
 
             {/* Transaction Amount */}
             {selectedBeneficiary && (
@@ -793,8 +892,12 @@ const SingleTransactionForm = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h5 className="text-center">Sender</h5>
-                        <Label htmlFor="amount">Amount(AED) *</Label>
+                        <h5 className="text-center font-bold mb-4 text-xl">
+                          Sender
+                        </h5>
+                        <Label htmlFor="amount">
+                          Amount(AED) <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id="amount"
                           type="number"
@@ -815,10 +918,11 @@ const SingleTransactionForm = ({
                         />
                       </div>
                       <div>
-                        <h5 className="text-center">Receiver</h5>
+                        <h5 className="text-center font-bold mb-4 text-xl">
+                          Receiver
+                        </h5>
                         <Label htmlFor="receiverAmount">
-                          Amount{" "}
-                          {`(${getSelectedBeneficiriesData?.currency ? getSelectedBeneficiriesData?.currency : "USD"})`}
+                          Amount ({beneficiaryCurrencyCode})
                         </Label>
                         <Input
                           id="receiverAmount"
@@ -856,7 +960,8 @@ const SingleTransactionForm = ({
                       <CardContent className="space-y-4">
                         <div>
                           <Label htmlFor="source">
-                            Select Fee Responsibility *
+                            Select Fee Responsibility{" "}
+                            <span className="text-red-500">*</span>
                           </Label>
                           <Select
                             value={feeResponsibility}
@@ -1174,10 +1279,7 @@ const SingleTransactionForm = ({
               <FeeCalculator
                 amount={parseFloat(amount)}
                 currency={currency}
-                country={
-                  beneficiaries.find((b) => b.id === selectedBeneficiary)
-                    ?.country || ""
-                }
+                country={selectedBeneficiaryData?.countryName || ""}
                 transactionType="Single Transaction"
               />
             )}
@@ -1248,7 +1350,9 @@ const SingleTransactionForm = ({
                     !selectedBeneficiary ||
                     !selectedSource ||
                     !amount ||
-                    !transactionPurpose
+                    !transactionPurpose ||
+                    !selectedPayoutDetailId ||
+                    !feeResponsibility
                   }
                   onClick={() => setShowConfirmation(true)}
                 >
