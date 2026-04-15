@@ -135,7 +135,7 @@ const ExchangePayoutConfig = () => {
     totalPages: 0,
     currentPage: 0,
     pageSize: 10,
-  });
+  }); 
   const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
     try {
