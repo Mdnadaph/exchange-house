@@ -453,10 +453,10 @@ const ExchangeTransactions = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              All Business Transactions
+              Pending Payment Verification
             </h1>
             <p className="text-muted-foreground">
-              Monitor and manage all business payment transactions
+              Review and verify all pending payment transactions before approval
             </p>
           </div>
           {/* <Button variant="outline" disabled={transactions.length === 0}>
@@ -602,7 +602,7 @@ const ExchangeTransactions = () => {
         {/* Transactions List */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <CardTitle>Payment History</CardTitle>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -618,13 +618,13 @@ const ExchangeTransactions = () => {
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
                   {transactions.length === 0
-                    ? "No transactions found"
+                    ? "No payment found"
                     : "No matching transactions"}
                 </h3>
                 <p className="text-muted-foreground">
                   {searchTerm
                     ? "Try adjusting your search criteria"
-                    : "No transactions available in the system"}
+                    : "No payment available in the system"}
                 </p>
               </div>
             ) : (

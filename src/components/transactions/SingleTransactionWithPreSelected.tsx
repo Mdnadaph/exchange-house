@@ -357,7 +357,7 @@ const SingleTransactionWithPreselected = ({
   const getCurrencyName = () => {
     const currencyName = currencyListData?.data
       ?.find((currencyList: any) => currencyList?.id == currency)
-      ?.name.toUpperCase();
+      ?.name?.toUpperCase();
     return currencyName;
   };
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -472,7 +472,9 @@ const SingleTransactionWithPreselected = ({
     } catch (err) {
       toast({
         title: "Error",
-        description: err?.message,
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while fetching rule",
         variant: "destructive",
       });
     }
@@ -1035,16 +1037,20 @@ const SingleTransactionWithPreselected = ({
                       Fee Type:{" "}
                       {selectedBeneficiaryFee?.feeType
                         ?.charAt(0)
-                        .toUpperCase() +
-                        selectedBeneficiaryFee?.feeType?.slice(1).toLowerCase()}
+                        ?.toUpperCase() +
+                        selectedBeneficiaryFee?.feeType
+                          ?.slice(1)
+                          ?.toLowerCase()}
                     </div>
                     <div>Fee Amount: {selectedBeneficiaryFee?.feeValue}</div>
                     <div>
                       Status:{" "}
-                      {selectedBeneficiaryFee?.status?.charAt(0).toUpperCase() +
+                      {selectedBeneficiaryFee?.status
+                        ?.charAt(0)
+                        ?.toUpperCase() +
                         selectedBeneficiaryFee?.status
                           ?.slice(1)
-                          .toLowerCase()}{" "}
+                          ?.toLowerCase()}{" "}
                     </div>
                     <div>Min Amount: {selectedBeneficiaryFee?.minAmount} </div>
                     <div>Max Amount: {selectedBeneficiaryFee?.maxAmount} </div>

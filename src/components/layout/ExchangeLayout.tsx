@@ -21,6 +21,9 @@ import {
   Handshake,
   GitBranch,
   BadgePercent,
+  Clock ,
+  BadgeCheck ,
+  Loader   ,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -114,6 +117,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       href: "/exchange/transactions",
       icon: CreditCard,
       code: "NAV_TRANSACTION",
+    },
+     {
+      name: "Pending Payment",
+      href: "/exchange/pending-verification",
+      icon: Loader,
+      code: "NAV_PENDING_PEMENT_VERIFICATION",
     },
     {
       name: "Discounts",
