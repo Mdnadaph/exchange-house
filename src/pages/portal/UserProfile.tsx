@@ -972,72 +972,53 @@ const UserProfile = () => {
           <CardContent className="space-y-4">
             {businessProfile?.ubos?.map((uboItem: any) => (
               <div className="w-full" key={uboItem?.uuid}>
-                {uboItem?.uboType == "INDIVIDUAL" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">UBO Type</p>
-                      <p className="font-medium">
-                        {uboItem?.uboType?.charAt(0)?.toUpperCase()}
-                        {uboItem?.uboType?.slice(1)?.toLowerCase()}
-                      </p>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                  <div className="flex gap-3 item-center">
+                    <p className="text-muted-foreground">UBO Type</p>
+                    <p className="font-medium">
+                      {uboItem?.uboType?.charAt(0)?.toUpperCase()}
+                      {uboItem?.uboType?.slice(1)?.toLowerCase()}
+                    </p>
+                  </div>
+                  {uboItem?.uboType == "INDIVIDUAL" && (
                     <div className="flex gap-3 item-center">
                       <p className="text-muted-foreground">Full Name</p>
                       <p className="font-medium">{uboItem?.fullName}</p>
                     </div>
+                  )}
+                  {uboItem?.uboType == "INDIVIDUAL" && (
                     <div className="flex gap-3 item-center">
                       <p className="text-muted-foreground">Email</p>
                       <p className="font-medium">{uboItem?.email}</p>
                     </div>
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Address</p>
-                      <p className="font-medium">{uboItem?.address}</p>
-                    </div>
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">
-                        OwnerShip Percentage
-                      </p>
-                      <p className="font-medium">
-                        {uboItem?.ownershipPercentage}%
-                      </p>
-                    </div>
+                  )}
+                  <div className="flex gap-3 item-center">
+                    <p className="text-muted-foreground">
+                      OwnerShip Percentage
+                    </p>
+                    <p className="font-medium">
+                      {uboItem?.ownershipPercentage}%
+                    </p>
+                  </div>
+                  {uboItem?.uboType == "INDIVIDUAL" && (
                     <div className="flex gap-3 item-center">
                       <p className="text-muted-foreground">Contact Number</p>
                       <p className="font-medium">{uboItem?.contactNumber}</p>
                     </div>
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Date Of Birth</p>
-                      <p className="font-medium">{uboItem?.dateOfBirth}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">UBO Type:</p>
-                      <p className="font-medium">
-                        {" "}
-                        {uboItem?.uboType?.charAt(0)?.toUpperCase()}
-                        {uboItem?.uboType?.slice(1)?.toLowerCase()}
-                      </p>
-                    </div>
+                  )}
+                  {uboItem?.uboType == "ORGANIZATION" && (
                     <div className="flex gap-3 item-center">
                       <p className="text-muted-foreground">
                         Organization Name:
                       </p>
                       <p className="font-medium">{uboItem?.organizationName}</p>
                     </div>
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">
-                        OwnerShip Percentage:
-                      </p>
-                      <p className="font-medium">
-                        {uboItem?.ownershipPercentage}%
-                      </p>
-                    </div>
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Address:</p>
-                      <p className="font-medium">{uboItem?.address}</p>
-                    </div>
+                  )}
+                  <div className="flex gap-3 item-center">
+                    <p className="text-muted-foreground">Date Of Birth</p>
+                    <p className="font-medium">{uboItem?.dateOfBirth}</p>
+                  </div>
+                  {uboItem?.uboType == "ORGANIZATION" && (
                     <div className="flex gap-3 item-center">
                       <p className="text-muted-foreground">
                         Registration Number:
@@ -1046,12 +1027,14 @@ const UserProfile = () => {
                         {uboItem?.registrationNumber}
                       </p>
                     </div>
+                  )}
+                  {uboItem?.uboType == "ORGANIZATION" && (
                     <div className="flex gap-3 item-center">
                       <p className="text-muted-foreground">Phone Number:</p>
                       <p className="font-medium">{uboItem?.phoneNumber}</p>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
