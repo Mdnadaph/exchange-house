@@ -135,7 +135,8 @@ const ExchangePayoutConfig = () => {
     totalPages: 0,
     currentPage: 0,
     pageSize: 10,
-  }); 
+  });
+
   const [id, setId] = useState<number | null>(null);
   const getCountriesData = async () => {
     try {
@@ -1043,6 +1044,25 @@ const ExchangePayoutConfig = () => {
                                         {mechanismName}
                                       </Badge>
                                     </div>
+
+                                    <div className="text-sm text-muted-foreground w-full flex items-center gap-3">
+                                      <div> Currencies: </div>
+                                      <div className="flex gap-2 items-center">
+                                        {destination?.mechanismCurrencies[
+                                          mechanismName
+                                        ]?.map((currency: string) => (
+                                          <div
+                                            key={currency}
+                                            className="px-2 py-1 bg-blue-900 rounded-md"
+                                          >
+                                            <span className="text-white">
+                                              {currency}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+
                                     <div className="grid grid-cols-1 gap-2 text-sm">
                                       <div className="text-muted-foreground">
                                         {"List fields"}:{" "}
