@@ -1,16 +1,13 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useCookies } from "react-cookie";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Upload,
   FileText,
   Download,
   Eye,
   CheckCircle,
-  Calendar,
   X,
   Loader2,
   AlertCircle,
@@ -21,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import BASE_URL from "@/config/config";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────
 interface ProofDocument {
   id: number;
   fileName: string;
@@ -41,7 +38,7 @@ interface ProofOfPaymentUploadProps {
   onUploadComplete?: () => void;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────
 const formatFileSize = (bytes: number | null): string => {
   if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
@@ -64,7 +61,7 @@ const formatDate = (iso: string): string => {
   }
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ─────────────────────────────────────────────
 const ProofOfPaymentUpload = ({
   transactionId,
   userRole,
@@ -86,10 +83,14 @@ const ProofOfPaymentUpload = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  const [loadingDocId, setLoadingDocId] = useState<number | null>(null);
+  const [loadingAction, setLoadingAction] = useState<"view" | "download" | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const canUpload = userRole === "Exchange" || userRole === "Branch";
 
-  // ── Fetch Documents (Fixed) ───────────────────────────────────────────────
+  // ── Fetch Documents ───────────────────────────────────────────────────────
   const fetchDocuments = async () => {
     if (!token || !transactionId) return;
 
@@ -105,17 +106,19 @@ const ProofOfPaymentUpload = ({
         }
       );
 
-      console.log("📥 Fetch Documents Response:", res.data);
+      const transactions: any[] = res.data?.data?.transactions ?? [];
+      const matchedTxn = transactions.find(
+        (txn: any) => txn.reference === transactionId
+      );
 
-      const payload = res.data?.data ?? res.data;
-      let docs: ProofDocument[] = [];
+      // ✅ ONLY show PROOF_OF_PAYMENT documents
+      const proofDocs: ProofDocument[] = (matchedTxn?.documents ?? []).filter(
+        (doc: any) => doc.documentType === "PROOF_OF_PAYMENT"
+      );
 
-      if (Array.isArray(payload)) docs = payload;
-      else if (Array.isArray(payload?.documents)) docs = payload.documents;
-      else if (Array.isArray(payload?.proofDocuments)) docs = payload.proofDocuments;
-      else if (Array.isArray(payload?.data)) docs = payload.data;
+      console.log(`📄 Found ${proofDocs.length} PROOF_OF_PAYMENT documents for transaction ${transactionId}`);
 
-      setDocuments(docs);
+      setDocuments(proofDocs);
     } catch (err: any) {
       console.error("Fetch Documents Error:", err.response?.data || err.message);
       setFetchError("Could not load documents. Please try again.");
@@ -173,7 +176,7 @@ const ProofOfPaymentUpload = ({
     if (file) validateAndSetFile(file);
   };
 
-  // ── Upload (POST) ─────────────────────────────────────────────────────────
+  // ── Upload ────────────────────────────────────────────────────────────────
   const handleUploadClick = () => {
     if (!selectedFile) {
       toast({
@@ -193,9 +196,8 @@ const ProofOfPaymentUpload = ({
 
     try {
       const formData = new FormData();
-      formData.append("proof", selectedFile);
+      formData.append("file", selectedFile);           // Important: "file" field
       formData.append("uploadedBy", userName);
-
       if (userRole === "Branch" && branchName) {
         formData.append("branchName", branchName);
       }
@@ -203,28 +205,31 @@ const ProofOfPaymentUpload = ({
       const uploadUrl = `${BASE_URL}/api/v1/transactions/${transactionId}/proof-of-payment`;
 
       console.log("🚀 Uploading to:", uploadUrl);
+      console.log("📎 FormData contents:");
+      for (const [key, value] of formData.entries()) {
+        console.log(key, value instanceof File ? `${value.name} (${value.size} bytes)` : value);
+      }
 
       await axios.post(uploadUrl, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         timeout: 30000,
       });
 
       toast({
         title: "Upload Successful",
-        description: "Proof document uploaded successfully.",
+        description: "Proof of payment document uploaded successfully.",
       });
 
       setSelectedFile(null);
-      await fetchDocuments();        // Refresh list after upload
+      await fetchDocuments();   // Refresh list
       onUploadComplete?.();
     } catch (err: any) {
       console.error("Upload Error:", err.response?.data || err.message);
-      const msg = err.response?.data?.message || "Upload failed. Please try again.";
+      const errorMsg = err.response?.data?.message || "Upload failed. Please try again.";
+
       toast({
         title: "Upload Failed",
-        description: msg,
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -232,20 +237,60 @@ const ProofOfPaymentUpload = ({
     }
   };
 
-  // ── View & Download ───────────────────────────────────────────────────────
-  const handleView = (doc: ProofDocument) => {
-    if (!doc.fileUrl) return;
-    window.open(doc.fileUrl, "_blank", "noopener,noreferrer");
+  // ── View & Download Helpers ───────────────────────────────────────────────
+  const fetchFileBlob = async (fileUrl: string): Promise<Blob> => {
+    const response = await axios.get(fileUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: "blob",
+      timeout: 30000,
+    });
+    return response.data;
   };
 
-  const handleDownload = (doc: ProofDocument) => {
-    if (!doc.fileUrl) return;
-    const a = document.createElement("a");
-    a.href = doc.fileUrl;
-    a.download = doc.fileName;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.click();
+  const handleView = async (doc: ProofDocument) => {
+    if (!doc.fileUrl || loadingDocId !== null) return;
+    try {
+      setLoadingDocId(doc.id);
+      setLoadingAction("view");
+      const blob = await fetchFileBlob(doc.fileUrl);
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (err) {
+      toast({ title: "View Failed", description: "Could not open the document.", variant: "destructive" });
+    } finally {
+      setLoadingDocId(null);
+      setLoadingAction(null);
+    }
+  };
+
+  const handleDownload = async (doc: ProofDocument) => {
+    if (!doc.fileUrl || loadingDocId !== null) return;
+    try {
+      setLoadingDocId(doc.id);
+      setLoadingAction("download");
+      const blob = await fetchFileBlob(doc.fileUrl);
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = doc.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+      toast({
+        title: "Download Started",
+        description: `${doc.fileName} is downloading.`,
+      });
+    } catch (err) {
+      toast({ title: "Download Failed", description: "Could not download the document.", variant: "destructive" });
+    } finally {
+      setLoadingDocId(null);
+      setLoadingAction(null);
+    }
   };
 
   return (
@@ -308,11 +353,7 @@ const ProofOfPaymentUpload = ({
                     <X className="h-4 w-4" />
                   </Button>
                   <Button onClick={handleUploadClick} size="sm" disabled={isUploading}>
-                    {isUploading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4 mr-2" />
-                    )}
+                    {isUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
                     {isUploading ? "Uploading…" : "Upload"}
                   </Button>
                 </div>
@@ -321,11 +362,11 @@ const ProofOfPaymentUpload = ({
           </div>
         )}
 
-        {/* Documents List */}
+        {/* Documents List - Only PROOF_OF_PAYMENT */}
         <div className="space-y-3">
           <h4 className="font-semibold text-foreground flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-success" />
-            Uploaded Documents {!isFetching && `(${documents.length})`}
+            Uploaded Proof of Payment Documents {!isFetching && `(${documents.length})`}
           </h4>
 
           {isFetching && (
@@ -348,41 +389,60 @@ const ProofOfPaymentUpload = ({
           {!isFetching && !fetchError && documents.length === 0 && (
             <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-40" />
-              <p className="text-sm font-medium">No proof documents uploaded yet.</p>
+              <p className="text-sm font-medium">No proof of payment documents uploaded yet.</p>
               {canUpload && <p className="text-xs mt-1">Upload proof once payment is confirmed.</p>}
             </div>
           )}
 
           {!isFetching && !fetchError && documents.length > 0 && (
             <div className="space-y-2">
-              {documents.map((doc) => (
-                <Card key={doc.id} className="hover:shadow-sm transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center gap-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="h-8 w-8 text-primary shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{doc.fileName}</p>
-                          <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 mt-1">
-                            <span>{formatDate(doc.uploadedAt)}</span>
-                            {doc.uploadedBy && <span>By: {doc.uploadedBy}</span>}
-                            <span>{formatFileSize(doc.fileSize)}</span>
+              {documents.map((doc) => {
+                const isThisLoading = loadingDocId === doc.id;
+                const isViewLoading = isThisLoading && loadingAction === "view";
+                const isDownloadLoading = isThisLoading && loadingAction === "download";
+
+                return (
+                  <Card key={doc.id} className="hover:shadow-sm transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <FileText className="h-8 w-8 text-primary shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{doc.fileName}</p>
+                            <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 mt-1">
+                              <span>{formatDate(doc.uploadedAt)}</span>
+                              {doc.uploadedBy && <span>By: {doc.uploadedBy}</span>}
+                              <span>{formatFileSize(doc.fileSize)}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex gap-2 shrink-0">
-                        <Button variant="outline" size="sm" onClick={() => handleView(doc)}>
-                          <Eye className="h-4 w-4 mr-1" /> View
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDownload(doc)}>
-                          <Download className="h-4 w-4 mr-1" /> Download
-                        </Button>
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleView(doc)}
+                            disabled={loadingDocId !== null}
+                          >
+                            {isViewLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Eye className="h-4 w-4 mr-1" />}
+                            {isViewLoading ? "Opening…" : "View"}
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownload(doc)}
+                            disabled={loadingDocId !== null}
+                          >
+                            {isDownloadLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+                            {isDownloadLoading ? "Downloading…" : "Download"}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
