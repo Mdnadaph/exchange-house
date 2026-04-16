@@ -842,7 +842,7 @@ const ExchangeFeeManagement = () => {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select Businss Fee Type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
