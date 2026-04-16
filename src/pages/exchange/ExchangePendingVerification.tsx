@@ -32,6 +32,8 @@ import TransactionDetailModal, {
   handleDownloadReceipt,
 } from "../portal/TransactionDetailModal";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "react-toastify";
 
 interface TransactionDocument {
   id: number;
@@ -168,6 +170,10 @@ const ExchangeTransactions = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
+
+  //for verifying
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const [verifying, setVerifying] = useState<Record<string, boolean>>({});
 
   const token = cookies.token;
   const fullname = cookies.fullName;
@@ -327,7 +333,50 @@ const ExchangeTransactions = () => {
       setIsLoading(false);
     }
   };
+  const handleVerifyPayment = async (
+    transactionId: string,
+    approved: boolean,
+    notes: string,
+  ) => {
+    //if (!token) {
+    //  alert("Authentication token missing. Please log in again.");
+    //  return;
+    //}
 
+    setVerifying((prev) => ({ ...prev, [transactionId]: true }));
+
+    try {
+      const response = await axios.patch(
+        `${BASE_URL}/api/v1/transactions/${transactionId}/verify-payment`,
+        { approved, notes },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.data?.status === true || response.status === 200) {
+        toast(`Payment ${approved ? "approved" : "rejected"} successfully!`);
+        // Clear notes for this transaction
+        setReviewNotes((prev) => {
+          const newNotes = { ...prev };
+          delete newNotes[transactionId];
+          return newNotes;
+        });
+        await fetchTransactions(); // refresh list
+      } else {
+        throw new Error(response.data?.message || "Verification failed");
+      }
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.message || err.message || "Verification failed";
+      toast(`Error: ${errorMsg}`);
+    } finally {
+      setVerifying((prev) => ({ ...prev, [transactionId]: false }));
+    }
+  };
   useEffect(() => {
     fetchTransactions();
   }, [transactionType, page]);
@@ -405,7 +454,11 @@ const ExchangeTransactions = () => {
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
-
+  // Eligible statuses for payment verification
+  const ELIGIBLE_VERIFICATION_STATUSES = [
+    "PAYMENT_VERIFICATION_PENDING",
+    // Add any other status your backend accepts
+  ];
   // Calculate statistics
   const calculateStatistics = () => {
     const totalTransactions = transactions.length;
@@ -632,6 +685,9 @@ const ExchangeTransactions = () => {
                 {filteredTransactions.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status.icon;
+                  const isEligible = ELIGIBLE_VERIFICATION_STATUSES.includes(
+                    transaction.status,
+                  );
 
                   return (
                     <Card
@@ -909,6 +965,87 @@ const ExchangeTransactions = () => {
                             </div>
                           )}
                         </div>
+                        {isEligible && (
+                          <div className="border-t pt-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-4">
+                                <Label>Review Comments</Label>
+                                <Textarea
+                                  placeholder="Add notes about payment verification..."
+                                  value={
+                                    reviewNotes[transaction.referenceNumber] ||
+                                    ""
+                                  }
+                                  onChange={(e) =>
+                                    setReviewNotes((prev) => ({
+                                      ...prev,
+                                      [transaction.referenceNumber]:
+                                        e.target.value,
+                                    }))
+                                  }
+                                  disabled={
+                                    verifying[transaction.referenceNumber]
+                                  }
+                                />
+                              </div>
+
+                              <div className="space-y-4">
+                                <Label>Review Actions</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <Button
+                                    onClick={() =>
+                                      handleVerifyPayment(
+                                        transaction.referenceNumber,
+                                        true,
+                                        reviewNotes[
+                                          transaction.referenceNumber
+                                        ] || "",
+                                      )
+                                    }
+                                    disabled={
+                                      verifying[transaction.referenceNumber] ||
+                                      !reviewNotes[
+                                        transaction.referenceNumber
+                                      ]?.trim()
+                                    }
+                                  >
+                                    {verifying[transaction.referenceNumber] ? (
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    ) : (
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                    )}
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    onClick={() =>
+                                      handleVerifyPayment(
+                                        transaction.referenceNumber,
+                                        false,
+                                        reviewNotes[
+                                          transaction.referenceNumber
+                                        ] || "",
+                                      )
+                                    }
+                                    disabled={
+                                      verifying[transaction.referenceNumber] ||
+                                      !reviewNotes[
+                                        transaction.referenceNumber
+                                      ]?.trim()
+                                    }
+                                  >
+                                    {verifying[transaction.referenceNumber] ? (
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    ) : (
+                                      <AlertCircle className="h-4 w-4 mr-2" />
+                                    )}
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
