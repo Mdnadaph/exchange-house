@@ -69,6 +69,8 @@ interface FeeRule {
   sharedBusinessFeeValue: number | null;
   sharedBeneficiaryFeeType: string | null;
   sharedBeneficiaryFeeValue: string | null;
+  bulkTotalBeneficiary: null | number;
+  bulkTotalAmount: null | number;
 }
 
 const ExchangeFeeManagement = () => {
@@ -103,6 +105,8 @@ const ExchangeFeeManagement = () => {
   const [newFeeRule, setNewFeeRule] = useState({
     transactionType: "SINGLE",
     payoutCountry: "",
+    bulkTotalAmount: "",
+    bulkTotalBeneficiary: "",
     vat: "",
     feeType: "FLAT",
     feeValue: "",
@@ -135,9 +139,25 @@ const ExchangeFeeManagement = () => {
       errors.transactionType = "Transaction type is required";
     }
 
+    if (newFeeRule?.transactionType == "BULK") {
+      if (!newFeeRule.bulkTotalAmount) {
+        errors.bulkTotalAmount = "Bulk total amount  is required";
+      } else if (Number(newFeeRule.bulkTotalAmount) < 0) {
+        errors.bulkTotalAmount = "Bulk Total Amount is not negative";
+      }
+
+      if (!newFeeRule.bulkTotalBeneficiary) {
+        errors.bulkTotalBeneficiary = "Bulk total beneficiary  is required";
+      } else if (Number(newFeeRule.bulkTotalBeneficiary) < 0) {
+        errors.bulkTotalBeneficiary = "Bulk total beneficiary is required";
+      }
+    }
+
     // Payout Country
-    if (!newFeeRule.payoutCountry) {
-      errors.payoutCountry = "Payout country is required";
+    if (newFeeRule?.transactionType == "SINGLE") {
+      if (!newFeeRule.payoutCountry) {
+        errors.payoutCountry = "Payout country is required";
+      }
     }
 
     // VAT
@@ -157,43 +177,44 @@ const ExchangeFeeManagement = () => {
     } else if (Number(newFeeRule.businessFeeValue) <= 0) {
       errors.businessFeeValue = "Must be greater than 0";
     }
+    if (newFeeRule?.transactionType == "SINGLE") {
+      // Beneficiary Fee
+      if (!newFeeRule.beneficiaryFeeType) {
+        errors.beneficiaryFeeType = "Beneficiary fee type is required";
+      }
 
-    // Beneficiary Fee
-    if (!newFeeRule.beneficiaryFeeType) {
-      errors.beneficiaryFeeType = "Beneficiary fee type is required";
-    }
+      if (!newFeeRule.transactionType) {
+        errors.transactionType = "Transaction type is required";
+      }
 
-    if (!newFeeRule.transactionType) {
-      errors.transactionType = "Transaction type is required";
-    }
+      if (!newFeeRule.beneficiaryFeeValue) {
+        errors.beneficiaryFeeValue = "Beneficiary fee value is required";
+      } else if (Number(newFeeRule.beneficiaryFeeValue) <= 0) {
+        errors.beneficiaryFeeValue = "Must be greater than 0";
+      }
 
-    if (!newFeeRule.beneficiaryFeeValue) {
-      errors.beneficiaryFeeValue = "Beneficiary fee value is required";
-    } else if (Number(newFeeRule.beneficiaryFeeValue) <= 0) {
-      errors.beneficiaryFeeValue = "Must be greater than 0";
-    }
+      // Shared - Business
+      if (!newFeeRule.sharedBusinessFeeType) {
+        errors.sharedBusinessFeeType = "Shared Business Fee Type is Required";
+      }
 
-    // Shared - Business
-    if (!newFeeRule.sharedBusinessFeeType) {
-      errors.sharedBusinessFeeType = "Shared Business Fee Type is Required";
-    }
+      if (!newFeeRule.sharedBusinessFeeValue) {
+        errors.sharedBusinessFeeValue = "Shared Business Fee Value is Required";
+      } else if (Number(newFeeRule.sharedBusinessFeeValue) <= 0) {
+        errors.sharedBusinessFeeValue = "Must be greater than 0";
+      }
 
-    if (!newFeeRule.sharedBusinessFeeValue) {
-      errors.sharedBusinessFeeValue = "Shared Business Fee Value is Required";
-    } else if (Number(newFeeRule.sharedBusinessFeeValue) <= 0) {
-      errors.sharedBusinessFeeValue = "Must be greater than 0";
-    }
+      // Shared - Beneficiary
+      if (!newFeeRule.sharedBeneficiaryFeeType) {
+        errors.sharedBeneficiaryFeeType = "Shared Beneficiary Type is Required";
+      }
 
-    // Shared - Beneficiary
-    if (!newFeeRule.sharedBeneficiaryFeeType) {
-      errors.sharedBeneficiaryFeeType = "Shared Beneficiary Type is Required";
-    }
-
-    if (!newFeeRule.sharedBeneficiaryFeeValue) {
-      errors.sharedBeneficiaryFeeValue =
-        "Shared Beneficiary Fee Value is Required";
-    } else if (Number(newFeeRule.sharedBeneficiaryFeeValue) <= 0) {
-      errors.sharedBeneficiaryFeeValue = "Must be greater than 0";
+      if (!newFeeRule.sharedBeneficiaryFeeValue) {
+        errors.sharedBeneficiaryFeeValue =
+          "Shared Beneficiary Fee Value is Required";
+      } else if (Number(newFeeRule.sharedBeneficiaryFeeValue) <= 0) {
+        errors.sharedBeneficiaryFeeValue = "Must be greater than 0";
+      }
     }
 
     setFormErrors(errors);
@@ -316,10 +337,12 @@ const ExchangeFeeManagement = () => {
 
     setIsSubmitting(true);
     try {
-      let payload: any = {
+      let singlePayload: any = {
         transactionType: newFeeRule.transactionType,
         payoutCountry: newFeeRule.payoutCountry,
         vat: Number(newFeeRule.vat) || 0,
+        bulkTotalAmount: Number(newFeeRule?.bulkTotalAmount) || 0,
+        bulkTotalBeneficiary: Number(newFeeRule?.bulkTotalBeneficiary) || 0,
         // maxAmount: Number(newFeeRule.maxAmount) || 999999,
         businessFeeEnabled: newFeeRule.businessFeeEnabled,
         beneficiaryFeeEnabled: newFeeRule.beneficiaryFeeEnabled,
@@ -338,6 +361,16 @@ const ExchangeFeeManagement = () => {
         ),
       };
 
+      let bulkPayload = {
+        transactionType: newFeeRule.transactionType,
+        vat: Number(newFeeRule.vat) || 0,
+        bulkTotalAmount: Number(newFeeRule?.bulkTotalAmount) || 0,
+        bulkTotalBeneficiary: Number(newFeeRule?.bulkTotalBeneficiary) || 0,
+        businessFeeEnabled: newFeeRule.businessFeeEnabled,
+        businessFeeType: newFeeRule.businessFeeType,
+        businessFeeValue: Number(newFeeRule.businessFeeValue),
+      };
+
       // if (newFeeRule.feeResponsibility === "SHARED") {
       //   payload.businessFeeType = newFeeRule.businessFeeType;
       //   payload.businessFeeValue = Number(newFeeRule.businessFeeValue);
@@ -347,7 +380,8 @@ const ExchangeFeeManagement = () => {
       //   payload.feeType = newFeeRule.feeType;
       //   payload.feeValue = Number(newFeeRule.feeValue);
       // }
-
+      const payload =
+        newFeeRule?.transactionType == "SINGLE" ? singlePayload : bulkPayload;
       if (isEditing && editId) {
         const res = await axios.put(
           `${BASE_URL}/api/v3/fees/update/${editId}`,
@@ -450,6 +484,8 @@ const ExchangeFeeManagement = () => {
     setEditId(null);
     setNewFeeRule({
       transactionType: "SINGLE",
+      bulkTotalAmount: "",
+      bulkTotalBeneficiary: "",
       payoutCountry: "",
       vat: "",
       // maxAmount: "",
@@ -493,6 +529,8 @@ const ExchangeFeeManagement = () => {
     setNewFeeRule({
       transactionType: rule?.transactionType,
       payoutCountry: rule?.payoutCountry,
+      bulkTotalAmount: rule?.bulkTotalAmount?.toString(),
+      bulkTotalBeneficiary: rule?.bulkTotalBeneficiary?.toString(),
       vat: rule?.vat?.toString(),
       feeType: rule?.feeType || "FLAT",
       feeValue: rule?.feeValue?.toString() || "",
@@ -592,7 +630,9 @@ const ExchangeFeeManagement = () => {
 
         {/* --- Create/Edit Dialog --- */}
         <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-          <DialogContent className="max-w-2xl h-[90vh]">
+          <DialogContent
+            className={`max-w-2xl ${newFeeRule?.transactionType == "SINGLE" ? "h-[90vh]" : ""}`}
+          >
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? "Update Fee Rule" : "Create New Fee Rule"}
@@ -605,7 +645,8 @@ const ExchangeFeeManagement = () => {
                     Transaction Type <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={newFeeRule.transactionType}
+                    disabled={!!editId}
+                    value={newFeeRule?.transactionType}
                     onValueChange={(v) => {
                       setNewFeeRule({ ...newFeeRule, transactionType: v });
                       clearFormError("transactionType");
@@ -628,35 +669,36 @@ const ExchangeFeeManagement = () => {
                     </p>
                   )}
                 </div>
-
-                <div>
-                  <Label>
-                    Payout Country <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={newFeeRule.payoutCountry}
-                    onValueChange={(v) => {
-                      setNewFeeRule({ ...newFeeRule, payoutCountry: v });
-                      clearFormError("payoutCountry");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {payoutCountryData?.map((c) => (
-                        <SelectItem key={c?.id} value={c?.countryCode}>
-                          {c?.countryName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.payoutCountry && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {formErrors.payoutCountry}
-                    </p>
-                  )}
-                </div>
+                {newFeeRule?.transactionType == "SINGLE" && (
+                  <div>
+                    <Label>
+                      Payout Country <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={newFeeRule.payoutCountry}
+                      onValueChange={(v) => {
+                        setNewFeeRule({ ...newFeeRule, payoutCountry: v });
+                        clearFormError("payoutCountry");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {payoutCountryData?.map((c) => (
+                          <SelectItem key={c?.id} value={c?.countryCode}>
+                            {c?.countryName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.payoutCountry && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.payoutCountry}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <Label>VAT</Label> <span className="text-red-500">*</span>
@@ -677,6 +719,56 @@ const ExchangeFeeManagement = () => {
                   <p className="text-sm text-red-500 mt-1">{formErrors.vat}</p>
                 )}
               </div>
+              {newFeeRule?.transactionType == "BULK" && (
+                <div>
+                  <Label>Total Benefeciary</Label>{" "}
+                  <span className="text-red-500">*</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter Total Benefeciary"
+                    value={newFeeRule.bulkTotalBeneficiary}
+                    onChange={(e) => {
+                      setNewFeeRule({
+                        ...newFeeRule,
+                        bulkTotalBeneficiary: e.target.value,
+                      });
+                      clearFormError("bulkTotalBeneficiary");
+                    }}
+                    onWheel={(e) => e.currentTarget.blur()}
+                  />
+                  {formErrors?.bulkTotalBeneficiary && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors?.bulkTotalBeneficiary}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {newFeeRule?.transactionType == "BULK" && (
+                <div>
+                  <Label>Total Amount</Label>{" "}
+                  <span className="text-red-500">*</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter Total Amount"
+                    value={newFeeRule.bulkTotalAmount}
+                    onChange={(e) => {
+                      setNewFeeRule({
+                        ...newFeeRule,
+                        bulkTotalAmount: e.target.value,
+                      });
+                      clearFormError("bulkTotalAmount");
+                    }}
+                    onWheel={(e) => e.currentTarget.blur()}
+                  />
+                  {formErrors?.bulkTotalAmount && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {formErrors?.bulkTotalAmount}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Min Amount (AED)</Label>{" "}
@@ -738,7 +830,6 @@ const ExchangeFeeManagement = () => {
                     "Select who is responsible for paying the fee"}
                 </p> */}
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Business Fee Structure </Label>
@@ -793,229 +884,237 @@ const ExchangeFeeManagement = () => {
                   )}
                 </div>
               </div>
+              {newFeeRule?.transactionType == "SINGLE" && (
+                <div className="w-full">
+                  <div>
+                    <Label>
+                      Fee Responsibility <span className="text-red-500">*</span>
+                    </Label>
+                    <Input value="BENEFICIARY" disabled onChange={() => {}} />
 
-              <div>
-                <Label>
-                  Fee Responsibility <span className="text-red-500">*</span>
-                </Label>
-                <Input value="BENEFICIARY" disabled onChange={() => {}} />
-
-                {/* {formErrors.feeType && (
+                    {/* {formErrors.feeType && (
                   <p className="text-sm text-red-500 mt-1">
                     {formErrors.feeType}
                   </p>
                 )} */}
-                {/* <p className="text-xs text-muted-foreground mt-1">
+                    {/* <p className="text-xs text-muted-foreground mt-1">
                   {newFeeRule.feeResponsibility === "BENEFICIARY" &&
                     "Fee deducted from payout amount (not shown to Business)"}
 
                   {!newFeeRule.feeResponsibility &&
                     "Select who is responsible for paying the fee"}
                 </p> */}
-              </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Beneficiary Fee Structure </Label>
-                  <span className="text-red-500">*</span>
-                  <Select
-                    value={newFeeRule?.beneficiaryFeeType}
-                    onValueChange={(v) => {
-                      setNewFeeRule({ ...newFeeRule, beneficiaryFeeType: v });
-                      clearFormError("beneficiaryFeeType");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Please select beneficiary Fee Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
-                      <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {formErrors.beneficiaryFeeType && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {formErrors.beneficiaryFeeType}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>
-                    Beneficiary Fee Value{" "}
-                    <span className="text-red-500">*</span>
-                    {newFeeRule.beneficiaryFeeType === "BPS"
-                      ? "(in basis points)"
-                      : "(in AED)"}
-                  </Label>
-                  <Input
-                    onWheel={(e) => e.currentTarget.blur()}
-                    type="number"
-                    placeholder={
-                      newFeeRule.beneficiaryFeeType === "BPS"
-                        ? "50 (0.5%)"
-                        : "25"
-                    }
-                    value={newFeeRule.beneficiaryFeeValue}
-                    onChange={(e) => {
-                      setNewFeeRule({
-                        ...newFeeRule,
-                        beneficiaryFeeValue: e.target.value,
-                      });
-                      clearFormError("beneficiaryFeeValue");
-                    }}
-                  />
-                  {formErrors.beneficiaryFeeValue && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {formErrors.beneficiaryFeeValue}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label>
-                  Shared Fee Responsibility{" "}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input value="SHARED" disabled onChange={() => {}} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Beneficiary Fee Structure </Label>
+                      <span className="text-red-500">*</span>
+                      <Select
+                        value={newFeeRule?.beneficiaryFeeType}
+                        onValueChange={(v) => {
+                          setNewFeeRule({
+                            ...newFeeRule,
+                            beneficiaryFeeType: v,
+                          });
+                          clearFormError("beneficiaryFeeType");
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Please select beneficiary Fee Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                          <SelectItem value="BPS">
+                            BPS (Basis Points %)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {formErrors.beneficiaryFeeType && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {formErrors.beneficiaryFeeType}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>
+                        Beneficiary Fee Value{" "}
+                        <span className="text-red-500">*</span>
+                        {newFeeRule.beneficiaryFeeType === "BPS"
+                          ? "(in basis points)"
+                          : "(in AED)"}
+                      </Label>
+                      <Input
+                        onWheel={(e) => e.currentTarget.blur()}
+                        type="number"
+                        placeholder={
+                          newFeeRule.beneficiaryFeeType === "BPS"
+                            ? "50 (0.5%)"
+                            : "25"
+                        }
+                        value={newFeeRule.beneficiaryFeeValue}
+                        onChange={(e) => {
+                          setNewFeeRule({
+                            ...newFeeRule,
+                            beneficiaryFeeValue: e.target.value,
+                          });
+                          clearFormError("beneficiaryFeeValue");
+                        }}
+                      />
+                      {formErrors.beneficiaryFeeValue && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {formErrors.beneficiaryFeeValue}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>
+                      Shared Fee Responsibility{" "}
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <Input value="SHARED" disabled onChange={() => {}} />
 
-                {/* <p className="text-xs text-muted-foreground mt-1">
+                    {/* <p className="text-xs text-muted-foreground mt-1">
                   {newFeeRule.feeResponsibility === "SHARED" &&
                     "Business pays known portion; Beneficiary portion deducted from payout (not shown to Business)"}
                   {!newFeeRule.feeResponsibility &&
                     "Select who is responsible for paying the fee"}
                 </p> */}
-              </div>
+                  </div>
 
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                <h4 className="font-medium text-sm">
-                  Shared Fee Configuration
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Business Fee Type *</Label>
-                    <Select
-                      value={newFeeRule.sharedBusinessFeeType}
-                      onValueChange={(v) => {
-                        setNewFeeRule({
-                          ...newFeeRule,
-                          sharedBusinessFeeType: v,
-                        });
-                        clearFormError("sharedBusinessFeeType");
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
-                        <SelectItem value="BPS">
-                          BPS (Basis Points %)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* <p className="text-xs text-muted-foreground mt-1">
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                    <h4 className="font-medium text-sm">
+                      Shared Fee Configuration
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Business Fee Type *</Label>
+                        <Select
+                          value={newFeeRule.sharedBusinessFeeType}
+                          onValueChange={(v) => {
+                            setNewFeeRule({
+                              ...newFeeRule,
+                              sharedBusinessFeeType: v,
+                            });
+                            clearFormError("sharedBusinessFeeType");
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                            <SelectItem value="BPS">
+                              BPS (Basis Points %)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {/* <p className="text-xs text-muted-foreground mt-1">
                       "Fee added to transaction cost (visible to Business)"
                     </p> */}
-                    {formErrors.sharedBusinessFeeType && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {formErrors.sharedBusinessFeeType}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>
-                      Business Fee Value *{" "}
-                      {newFeeRule.sharedBusinessFeeType === "BPS"
-                        ? "(BPS)"
-                        : "(AED)"}
-                    </Label>
-                    <Input
-                      type="number"
-                      placeholder={
-                        newFeeRule.sharedBusinessFeeType === "BPS"
-                          ? "25 (0.25%)"
-                          : "35"
-                      }
-                      value={newFeeRule.sharedBusinessFeeValue}
-                      onChange={(e) => {
-                        setNewFeeRule({
-                          ...newFeeRule,
-                          sharedBusinessFeeValue: e.target.value,
-                        });
-                        clearFormError("sharedBusinessFeeValue");
-                      }}
-                    />
-                    {formErrors.sharedBusinessFeeValue && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {formErrors.sharedBusinessFeeValue}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Beneficiary Fee Type *</Label>
-                    <Select
-                      value={newFeeRule.sharedBeneficiaryFeeType}
-                      onValueChange={(v) => {
-                        setNewFeeRule({
-                          ...newFeeRule,
-                          sharedBeneficiaryFeeType: v,
-                        });
-                        clearFormError("sharedBeneficiaryFeeType");
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
-                        <SelectItem value="BPS">
-                          BPS (Basis Points %)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* <p className="text-xs text-muted-foreground mt-1">
+                        {formErrors.sharedBusinessFeeType && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {formErrors.sharedBusinessFeeType}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>
+                          Business Fee Value *{" "}
+                          {newFeeRule.sharedBusinessFeeType === "BPS"
+                            ? "(BPS)"
+                            : "(AED)"}
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder={
+                            newFeeRule.sharedBusinessFeeType === "BPS"
+                              ? "25 (0.25%)"
+                              : "35"
+                          }
+                          value={newFeeRule.sharedBusinessFeeValue}
+                          onChange={(e) => {
+                            setNewFeeRule({
+                              ...newFeeRule,
+                              sharedBusinessFeeValue: e.target.value,
+                            });
+                            clearFormError("sharedBusinessFeeValue");
+                          }}
+                        />
+                        {formErrors.sharedBusinessFeeValue && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {formErrors.sharedBusinessFeeValue}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Beneficiary Fee Type *</Label>
+                        <Select
+                          value={newFeeRule.sharedBeneficiaryFeeType}
+                          onValueChange={(v) => {
+                            setNewFeeRule({
+                              ...newFeeRule,
+                              sharedBeneficiaryFeeType: v,
+                            });
+                            clearFormError("sharedBeneficiaryFeeType");
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                            <SelectItem value="BPS">
+                              BPS (Basis Points %)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {/* <p className="text-xs text-muted-foreground mt-1">
                       "Fee deducted from payout amount (not shown to Business)"
                     </p> */}
-                    {formErrors.sharedBeneficiaryFeeType && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {formErrors.sharedBeneficiaryFeeType}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>
-                      Beneficiary Fee Value *{" "}
-                      {newFeeRule.sharedBeneficiaryFeeType === "BPS"
-                        ? "(BPS)"
-                        : "(AED)"}
-                    </Label>
-                    <Input
-                      onWheel={(e) => e.currentTarget.blur()}
-                      type="number"
-                      placeholder={
-                        newFeeRule.sharedBeneficiaryFeeType === "BPS"
-                          ? "25 (0.25%)"
-                          : "10"
-                      }
-                      value={newFeeRule.sharedBeneficiaryFeeValue}
-                      onChange={(e) => {
-                        setNewFeeRule({
-                          ...newFeeRule,
-                          sharedBeneficiaryFeeValue: e.target.value,
-                        });
-                        clearFormError("sharedBeneficiaryFeeValue");
-                      }}
-                    />
-                    {formErrors.sharedBeneficiaryFeeValue && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {formErrors.sharedBeneficiaryFeeValue}
-                      </p>
-                    )}
+                        {formErrors.sharedBeneficiaryFeeType && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {formErrors.sharedBeneficiaryFeeType}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>
+                          Beneficiary Fee Value *{" "}
+                          {newFeeRule.sharedBeneficiaryFeeType === "BPS"
+                            ? "(BPS)"
+                            : "(AED)"}
+                        </Label>
+                        <Input
+                          onWheel={(e) => e.currentTarget.blur()}
+                          type="number"
+                          placeholder={
+                            newFeeRule.sharedBeneficiaryFeeType === "BPS"
+                              ? "25 (0.25%)"
+                              : "10"
+                          }
+                          value={newFeeRule.sharedBeneficiaryFeeValue}
+                          onChange={(e) => {
+                            setNewFeeRule({
+                              ...newFeeRule,
+                              sharedBeneficiaryFeeValue: e.target.value,
+                            });
+                            clearFormError("sharedBeneficiaryFeeValue");
+                          }}
+                        />
+                        {formErrors.sharedBeneficiaryFeeValue && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {formErrors.sharedBeneficiaryFeeValue}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
             <DialogFooter className="mt-6">
               <Button variant="outline" onClick={handleCloseFormDialog}>
@@ -1258,6 +1357,8 @@ const ExchangeFeeManagement = () => {
                       Business
                     </TableHead>
                     <TableHead>Beneficiary</TableHead>
+                    <TableHead>Total Amount</TableHead>
+                    <TableHead>Total Beneficiary</TableHead>
                     <TableHead className="hidden md:table-cell">
                       Shared
                     </TableHead>
@@ -1315,63 +1416,85 @@ const ExchangeFeeManagement = () => {
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-sm">
-                          <div className="border rounded-md p-2 text-xs space-y-1">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">
-                                Fee Type
-                              </span>
-                              <span>{rule?.beneficiaryFeeType}</span>
+                          {rule?.beneficiaryFeeType ? (
+                            <div className="border rounded-md p-2 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Fee Type
+                                </span>
+                                <span>{rule?.beneficiaryFeeType}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Value
+                                </span>
+                                <span>
+                                  {formatFee(
+                                    rule.beneficiaryFeeType,
+                                    rule.beneficiaryFeeValue,
+                                  )}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">
-                                Value
-                              </span>
-                              <span>
-                                {formatFee(
-                                  rule.beneficiaryFeeType,
-                                  rule.beneficiaryFeeValue,
-                                )}
-                              </span>
-                            </div>
-                          </div>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          <p>
+                            {rule?.bulkTotalAmount
+                              ? rule?.bulkTotalAmount
+                              : "-"}
+                          </p>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          <p>
+                            {rule?.bulkTotalBeneficiary
+                              ? rule?.bulkTotalBeneficiary
+                              : "-"}
+                          </p>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          <div className="border rounded-md p-2 text-xs space-y-1">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">
-                                Business Fee Type
-                              </span>
-                              <span>{rule?.sharedBusinessFeeType}</span>
+                          {rule?.sharedBeneficiaryFeeType ? (
+                            <div className="border rounded-md p-2 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Business Fee Type
+                                </span>
+                                <span>{rule?.sharedBusinessFeeType}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Business Value
+                                </span>
+                                <span>
+                                  {formatFee(
+                                    rule?.sharedBusinessFeeType,
+                                    rule?.sharedBusinessFeeValue,
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Beneficiary Fee Type
+                                </span>
+                                <span>{rule?.sharedBeneficiaryFeeType}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Beneficiary Value
+                                </span>
+                                <span>
+                                  {formatFee(
+                                    rule?.sharedBeneficiaryFeeType,
+                                    rule?.sharedBeneficiaryFeeValue,
+                                  )}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">
-                                Business Value
-                              </span>
-                              <span>
-                                {formatFee(
-                                  rule?.sharedBusinessFeeType,
-                                  rule?.sharedBusinessFeeValue,
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">
-                                Beneficiary Fee Type
-                              </span>
-                              <span>{rule?.sharedBeneficiaryFeeType}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">
-                                Beneficiary Value
-                              </span>
-                              <span>
-                                {formatFee(
-                                  rule?.sharedBeneficiaryFeeType,
-                                  rule?.sharedBeneficiaryFeeValue,
-                                )}
-                              </span>
-                            </div>
-                          </div>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
                         <TableCell>{getStatusBadge(rule.status)}</TableCell>
                         <TableCell>
