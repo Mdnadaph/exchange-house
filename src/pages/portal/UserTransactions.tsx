@@ -557,7 +557,6 @@ const UserTransactions = () => {
               </div>
             </CardContent>
           </Card>
-
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -619,19 +618,28 @@ const UserTransactions = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("COMPLETED")}
+                  onClick={() => {
+                    setTransactionType("COMPLETED");
+                    setPage(0);
+                  }}
                 >
                   Approved
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setTransactionType("SINGLE");
+                    setPage(0);
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setTransactionType("BULK");
+                    setPage(0);
+                  }}
                 >
                   Bulk
                 </Button>
