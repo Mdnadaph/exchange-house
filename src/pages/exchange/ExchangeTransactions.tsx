@@ -32,7 +32,9 @@ import TransactionDetailModal, {
   handleDownloadReceipt,
 } from "../portal/TransactionDetailModal";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
-
+import DealResponseForm from "@/components/deals/DealResponseForm";
+import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
+import { formateDateTime } from "@/utils/formateDateTime";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -139,8 +141,61 @@ interface Transaction {
   discountAmount: String;
   beneficiaryName?: string;
   businessName?: string;
+  rateDeal?: {
+    requestedExchangeRate: number | null;
+    currentExchangeRate: number | null;
+    counterProposalCount: number;
+    counterProposalsRemaining: number;
+    isTerminal: boolean;
+    waitingForEmail: string | null;
+    history: Array<{
+      action: string;
+      actorEmail: string;
+      rate: number | null;
+      message: string | null;
+      actedAt: string;
+    }>;
+  };
 }
+const transformDealHistory = (history: any[], transactionId: string) => {
+  if (!history) return [];
+  return history.map((item, idx) => {
+    // Map API action to component actionType
+    let actionType = "";
+    switch (item.action) {
+      case "REQUESTED":
+        actionType = "DEAL_REQUESTED";
+        break;
+      case "COUNTER_PROPOSED":
+        actionType = "COUNTER_PROPOSAL";
+        break;
+      case "REQUEST_APPROVED":
+        actionType = "DEAL_APPROVED";
+        break;
+      case "REQUEST_REJECTED":
+        actionType = "DEAL_REJECTED";
+        break;
+      default:
+        actionType = item.action;
+    }
 
+    // Determine role based on email (adjust logic if needed)
+    const role = item.actorEmail?.toLowerCase().includes("exchange")
+      ? "Exchange"
+      : "Business";
+
+    return {
+      id: `${transactionId}-${idx}`,
+      actionType,
+      performedBy: item.actorEmail,
+      role,
+      rate: item.rate?.toString(),
+      message: item.message,
+      createdAt: item.actedAt,
+      performedByRole: role,
+    };
+  });
+};
 const ExchangeTransactions = () => {
   const [expandedTransaction, setExpandedTransaction] = useState<string | null>(
     null,
@@ -164,6 +219,8 @@ const ExchangeTransactions = () => {
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [transitionDashboardData, setTransationDashboardData] = useState(null);
 
+  //rate deals
+  const [expandedDealTxId, setExpandedDealTxId] = useState<string | null>(null);
   //document upload state
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
@@ -289,6 +346,7 @@ const ExchangeTransactions = () => {
                 city: apiTx?.singleBeneficiary?.city,
                 state: apiTx?.singleBeneficiary?.state,
               },
+              rateDeal: apiTx.rateDeal,
             };
           });
         setTransactions(transformedTransactions);
@@ -865,6 +923,27 @@ const ExchangeTransactions = () => {
                                 <FileText className="h-4 w-4 mr-1" />
                                 Upload Documents
                               </Button>
+                              {transaction.rateDeal && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setExpandedDealTxId(
+                                      expandedDealTxId === transaction.id
+                                        ? null
+                                        : transaction.id,
+                                    )
+                                  }
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Deal Details
+                                  {expandedDealTxId === transaction.id ? (
+                                    <ChevronUp className="h-4 w-4 ml-1" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                  )}
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -886,6 +965,39 @@ const ExchangeTransactions = () => {
                               </Button>
                             </div>
                           </div>
+
+                          {/* Expanded Deal Content */}
+                          {expandedDealTxId === transaction.id &&
+                            transaction.rateDeal && (
+                              <div className="pt-4 border-t space-y-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                  <DealNegotiationTimeline
+                                    events={transformDealHistory(
+                                      transaction.rateDeal.history,
+                                    )}
+                                    currentRate={
+                                      transaction.rateDeal.currentExchangeRate?.toString() ||
+                                      ""
+                                    }
+                                    currency={transaction.localCurrency}
+                                  />
+                                  {!transaction.rateDeal.isTerminal && (
+                                    <DealResponseForm
+                                      refetch={fetchTransactions}
+                                      dealId={transaction.id}
+                                      businessName={
+                                        transaction.businessName || ""
+                                      }
+                                      requestedRate={
+                                        transaction.rateDeal.requestedExchangeRate?.toString() ||
+                                        ""
+                                      }
+                                      currency={transaction.localCurrency}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
 
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
