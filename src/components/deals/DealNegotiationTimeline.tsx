@@ -27,7 +27,8 @@ interface TimelineEvent {
 }
 
 interface DealNegotiationTimelineProps {
-  events: TimelineEvent[];
+  //events: TimelineEvent[];
+  events: any;
   currentRate: string;
   currency: string;
 }
