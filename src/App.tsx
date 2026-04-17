@@ -312,7 +312,10 @@ function App() {
                       path="transactions"
                       element={<ExchangeTransactions />}
                     />
-                    <Route path="pending-verification" element={<ExchangePendingVerification />} />
+                    <Route
+                      path="pending-verification"
+                      element={<ExchangePendingVerification />}
+                    />
                     <Route path="discount" element={<ExchangeDiscount />} />
                     <Route path="deals" element={<ExchangeDealReview />} />
                     <Route
