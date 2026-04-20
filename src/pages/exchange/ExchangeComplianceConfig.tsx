@@ -23,7 +23,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-
 import {
   Shield,
   AlertTriangle,
@@ -38,7 +37,6 @@ import {
   Settings,
   Check,
 } from "lucide-react";
-
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { PermissionGate } from "@/contexts/PermissionGate";
@@ -57,28 +55,26 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+
 type ComplianceFormData = {
   highRiskCountries: string[];
   prohibitedCountries: string[];
   enhancedMonitoringCountries: string[];
-
   realTimeSanctionsCheck: boolean;
   pepDatabaseScreening: boolean;
   adverseMediaMonitoring: boolean;
   enhancedDueDiligence: boolean;
-
   sanctionsListUpdate: string;
   pepDatabaseRefresh: string;
   adverseMediaCheck: string;
-
   largeTransactionThreshold?: number;
   suspiciousActivityReports: boolean;
   monthlyStatisticalReturns: boolean;
-
   complianceOfficerAlerts: string;
   auditTrailRetentionYears?: number;
   managementReports: string;
 };
+
 const ExchangeComplianceConfig = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
@@ -128,6 +124,7 @@ const ExchangeComplianceConfig = () => {
     });
   const [countriesRiskData, setCountriesRiskData] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(false);
+
   const clearFormError = (field: string) => {
     setCreateErrors((prev) => {
       const newErrors = { ...prev };
@@ -135,6 +132,7 @@ const ExchangeComplianceConfig = () => {
       return newErrors;
     });
   };
+
   const actions = [
     "MANUAL_REVIEW",
     "ENHANCED_SCREENING",
@@ -179,6 +177,7 @@ const ExchangeComplianceConfig = () => {
       });
     }
   };
+
   useEffect(() => {
     getPayoutCountryList();
   }, []);
@@ -250,15 +249,12 @@ const ExchangeComplianceConfig = () => {
     );
     if (Object.keys(errors).length > 0) {
       setCreateErrors(errors);
-
       return;
     }
-
     const payloadData = {
       ...createForm,
       payoutCountry: selectedCountryCode?.countryCode,
     };
-
     try {
       const res = await fetch(`${BASE_URL}/api/v1/compliance/rules`, {
         method: "POST",
@@ -425,6 +421,7 @@ const ExchangeComplianceConfig = () => {
       }
     );
   };
+
   const getComplianceData = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/v1/compliance/config`, {
@@ -439,6 +436,7 @@ const ExchangeComplianceConfig = () => {
       console.error("error", error);
     }
   };
+
   const handleComplianceConfiguration = async () => {
     setLoading(true);
     try {
@@ -454,7 +452,6 @@ const ExchangeComplianceConfig = () => {
         },
       );
       const responseData = await res.json();
-
       getComplianceData();
       if (responseData?.status) {
         toast({
@@ -476,7 +473,7 @@ const ExchangeComplianceConfig = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create  Country Risk Configuration",
+        description: "Failed to create Country Risk Configuration",
       });
     } finally {
       setLoading(false);
@@ -486,35 +483,27 @@ const ExchangeComplianceConfig = () => {
   useEffect(() => {
     getComplianceData();
   }, []);
+
   useEffect(() => {
     if (!countriesRiskData) return;
-
     const data = countriesRiskData as ComplianceFormData;
-
     setComplianceFormData((prev) => ({
       ...prev,
-
       highRiskCountries: data.highRiskCountries ?? [],
       prohibitedCountries: data.prohibitedCountries ?? [],
       enhancedMonitoringCountries: data.enhancedMonitoringCountries ?? [],
-
       realTimeSanctionsCheck: data.realTimeSanctionsCheck ?? false,
       pepDatabaseScreening: data.pepDatabaseScreening ?? false,
       adverseMediaMonitoring: data.adverseMediaMonitoring ?? false,
       enhancedDueDiligence: data.enhancedDueDiligence ?? false,
-
       sanctionsListUpdate: data.sanctionsListUpdate ?? "",
       pepDatabaseRefresh: data.pepDatabaseRefresh ?? "",
       adverseMediaCheck: data.adverseMediaCheck ?? "",
-
       largeTransactionThreshold: data.largeTransactionThreshold ?? undefined,
-
       suspiciousActivityReports: data.suspiciousActivityReports ?? false,
       monthlyStatisticalReturns: data.monthlyStatisticalReturns ?? false,
-
       complianceOfficerAlerts: data.complianceOfficerAlerts ?? "",
       auditTrailRetentionYears: data.auditTrailRetentionYears ?? undefined,
-
       managementReports: data.managementReports ?? "",
     }));
   }, [countriesRiskData]);
@@ -526,6 +515,16 @@ const ExchangeComplianceConfig = () => {
     );
     return country ? country.countryName || country.name || code : code;
   };
+
+  // Helper to get correct payout country id for pre-filling
+  const getPayoutCountryId = (countryCode: string): string => {
+    if (!countryCode) return "";
+    const found = payoutCountryData.find(
+      (c: any) => c?.countryCode === countryCode || c?.isoCode === countryCode
+    );
+    return found ? found.id : "";
+  };
+
   return (
     <ExchangeLayout>
       <div className="space-y-6">
@@ -540,7 +539,6 @@ const ExchangeComplianceConfig = () => {
               requirements
             </p>
           </div>
-
           <div className="flex space-x-3">
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <PermissionGate permission="BTN_CREATE_COMPLIANCE_RULE">
@@ -551,7 +549,6 @@ const ExchangeComplianceConfig = () => {
                   </Button>
                 </DialogTrigger>
               </PermissionGate>
-
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create New Compliance Rule</DialogTitle>
@@ -604,7 +601,6 @@ const ExchangeComplianceConfig = () => {
                         </p>
                       )}
                     </div>
-
                     <div>
                       <Label>
                         Threshold Amount
@@ -629,7 +625,6 @@ const ExchangeComplianceConfig = () => {
                       )}
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>
@@ -648,7 +643,6 @@ const ExchangeComplianceConfig = () => {
                             payoutCountry: v,
                             currency: autoCurrency,
                           });
-
                           clearFormError("payoutCountry");
                           if (autoCurrency) clearFormError("currency");
                         }}
@@ -669,7 +663,6 @@ const ExchangeComplianceConfig = () => {
                           })}
                         </SelectContent>
                       </Select>
-
                       {createErrors.payoutCountry && (
                         <p className="text-sm text-destructive mt-1">
                           {createErrors.payoutCountry}
@@ -800,50 +793,15 @@ const ExchangeComplianceConfig = () => {
           </div>
         </div>
 
-        {/* Compliance Overview */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {complianceMetrics.map((metric, index) => {
-            const Icon = metric.icon;
-            return (
-              <Card
-                key={index}
-                className="shadow-card hover:shadow-lg transition-smooth"
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {metric.title}
-                  </CardTitle>
-                  <Icon
-                    className={`h-5 w-5 ${getStatusColor(metric.status)}`}
-                  />
-                </CardHeader>
-                <CardContent>
-                  <div
-                    className={`text-2xl font-bold ${getStatusColor(metric.status)}`}
-                  >
-                    {metric.value}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Threshold: {metric.threshold}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div> */}
-
         {/* Regulatory Thresholds */}
         <Card className="shadow-card">
           <div className="flex p-6">
             <div className="flex-1">
-              {/* <CardHeader> */}
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-primary" />
                 Transaction Monitoring Thresholds
               </CardTitle>
-              {/* </CardHeader> */}
             </div>
-
             <div className="flex gap-2 items-end">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
@@ -865,7 +823,6 @@ const ExchangeComplianceConfig = () => {
               </Button>
             </div>
           </div>
-
           <CardContent className="space-y-6">
             {rules.map((rule) => {
               const categoryBadge = getCategoryBadge(rule.category);
@@ -873,7 +830,6 @@ const ExchangeComplianceConfig = () => {
               const ruleStatus = rule.active ? "active" : "inactive";
               const countryName =
                 countryMap[rule.payoutCountry] || rule.payoutCountry;
-
               return (
                 <Card key={rule.id} className="border-l-4 border-l-primary">
                   <CardContent className="p-6">
@@ -902,7 +858,6 @@ const ExchangeComplianceConfig = () => {
                         </Badge>
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 rounded-lg p-4">
                       <div className="space-y-1">
                         <div className="text-muted-foreground text-sm">
@@ -927,14 +882,17 @@ const ExchangeComplianceConfig = () => {
                         <p className="font-medium">{rule.currency || "N/A"}</p>
                       </div>
                     </div>
-
                     <div className="flex justify-end space-x-2 mt-4">
                       <PermissionGate permission="BTN_EDIT_COMPLIANCE_RULE">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setEditForm(rule);
+                            const payoutId = getPayoutCountryId(rule.payoutCountry);
+                            setEditForm({
+                              ...rule,
+                              payoutCountry: payoutId,
+                            });
                             setIsEditOpen(true);
                           }}
                         >
@@ -1020,7 +978,6 @@ const ExchangeComplianceConfig = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div>
                     <Label>Threshold Amount</Label>
                     <Input
@@ -1036,7 +993,6 @@ const ExchangeComplianceConfig = () => {
                     />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Payout Country</Label>
@@ -1046,14 +1002,11 @@ const ExchangeComplianceConfig = () => {
                         const selectedCountry = payoutCountryData.find(
                           (c: any) => c?.id === v,
                         );
-
+                        const newCurrency = selectedCountry?.currencyCode || selectedCountry?.payoutCurrency || "";
                         setEditForm({
                           ...editForm,
                           payoutCountry: v,
-                          currency:
-                            selectedCountry?.payoutCurrency ||
-                            editForm?.currency ||
-                            "",
+                          currency: newCurrency,
                         });
                       }}
                     >
@@ -1073,7 +1026,6 @@ const ExchangeComplianceConfig = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div>
                     <Label>Currency</Label>
                     <Input
@@ -1089,7 +1041,6 @@ const ExchangeComplianceConfig = () => {
                     />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Action</Label>
@@ -1256,7 +1207,6 @@ const ExchangeComplianceConfig = () => {
                   </div>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   Monitoring Intervals
@@ -1335,66 +1285,6 @@ const ExchangeComplianceConfig = () => {
         </Card>
 
         {/* Country Risk Configuration */}
-        {/* <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Country Risk Configuration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">
-                  High Risk Countries
-                </h4>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Enter country codes (e.g., AF, IR, KP)"
-                    rows={4}
-                    defaultValue="AF, IR, KP, MM, SY"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Additional screening required
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">
-                  Prohibited Countries
-                </h4>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Enter country codes for blocked countries"
-                    rows={4}
-                    defaultValue="CU, IR, KP"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Complete transaction blocking
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">
-                  Enhanced Monitoring
-                </h4>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Countries requiring enhanced monitoring"
-                    rows={4}
-                    defaultValue="BD, LK, PH, PK"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Lower thresholds applied
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card> */}
-
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -1450,11 +1340,6 @@ const ExchangeComplianceConfig = () => {
                                       highRiskCountries: newCountries,
                                     };
                                   });
-                                  // clearError("countryName");
-                                  // setApiErrors((prev) => ({
-                                  //   ...prev,
-                                  //   countryName: "",
-                                  // }));
                                 }}
                               >
                                 <Check
@@ -1473,7 +1358,6 @@ const ExchangeComplianceConfig = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   Prohibited Countries
@@ -1520,11 +1404,6 @@ const ExchangeComplianceConfig = () => {
                                       prohibitedCountries: newCountries,
                                     };
                                   });
-                                  // clearError("countryName");
-                                  // setApiErrors((prev) => ({
-                                  //   ...prev,
-                                  //   countryName: "",
-                                  // }));
                                 }}
                               >
                                 <Check
@@ -1543,7 +1422,6 @@ const ExchangeComplianceConfig = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   Enhanced Monitoring
@@ -1592,11 +1470,6 @@ const ExchangeComplianceConfig = () => {
                                       enhancedMonitoringCountries: newCountries,
                                     };
                                   });
-                                  // clearError("countryName");
-                                  // setApiErrors((prev) => ({
-                                  //   ...prev,
-                                  //   countryName: "",
-                                  // }));
                                 }}
                               >
                                 <Check
@@ -1618,6 +1491,7 @@ const ExchangeComplianceConfig = () => {
             </div>
           </CardContent>
         </Card>
+
         {/* Reporting Configuration */}
         <Card className="shadow-card">
           <CardHeader>
@@ -1682,7 +1556,6 @@ const ExchangeComplianceConfig = () => {
                   </div>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   Internal Reporting
