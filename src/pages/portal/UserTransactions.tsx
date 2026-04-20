@@ -260,6 +260,7 @@ const UserTransactions = () => {
       if (data?.data?.dashboard) {
         setDashboardData(data?.data?.dashboard);
       }
+      console.log("tttt", data?.data?.transactions);
       if (data.status && data.data) {
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => {
@@ -291,6 +292,7 @@ const UserTransactions = () => {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               }),
+              complianceRules: apiTx?.complianceRules,
               currency: apiTx.sourceCurrency,
               totalDebit: apiTx.totalDebit,
               exchangeRate: apiTx?.exchangeRate?.toFixed(3),
@@ -300,7 +302,7 @@ const UserTransactions = () => {
               }),
               localCurrency: apiTx.targetCurrency,
               status: apiTx.status,
-              logoUrl: apiTx?.logoUrl,
+              logoUrl: apiTx?.logUrl,
               type: apiTx?.type,
               bulkCount: apiTx?.itemCount,
               purpose: apiTx.purpose || "Transaction",
@@ -389,11 +391,10 @@ const UserTransactions = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
   useEffect(() => {
     fetchTransactions();
   }, [token, transactionType, page, debouncedSearch]);
-
+  console.log("transaction", transactions);
   //const getStatusBadge = (status: string) => {
   //  const statusMap = {
   //    COMPLETED: {
@@ -994,7 +995,7 @@ const UserTransactions = () => {
                                   <ChevronDown className="h-4 w-4 ml-1" />
                                 )}
                               </Button>
-                              <Button
+                              {/* <Button
                                 variant="outline"
                                 // type="button"
                                 // className="w-full bg-green-700 hover:bg-green-900"
@@ -1004,7 +1005,7 @@ const UserTransactions = () => {
                                 }}
                               >
                                 Change Compliance Status
-                              </Button>
+                              </Button> */}
 
                               {transaction.status === "failed" && (
                                 <Button variant="default" size="sm">
@@ -1028,7 +1029,7 @@ const UserTransactions = () => {
                                 )}
                             </div>
                           </div>
-                          {openCompliance && complianceTransaction && (
+                          {/* {openCompliance && complianceTransaction && (
                             <ComplianceStatus
                               open={openCompliance}
                               onClose={() => {
@@ -1044,7 +1045,7 @@ const UserTransactions = () => {
                                 fetchTransactions(); // Refresh the transaction list
                               }}
                             />
-                          )}
+                          )} */}
                           {/* Expanded Deal Content */}
                           {expandedDealTxId === transaction.id &&
                             transaction.rateDeal && (
@@ -1093,7 +1094,7 @@ const UserTransactions = () => {
                                 userRole="Business"
                                 userName={userName}
                                 branchName={transaction.branchName}
-                                initialDocuments={transaction.documents}
+                                initialDocuments={transaction?.documents}
                               />
                               <TransactionComments
                                 transactionId={transaction.id}

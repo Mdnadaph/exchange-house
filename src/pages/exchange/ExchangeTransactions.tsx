@@ -137,7 +137,7 @@ interface Transaction {
     state: string;
   };
   discountValue: string;
-
+  logoUrl: string | undefined;
   discountAmount: String;
   beneficiaryName?: string;
   businessName?: string;
@@ -283,7 +283,7 @@ const ExchangeTransactions = () => {
               businessPhone: apiTx?.businessPhone,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
-              logoUrl: apiTx?.logoUrl,
+              logoUrl: apiTx?.logUrl,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
               beneficiary: apiTx.beneficiaryName || "",
@@ -324,6 +324,7 @@ const ExchangeTransactions = () => {
               bulkCount: apiTx?.itemCount,
               complianceStatus: apiTx.complianceStatus || "",
               totalDebit: apiTx.totalDebit,
+              complianceRules: apiTx?.complianceRules,
               beneficiaryFeeAmount:
                 apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,

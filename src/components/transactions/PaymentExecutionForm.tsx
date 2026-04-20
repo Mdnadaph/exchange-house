@@ -695,6 +695,7 @@ const PaymentExecutionForm = ({
   trigger,
   onSuccess,
 }: PaymentExecutionFormProps) => {
+  console.log("transactionsss", transaction);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);

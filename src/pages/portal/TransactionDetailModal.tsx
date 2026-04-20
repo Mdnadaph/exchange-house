@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { object } from "yup";
+import { useCookies } from "react-cookie";
 
 interface TransactionDocument {
   id: number;
@@ -371,9 +372,33 @@ export default function TransactionDetailModal({
   onClose,
 }: TransactionDetailModalProps) {
   if (!transaction) return null;
-
+  console.log("transaction Detail", transaction);
+  const [cookies] = useCookies(["token"]);
   const status = getStatusBadge(transaction.status);
   const StatusIcon = status.icon;
+  const token = cookies?.token;
+  const handleDownloadFile = async (url: string, fileName: string) => {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`, // add your token
+        },
+      });
+      const blob = await response.blob();
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName || "file";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
@@ -476,7 +501,7 @@ export default function TransactionDetailModal({
           {/* Business & Beneficiary */}
           <section>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-              Business &amp; Beneficiary
+              Business
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-muted/30 rounded-xl p-4">
               <DetailField
@@ -484,7 +509,7 @@ export default function TransactionDetailModal({
                 value={transaction.businessName}
                 mono
               />
-              <DetailField
+              {/* <DetailField
                 label="Beneficiary Name"
                 value={transaction.beneficiaryName}
                 mono
@@ -493,7 +518,7 @@ export default function TransactionDetailModal({
                 label="Business ID"
                 value={transaction.businessId}
                 mono
-              />
+              /> */}
             </div>
           </section>
 
@@ -506,9 +531,9 @@ export default function TransactionDetailModal({
             </p>
 
             <div className="space-y-4">
-              {transaction.complianceRules &&
-              transaction.complianceRules.length > 0 ? (
-                transaction.complianceRules.map((rule: any, index: number) => (
+              {transaction?.complianceRules &&
+              transaction?.complianceRules.length > 0 ? (
+                transaction?.complianceRules.map((rule: any, index: number) => (
                   <div
                     key={rule.ruleId || index}
                     className="bg-muted/30 rounded-xl p-4"
@@ -661,16 +686,16 @@ export default function TransactionDetailModal({
                           {new Date(doc.uploadedAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <a
-                        href={doc.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleDownloadFile(doc.fileUrl, doc.fileName)
+                        }
                       >
-                        <Button variant="outline" size="sm">
-                          <Download className="h-3 w-3 mr-1" />
-                          Download
-                        </Button>
-                      </a>
+                        <Download className="h-3 w-3 mr-1" />
+                        Download
+                      </Button>
                     </div>
                   ))}
                 </div>
