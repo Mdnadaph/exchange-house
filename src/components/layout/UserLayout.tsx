@@ -115,7 +115,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     { name: "Profile", href: `/portal/profile/${id}`, icon: UserCircle },
     { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
     { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
-    { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
+    //{ name: "Rate Deals", href: "/portal/deals", icon: Handshake },
     { name: "User Management", href: "/portal/users", icon: Users },
     { name: "Governance", href: "/portal/governance", icon: Shield },
     { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },

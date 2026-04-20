@@ -21,9 +21,9 @@ import {
   Handshake,
   GitBranch,
   BadgePercent,
-  Clock ,
-  BadgeCheck ,
-  Loader   ,
+  Clock,
+  BadgeCheck,
+  Loader,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -107,7 +107,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       code: "NAV_KYB_CONFIG",
     },
     {
-      name: "KYB Mappning",
+      name: "KYB Mapping",
       href: "/exchange/onmapping",
       icon: FileCheck,
       code: "NAV_KYB_MAPPING",
@@ -118,7 +118,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       icon: CreditCard,
       code: "NAV_TRANSACTION",
     },
-     {
+    {
       name: "Pending Payment",
       href: "/exchange/pending-verification",
       icon: Loader,
@@ -130,12 +130,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       icon: BadgePercent,
       code: "NAV_DISCOUNTS",
     },
-    {
-      name: "Rate Deals",
-      href: "/exchange/deals",
-      icon: Handshake,
-      code: "NAV_RATE_DEALS",
-    },
+    //{
+    //  name: "Rate Deals",
+    //  href: "/exchange/deals",
+    //  icon: Handshake,
+    //  code: "NAV_RATE_DEALS",
+    //},
     {
       name: "Documents",
       href: "/exchange/documents",

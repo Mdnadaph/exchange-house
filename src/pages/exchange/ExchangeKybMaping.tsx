@@ -594,7 +594,7 @@ const ExchangeKybMapping = () => {
                         {/* <th className="pb-3 pr-4 font-medium">KYB Code</th> */}
                         <th className="pb-3 pr-4 font-medium">Description</th>
                         <th className="pb-3 pr-4 font-medium">Status</th>
-                        <th className="pb-3 pr-4 font-medium">Default</th>
+                        {/*<th className="pb-3 pr-4 font-medium">Default</th>*/}
                         <th className="pb-3 font-medium">Actions</th>
                       </tr>
                     </thead>
@@ -635,7 +635,7 @@ const ExchangeKybMapping = () => {
                               {m.active ? "Active" : "Inactive"}
                             </Badge>
                           </td>
-                          <td className="py-3 pr-4">
+                          {/*<td className="py-3 pr-4">
                             {m.default ? (
                               <Badge
                                 variant="outline"
@@ -648,7 +648,7 @@ const ExchangeKybMapping = () => {
                                 —
                               </span>
                             )}
-                          </td>
+                          </td>*/}
                           {/* ── Edit action ── */}
                           <td className="py-3">
                             <Button
@@ -757,14 +757,14 @@ const ExchangeKybMapping = () => {
                 onChange={(e) => setBtForm({ ...btForm, name: e.target.value })}
               />
             </div>
-            <div className="flex items-center justify-between">
+            {/*<div className="flex items-center justify-between">
               <Label htmlFor="bt-active">Active</Label>
               <Switch
                 id="bt-active"
                 checked={btForm.active}
                 onCheckedChange={(val) => setBtForm({ ...btForm, active: val })}
               />
-            </div>
+            </div>*/}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateBT(false)}>
@@ -812,7 +812,7 @@ const ExchangeKybMapping = () => {
                 }
               />
             </div>
-            <div className="flex items-center justify-between">
+            {/*<div className="flex items-center justify-between">
               <Label htmlFor="kyb-active">Active</Label>
               <Switch
                 id="kyb-active"
@@ -821,7 +821,7 @@ const ExchangeKybMapping = () => {
                   setKybForm({ ...kybForm, active: val })
                 }
               />
-            </div>
+            </div>*/}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateKYB(false)}>
@@ -921,7 +921,7 @@ const ExchangeKybMapping = () => {
                 }
               />
             </div>
-            <div className="flex items-center justify-between">
+            {/*<div className="flex items-center justify-between">
               <Label htmlFor="map-active">Active</Label>
               <Switch
                 id="map-active"
@@ -930,8 +930,8 @@ const ExchangeKybMapping = () => {
                   setMapForm({ ...mapForm, active: val })
                 }
               />
-            </div>
-            <div className="flex items-center justify-between">
+            </div>*/}
+            {/*<div className="flex items-center justify-between">
               <Label htmlFor="map-default">Set as Default</Label>
               <Switch
                 id="map-default"
@@ -940,7 +940,7 @@ const ExchangeKybMapping = () => {
                   setMapForm({ ...mapForm, isDefault: val })
                 }
               />
-            </div>
+            </div>*/}
           </div>
           <DialogFooter>
             <Button
@@ -1041,7 +1041,7 @@ const ExchangeKybMapping = () => {
             </div>
 
             {/* active toggle */}
-            <div className="flex items-center justify-between">
+            {/*<div className="flex items-center justify-between">
               <Label htmlFor="edit-active">Active</Label>
               <Switch
                 id="edit-active"
@@ -1050,10 +1050,10 @@ const ExchangeKybMapping = () => {
                   setEditForm({ ...editForm, active: val })
                 }
               />
-            </div>
+            </div>*/}
 
             {/* default toggle */}
-            <div className="flex items-center justify-between">
+            {/*<div className="flex items-center justify-between">
               <Label htmlFor="edit-default">Set as Default</Label>
               <Switch
                 id="edit-default"
@@ -1062,7 +1062,7 @@ const ExchangeKybMapping = () => {
                   setEditForm({ ...editForm, default: val })
                 }
               />
-            </div>
+            </div>*/}
           </div>
 
           <DialogFooter>

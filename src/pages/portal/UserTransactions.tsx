@@ -39,7 +39,8 @@ import { Textarea } from "@/components/ui/textarea";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import ComplianceStatus from "@/components/transactions/ComplianceStatus";
 import ProofOfPaymentUploadInBusinessAdmin from "@/components/transactions/ProofOfPaymentUploadInBusinessAdmin";
-
+import DealResponseForm from "@/components/deals/DealResponseForm";
+import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -141,8 +142,57 @@ interface Transaction {
     state: string;
   };
   canExecutePayment?: boolean;
+  rateDeal?: {
+    requestedExchangeRate: number | null;
+    currentExchangeRate: number | null;
+    counterProposalCount: number;
+    counterProposalsRemaining: number;
+    isTerminal: boolean;
+    waitingForEmail: string | null;
+    history: Array<{
+      action: string;
+      actorEmail: string;
+      rate: number | null;
+      message: string | null;
+      actedAt: string;
+    }>;
+  };
 }
-
+const transformDealHistory = (history: any[], transactionId: string) => {
+  if (!history) return [];
+  return history.map((item, idx) => {
+    let actionType = "";
+    switch (item.action) {
+      case "REQUESTED":
+        actionType = "DEAL_REQUESTED";
+        break;
+      case "COUNTER_PROPOSED":
+        actionType = "COUNTER_PROPOSAL";
+        break;
+      case "REQUEST_APPROVED":
+        actionType = "DEAL_APPROVED";
+        break;
+      case "REQUEST_REJECTED":
+        actionType = "DEAL_REJECTED";
+        break;
+      default:
+        actionType = item.action;
+    }
+    const role = item.actorEmail?.toLowerCase().includes("exchange")
+      ? "Exchange"
+      : "Business";
+    return {
+      id: `${transactionId}-${idx}`,
+      actionType,
+      performedBy: item.actorEmail,
+      role,
+      rate: item.rate?.toString(),
+      message: item.message,
+      createdAt: item.actedAt,
+      performedByRole: role,
+    };
+  });
+};
 const UserTransactions = () => {
   const [expandedTransaction, setExpandedTransaction] = useState<string | null>(
     null,
@@ -167,7 +217,7 @@ const UserTransactions = () => {
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [page, setPage] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
-
+  const [expandedDealTxId, setExpandedDealTxId] = useState<string | null>(null);
   //document upload state
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
@@ -289,6 +339,7 @@ const UserTransactions = () => {
                 state: apiTx?.singleBeneficiary?.state,
               },
               canExecutePayment: apiTx.canExecutePayment,
+              rateDeal: apiTx.rateDeal,
             };
           });
 
@@ -557,7 +608,6 @@ const UserTransactions = () => {
               </div>
             </CardContent>
           </Card>
-
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -619,19 +669,28 @@ const UserTransactions = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("COMPLETED")}
+                  onClick={() => {
+                    setTransactionType("COMPLETED");
+                    setPage(0);
+                  }}
                 >
                   Approved
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setTransactionType("SINGLE");
+                    setPage(0);
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setTransactionType("BULK");
+                    setPage(0);
+                  }}
                 >
                   Bulk
                 </Button>
@@ -895,6 +954,27 @@ const UserTransactions = () => {
                                 <FileText className="h-4 w-4 mr-1" />
                                 Upload Documents
                               </Button>
+                              {transaction.rateDeal && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setExpandedDealTxId(
+                                      expandedDealTxId === transaction.id
+                                        ? null
+                                        : transaction.id,
+                                    )
+                                  }
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Deal Details
+                                  {expandedDealTxId === transaction.id ? (
+                                    <ChevronUp className="h-4 w-4 ml-1" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                  )}
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -965,6 +1045,39 @@ const UserTransactions = () => {
                               }}
                             />
                           )}
+                          {/* Expanded Deal Content */}
+                          {expandedDealTxId === transaction.id &&
+                            transaction.rateDeal && (
+                              <div className="pt-4 border-t space-y-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                  <DealNegotiationTimeline
+                                    events={transformDealHistory(
+                                      transaction.rateDeal.history,
+                                      transaction.id,
+                                    )}
+                                    currentRate={
+                                      transaction.rateDeal.currentExchangeRate?.toString() ||
+                                      ""
+                                    }
+                                    currency={transaction.localCurrency}
+                                  />
+                                  {!transaction.rateDeal.isTerminal && (
+                                    <DealResponseForm
+                                      refetch={fetchTransactions}
+                                      dealId={transaction.id}
+                                      businessName={
+                                        transaction.businessName || ""
+                                      }
+                                      requestedRate={
+                                        transaction.rateDeal.requestedExchangeRate?.toString() ||
+                                        ""
+                                      }
+                                      currency={transaction.localCurrency}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">

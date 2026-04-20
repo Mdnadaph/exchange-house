@@ -40,6 +40,10 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import axios from "axios";
+import { Skeleton } from "../ui/skeleton";
+import { Checkbox } from "../ui/checkbox";
+import { previousDay } from "date-fns";
 
 const BulkTransactionForm = ({
   trigger,
@@ -67,26 +71,31 @@ const BulkTransactionForm = ({
   // Data
   const [currencyListData, setCurrencyListData] = useState<any>(null);
   const [beneficiaryGroupsList, setBeneficiaryGroupList] = useState<any>(null);
-
+  const [payoutDetail, setPayoutDetail] = useState([]);
   // Per-beneficiary inputs
-  const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<Record<number, string>>({});
-  const [beneficiaryDiscounts, setBeneficiaryDiscounts] = useState<Record<number, string>>({});
+  const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<
+    Record<number, string>
+  >({});
+  const [beneficiaryDiscounts, setBeneficiaryDiscounts] = useState<
+    Record<number, string>
+  >({});
+  const [selectedPayouts, setSelectedPayouts] = useState<
+    Record<number, number>
+  >({});
 
   // Mock sources (replace with real fetch if needed)
   const transactionSources = [
     {
       id: "1",
-      name: "Emirates NBD Business Account",
-      accountNumber: "AE070331234567890123456",
-      balance: "245,000",
-      currency: "AED",
+      name: "Cheque",
     },
     {
       id: "2",
-      name: "FAB USD Account",
-      accountNumber: "AE070331987654321098765",
-      balance: "85,000",
-      currency: "USD",
+      name: "Online Transfer",
+    },
+    {
+      id: "3",
+      name: "Cash",
     },
   ];
 
@@ -137,7 +146,7 @@ const BulkTransactionForm = ({
   // Helpers
   const getSelectedGroup = () =>
     beneficiaryGroupsList?.data?.groups?.find(
-      (g: any) => g.id.toString() === selectedGroup
+      (g: any) => g.id.toString() === selectedGroup,
     ) ?? null;
 
   const getSelectedSourceDetails = () =>
@@ -152,7 +161,48 @@ const BulkTransactionForm = ({
     setBeneficiaryDiscounts((prev) => ({ ...prev, [id]: value.trim() }));
   };
 
+  const handlePayoutChange = (id: number, value: number) => {
+    setSelectedPayouts((prev) => ({
+      ...prev,
+      [id]: prev[id] === value ? undefined : value,
+    }));
+  };
+
+  const requiredDocForPorpose = purposeOptions?.find(
+    (purpose) => purpose?.value == transactionPurpose,
+  )?.requiresDoc;
   // Submit
+
+  // Get selected payout currency for a beneficiary
+  const getSelectedCurrency = (ben) => {
+    const selectedPayoutId = selectedPayouts?.[ben?.id];
+
+    const payout = ben?.payoutDetails?.find(
+      (p) => p?.payoutDetailId === selectedPayoutId,
+    );
+
+    return payout?.currencyCode; // e.g. "QAR"
+  };
+
+  const getExchangeRate = (currencyCode) => {
+    if (!currencyCode) return null;
+
+    return currencyListData?.data?.find(
+      (c) => c?.name === currencyCode?.toLowerCase(),
+    );
+  };
+
+  const getConvertedAmount = (ben) => {
+    const amount = beneficiaryAmounts[ben.id];
+    const currency = getSelectedCurrency(ben);
+    const rateObj = getExchangeRate(currency);
+
+    if (!amount || !rateObj) return "";
+
+    return (Number(amount) * Number(rateObj.rate)).toFixed(2);
+  };
+
+  const disableButtonForDocd = requiredDocForPorpose ? !document : false;
   const handleSubmit = async () => {
     setLoading(true);
 
@@ -167,12 +217,13 @@ const BulkTransactionForm = ({
       .map((ben: any) => {
         const amountStr = beneficiaryAmounts[ben.id];
         const amount = amountStr ? Number(amountStr) : NaN;
+        const beneficiaryPayoutDetailId = selectedPayouts[ben.id];
         if (!amountStr || isNaN(amount) || amount <= 0) return null;
-
         return {
           beneficiaryId: Number(ben.id),
           amount,
           discountCode: beneficiaryDiscounts[ben.id] || "",
+          beneficiaryPayoutDetailId,
         };
       })
       .filter((item): item is NonNullable<typeof item> => !!item);
@@ -190,14 +241,18 @@ const BulkTransactionForm = ({
     const payload = {
       groupId: Number(selectedGroup),
       purposeCode: transactionPurpose,
-      currencyId: Number(currency),
+      // currencyId: Number(currency),
       sourceAccountId: Number(selectedSource),
       beneficiaries: validBeneficiaries,
-      discountCode: "", // global one – can be removed or kept
+      feeResponsibility: "BUSINESS",
+      // discountCode: "", // global one – can be removed or kept
     };
 
     const formData = new FormData();
-    formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], { type: "application/json" }),
+    );
     if (document) formData.append("documents", document);
 
     try {
@@ -208,7 +263,6 @@ const BulkTransactionForm = ({
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok || data?.status === false) {
         toast({
           variant: "destructive",
@@ -220,7 +274,9 @@ const BulkTransactionForm = ({
 
       toast({
         title: "Success",
-        description: `Submitted ${validBeneficiaries.length} payments for approval`,
+        description:
+          data?.message ||
+          `Submitted ${validBeneficiaries.length} payments for approval`,
       });
 
       setOpen(false);
@@ -241,6 +297,33 @@ const BulkTransactionForm = ({
       setLoading(false);
     }
   };
+
+  const getBeneficiaryPayout = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/beneficiary-groups/${selectedGroup}/payout-details`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setPayoutDetail(res?.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error?.respose?.data?.message ||
+          "Something went wrong fecting payout mechanisms",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedGroup) return;
+    getBeneficiaryPayout();
+  }, [selectedGroup]);
 
   // ─── UI ─────────────────────────────────────────────
   const renderStepIndicator = () => (
@@ -281,7 +364,10 @@ const BulkTransactionForm = ({
         <CardContent className="space-y-4">
           <div>
             <Label>Purpose of Transaction *</Label>
-            <Select value={transactionPurpose} onValueChange={setTransactionPurpose}>
+            <Select
+              value={transactionPurpose}
+              onValueChange={setTransactionPurpose}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select purpose" />
               </SelectTrigger>
@@ -302,7 +388,12 @@ const BulkTransactionForm = ({
             </Select>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label>Fee Responsibility *</Label>
+            <Input disabled defaultValue="BUSINESS" />
+          </div>
+
+          {/* <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Currency *</Label>
               <Select value={currency} onValueChange={setCurrency}>
@@ -318,7 +409,7 @@ const BulkTransactionForm = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 
@@ -327,12 +418,12 @@ const BulkTransactionForm = ({
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Source of Transaction
+            Mode of Transaction
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Select Source Account *</Label>
+            <Label>Select Mode Of Transaction *</Label>
             <Select value={selectedSource} onValueChange={setSelectedSource}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose account" />
@@ -342,9 +433,9 @@ const BulkTransactionForm = ({
                   <SelectItem key={s.id} value={s.id}>
                     <div className="flex flex-col">
                       <span className="font-medium">{s.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      {/* <span className="text-xs text-muted-foreground">
                         {s.currency} {s.balance}
-                      </span>
+                      </span> */}
                     </div>
                   </SelectItem>
                 ))}
@@ -352,18 +443,22 @@ const BulkTransactionForm = ({
             </Select>
           </div>
 
-          {getSelectedSourceDetails() && (
+          {/* {getSelectedSourceDetails() && (
             <Card className="border-l-4 border-l-primary">
               <CardContent className="p-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Account Number:</span>
+                    <span className="text-muted-foreground">
+                      Account Number:
+                    </span>
                     <p className="font-medium font-mono">
                       {getSelectedSourceDetails()?.accountNumber}
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Available Balance:</span>
+                    <span className="text-muted-foreground">
+                      Available Balance:
+                    </span>
                     <p className="font-medium text-green-600">
                       {getSelectedSourceDetails()?.currency}{" "}
                       {getSelectedSourceDetails()?.balance}
@@ -372,7 +467,7 @@ const BulkTransactionForm = ({
                 </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
         </CardContent>
       </Card>
 
@@ -392,7 +487,9 @@ const BulkTransactionForm = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
-                  <span className="text-muted-foreground">No group selected</span>
+                  <span className="text-muted-foreground">
+                    No group selected
+                  </span>
                 </SelectItem>
                 {beneficiaryGroupsList?.data?.groups?.map((g: any) => (
                   <SelectItem key={g.id} value={g.id.toString()}>
@@ -407,68 +504,123 @@ const BulkTransactionForm = ({
               </SelectContent>
             </Select>
 
-            {selectedGroup && selectedGroup !== "none" && getSelectedGroup() && (
-              <Card className="border-l-4 border-l-primary bg-primary/5">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      {getSelectedGroup().groupName}
-                    </h4>
-                    <Badge variant="secondary">
-                      {getSelectedGroup().beneficiaries.length} members
-                    </Badge>
-                  </div>
+            {selectedGroup &&
+              selectedGroup !== "none" &&
+              getSelectedGroup() && (
+                <Card className="border-l-4 border-l-primary bg-primary/5">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        {getSelectedGroup().groupName}
+                      </h4>
+                      <Badge variant="secondary">
+                        {getSelectedGroup().beneficiaries.length} members
+                      </Badge>
+                    </div>
 
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Beneficiary</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Value (Amount)</TableHead>
-                        <TableHead>Discount Code</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {getSelectedGroup().beneficiaries.map((ben: any) => (
-                        <TableRow key={ben.id}>
-                          <TableCell>
-                            <Badge variant="outline" className="flex w-fit items-center gap-1">
-                              {ben.type === "BUSINESS" ? (
-                                <Building className="h-3 w-3" />
-                              ) : (
-                                <Users className="h-3 w-3" />
-                              )}
-                              {ben.name}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="capitalize">{ben.type?.toLowerCase()}</TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="0.00"
-                              className="max-w-[160px]"
-                              value={beneficiaryAmounts[ben.id] ?? ""}
-                              onChange={(e) => handleAmountChange(ben.id, e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              placeholder="e.g. VKLXPD57"
-                              className="max-w-[160px] font-mono"
-                              value={beneficiaryDiscounts[ben.id] ?? ""}
-                              onChange={(e) => handleDiscountChange(ben.id, e.target.value)}
-                            />
-                          </TableCell>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Beneficiary</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Beneficiary Payout</TableHead>
+                          <TableHead>Value (Amount)</TableHead>
+                          <TableHead>Exchnage Rate</TableHead>
+                          <TableHead>Converted Amount</TableHead>
+                          <TableHead>Discount Code</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
+                      </TableHeader>
+                      <TableBody>
+                        {getSelectedGroup()?.beneficiaries?.map((ben: any) => {
+                          const currency = getSelectedCurrency(ben);
+                          const rateObj = getExchangeRate(currency);
+                          return (
+                            <TableRow key={ben.id}>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className="flex w-fit items-center gap-1"
+                                >
+                                  {ben.type === "BUSINESS" ? (
+                                    <Building className="h-3 w-3" />
+                                  ) : (
+                                    <Users className="h-3 w-3" />
+                                  )}
+                                  {ben.name}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="capitalize">
+                                {ben.type?.toLowerCase()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-2">
+                                  {ben?.payoutDetails?.map((vv: any) => (
+                                    <div
+                                      key={vv.payoutDetailId}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Checkbox
+                                        checked={
+                                          selectedPayouts?.[ben.id] ===
+                                          vv.payoutDetailId
+                                        }
+                                        onCheckedChange={() =>
+                                          handlePayoutChange(
+                                            ben.id,
+                                            vv.payoutDetailId,
+                                          )
+                                        }
+                                      />
+                                      <span className="text-xs">
+                                        {vv.payoutMechanismType}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className="max-w-[160px]"
+                                  value={beneficiaryAmounts[ben.id] ?? ""}
+                                  onChange={(e) =>
+                                    handleAmountChange(ben.id, e.target.value)
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-xs">
+                                  {rateObj ? rateObj?.rate : "-"}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium text-green-600">
+                                  {getConvertedAmount(ben) || "-"}
+                                </span>
+                              </TableCell>
+
+                              <TableCell>
+                                <Input
+                                  placeholder="e.g. VKLXPD57"
+                                  className="max-w-[160px] font-mono"
+                                  value={beneficiaryDiscounts[ben.id] ?? ""}
+                                  onChange={(e) =>
+                                    handleDiscountChange(ben.id, e.target.value)
+                                  }
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
           </CardContent>
         </Card>
       )}
@@ -516,9 +668,15 @@ const BulkTransactionForm = ({
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-primary" />
-                    <span className="text-sm truncate max-w-[220px]">{document.name}</span>
+                    <span className="text-sm truncate max-w-[220px]">
+                      {document.name}
+                    </span>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setDocument(null)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDocument(null)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -533,7 +691,8 @@ const BulkTransactionForm = ({
                 <div className="text-sm space-y-1">
                   <p className="font-medium">Approval & Processing</p>
                   <p className="text-muted-foreground">
-                    Transactions will be routed for approval. Expected processing time: 24-48 hours.
+                    Transactions will be routed for approval. Expected
+                    processing time: 24-48 hours.
                   </p>
                 </div>
               </div>
@@ -558,7 +717,9 @@ const BulkTransactionForm = ({
 
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">Create Bulk Transaction</DialogTitle>
+            <DialogTitle className="text-xl">
+              Create Bulk Transaction
+            </DialogTitle>
           </DialogHeader>
 
           <div className="mt-6">
@@ -583,7 +744,6 @@ const BulkTransactionForm = ({
                     !selectedGroup ||
                     selectedGroup === "none" ||
                     !transactionPurpose ||
-                    !currency ||
                     !selectedSource
                   }
                 >
@@ -595,7 +755,7 @@ const BulkTransactionForm = ({
                     Back to Setup
                   </Button>
                   <Button
-                    disabled={loading || !document}
+                    disabled={loading || disableButtonForDocd}
                     onClick={() => setShowConfirmation(true)}
                   >
                     {loading ? "Submitting…" : "Submit for Approval"}
