@@ -56,6 +56,8 @@ import ExchangeBusinessOnboarding from "./pages/exchange/ExchangeBusinessOnboard
 import BranchDetails from "./pages/exchange/Branch/BranchDetails";
 import CreateKybRule from "./components/kyb/CreateKybRule";
 import ExchangePendingVerification from "./pages/exchange/ExchangePendingVerification";
+import ExchangeAdminComplianceReview from "./pages/exchange/ExchangeAdminComplianceReview";
+
 
 // Branch Staff
 import BranchDashboard from "./pages/branch/BranchDashboard";
@@ -315,6 +317,10 @@ function App() {
                     <Route
                       path="pending-verification"
                       element={<ExchangePendingVerification />}
+                    />
+                    <Route
+                      path="compliance-review"
+                      element={<ExchangeAdminComplianceReview />}
                     />
                     <Route path="discount" element={<ExchangeDiscount />} />
                     <Route path="deals" element={<ExchangeDealReview />} />

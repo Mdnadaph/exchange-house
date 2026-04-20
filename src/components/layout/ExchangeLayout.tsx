@@ -125,6 +125,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       code: "NAV_PENDING_PEMENT_VERIFICATION",
     },
     {
+      name: "Compliance Review",
+      href: "/exchange/compliance-review",
+      icon: FileCheck,
+      code: "NAV_COMPLIANCE_REVIEW",
+    },
+    {
       name: "Discounts",
       href: "/exchange/discount",
       icon: BadgePercent,
