@@ -688,13 +688,16 @@ interface PaymentExecutionFormProps {
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;
+  fetchTransactions?: () => void;
 }
 
 const PaymentExecutionForm = ({
   transaction,
   trigger,
   onSuccess,
+  fetchTransactions,
 }: PaymentExecutionFormProps) => {
+  console.log("zzz", transaction);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
@@ -749,12 +752,14 @@ const PaymentExecutionForm = ({
         },
       );
 
-      if (response.data?.status === true) {
+      if (response?.data?.status === true) {
         toast({
           title: "Success",
-          description: "Payment executed successfully.",
+          description:
+            response?.data?.message || "Payment executed successfully.",
         });
         setOpen(false);
+        fetchTransactions();
         onSuccess?.();
         // Reset
         setUploadedDocument(null);
@@ -815,7 +820,9 @@ const PaymentExecutionForm = ({
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Beneficiary:</span>
+                    <span className="text-muted-foreground">
+                      Beneficiary Name:
+                    </span>
                     <p className="font-medium">{transaction.beneficiary}</p>
                   </div>
                   <div>

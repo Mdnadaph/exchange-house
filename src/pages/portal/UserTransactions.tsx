@@ -260,7 +260,6 @@ const UserTransactions = () => {
       if (data?.data?.dashboard) {
         setDashboardData(data?.data?.dashboard);
       }
-      console.log("tttt", data?.data?.transactions);
       if (data.status && data.data) {
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => {
@@ -1012,19 +1011,20 @@ const UserTransactions = () => {
                                   Retry Payment
                                 </Button>
                               )}
-
                               {transaction.canExecutePayment &&
                                 transaction.status === "PAYMENT_PENDING" && (
                                   <PaymentExecutionForm
                                     transaction={{
                                       id: transaction.id,
-                                      beneficiary: transaction.beneficiary,
+                                      beneficiary:
+                                        transaction.singleBeneficiary?.name,
                                       amount: transaction.amount,
                                       currency: transaction.currency,
                                       localAmount: transaction.localAmount,
                                       localCurrency: transaction.localCurrency,
                                       purpose: transaction.purpose,
                                     }}
+                                    fetchTransactions={fetchTransactions}
                                   />
                                 )}
                             </div>

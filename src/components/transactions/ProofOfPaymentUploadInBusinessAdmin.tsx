@@ -371,7 +371,6 @@ const ProofOfPaymentUploadInBusinessAdmin = ({
           },
         },
       );
-
       if (response?.data?.status) {
         // Create new document object
         const newDocument: ProofDocument = {
@@ -390,7 +389,6 @@ const ProofOfPaymentUploadInBusinessAdmin = ({
         setDocuments([...documents, newDocument]);
         setSelectedFile(null);
         setDocumentType("");
-
         toast({
           title: "Success",
           description: "Document uploaded successfully",
