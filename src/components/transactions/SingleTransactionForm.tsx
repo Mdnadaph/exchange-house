@@ -860,7 +860,7 @@
 //                 </CardHeader>
 //                 <CardContent className="space-y-4">
 //                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-           
+
 //                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
 //                       <h2 className="text-lg font-semibold mb-3">Business</h2>
 //                       <div className="space-y-1 text-sm text-gray-700">
@@ -875,7 +875,6 @@
 //                       </div>
 //                     </div>
 
-             
 //                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
 //                       <h2 className="text-lg font-semibold mb-3">
 //                         Beneficiary
@@ -892,7 +891,6 @@
 //                       </div>
 //                     </div>
 
-                    
 //                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
 //                       <h2 className="text-lg font-semibold mb-3">Shared</h2>
 //                       <div className="space-y-1 text-sm text-gray-700">
@@ -1074,7 +1072,7 @@
 //                           <SelectItem key={curr} value={curr}>
 //                             {curr}
 //                           </SelectItem>
-//                         ))} 
+//                         ))}
 //                           {currencyListData?.data?.map((curr: any) => (
 //                             <SelectItem key={curr?.id} value={curr?.id}>
 //                               {curr?.name?.toUpperCase()}
@@ -1523,13 +1521,14 @@ const SingleTransactionForm = ({
   const [feeResponsibility, setFeeResponsibility] = useState("");
   const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
     useState<any>(null);
-  const [cookie] = useCookies(["token"]);
+  const [cookie] = useCookies(["token", "currencyCode"]);
   const [transectionSummeryData, setTransectionSummeryData] =
     useState<any>(null);
 
   //payoutdetails
   const [payoutDetails, setPayoutDetails] = useState<any>(null);
   const [loadingPayout, setLoadingPayout] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [payoutError, setPayoutError] = useState<string | null>(null);
   const [selectedPayoutDetailId, setSelectedPayoutDetailId] = useState<
     number | null
@@ -1543,7 +1542,8 @@ const SingleTransactionForm = ({
   const [currentExchangeRate, setCurrentExchangeRate] = useState("");
   const [requestedExchangeRate, setRequestedExchangeRate] = useState("");
 
-  const token = cookie.token;
+  const token = cookie?.token;
+  const currencyCode = cookie?.currencyCode;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const transactionSources = [
@@ -1697,8 +1697,12 @@ const SingleTransactionForm = ({
       notes,
       discountCode: discountCode.trim() || "",
       beneficiaryPayoutDetailId: selectedPayoutDetailId,
-      currentExchangeRate: currentExchangeRate ? Number(currentExchangeRate) : null,
-      requestedExchangeRate: requestedExchangeRate ? Number(requestedExchangeRate) : null,
+      currentExchangeRate: currentExchangeRate
+        ? Number(currentExchangeRate)
+        : null,
+      requestedExchangeRate: requestedExchangeRate
+        ? Number(requestedExchangeRate)
+        : null,
     };
 
     const formData = new FormData();
@@ -1813,16 +1817,23 @@ const SingleTransactionForm = ({
   };
 
   const handleTransationSummary = async () => {
+    setLoading(true);
     const payload = {
       purposeCode: transactionPurpose,
       sourceAccountId: selectedSource,
       beneficiaryId: selectedBeneficiary,
       amount: Number(receiverAmount),
+      feeResponsibility,
       currencyId: currency,
       notes,
       discountCode: discountCode.trim() || "",
-      currentExchangeRate: currentExchangeRate ? Number(currentExchangeRate) : null,
-      requestedExchangeRate: requestedExchangeRate ? Number(requestedExchangeRate) : null,
+      beneficiaryPayoutDetailId: selectedPayoutDetailId,
+      currentExchangeRate: currentExchangeRate
+        ? Number(currentExchangeRate)
+        : null,
+      requestedExchangeRate: requestedExchangeRate
+        ? Number(requestedExchangeRate)
+        : null,
     };
 
     const formData = new FormData();
@@ -1860,6 +1871,8 @@ const SingleTransactionForm = ({
         variant: "destructive",
         title: err?.response?.data?.message || "Transaction failed",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1939,6 +1952,7 @@ const SingleTransactionForm = ({
     (fee: any) =>
       Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
   );
+  const isFormValid = amount && receiverAmount && feeResponsibility;
 
   return (
     <>
@@ -2219,7 +2233,8 @@ const SingleTransactionForm = ({
                           Sender
                         </h5>
                         <Label htmlFor="amount">
-                          Amount(AED) <span className="text-red-500">*</span>
+                          Amount({currencyCode}){" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="amount"
@@ -2291,7 +2306,9 @@ const SingleTransactionForm = ({
                         id="requestedExchangeRate"
                         type="number"
                         value={requestedExchangeRate}
-                        onChange={(e) => setRequestedExchangeRate(e.target.value)}
+                        onChange={(e) =>
+                          setRequestedExchangeRate(e.target.value)
+                        }
                         placeholder="125"
                         step="0.0001"
                       />
@@ -2338,121 +2355,148 @@ const SingleTransactionForm = ({
                       </Select>
                     </div>
                   </div>
-
-                  {transectionSummeryData && amount && (
-                    <Card className="bg-accent-muted/10 border-accent/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <TrendingUp className="h-4 w-4 text-accent" />
-                          <span className="font-medium text-foreground">
-                            Transaction Summary
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">
-                              PayIn Amount
+                  <Button
+                    onClick={handleTransationSummary}
+                    disabled={!isFormValid}
+                    variant="outline"
+                  >
+                    Transaction Summary
+                  </Button>
+                  {loading ? (
+                    <div className="flex items-center space-x-2 mb-3">
+                      <TrendingUp className="h-4 w-4 text-accent animate-pulse" />
+                      <span className="font-medium text-foreground">
+                        Loading Transaction Summary...
+                      </span>
+                    </div>
+                  ) : (
+                    transectionSummeryData &&
+                    amount && (
+                      <Card className="bg-accent-muted/10 border-accent/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-2 mb-3">
+                            <TrendingUp className="h-4 w-4 text-accent" />
+                            <span className="font-medium text-foreground">
+                              Transaction Summary
                             </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.baseAedAmount?.toFixed(
-                                2,
-                              )}
-                            </p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Exchange Rate
-                            </span>
-                            <p className="font-medium">
-                              1 AED ={" "}
-                              {(
-                                1 / transectionSummeryData?.exchangeRate
-                              )?.toFixed(2)}{" "}
-                              {transectionSummeryData?.currency}
-                            </p>
-                          </div>
-                          {transectionSummeryData?.businessFee >= 1 && (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">
-                                businessFee
+                                PayIn Amount
                               </span>
                               <p className="font-medium">
-                                {transectionSummeryData?.businessFee?.toLocaleString()}{" "}
-                                AED
+                                {transectionSummeryData?.baseAedAmount?.toFixed(
+                                  2,
+                                )}
                               </p>
                             </div>
-                          )}
-                          {transectionSummeryData?.beneficiaryFee >= 1 && (
                             <div>
                               <span className="text-muted-foreground">
-                                Beneficiary Fee
+                                Exchange Rate
                               </span>
                               <p className="font-medium">
-                                {transectionSummeryData?.beneficiaryFee?.toLocaleString()}{" "}
-                                AED
+                                1 {currencyCode} ={" "}
+                                {(
+                                  1 / transectionSummeryData?.exchangeRate
+                                )?.toFixed(2)}{" "}
+                                {selectedPayoutCurrencyCode}
                               </p>
                             </div>
-                          )}
+                            {transectionSummeryData?.businessFee >= 1 && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  businessFee
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.businessFee?.toLocaleString()}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+                            {transectionSummeryData?.beneficiaryFee >= 1 && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Beneficiary Fee
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.beneficiaryFee?.toLocaleString()}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
 
-                          <div>
-                            <span className="text-muted-foreground">
-                              Discount Amount
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.discountAmountAed} AED
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Total Payable
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
-                              AED
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Monthly Limit
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.monthlyLimit?.toFixed(2)}{" "}
-                              AED
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Used Limit
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.currentMonthSpend?.toFixed(
-                                2,
-                              )}{" "}
-                              AED
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Remaining Limit
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.monthlyLimit?.toFixed(
-                                2,
-                              ) -
-                                transectionSummeryData?.currentMonthSpend?.toFixed(
+                            <div>
+                              <span className="text-muted-foreground">
+                                Discount Amount
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.discountAmountAed}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Total Payable
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Monthly Limit
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.monthlyLimit?.toFixed(
                                   2,
                                 )}{" "}
-                              AED
-                            </p>
+                                {currencyCode}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Used Limit
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.currentMonthSpend?.toFixed(
+                                  2,
+                                )}{" "}
+                                {transectionSummeryData?.currency}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Remaining Limit
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.monthlyLimit?.toFixed(
+                                  2,
+                                ) -
+                                  transectionSummeryData?.currentMonthSpend?.toFixed(
+                                    2,
+                                  )}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                            {transectionSummeryData?.vatAmount > 0 && (
+                              <div>
+                                <span>Vat Amount</span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.vatAmount}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    )
                   )}
                 </CardContent>
               </Card>
             )}
-
             {range && (
               <Card>
                 <CardHeader>
@@ -2577,14 +2621,14 @@ const SingleTransactionForm = ({
               </CardContent>
             </Card>
 
-            {selectedBeneficiary && amount && (
+            {/* {selectedBeneficiary && amount && (
               <FeeCalculator
                 amount={parseFloat(amount)}
                 currency={currency}
                 country={selectedBeneficiaryData?.countryName || ""}
                 transactionType="Single Transaction"
               />
-            )}
+            )} */}
 
             <Card>
               <CardHeader>

@@ -130,12 +130,14 @@ const ComplianceStatus = ({
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="CLEAR">CLEAR</SelectItem>
-                <SelectItem value="FLAGGED">FLAGGED</SelectItem>
-                <SelectItem value="MANUAL_REVIEW">MANUAL REVIEW</SelectItem>
-                <SelectItem value="REVIEW_REQUIRED">REVIEW REQUIRED</SelectItem>
-                <SelectItem value="REPORTED">REPORTED</SelectItem>
-                <SelectItem value="BLOCKED">BLOCKED</SelectItem>
+                <SelectItem value="CLEAR">Clear</SelectItem>
+                {/* <SelectItem value="FLAGGED">Enhance Screening</SelectItem> */}
+                <SelectItem value="MANUAL_REVIEW">Manual Review</SelectItem>
+                <SelectItem value="REVIEW_REQUIRED">
+                  Enhanced Screening
+                </SelectItem>
+                <SelectItem value="REPORTED">Auto Report CB</SelectItem>
+                <SelectItem value="BLOCKED">Block</SelectItem>
               </SelectContent>
             </Select>
           </div>
