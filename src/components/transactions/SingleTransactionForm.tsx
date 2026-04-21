@@ -1697,12 +1697,12 @@ const SingleTransactionForm = ({
       notes,
       discountCode: discountCode.trim() || "",
       beneficiaryPayoutDetailId: selectedPayoutDetailId,
-      currentExchangeRate: currentExchangeRate
-        ? Number(currentExchangeRate)
-        : null,
-      requestedExchangeRate: requestedExchangeRate
-        ? Number(requestedExchangeRate)
-        : null,
+      // currentExchangeRate: currentExchangeRate
+      //   ? Number(currentExchangeRate)
+      //   : null,
+      // requestedExchangeRate: requestedExchangeRate
+      //   ? Number(requestedExchangeRate)
+      //   : null,
     };
 
     const formData = new FormData();
@@ -1828,12 +1828,12 @@ const SingleTransactionForm = ({
       notes,
       discountCode: discountCode.trim() || "",
       beneficiaryPayoutDetailId: selectedPayoutDetailId,
-      currentExchangeRate: currentExchangeRate
-        ? Number(currentExchangeRate)
-        : null,
-      requestedExchangeRate: requestedExchangeRate
-        ? Number(requestedExchangeRate)
-        : null,
+      // currentExchangeRate: currentExchangeRate
+      //   ? Number(currentExchangeRate)
+      //   : null,
+      // requestedExchangeRate: requestedExchangeRate
+      //   ? Number(requestedExchangeRate)
+      //   : null,
     };
 
     const formData = new FormData();
@@ -2284,7 +2284,7 @@ const SingleTransactionForm = ({
                     </div>
 
                     {/* Newly Added Fields */}
-                    <div>
+                    {/* <div>
                       <Label htmlFor="currentExchangeRate">
                         Current Exchange Rate
                       </Label>
@@ -2296,9 +2296,9 @@ const SingleTransactionForm = ({
                         placeholder="123"
                         step="0.0001"
                       />
-                    </div>
+                    </div> */}
 
-                    <div>
+                    {/* <div>
                       <Label htmlFor="requestedExchangeRate">
                         Requested Exchange Rate
                       </Label>
@@ -2312,7 +2312,7 @@ const SingleTransactionForm = ({
                         placeholder="125"
                         step="0.0001"
                       />
-                    </div>
+                    </div> */}
 
                     <div>
                       <Label htmlFor="discountCode">Discount Code</Label>

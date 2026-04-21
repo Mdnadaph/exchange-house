@@ -742,7 +742,6 @@ const UserTransactions = () => {
                 {transactions.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status.icon;
-
                   return (
                     <Card
                       key={transaction.id}

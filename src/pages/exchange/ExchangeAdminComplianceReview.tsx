@@ -35,6 +35,7 @@ import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import { formateDateTime } from "@/utils/formateDateTime";
+import ComplianceStatus from "@/components/transactions/ComplianceStatus";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -201,12 +202,16 @@ const ExchangeAdminComplianceReview = () => {
     null,
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [complianceTransaction, setComplianceTransaction] =
+    useState<Transaction | null>(null);
+  const [openCompliance, setOpenCompliance] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
+  const [complianceStatus, setComplianceStatus] = useState<string>("");
   const [cookies] = useCookies([
     "token",
     "email",
@@ -301,7 +306,7 @@ const ExchangeAdminComplianceReview = () => {
               localCurrency: apiTx.targetCurrency,
               status: apiTx?.status,
               type: apiTx?.type,
-              purpose: apiTx.purpose || "",
+              purpose: apiTx.purposeName || "",
               date: new Date(apiTx.createdAt)
                 .toLocaleString("en-US", {
                   year: "numeric",
@@ -515,7 +520,8 @@ const ExchangeAdminComplianceReview = () => {
               All Compliance Review
             </h1>
             <p className="text-muted-foreground">
-               Review, verify, and manage all compliance-related submissions and updates
+              Review, verify, and manage all compliance-related submissions and
+              updates
             </p>
           </div>
           {/* <Button variant="outline" disabled={transactions.length === 0}>
@@ -964,6 +970,21 @@ const ExchangeAdminComplianceReview = () => {
                                   <ChevronDown className="h-4 w-4 ml-1" />
                                 )}
                               </Button>
+                              {/* Change complience status */}
+                              <Button
+                                variant="outline"
+                                // type="button"
+                                // className="w-full bg-green-700 hover:bg-green-900"
+                                onClick={() => {
+                                  setComplianceTransaction(transaction);
+                                  setOpenCompliance(true);
+                                  setComplianceStatus(
+                                    transaction?.complianceStatus,
+                                  );
+                                }}
+                              >
+                                Change Compliance Status
+                              </Button>
                             </div>
                           </div>
 
@@ -1000,7 +1021,25 @@ const ExchangeAdminComplianceReview = () => {
                                 </div>
                               </div>
                             )}
-
+                          {openCompliance && complianceTransaction && (
+                            <ComplianceStatus
+                              compianceStatus={complianceStatus}
+                              open={openCompliance}
+                              onClose={() => {
+                                setOpenCompliance(false);
+                                setComplianceTransaction(null);
+                                setComplianceStatus("");
+                              }}
+                              transactionReference={
+                                complianceTransaction.referenceNumber
+                              }
+                              onSuccess={() => {
+                                setOpenCompliance(false);
+                                setComplianceTransaction(null);
+                                fetchTransactions(); // Refresh the transaction list
+                              }}
+                            />
+                          )}
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">

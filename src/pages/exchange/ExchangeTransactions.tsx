@@ -201,6 +201,7 @@ const ExchangeTransactions = () => {
     null,
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -913,17 +914,7 @@ const ExchangeTransactions = () => {
                                     Documents
                                   </Button>
                                 )}*/}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setUploadModalOpen(true);
-                                  setUploadTransaction(transaction);
-                                }}
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                Upload Documents
-                              </Button>
+
                               {transaction.rateDeal && (
                                 <Button
                                   variant="outline"

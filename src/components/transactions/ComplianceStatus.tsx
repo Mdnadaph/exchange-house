@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 interface ComplianceStatusProps {
+  compianceStatus?: string;
   open: boolean;
   onClose: () => void;
   transactionReference: string; // Required to know which transaction to update
@@ -29,6 +30,7 @@ interface ComplianceStatusProps {
   onSuccess?: (status: string) => void;
 }
 const ComplianceStatus = ({
+  compianceStatus,
   open,
   onClose,
   transactionReference,
@@ -42,6 +44,25 @@ const ComplianceStatus = ({
   const handleComplianceChange = (value: string) => {
     setCompliance(value);
   };
+
+  const STATUS_ORDER = [
+    "MANUAL_REVIEW",
+    "REVIEW_REQUIRED",
+    "REPORTED",
+    "BLOCKED",
+    "CLEAR",
+  ];
+
+  const isOptionDisabled = (value: string) => {
+    if (!compianceStatus) return false;
+
+    const currentIndex = STATUS_ORDER.indexOf(compianceStatus);
+    const optionIndex = STATUS_ORDER.indexOf(value);
+
+    // Disable anything BEFORE current status
+    return optionIndex <= currentIndex;
+  };
+
   const handleSubmit = async () => {
     if (!compliance) {
       toast({
@@ -68,12 +89,17 @@ const ComplianceStatus = ({
       if (response.data?.status) {
         toast({
           title: "Success",
-          description: "Compliance status updated successfully",
+          description:
+            response?.data?.message || "Compliance status updated successfully",
         });
         onSuccess?.(compliance);
         onClose();
       } else {
-        throw new Error(response.data?.message || "Failed to update status");
+        toast({
+          title: "Error",
+          description: response?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       toast({
@@ -130,14 +156,34 @@ const ComplianceStatus = ({
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="CLEAR">Clear</SelectItem>
                 {/* <SelectItem value="FLAGGED">Enhance Screening</SelectItem> */}
-                <SelectItem value="MANUAL_REVIEW">Manual Review</SelectItem>
-                <SelectItem value="REVIEW_REQUIRED">
+                <SelectItem
+                  value="MANUAL_REVIEW"
+                  disabled={isOptionDisabled("MANUAL_REVIEW")}
+                >
+                  Manual Review
+                </SelectItem>
+                <SelectItem
+                  value="REVIEW_REQUIRED"
+                  disabled={isOptionDisabled("REVIEW_REQUIRED")}
+                >
                   Enhanced Screening
                 </SelectItem>
-                <SelectItem value="REPORTED">Auto Report CB</SelectItem>
-                <SelectItem value="BLOCKED">Block</SelectItem>
+                <SelectItem
+                  value="REPORTED"
+                  disabled={isOptionDisabled("REPORTED")}
+                >
+                  Auto Report CB
+                </SelectItem>
+                <SelectItem
+                  value="BLOCKED"
+                  disabled={isOptionDisabled("BLOCKED")}
+                >
+                  Block
+                </SelectItem>
+                <SelectItem value="CLEAR" disabled={isOptionDisabled("CLEAR")}>
+                  Clear
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
