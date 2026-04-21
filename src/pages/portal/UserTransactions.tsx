@@ -466,11 +466,17 @@ const UserTransactions = () => {
         icon: FileText,
       },
 
+      INTERNAL_REVIEW_PENDING: {
+        variant: "outline",
+        label: "Internal Review Pending",
+        icon: Clock,
+      },
+
       // Payment flow
       PAYMENT_PENDING: {
         variant: "secondary",
         label: "Payment Pending",
-        icon: Wallet,
+        icon: Clock,
       },
       PAYMENT_VERIFICATION_PENDING: {
         variant: "secondary",
@@ -480,6 +486,11 @@ const UserTransactions = () => {
       PENDING_APPROVAL: {
         variant: "secondary",
         label: "Pending Approval",
+        icon: Clock,
+      },
+      PROOF_OF_PAYMENT_PENDING: {
+        variant: "secondary",
+        label: "Proof Of Payment Pending",
         icon: Clock,
       },
       PROCESSING: {
@@ -504,7 +515,33 @@ const UserTransactions = () => {
         label: "Failed",
         icon: AlertCircle,
       },
+      RATE_DEAL_PENDING: {
+        variant: "default",
+        label: "Rate Deal Pending",
+        icon: Clock,
+      },
 
+      RATE_DEAL_APPROVED: {
+        variant: "default",
+        label: "Rate Deal Approved",
+        icon: CheckCircle,
+      },
+
+      RATE_DEAL_REJECTED: {
+        variant: "destructive",
+        label: "Rate Deal Rejected",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_COUNTER_PROPOSAL: {
+        variant: "default",
+        label: "Rate Deal Counter Proposal",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_EXPIRED: {
+        variant: "default",
+        label: "Rate Deal Expired",
+        icon: AlertCircle,
+      },
       // Compliance
       COMPLIANCE_REVIEW: {
         variant: "outline",
@@ -740,7 +777,7 @@ const UserTransactions = () => {
             ) : (
               <div className="space-y-4">
                 {transactions.map((transaction) => {
-                  const status = getStatusBadge(transaction.status);
+                  const status = getStatusBadge(transaction?.status);
                   const StatusIcon = status.icon;
                   return (
                     <Card

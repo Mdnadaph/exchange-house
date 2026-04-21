@@ -684,12 +684,12 @@ interface PaymentExecutionFormProps {
     currency: string;
     localAmount: string;
     localCurrency: string;
-    email: string;
-    purpose: string;
-    address: string;
-    discount: any;
-    vatAmount: number;
-    payoutMechanismType: string;
+    email?: string;
+    purpose?: string;
+    address?: string;
+    discount?: any;
+    vatAmount?: number;
+    payoutMechanismType?: string;
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;

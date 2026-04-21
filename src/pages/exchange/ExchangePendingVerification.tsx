@@ -403,15 +403,55 @@ const ExchangeTransactions = () => {
         label: "Completed",
         icon: CheckCircle,
       },
+      INTERNAL_REVIEW_PENDING: {
+        variant: "secondary" as const,
+        label: "Internal Review Pending",
+        icon: Clock,
+      },
       PENDING_APPROVAL: {
         variant: "secondary" as const,
         label: "Pending Approval",
         icon: Clock,
       },
-      pending_payment: {
-        variant: "destructive" as const,
+      PAYMENT_PENDING: {
+        variant: "secondary" as const,
         label: "Pending Payment",
-        icon: Wallet,
+        icon: Clock,
+      },
+      PAYMENT_VERIFICATION_PENDING: {
+        variant: "secondary" as const,
+        label: "Payment Verification Pending",
+        icon: Clock,
+      },
+      PROOF_OF_PAYMENT_PENDING: {
+        variant: "secondary" as const,
+        label: "Proof Of Payment Pending",
+        icon: Clock,
+      },
+      RATE_DEAL_PENDING: {
+        variant: "secondary" as const,
+        label: "Rate Deal Pending",
+        icon: Clock,
+      },
+      RATE_DEAL_APPROVED: {
+        variant: "secondary" as const,
+        label: "Rate Deal Approved",
+        icon: CheckCircle,
+      },
+      RATE_DEAL_REJECTED: {
+        variant: "destructive" as const,
+        label: "Rate Deal Rejected",
+        icon: CheckCircle,
+      },
+      RATE_DEAL_COUNTER_PROPOSAL: {
+        variant: "outline" as const,
+        label: "Rate Deal Counter Proposal",
+        icon: CheckCircle,
+      },
+      RATE_DEAL_EXPIRED: {
+        variant: "outline" as const,
+        label: "Rate Deal Expired",
+        icon: CheckCircle,
       },
       APPROVED: {
         variant: "secondary" as const,
@@ -429,7 +469,7 @@ const ExchangeTransactions = () => {
         icon: AlertCircle,
       },
       REJECTED: {
-        variant: "outline" as const,
+        variant: "destructive" as const,
         label: "Rejetced",
         icon: AlertCircle,
       },

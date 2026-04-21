@@ -1763,6 +1763,7 @@ const SingleTransactionForm = ({
   };
 
   const fetchFeeRulesForTransaction = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(
         `${BASE_URL}/api/v3/fees/${selectedBeneficiary}/get-fee-rules-for-transaction`,
@@ -1780,6 +1781,8 @@ const SingleTransactionForm = ({
         description: err?.response?.data?.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1975,6 +1978,7 @@ const SingleTransactionForm = ({
             setSelectedPayoutCurrencyRate(1);
             setCurrentExchangeRate("");
             setRequestedExchangeRate("");
+            setFeeRule({});
           }
         }}
       >
@@ -2135,6 +2139,104 @@ const SingleTransactionForm = ({
                     </SelectContent>
                   </Select>
                 </div>
+                {loading ? (
+                  <div>Fee Data Loading...</div>
+                ) : feeRule?.id ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Fee Rule
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="p-4 border rounded-2xl shadow-sm bg-white">
+                          <h2 className="text-lg font-semibold mb-3">
+                            {feeRule?.businessFee?.businessFeeResponsibility?.charAt(
+                              0,
+                            )}
+                            {feeRule?.businessFee?.businessFeeResponsibility
+                              ?.slice(1)
+                              ?.toLowerCase()}
+                          </h2>
+                          <div className="space-y-1 text-sm text-gray-700">
+                            <p>
+                              <span className="font-medium">Fee Type:</span>{" "}
+                              {feeRule?.businessFee?.businessFeeType || "-"}
+                            </p>
+                            <p>
+                              <span className="font-medium">Fee Value:</span>{" "}
+                              {feeRule?.businessFee?.businessFeeValue || "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="p-4 border rounded-2xl shadow-sm bg-white">
+                          <h2 className="text-lg font-semibold mb-3">
+                            {feeRule?.beneficiaryFee?.beneficiaryFeeResponsibility?.charAt(
+                              0,
+                            )}
+                            {feeRule?.beneficiaryFee?.beneficiaryFeeResponsibility
+                              ?.slice(1)
+                              ?.toLowerCase()}
+                          </h2>{" "}
+                          <div className="space-y-1 text-sm text-gray-700">
+                            <p>
+                              <span className="font-medium">Fee Type:</span>{" "}
+                              {feeRule?.beneficiaryFee?.beneficiaryFeeType ||
+                                "-"}
+                            </p>
+                            <p>
+                              <span className="font-medium">Fee Value:</span>{" "}
+                              {feeRule?.beneficiaryFee?.beneficiaryFeeValue ||
+                                "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-4 border rounded-2xl shadow-sm bg-white">
+                          <h2 className="text-lg font-semibold mb-3">
+                            {feeRule?.shareFee?.sharedFeeResponsibility?.charAt(
+                              0,
+                            )}
+                            {feeRule?.shareFee?.sharedFeeResponsibility
+                              ?.slice(1)
+                              ?.toLowerCase()}
+                          </h2>
+                          <div className="space-y-1 text-sm text-gray-700">
+                            <p>
+                              <span className="font-medium">
+                                Business Fee Type:
+                              </span>{" "}
+                              {feeRule?.shareFee?.sharedBusinessFeeType || "-"}
+                            </p>
+                            <p>
+                              <span className="font-medium">
+                                Business Fee Value:
+                              </span>{" "}
+                              {feeRule?.shareFee?.sharedBusinessFeeValue || "-"}
+                            </p>
+                            <p>
+                              <span className="font-medium">
+                                {" "}
+                                Beneficiary Fee Type:
+                              </span>{" "}
+                              {feeRule?.shareFee?.sharedBeneficiaryFeeType ||
+                                "-"}{" "}
+                            </p>
+                            <p>
+                              <span className="font-medium">
+                                Beneficiary Fee Value:
+                              </span>{" "}
+                              {feeRule?.shareFee?.sharedBeneficiaryFeeValue ||
+                                "-"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>{" "}
+                    </CardContent>{" "}
+                  </Card>
+                ) : null}
 
                 {selectedBeneficiaryData && (
                   <Card className="border-l-4 border-l-accent">

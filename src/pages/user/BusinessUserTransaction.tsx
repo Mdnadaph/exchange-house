@@ -393,7 +393,7 @@ const BusinessUserTransaction = () => {
         label: "Pending Approval",
         icon: Clock,
       },
-      pending_payment: {
+      PAYMENT_PENDING: {
         variant: "destructive" as const,
         label: "Pending Payment",
         icon: Wallet,
@@ -421,6 +421,51 @@ const BusinessUserTransaction = () => {
       COMPLIANCE_REVIEW: {
         variant: "outline" as const,
         label: "Compliance Review",
+        icon: AlertCircle,
+      },
+      INTERNAL_REVIEW_PENDING: {
+        variant: "outline" as const,
+        label: "Internal Review Pending",
+        icon: AlertCircle,
+      },
+      PAYMENT_VERIFICATION_PENDING: {
+        variant: "outline" as const,
+        label: "Payment Verification Pending",
+        icon: AlertCircle,
+      },
+      PROOF_OF_PAYMENT_PENDING: {
+        variant: "outline" as const,
+        label: "Proof Of Payment Pending",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_PENDING: {
+        variant: "outline" as const,
+        label: "Rate Deal Pending",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_APPROVED: {
+        variant: "outline" as const,
+        label: "Rate Deal Approved",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_REJECTED: {
+        variant: "outline" as const,
+        label: "Rate Deal Rejected",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_COUNTER_PROPOSAL: {
+        variant: "outline" as const,
+        label: "Rate Deal Counter Proposal",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_EXPIRED: {
+        variant: "outline" as const,
+        label: "Rate Deal Expired",
+        icon: AlertCircle,
+      },
+      DRAFT: {
+        variant: "outline" as const,
+        label: "Draft",
         icon: AlertCircle,
       },
     };
@@ -683,7 +728,7 @@ const BusinessUserTransaction = () => {
               <div>
                 <div className="space-y-4">
                   {filteredTransactions.map((transaction) => {
-                    const status = getStatusBadge(transaction.status);
+                    const status = getStatusBadge(transaction?.status);
                     const StatusIcon = status.icon;
 
                     return (
@@ -813,18 +858,19 @@ const BusinessUserTransaction = () => {
                                   </p>
                                 )}
                               </div>
-
-                              <div className="space-y-1">
-                                <span className="text-muted-foreground">
-                                  Compliance Status:
-                                </span>
-                                <p className="font-medium">
-                                  {transaction.complianceStatus.replace(
-                                    /_/g,
-                                    " ",
-                                  )}
-                                </p>
-                              </div>
+                              {transaction?.complianceStatus && (
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground">
+                                    Compliance Status:
+                                  </span>
+                                  <p className="font-medium">
+                                    {transaction.complianceStatus.replace(
+                                      /_/g,
+                                      " ",
+                                    )}
+                                  </p>
+                                </div>
+                              )}
 
                               <div className="space-y-1">
                                 <span className="text-muted-foreground">
@@ -834,27 +880,31 @@ const BusinessUserTransaction = () => {
                                   {transaction?.referenceNumber}
                                 </p>
                               </div>
-                              <div className="space-y-1">
-                                <span className="text-muted-foreground">
-                                  Discount Value:
-                                </span>
-                                <p className="font-medium">
-                                  {transaction.discountValue}
-                                </p>
-                              </div>
-                              <div className="space-y-1">
-                                <span className="text-muted-foreground">
-                                  Discount Amount:
-                                </span>
-                                <p className="font-medium">
-                                  {transaction.discountAmount === "0.00"
-                                    ? "—"
-                                    : `AED ${transaction.discountAmount}`}
-                                </p>
-                              </div>
+                              {transaction?.discountValue && (
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground">
+                                    Discount Value:
+                                  </span>
+                                  <p className="font-medium">
+                                    {transaction.discountValue}
+                                  </p>
+                                </div>
+                              )}
+                              {transaction?.discountAmount && (
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground">
+                                    Discount Amount:
+                                  </span>
+                                  <p className="font-medium">
+                                    {transaction.discountAmount === "0.00"
+                                      ? "—"
+                                      : `AED ${transaction.discountAmount}`}
+                                  </p>
+                                </div>
+                              )}
                             </div>
 
-                            {transaction?.status !== "APPROVED" &&
+                            {transaction?.status !== "COMPELETD" &&
                               transaction?.status !== "REJECTED" && (
                                 <div className="border-t pt-6">
                                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -891,7 +941,7 @@ const BusinessUserTransaction = () => {
                                             setShowApproveConfirmation(true);
                                             setReviewActionData({
                                               transactionId: transaction?.id,
-                                              actionType: "APPROVED",
+                                              actionType: "COMPLETED",
                                             });
                                             // handleReviewAction(
                                             //   transaction?.id,
@@ -923,7 +973,7 @@ const BusinessUserTransaction = () => {
                                           Reject
                                         </Button>
                                       </div>
-                                      <div className="space-y-4">
+                                      {/* <div className="space-y-4">
                                         <Label>Compliance Status</Label>
                                         <div className="grid grid-cols-2 gap-3">
                                           <Button
@@ -939,7 +989,7 @@ const BusinessUserTransaction = () => {
                                             Change Compliance Status
                                           </Button>
                                         </div>
-                                      </div>
+                                      </div> */}
                                     </div>
                                   </div>
                                 </div>
@@ -1013,7 +1063,7 @@ const BusinessUserTransaction = () => {
                                     Retry Payment
                                   </Button>
                                 )}
-                                {transaction.status === "pending_payment" && (
+                                {transaction?.status === "pending_payment" && (
                                   <PaymentExecutionForm
                                     transaction={{
                                       id: transaction.id,
