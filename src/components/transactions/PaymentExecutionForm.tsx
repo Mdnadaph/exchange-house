@@ -684,7 +684,12 @@ interface PaymentExecutionFormProps {
     currency: string;
     localAmount: string;
     localCurrency: string;
+    email: string;
     purpose: string;
+    address: string;
+    discount: any;
+    vatAmount: number;
+    payoutMechanismType: string;
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;
@@ -826,19 +831,45 @@ const PaymentExecutionForm = ({
                     <p className="font-medium">{transaction.beneficiary}</p>
                   </div>
                   <div>
+                    <span className="text-muted-foreground">Email:</span>
+                    <p className="font-medium">{transaction?.email}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Address:</span>
+                    <p className="font-medium">{transaction?.address}</p>
+                  </div>
+                  <div>
                     <span className="text-muted-foreground">Purpose:</span>
                     <p className="font-medium">{transaction.purpose}</p>
                   </div>
                   <div>
+                    <span className="text-muted-foreground">
+                      Payout Mechanism:
+                    </span>
+                    <p className="font-medium">
+                      {transaction?.payoutMechanismType}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Vat Amount:</span>
+                    <p className="font-medium">{transaction?.vatAmount}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">
+                      Discount Amount:
+                    </span>
+                    <p className="font-medium">{transaction?.discount}</p>
+                  </div>
+                  <div>
                     <span className="text-muted-foreground">Amount:</span>
                     <p className="font-medium">
-                      {transaction.currency} {transaction.amount}
+                      {transaction?.amount} {transaction?.currency}
                     </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Total Debit:</span>
                     <p className="font-medium text-primary">
-                      {transaction.localCurrency} {transaction.localAmount}
+                      {transaction.localAmount} {transaction?.currency}
                     </p>
                   </div>
                 </div>

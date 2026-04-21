@@ -130,7 +130,10 @@ interface Transaction {
   discountValue: string;
   discountAmount: String;
   beneficiaryName: string;
+  vatAmount: number;
   businessName: string;
+  discount: number;
+  payoutMechanismType: string;
   singleBeneficiary: {
     name: string;
     phone: string;
@@ -304,7 +307,8 @@ const UserTransactions = () => {
               logoUrl: apiTx?.logUrl,
               type: apiTx?.type,
               bulkCount: apiTx?.itemCount,
-              purpose: apiTx.purpose || "Transaction",
+              payoutMechanismType: apiTx?.payoutMechanismType,
+              purpose: apiTx?.purposeName || "Transaction",
               date: new Date(apiTx.createdAt)
                 .toLocaleString("en-US", {
                   year: "numeric",
@@ -321,6 +325,7 @@ const UserTransactions = () => {
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
               failureReason: apiTx.failureReason || "",
+              vatAmount: apiTx?.vatAmount,
               //documents: apiTx.documents,
               documents: apiTx.documents?.map((doc: any) => ({
                 ...doc,
@@ -328,6 +333,7 @@ const UserTransactions = () => {
               })),
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
+              discount: apiTx?.discountAmount,
               beneficiaryName: apiTx.beneficiaryName,
               singleBeneficiary: {
                 name: apiTx?.singleBeneficiary?.name,
@@ -393,7 +399,6 @@ const UserTransactions = () => {
   useEffect(() => {
     fetchTransactions();
   }, [token, transactionType, page, debouncedSearch]);
-  console.log("transaction", transactions);
   //const getStatusBadge = (status: string) => {
   //  const statusMap = {
   //    COMPLETED: {
@@ -1018,6 +1023,14 @@ const UserTransactions = () => {
                                       id: transaction.id,
                                       beneficiary:
                                         transaction.singleBeneficiary?.name,
+                                      email:
+                                        transaction.singleBeneficiary?.email,
+                                      address:
+                                        transaction?.singleBeneficiary?.address,
+                                      discount: transaction?.discountAmount,
+                                      vatAmount: transaction?.vatAmount,
+                                      payoutMechanismType:
+                                        transaction?.payoutMechanismType,
                                       amount: transaction.amount,
                                       currency: transaction.currency,
                                       localAmount: transaction.localAmount,
