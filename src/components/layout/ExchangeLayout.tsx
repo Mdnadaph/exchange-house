@@ -136,12 +136,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       icon: BadgePercent,
       code: "NAV_DISCOUNTS",
     },
-    //{
-    //  name: "Rate Deals",
-    //  href: "/exchange/deals",
-    //  icon: Handshake,
-    //  code: "NAV_RATE_DEALS",
-    //},
+    {
+     name: "Rate Deals",
+     href: "/exchange/deals",
+     icon: Handshake,
+     code: "NAV_RATE_DEALS",
+    },
     {
       name: "Documents",
       href: "/exchange/documents",
