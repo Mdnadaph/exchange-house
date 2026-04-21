@@ -167,10 +167,10 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       code: "NAV_COMPLIANCE",
     },
     {
-      name: "Branch Management",
+      name: "Branch Oversight",
       href: "/exchange/branches",
       icon: GitBranch,
-      code: "NAV_BRANCH_MANAGEMENT",
+      code: "NAV_BRANCH_OVERSIGHT",
     },
     {
       name: "Staff Management",
@@ -179,7 +179,8 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       code: "NAV_STAFF_MANAGEMENT",
     },
     {
-      name: "Exchange Admin User",
+      // name: "Exchange Admin User",
+      name: "Exchange Members",
       href: "/exchange/user",
       icon: Users,
       code: "NAV_EXCHANGE_ADMIN_USER",
