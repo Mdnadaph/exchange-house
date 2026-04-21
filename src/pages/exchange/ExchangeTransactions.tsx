@@ -975,6 +975,7 @@ const ExchangeTransactions = () => {
                                   <DealNegotiationTimeline
                                     events={transformDealHistory(
                                       transaction.rateDeal.history,
+                                      transaction.id,
                                     )}
                                     currentRate={
                                       transaction.rateDeal.currentExchangeRate?.toString() ||
