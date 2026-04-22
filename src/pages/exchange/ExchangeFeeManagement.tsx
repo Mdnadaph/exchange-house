@@ -59,6 +59,7 @@ interface FeeRule {
   maxAmount: number;
   feeType: string | null;
   feeValue: number | null;
+  countryName: string | null;
   feeResponsibility: string;
   status: boolean | string;
   businessFeeType: string | null;
@@ -817,7 +818,7 @@ const ExchangeFeeManagement = () => {
                 <Label>
                   Fee Responsibility <span className="text-red-500">*</span>
                 </Label>
-                <Input value="BUSINESS" disabled onChange={() => {}} />
+                <Input value="BUSINESS" disabled onChange={() => { }} />
 
                 {/* {formErrors.feeType && (
                   <p className="text-sm text-red-500 mt-1">
@@ -890,7 +891,7 @@ const ExchangeFeeManagement = () => {
                     <Label>
                       Fee Responsibility <span className="text-red-500">*</span>
                     </Label>
-                    <Input value="BENEFICIARY" disabled onChange={() => {}} />
+                    <Input value="BENEFICIARY" disabled onChange={() => { }} />
 
                     {/* {formErrors.feeType && (
                   <p className="text-sm text-red-500 mt-1">
@@ -973,7 +974,7 @@ const ExchangeFeeManagement = () => {
                       Shared Fee Responsibility{" "}
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Input value="SHARED" disabled onChange={() => {}} />
+                    <Input value="SHARED" disabled onChange={() => { }} />
 
                     {/* <p className="text-xs text-muted-foreground mt-1">
                   {newFeeRule.feeResponsibility === "SHARED" &&
@@ -1388,8 +1389,11 @@ const ExchangeFeeManagement = () => {
                         <TableCell className="font-medium text-sm">
                           {transactionTypeLabel(rule.transactionType)}
                         </TableCell>
+                        {/* <TableCell className="text-sm">
+                          {countryName(rule.countryName)}
+                        </TableCell> */}
                         <TableCell className="text-sm">
-                          {countryLabel(rule.payoutCountry)}
+                          {rule.countryName ?? "-"}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-sm">
                           {rule?.vat?.toFixed(2)}
