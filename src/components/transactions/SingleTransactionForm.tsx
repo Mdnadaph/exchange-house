@@ -1521,6 +1521,7 @@ const SingleTransactionForm = ({
   const [feeResponsibility, setFeeResponsibility] = useState("");
   const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
     useState<any>(null);
+  const [rateDealData, setRateDealData] = useState<any>({});
   const [cookie] = useCookies(["token", "currencyCode"]);
   const [transectionSummeryData, setTransectionSummeryData] =
     useState<any>(null);
@@ -1925,6 +1926,28 @@ const SingleTransactionForm = ({
       currency?.name?.toLowerCase() === beneficiaryCurrencyCode.toLowerCase(),
   );
 
+  const getCustomRateDeal = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setRateDealData(res?.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: error?.response?.data?.message || "Transaction failed",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getCustomRateDeal();
+  }, [amount]);
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
@@ -2598,6 +2621,36 @@ const SingleTransactionForm = ({
                   )}
                 </CardContent>
               </Card>
+            )}
+            {rateDealData?.proposedRate ? (
+              <Card className="bg-accent-muted/10 border-accent/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <TrendingUp className="h-4 w-4 text-accent" />
+                    <span className="font-medium text-foreground">
+                      Applied Rate Deal
+                    </span>
+                  </div>
+                  <div className="flex gap-7 text-base font-normal text-gray-600">
+                    <div className="flex gap-1">
+                      <p>
+                        Proposed Rate: {rateDealData.proposedRate}{" "}
+                        {rateDealData.payoutCurrency}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <p>
+                        Remaining Amount: {rateDealData.remainingAmount}{" "}
+                        {rateDealData.payoutCurrency}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-gray-400 p-4">
+                No rate deal data available
+              </div>
             )}
             {range && (
               <Card>
