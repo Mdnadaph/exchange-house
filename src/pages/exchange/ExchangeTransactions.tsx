@@ -209,6 +209,7 @@ const ExchangeTransactions = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
+  const [reference, setReference] = useState("");
   const [cookies] = useCookies([
     "token",
     "email",
@@ -807,8 +808,6 @@ const ExchangeTransactions = () => {
                                 {transaction.amount}
                               </p>
                             </div>
-
-                            
                           </div>
 
                           {/* Transaction Details */}
@@ -1013,9 +1012,27 @@ const ExchangeTransactions = () => {
                                 )}
                               </Button>
                               {transaction?.status === "PROCESSING" && (
-                                <div>
-                                  <Button>Approve</Button>
-                                  <Button>Reject</Button>
+                                <div className="flex gap-5 items-center">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setActionType("APPROVE");
+                                      setOpen(true);
+                                      setReference(transaction?.id);
+                                    }}
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setActionType("REJECT");
+                                      setOpen(true);
+                                      setReference(transaction?.id);
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
                                 </div>
                               )}
                             </div>
@@ -1068,6 +1085,7 @@ const ExchangeTransactions = () => {
                                 userRole="Exchange" // ✅ use role string
                                 userName={fullname}
                                 initialDocuments={transaction.documents}
+                                onUploadComplete={fetchTransactions}
                               />
                               <TransactionComments
                                 transactionId={transaction.id}
@@ -1140,10 +1158,13 @@ const ExchangeTransactions = () => {
       )}
       {open && (
         <ApproveRejectTransactionModal
+          fetchTransactions={fetchTransactions}
           setOpen={setOpen}
           open={open}
           actionType={actionType}
           setActionType={setActionType}
+          reference={reference}
+          setReference={setReference}
         />
       )}
     </ExchangeLayout>

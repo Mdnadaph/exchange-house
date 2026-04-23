@@ -2,36 +2,103 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import BASE_URL from "@/config/config";
+import axios from "axios";
+import { useCookies } from "react-cookie";
+import { useToast } from "@/hooks/use-toast";
+type ActionType = "APPROVE" | "REJECT" | null;
 
+interface ApproveRejectTransactionModalProps {
+  actionType: ActionType;
+  setActionType: React.Dispatch<React.SetStateAction<ActionType>>;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  open: boolean;
+  fetchTransactions: () => void;
+  reference: string;
+  setReference: React.Dispatch<React.SetStateAction<string>>;
+}
 export default function ApproveRejectTransactionModal({
   actionType,
   setActionType,
   setOpen,
   open,
-}: any) {
+  fetchTransactions,
+  reference,
+  setReference,
+}: ApproveRejectTransactionModalProps) {
   const [note, setNote] = useState("");
-  const handleSubmit = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [cookies] = useCookies(["token"]);
+  const token = cookies?.token;
+  const handleSubmit = async () => {
     if (!actionType) return;
-
+    setLoading(true);
     const payload = {
-      action: actionType,
-      note,
+      approved: actionType == "APPROVE" ? true : false,
+      notes: note,
     };
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v1/transactions/${reference}/final-approval`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Final Approve success",
+        });
+        setNote("");
+        setActionType(null);
+        setOpen(false);
+        setReference("");
+        fetchTransactions();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Success",
+          description: res?.data?.message || "Some thing wrong",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Success",
+        description: error?.response?.data?.message || "Some thing wrong",
+      });
+    } finally {
+      setLoading(false);
+    }
 
     console.log("Submit:", payload);
 
     // 👉 call API here
-
-    setNote("");
-    setActionType(null);
-    setOpen(false);
   };
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open);
+        if (!open) {
+          setNote("");
+          setActionType(null);
+          setOpen(false);
+          setReference("");
+        }
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {actionType === "APPROVE" ? "Approve Deal" : "Reject Deal"}
+            {actionType === "APPROVE"
+              ? "Approve Transaction"
+              : "Reject Transaction"}
           </DialogTitle>
         </DialogHeader>
 
@@ -55,7 +122,7 @@ export default function ApproveRejectTransactionModal({
             <Button
               variant={actionType === "REJECT" ? "destructive" : "default"}
               onClick={handleSubmit}
-              disabled={!note}
+              disabled={!note || loading}
             >
               Submit
             </Button>
