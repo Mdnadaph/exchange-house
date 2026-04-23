@@ -830,12 +830,12 @@ const UserTransactions = () => {
 
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction?.currency?.toUpperCase()}
-                                {transaction.amount}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
+                                {transaction?.currency?.toUpperCase()}{" "}
                                 {transaction.localCurrency}
                                 {transaction.localAmount}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {transaction.amount}
                               </p>
                             </div>
                           </div>
