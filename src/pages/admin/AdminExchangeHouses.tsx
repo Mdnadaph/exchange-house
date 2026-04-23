@@ -1213,9 +1213,7 @@ const AdminExchangeHouses = () => {
                                   {t("suspendExchangeHouse")}
                                 </DropdownMenuItem>
                               ) : admin.exchangeStatus?.toLowerCase() ===
-                                  "suspended" ||
-                                admin.exchangeStatus?.toLowerCase() ===
-                                  "pending" ? (
+                                "suspended" ? (
                                 <div>
                                   <DropdownMenuItem
                                     className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
