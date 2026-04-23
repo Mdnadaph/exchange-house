@@ -897,20 +897,20 @@ const UserProfile = () => {
                           {kybContext.businessType}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">KYB Type:</span>
                         <span className="font-medium">
                           {kybContext.kybType}
                         </span>
-                      </div>
-                      <div className="flex items-center justify-between">
+                      </div> */}
+                      {/* <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">
                           Rule Applied:
                         </span>
                         <span className="font-medium">
                           {kybContext.kybRuleName}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                   </>
                 )}
