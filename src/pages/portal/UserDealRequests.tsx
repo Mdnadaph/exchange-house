@@ -26,7 +26,17 @@ import {
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { formateDateTime } from "@/utils/formateDateTime";
-
+import DealResponseForm from "@/components/deals/DealResponseForm";
+import DealCounterResponseForm from "@/components/deals/DealCounterResponseForm";
+type NegotiationHistoryItem = {
+  id: number;
+  actionType: string;
+  rate: number;
+  comments?: string | null;
+  createdAt: string;
+  performedBy: string;
+  performedByRole: string;
+};
 const UserDealRequests = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
@@ -34,7 +44,6 @@ const UserDealRequests = () => {
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
   const [showDeclineConfirmation, setShowDeclineConfirmation] = useState(false);
   const [counterDeal, setCounterDeal] = useState<any>(null);
@@ -257,6 +266,18 @@ const UserDealRequests = () => {
     return negotiationHistory?.find(
       (item: any) => item?.actionType === "COUNTER_PROPOSAL",
     )?.comments;
+  };
+
+  const hasMultipleCounterProposals = (
+    negotiationHistory?: NegotiationHistoryItem[],
+  ): boolean => {
+    if (!negotiationHistory || negotiationHistory.length === 0) return false;
+
+    const count = negotiationHistory.filter(
+      (item) => item.actionType === "COUNTER_PROPOSAL",
+    ).length;
+
+    return count >= 2;
   };
 
   if (loading) {
@@ -564,11 +585,36 @@ const UserDealRequests = () => {
                     {/* Timeline */}
                     {selectedDeal === deal?.id && (
                       <div className="pt-4 border-t">
-                        <DealNegotiationTimeline
-                          events={deal?.negotiationHistory}
-                          currentRate={deal?.proposedRate}
-                          currency={deal?.payoutCurrency}
-                        />
+                        <div className="grid grid-cols-2 gap-6">
+                          <DealNegotiationTimeline
+                            events={deal?.negotiationHistory}
+                            currentRate={deal?.proposedRate}
+                            currency={deal?.payoutCurrency}
+                          />
+                          {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
+                            <DealResponseForm
+                              refetch={getRateDeals}
+                              dealId={deal?.id}
+                              businessName={deal?.companyName}
+                              requestedRate={deal?.proposedRate}
+                              currency={deal?.payoutCurrency}
+                            />
+                          )} */}
+                          {deal?.dealStatus === "COUNTER_PROPOSAL" &&
+                            (hasMultipleCounterProposals(
+                              deal?.negotiationHistory,
+                            ) ? (
+                              <div></div>
+                            ) : (
+                              <DealCounterResponseForm
+                                refetch={getRateDeals}
+                                dealId={deal?.id}
+                                businessName={deal?.companyName}
+                                requestedRate={deal?.proposedRate}
+                                currency={deal?.payoutCurrency}
+                              />
+                            ))}
+                        </div>
                       </div>
                     )}
                   </div>

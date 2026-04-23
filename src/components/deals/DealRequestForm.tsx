@@ -20,12 +20,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Plus,
-  TrendingUp,
-  Info,
-  DollarSign,
-} from "lucide-react";
+import { Plus, TrendingUp, Info, DollarSign } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 
@@ -53,8 +48,8 @@ const DealRequestForm = ({
   const [exchangeRates, setExchangeRates] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     sendingAmount: "",
-    payoutCountry: "",  
-    payoutCountryId: "", 
+    payoutCountry: "",
+    payoutCountryId: "",
     payoutCurrency: "",
     proposedRate: "",
     currentMarketRate: "",
@@ -65,8 +60,8 @@ const DealRequestForm = ({
   // Derive unique countries from complianceCurrencies
   const countries = Array.from(
     new Map(
-      complianceCurrencies.map((item) => [item.countryCode, item])
-    ).values()
+      complianceCurrencies.map((item) => [item.countryCode, item]),
+    ).values(),
   );
 
   // Derive currencies for the selected country
@@ -76,13 +71,20 @@ const DealRequestForm = ({
 
   const getTransitionPropose = async () => {
     if (!token) {
-      toast({ title: "Error", description: "No token found", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "No token found",
+        variant: "destructive",
+      });
       return;
     }
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/rate-deals/rate-deals-purpose`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/rate-deals/rate-deals-purpose`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (json.status !== true || !json.data) {
@@ -98,9 +100,12 @@ const DealRequestForm = ({
   const getComplianceCurrencies = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/payout/config/compliance-currencies`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/payout/config/compliance-currencies`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (json.status !== true || !json.data) {
@@ -140,7 +145,7 @@ const DealRequestForm = ({
   const handleCountryChange = (countryId: string) => {
     // Find the matching country entry to get countryCode for UI filtering
     const countryEntry = complianceCurrencies.find(
-      (item) => String(item.countryId) === countryId
+      (item) => String(item.countryId) === countryId,
     );
     // Reset currency and market rate when country changes
     setFormData({
@@ -155,7 +160,7 @@ const DealRequestForm = ({
   const handleCurrencyChange = (currency: string) => {
     // Look up market rate for selected currency from exchangeRates
     const rateEntry = exchangeRates.find(
-      (r) => r.name.toLowerCase() === currency.toLowerCase()
+      (r) => r.name.toLowerCase() === currency.toLowerCase(),
     );
     const marketRate = rateEntry ? String(rateEntry.rate) : "";
 
@@ -190,7 +195,7 @@ const DealRequestForm = ({
 
   const handleSubmit = async () => {
     const formDTO = {
-      sendingCurrency: currencyCode,  // from cookie, read-only
+      sendingCurrency: currencyCode, // from cookie, read-only
       amount: formData?.sendingAmount,
       countryId: formData?.payoutCountryId,
       payoutCurrency: formData?.payoutCurrency,
@@ -228,7 +233,8 @@ const DealRequestForm = ({
 
       toast({
         title: "Deal Request Submitted",
-        description: "Your exchange rate deal request has been submitted for review.",
+        description:
+          "Your exchange rate deal request has been submitted for review.",
       });
       setOpen(false);
       onSubmitSuccess?.();
@@ -330,7 +336,10 @@ const DealRequestForm = ({
                       placeholder="Enter amount"
                       value={formData.sendingAmount}
                       onChange={(e) =>
-                        setFormData({ ...formData, sendingAmount: e.target.value })
+                        setFormData({
+                          ...formData,
+                          sendingAmount: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -414,7 +423,9 @@ const DealRequestForm = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentMarketRate">Current Market Rate</Label>
+                    <Label htmlFor="currentMarketRate">
+                      Current Market Rate
+                    </Label>
                     <Input
                       type="number"
                       id="currentMarketRate"
@@ -437,7 +448,10 @@ const DealRequestForm = ({
                       placeholder="Enter your desired rate"
                       value={formData.proposedRate}
                       onChange={(e) =>
-                        setFormData({ ...formData, proposedRate: e.target.value })
+                        setFormData({
+                          ...formData,
+                          proposedRate: e.target.value,
+                        })
                       }
                     />
                     <p className="text-xs text-muted-foreground">
@@ -453,27 +467,39 @@ const DealRequestForm = ({
                       <h4 className="font-medium mb-3">Potential Impact</h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Market Payout:</span>
+                          <span className="text-muted-foreground">
+                            Market Payout:
+                          </span>
                           <p className="font-semibold">
                             {formData.payoutCurrency} {savings.marketPayout}
                           </p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Proposed Payout:</span>
+                          <span className="text-muted-foreground">
+                            Proposed Payout:
+                          </span>
                           <p className="font-semibold">
                             {formData.payoutCurrency} {savings.proposedPayout}
                           </p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Difference:</span>
-                          <p className={`font-semibold ${parseFloat(savings.difference) >= 0 ? "text-success" : "text-destructive"}`}>
+                          <span className="text-muted-foreground">
+                            Difference:
+                          </span>
+                          <p
+                            className={`font-semibold ${parseFloat(savings.difference) >= 0 ? "text-success" : "text-destructive"}`}
+                          >
                             {parseFloat(savings.difference) >= 0 ? "+" : ""}
                             {formData.payoutCurrency} {savings.difference}
                           </p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Rate Change:</span>
-                          <p className={`font-semibold ${parseFloat(savings.percentageDiff) >= 0 ? "text-success" : "text-destructive"}`}>
+                          <span className="text-muted-foreground">
+                            Rate Change:
+                          </span>
+                          <p
+                            className={`font-semibold ${parseFloat(savings.percentageDiff) >= 0 ? "text-success" : "text-destructive"}`}
+                          >
                             {parseFloat(savings.percentageDiff) >= 0 ? "+" : ""}
                             {savings.percentageDiff}%
                           </p>
@@ -504,7 +530,11 @@ const DealRequestForm = ({
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button variant="default" onClick={handleConfirm}>
+              <Button
+                variant="default"
+                onClick={handleConfirm}
+                disabled={loading}
+              >
                 Submit Deal Request
               </Button>
             </div>

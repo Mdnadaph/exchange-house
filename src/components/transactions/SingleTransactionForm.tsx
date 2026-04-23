@@ -1512,6 +1512,7 @@ const SingleTransactionForm = ({
   const [notes, setNotes] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [open, setOpen] = useState(false);
+  const [loadingRateDeal, setLoadingRateDeal] = useState(false);
   const [currencyListData, setCurrencyListData] = useState(null);
   const [beneficiariesList, setBeneficiariesList] = useState([]);
   const [feeManagementData, setFeeManagementData] = useState([]);
@@ -1927,6 +1928,7 @@ const SingleTransactionForm = ({
   );
 
   const getCustomRateDeal = async () => {
+    setLoadingRateDeal(true);
     try {
       const res = await axios.get(
         `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
@@ -1942,6 +1944,8 @@ const SingleTransactionForm = ({
         variant: "destructive",
         title: error?.response?.data?.message || "Transaction failed",
       });
+    } finally {
+      setLoadingRateDeal(false);
     }
   };
 
@@ -2002,6 +2006,7 @@ const SingleTransactionForm = ({
             setCurrentExchangeRate("");
             setRequestedExchangeRate("");
             setFeeRule({});
+            setRateDealData({});
           }
         }}
       >
@@ -2622,7 +2627,9 @@ const SingleTransactionForm = ({
                 </CardContent>
               </Card>
             )}
-            {rateDealData?.proposedRate ? (
+            {loadingRateDeal ? (
+              <div className="text-gray-400 p-4">Loading...</div>
+            ) : rateDealData?.proposedRate && amount ? (
               <Card className="bg-accent-muted/10 border-accent/20">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -2649,7 +2656,7 @@ const SingleTransactionForm = ({
               </Card>
             ) : (
               <div className="text-gray-400 p-4">
-                No rate deal data available
+                {amount && <p> No rate deal data available</p>}
               </div>
             )}
             {range && (
