@@ -83,6 +83,7 @@ const ExchangeBranchManagement = () => {
     "UMM_AL_QUWAIN",
   ];
 
+
   /* =========================
      FETCH BRANCHES
   ========================= */
