@@ -24,6 +24,9 @@ import {
   Clock,
   BadgeCheck,
   Loader,
+  BookOpen,
+  FileSpreadsheet,
+  ShieldCheck,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -127,8 +130,14 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     {
       name: "Compliance Review",
       href: "/exchange/compliance-review",
-      icon: FileCheck,
+      icon: ShieldCheck,
       code: "NAV_COMPLIANCE_REVIEW",
+    },
+     {
+      name: "Transaction Report",
+      href: "/exchange/transaction-report",
+      icon: BookOpen,
+      code: "NAV_TRANSACTION_REPORT",
     },
     {
       name: "Discounts",

@@ -57,6 +57,7 @@ import BranchDetails from "./pages/exchange/Branch/BranchDetails";
 import CreateKybRule from "./components/kyb/CreateKybRule";
 import ExchangePendingVerification from "./pages/exchange/ExchangePendingVerification";
 import ExchangeAdminComplianceReview from "./pages/exchange/ExchangeAdminComplianceReview";
+import ExchangeAdminTransactionReport from "./pages/exchange/ExchangeAdminTransactionReport";
 
 
 // Branch Staff
@@ -322,6 +323,7 @@ function App() {
                       path="compliance-review"
                       element={<ExchangeAdminComplianceReview />}
                     />
+                    <Route path="transaction-report" element={<ExchangeAdminTransactionReport />} />
                     <Route path="discount" element={<ExchangeDiscount />} />
                     <Route path="deals" element={<ExchangeDealReview />} />
                     <Route
