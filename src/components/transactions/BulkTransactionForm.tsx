@@ -82,6 +82,7 @@ const BulkTransactionForm = ({
   const [selectedPayouts, setSelectedPayouts] = useState<
     Record<number, number>
   >({});
+  const [applicableRate, setApplicableRate] = useState([]);
 
   // Mock sources (replace with real fetch if needed)
   const transactionSources = [
@@ -285,6 +286,7 @@ const BulkTransactionForm = ({
       // Reset form
       setSelectedSource("");
       setTransactionPurpose("");
+      setSelectedPayouts({});
       setCurrency("");
       setSelectedGroup("");
       setBeneficiaryAmounts({});
@@ -297,6 +299,71 @@ const BulkTransactionForm = ({
       setLoading(false);
     }
   };
+
+  const isPayloadReady = () => {
+    const group = getSelectedGroup();
+    if (!group || !group.beneficiaries?.length) return false;
+
+    return group?.beneficiaries?.every((ben: any) => {
+      const amountStr = beneficiaryAmounts[ben.id];
+      const amount = amountStr ? Number(amountStr) : NaN;
+      const payoutId = selectedPayouts[ben.id];
+
+      return amountStr && !isNaN(amount) && amount > 0 && payoutId;
+    });
+  };
+
+  const getApplicableDeals = async () => {
+    const group = getSelectedGroup();
+    if (!group) {
+      toast({ variant: "destructive", title: "No group selected" });
+      setLoading(false);
+      return;
+    }
+
+    const dealPayload = group.beneficiaries
+      ?.map((ben: any) => {
+        const amountStr = beneficiaryAmounts[ben.id];
+        const amount = amountStr ? Number(amountStr) : NaN;
+        const beneficiaryPayoutDetailId = selectedPayouts[ben.id];
+        if (!amountStr || isNaN(amount) || amount <= 0) return null;
+        return {
+          beneficiaryId: Number(ben.id),
+          amount,
+          beneficiaryPayoutDetailId,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => !!item);
+
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/bulk-transactions/applicable-deals`,
+        dealPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setApplicableRate(res?.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isPayloadReady()) {
+      getApplicableDeals();
+    }
+  }, [beneficiaryAmounts, selectedPayouts]);
+
+  const applicableRateDealsData = applicableRate?.filter(
+    (item: any) => item?.rateDeal?.isApplicable === true,
+  );
 
   const getBeneficiaryPayout = async () => {
     try {
@@ -527,6 +594,7 @@ const BulkTransactionForm = ({
                           <TableHead>Beneficiary Payout</TableHead>
                           <TableHead>Value (Amount)</TableHead>
                           <TableHead>Exchnage Rate</TableHead>
+                          <TableHead>Currency Code</TableHead>
                           <TableHead>Converted Amount</TableHead>
                           <TableHead>Discount Code</TableHead>
                         </TableRow>
@@ -598,6 +666,9 @@ const BulkTransactionForm = ({
                                 </span>
                               </TableCell>
                               <TableCell>
+                                <p>{currency ?? "-"}</p>
+                              </TableCell>
+                              <TableCell>
                                 <span className="font-medium text-green-600">
                                   {getConvertedAmount(ben) || "-"}
                                 </span>
@@ -621,6 +692,41 @@ const BulkTransactionForm = ({
                   </CardContent>
                 </Card>
               )}
+          </CardContent>
+        </Card>
+      )}
+      {applicableRateDealsData?.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Applicable Rate deal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {applicableRateDealsData?.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+              >
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Proposed Rate</p>
+                  <p className="text-base font-semibold">
+                    {item?.rateDeal?.proposedRate ?? "-"}
+                  </p>
+                </div>
+
+                <div className="text-right space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    Remaining Amount
+                  </p>
+                  <p className="text-base font-semibold">
+                    {item?.rateDeal?.remainingAmount ?? "-"}{" "}
+                    {item?.rateDeal?.payoutCurrency}
+                  </p>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -705,7 +811,24 @@ const BulkTransactionForm = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          setOpen(open);
+          if (!open) {
+            setSelectedSource("");
+            setTransactionPurpose("");
+            setCurrency("");
+            setSelectedGroup("");
+            setBeneficiaryAmounts({});
+            setBeneficiaryDiscounts({});
+            setSelectedPayouts({});
+            setDocument(null);
+            setCurrentStep(1);
+            setApplicableRate([]);
+          }
+        }}
+      >
         <DialogTrigger asChild>
           {trigger || (
             <Button variant="outline">

@@ -25,7 +25,7 @@ interface DealResponseFormProps {
   requestedRate: string;
   currency: string;
   onResponse?: () => void;
-  hasMultipleCounterProposals: boolean;
+  hasMultipleCounterProposals?: boolean;
 }
 
 const DealResponseForm = ({

@@ -35,6 +35,7 @@ import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import { formateDateTime } from "@/utils/formateDateTime";
+import ApproveRejectTransactionModal from "@/components/transactions/ApproveRejectTransactionModal";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -226,6 +227,10 @@ const ExchangeTransactions = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
+  const [open, setOpen] = useState(false);
+  const [actionType, setActionType] = useState<"APPROVE" | "REJECT" | null>(
+    null,
+  );
 
   const token = cookies.token;
   const fullname = cookies.fullName;
@@ -995,6 +1000,12 @@ const ExchangeTransactions = () => {
                                   <ChevronDown className="h-4 w-4 ml-1" />
                                 )}
                               </Button>
+                              {transaction?.status === "PROCESSING" && (
+                                <div>
+                                  <Button>Approve</Button>
+                                  <Button>Reject</Button>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -1113,6 +1124,14 @@ const ExchangeTransactions = () => {
             setUploadTransaction(null);
             fetchTransactions();
           }}
+        />
+      )}
+      {open && (
+        <ApproveRejectTransactionModal
+          setOpen={setOpen}
+          open={open}
+          actionType={actionType}
+          setActionType={setActionType}
         />
       )}
     </ExchangeLayout>
