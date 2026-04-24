@@ -26,6 +26,7 @@ interface CountryCurrency {
 // ─── CONSTANTS ─────────────────────────
 
 const statusList = [
+  "ANY",
   "CLEAR",
   "FLAGGED",
   "MANUAL_REVIEW",
@@ -34,7 +35,7 @@ const statusList = [
   "BLOCKED",
 ];
 
-const transactionTypes = ["SINGLE", "BULK"];
+const transactionTypes = ["BOTH", "SINGLE", "BULK"];
 
 // ─── COMPONENT ─────────────────────────
 
@@ -79,7 +80,7 @@ function ExchangeAdminTransactionReport() {
     try {
       const res = await axios.get(
         `${BASE_URL}/api/v1/payout/config/compliance-currencies`,
-        { headers: getHeaders() }
+        { headers: getHeaders() },
       );
 
       const data: CountryCurrency[] = res.data?.data || [];
@@ -88,7 +89,7 @@ function ExchangeAdminTransactionReport() {
 
       // ✅ Unique countries (typed)
       const uniqueCountries = Array.from(
-        new Set<string>(data.map((item) => item.countryName))
+        new Set<string>(data.map((item) => item.countryName)),
       );
 
       setCountries(uniqueCountries);
@@ -111,8 +112,8 @@ function ExchangeAdminTransactionReport() {
       new Set(
         countryData
           .filter((item) => item.countryName === country)
-          .map((item) => item.currencyCode)
-      )
+          .map((item) => item.currencyCode),
+      ),
     );
 
     setCurrencies(filteredCurrencies);
@@ -124,20 +125,26 @@ function ExchangeAdminTransactionReport() {
     setLoading(true);
 
     try {
-      const payload = {
-        ...filters,
-        minAmount: filters.minAmount
-          ? Number(filters.minAmount)
-          : undefined,
-        maxAmount: filters.maxAmount
-          ? Number(filters.maxAmount)
-          : undefined,
-      };
+      // const payload = {
+      //   ...filters,
+      //   minAmount: filters.minAmount ? Number(filters.minAmount) : undefined,
+      //   maxAmount: filters.maxAmount ? Number(filters.maxAmount) : undefined,
+      // };
+
+      const payload = Object.fromEntries(
+        Object.entries({
+          ...filters,
+          minAmount: filters.minAmount ? Number(filters.minAmount) : undefined,
+          maxAmount: filters.maxAmount ? Number(filters.maxAmount) : undefined,
+        }).filter(
+          ([_, value]) => value !== "" && value !== null && value !== undefined,
+        ),
+      );
 
       const res = await axios.post(
         `${BASE_URL}/api/v1/compliance/reports/search?page=0&size=10`,
         payload,
-        { headers: getHeaders() }
+        { headers: getHeaders() },
       );
 
       setReports(res.data?.data?.content || []);
@@ -163,9 +170,7 @@ function ExchangeAdminTransactionReport() {
       <div className="space-y-6">
         {/* HEADER */}
         <div>
-          <h1 className="text-3xl font-bold">
-            Transaction Report
-          </h1>
+          <h1 className="text-3xl font-bold">Transaction Report</h1>
           <p className="text-muted-foreground">
             Search and monitor compliance transactions
           </p>
@@ -174,7 +179,6 @@ function ExchangeAdminTransactionReport() {
         {/* FILTER */}
         <Card>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-
             <Input
               type="date"
               onChange={(e) =>
@@ -191,7 +195,7 @@ function ExchangeAdminTransactionReport() {
 
             <Select
               onValueChange={(val) =>
-                setFilters({ ...filters, status: val })
+                setFilters({ ...filters, status: val == "ANY" ? "" : val })
               }
             >
               <SelectTrigger>
@@ -208,7 +212,10 @@ function ExchangeAdminTransactionReport() {
 
             <Select
               onValueChange={(val) =>
-                setFilters({ ...filters, transactionType: val })
+                setFilters({
+                  ...filters,
+                  transactionType: val == "BOTH" ? "" : val,
+                })
               }
             >
               <SelectTrigger>
@@ -237,9 +244,7 @@ function ExchangeAdminTransactionReport() {
             </Select>
 
             <Select
-              onValueChange={(val) =>
-                setFilters({ ...filters, currency: val })
-              }
+              onValueChange={(val) => setFilters({ ...filters, currency: val })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Currency" />
@@ -302,7 +307,6 @@ function ExchangeAdminTransactionReport() {
             <Button onClick={handleSearch} disabled={loading}>
               {loading ? "Searching..." : "Search"}
             </Button>
-
           </CardContent>
         </Card>
 

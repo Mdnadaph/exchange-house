@@ -104,6 +104,7 @@ interface ApiResponse {
 interface Transaction {
   id: string;
   branchName: string;
+  destinationCurrency: string;
   businessId: string;
   beneficiary: string;
   amount: string;
@@ -288,6 +289,7 @@ const ExchangeAdminComplianceReview = () => {
               businessPhone: apiTx?.businessPhone,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
+              destinationCurrency: apiTx?.destinationCurrency,
               logoUrl: apiTx?.logUrl,
               branchName: apiTx.branchName || "",
               businessId: apiTx.businessId || "",
@@ -804,6 +806,7 @@ const ExchangeAdminComplianceReview = () => {
                                 {transaction.localAmount}
                               </p>
                               <p className="text-sm text-muted-foreground">
+                                {transaction?.destinationCurrency}{" "}
                                 {transaction.amount}
                               </p>
                             </div>
@@ -829,13 +832,13 @@ const ExchangeAdminComplianceReview = () => {
                                 Exchange Rate:
                               </span>
                               <p className="font-medium">
-                                1 AED =
+                                1 {transaction.currency.toUpperCase()} =
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
                                     ).toFixed(2)
                                   : "-"}{" "}
-                                {transaction.currency.toUpperCase()}
+                                {transaction?.destinationCurrency}
                               </p>
                             </div>
 
@@ -844,7 +847,8 @@ const ExchangeAdminComplianceReview = () => {
                                 Fee Details:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.fees}
+                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.fees}
                               </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
@@ -872,7 +876,8 @@ const ExchangeAdminComplianceReview = () => {
                                 Beneficiary Fee Amount:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.beneficiaryFeeAmount}
+                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.beneficiaryFeeAmount}
                               </p>
                             </div>
 
@@ -881,7 +886,8 @@ const ExchangeAdminComplianceReview = () => {
                                 Net Payout Amount:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.netPayoutAmount}
+                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.netPayoutAmount}
                               </p>
                             </div>
 
@@ -890,7 +896,8 @@ const ExchangeAdminComplianceReview = () => {
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.totalDebit}
+                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction.totalDebit}
                               </p>
                             </div>
 
@@ -921,7 +928,7 @@ const ExchangeAdminComplianceReview = () => {
                               <p className="font-medium">
                                 {transaction.discountAmount === "0.00"
                                   ? "—"
-                                  : `AED ${transaction.discountAmount}`}
+                                  : `${transaction.currency.toUpperCase()} ${transaction.discountAmount}`}
                               </p>
                             </div>
 

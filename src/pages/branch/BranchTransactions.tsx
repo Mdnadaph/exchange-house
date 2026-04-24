@@ -112,6 +112,7 @@ interface ApiResponse {
 
 interface Transaction {
   id: string;
+  destinationCurrency: string;
   branchName: string;
   businessId: string;
   beneficiary: string;
@@ -251,6 +252,7 @@ const BranchTransactions = () => {
 
             return {
               id: apiTx.reference,
+              destinationCurrency: apiTx?.destinationCurrency,
               bulkCount: apiTx?.itemCount,
               businessPhone: apiTx?.businessPhone,
               logoUrl: apiTx?.logUrl,
@@ -735,6 +737,7 @@ const BranchTransactions = () => {
                                 {transaction.localAmount}
                               </p>
                               <p className="text-sm text-muted-foreground">
+                                {transaction?.destinationCurrency}{" "}
                                 {transaction.amount}
                               </p>
                             </div>
@@ -759,13 +762,13 @@ const BranchTransactions = () => {
                                 Exchange Rate:
                               </span>
                               <p className="font-medium">
-                                1 AED =
+                                1 {transaction?.currency?.toUpperCase()} =
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
                                     ).toFixed(2)
                                   : "-"}{" "}
-                                {transaction.currency.toUpperCase()}
+                                {transaction?.destinationCurrency}
                               </p>
                             </div>
 
@@ -774,7 +777,8 @@ const BranchTransactions = () => {
                                 Fee Details:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.fees}
+                                {transaction?.currency?.toUpperCase()}{" "}
+                                {transaction.fees}
                               </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
@@ -802,7 +806,8 @@ const BranchTransactions = () => {
                                 Beneficiary Fee Amount:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.beneficiaryFeeAmount}
+                                {transaction?.currency?.toUpperCase()}{" "}
+                                {transaction.beneficiaryFeeAmount}
                               </p>
                             </div>
 
@@ -811,7 +816,8 @@ const BranchTransactions = () => {
                                 Net Payout Amount:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.netPayoutAmount}
+                                {transaction?.currency?.toUpperCase()}{" "}
+                                {transaction.netPayoutAmount}
                               </p>
                             </div>
 
@@ -820,7 +826,8 @@ const BranchTransactions = () => {
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.totalDebit}
+                                {transaction?.currency?.toUpperCase()}{" "}
+                                {transaction.totalDebit}
                               </p>
                             </div>
 
@@ -860,7 +867,7 @@ const BranchTransactions = () => {
                               <p className="font-medium">
                                 {transaction.discountAmount === "0.00"
                                   ? "—"
-                                  : `AED ${transaction.discountAmount}`}
+                                  : `${transaction?.currency?.toUpperCase()} ${transaction.discountAmount}`}
                               </p>
                             </div>
                           </div>

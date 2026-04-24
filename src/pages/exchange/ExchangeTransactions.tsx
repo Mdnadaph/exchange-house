@@ -111,6 +111,7 @@ interface Transaction {
   exchangeRate: string;
   localAmount: string;
   localCurrency: string;
+  destinationCurrency: string;
   status: string;
   type: "SINGLE" | "BULK";
   purpose: string;
@@ -324,6 +325,7 @@ const ExchangeTransactions = () => {
               fees: apiTx.feeAmount?.toFixed(2),
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
+              destinationCurrency: apiTx?.destinationCurrency,
               failureReason: apiTx.failureReason || "",
               documents: apiTx.documents,
               commentCount: apiTx.commentCount || 0,
@@ -805,6 +807,7 @@ const ExchangeTransactions = () => {
                                 {transaction.localAmount}
                               </p>
                               <p className="text-sm text-muted-foreground">
+                                {transaction?.destinationCurrency}{" "}
                                 {transaction.amount}
                               </p>
                             </div>
@@ -830,13 +833,13 @@ const ExchangeTransactions = () => {
                                 Exchange Rate:
                               </span>
                               <p className="font-medium">
-                                1 AED =
+                                1 {transaction?.currency.toUpperCase()} =
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
                                     ).toFixed(2)
                                   : "-"}{" "}
-                                {transaction.currency.toUpperCase()}
+                                {transaction?.destinationCurrency.toUpperCase()}
                               </p>
                             </div>
 
@@ -845,7 +848,8 @@ const ExchangeTransactions = () => {
                                 Fee Details:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.fees}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction.fees}
                               </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
@@ -873,7 +877,8 @@ const ExchangeTransactions = () => {
                                 Beneficiary Fee Amount:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.beneficiaryFeeAmount}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction.beneficiaryFeeAmount}
                               </p>
                             </div>
 
@@ -882,7 +887,8 @@ const ExchangeTransactions = () => {
                                 Net Payout Amount:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.netPayoutAmount}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction.netPayoutAmount}
                               </p>
                             </div>
 
@@ -891,7 +897,8 @@ const ExchangeTransactions = () => {
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                AED {transaction.totalDebit}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction.totalDebit}
                               </p>
                             </div>
 
@@ -922,7 +929,7 @@ const ExchangeTransactions = () => {
                               <p className="font-medium">
                                 {transaction.discountAmount === "0.00"
                                   ? "—"
-                                  : `AED ${transaction.discountAmount}`}
+                                  : `${transaction?.currency.toUpperCase()} ${transaction.discountAmount}`}
                               </p>
                             </div>
 

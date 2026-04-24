@@ -32,6 +32,7 @@ interface TransactionDocument {
 
 interface Transaction {
   id: string;
+  destinationCurrency: string;
   branchName: string;
   businessId: string;
   beneficiary: string;
@@ -300,10 +301,10 @@ const handleDownloadReceipt = (
        <div class="row"><b>Address:</b> ${transaction.singleBeneficiary?.email || "-"}</div>
 
       <div class="label">Payment Details</div>
-      <div class="row amount">PayIn Amount: ${transaction.convertedAmount} ${currencyCode}</div>
-      <div class="row amount">Charges: ${transaction.fees} ${currencyCode}</div>
+      <div class="row amount">PayIn Amount: ${transaction.convertedAmount} ${transaction?.currency}</div>
+      <div class="row amount">Charges: ${transaction.fees} ${transaction?.currency}</div>
       <div class="row amount">VAT: 0</div>
-      <div class="row amount"><b>Total Payable: ${transaction.totalDebit} ${currencyCode}</b></div>
+      <div class="row amount"><b>Total Payable: ${transaction.totalDebit} ${transaction?.currency}</b></div>
       <div class="row amount">Exchange Rate: ${transaction.exchangeRate}</div>
       <div class="row amount"><b>Actual Payout Amount: ${transaction?.sourceAmount} ${transaction?.currency}</b></div>
     </div>
@@ -450,7 +451,7 @@ export default function TransactionDetailModal({
                 {transaction.currency.toUpperCase()} {transaction.amount}
               </p>
               <p className="text-sm text-slate-400 mt-1">
-                {transaction.localCurrency} {transaction.localAmount}
+                {transaction?.destinationCurrency} {transaction.localAmount}
               </p>
             </div>
           </div>
@@ -631,13 +632,17 @@ export default function TransactionDetailModal({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-muted/30 rounded-xl p-4">
               <DetailField
                 label="Exchange Rate"
-                value={`1 ${transaction.currency.toUpperCase()} = ${transaction.exchangeRate} ${transaction.localCurrency}`}
+                value={`1 ${transaction.currency.toUpperCase()} =${
+                  transaction?.exchangeRate
+                    ? (1 / Number(transaction.exchangeRate)).toFixed(2)
+                    : ""
+                } ${transaction?.destinationCurrency}`}
               />
               <DetailField
                 label="Fee"
                 value={
                   <>
-                    AED {transaction.fees}
+                    {transaction?.currency} {transaction.fees}
                     {transaction.feeResponsibility && (
                       <span className="text-xs text-muted-foreground block font-normal">
                         Paid by: {transaction.feeResponsibility}
@@ -648,7 +653,7 @@ export default function TransactionDetailModal({
               />
               <DetailField
                 label="Total Debit"
-                value={`AED ${transaction.totalDebit}`}
+                value={`${transaction?.currency} ${transaction.totalDebit}`}
               />
               <DetailField
                 label="Discount %"
@@ -659,7 +664,7 @@ export default function TransactionDetailModal({
                 value={
                   transaction.discountAmount === "0.00"
                     ? "—"
-                    : `AED ${transaction.discountAmount}`
+                    : `${transaction?.currency} ${transaction.discountAmount}`
                 }
               />
             </div>

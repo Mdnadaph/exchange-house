@@ -107,6 +107,7 @@ interface ApiResponse {
 interface Transaction {
   id: string;
   branchName: string;
+  destinationCurrency: string;
   businessId: string;
   beneficiary: string;
   amount: string;
@@ -284,6 +285,7 @@ const UserTransactions = () => {
             return {
               businessPhone: apiTx?.businessPhone,
               businessName: apiTx?.businessName,
+              destinationCurrency: apiTx?.destinationCurrency,
               id: apiTx.reference,
               sourceAmount: apiTx.sourceAmount,
               branchName: apiTx.branchName || "",
@@ -835,6 +837,7 @@ const UserTransactions = () => {
                                 {transaction.localAmount}
                               </p>
                               <p className="text-sm text-muted-foreground">
+                                {transaction?.destinationCurrency}{" "}
                                 {transaction.amount}
                               </p>
                             </div>
@@ -860,13 +863,13 @@ const UserTransactions = () => {
                                 Exchange Rate:
                               </span>
                               <p className="font-medium">
-                                1 AED =
+                                1 {transaction?.currency?.toUpperCase()}=
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
                                     ).toFixed(2)
                                   : "-"}{" "}
-                                {transaction.currency.toUpperCase()}
+                                {transaction?.destinationCurrency}
                               </p>
                             </div>
 
@@ -875,7 +878,8 @@ const UserTransactions = () => {
                                 Fee Details:
                               </span>
                               <p className="font-medium">
-                                {transaction.fees} AED
+                                {transaction.fees}{" "}
+                                {transaction?.currency?.toUpperCase()}
                               </p>
                               {transaction.feeResponsibility && (
                                 <p className="text-xs text-muted-foreground">
@@ -889,7 +893,8 @@ const UserTransactions = () => {
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                {transaction.totalDebit} AED
+                                {transaction.totalDebit}{" "}
+                                {transaction?.currency?.toUpperCase()}
                               </p>
                             </div>
 
@@ -932,7 +937,7 @@ const UserTransactions = () => {
                               <p className="font-medium">
                                 {transaction.discountAmount === "0.00"
                                   ? "—"
-                                  : `AED ${transaction.discountAmount}`}
+                                  : ` ${transaction?.currency?.toUpperCase()} ${transaction.discountAmount}`}
                               </p>
                             </div>
 
