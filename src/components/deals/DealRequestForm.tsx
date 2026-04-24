@@ -159,10 +159,10 @@ const DealRequestForm = ({
 
   const handleCurrencyChange = (currency: string) => {
     // Look up market rate for selected currency from exchangeRates
-    const rateEntry = exchangeRates.find(
-      (r) => r.name.toLowerCase() === currency.toLowerCase(),
+    const rateEntry = exchangeRates?.find(
+      (r) => r?.name?.toLowerCase() === currency?.toLowerCase(),
     );
-    const marketRate = rateEntry ? String(rateEntry.rate) : "";
+    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(2) : "";
 
     setFormData({
       ...formData,
@@ -270,7 +270,24 @@ const DealRequestForm = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          setOpen(open);
+          if (!open) {
+            setFormData({
+              sendingAmount: "",
+              payoutCountry: "",
+              payoutCountryId: "",
+              payoutCurrency: "",
+              proposedRate: "",
+              currentMarketRate: "",
+              purpose: "",
+              notes: "",
+            });
+          }
+        }}
+      >
         <DialogTrigger asChild>
           {trigger || (
             <Button variant="default">

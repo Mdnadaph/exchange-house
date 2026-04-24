@@ -73,11 +73,9 @@ const ProofOfPaymentUpload = ({
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
-
   const [documents, setDocuments] = useState<ProofDocument[]>(initialDocuments);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -122,7 +120,7 @@ const ProofOfPaymentUpload = ({
         `📄 Found ${proofDocs.length} PROOF_OF_PAYMENT documents for transaction ${transactionId}`,
       );
 
-      setDocuments(proofDocs);
+      setDocuments(matchedTxn?.documents ?? []);
     } catch (err: any) {
       console.error(
         "Fetch Documents Error:",

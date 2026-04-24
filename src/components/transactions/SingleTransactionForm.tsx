@@ -1956,10 +1956,10 @@ const SingleTransactionForm = ({
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
 
-  useEffect(() => {
-    if (!selectedBeneficiary) return;
-    fetchFeeRulesForTransaction();
-  }, [selectedBeneficiary]);
+  // useEffect(() => {
+  //   if (!selectedBeneficiary) return;
+  //   fetchFeeRulesForTransaction();
+  // }, [selectedBeneficiary]);
 
   useEffect(() => {
     const fee = singleTransationFeeManagementData?.filter(
@@ -2167,7 +2167,7 @@ const SingleTransactionForm = ({
                     </SelectContent>
                   </Select>
                 </div>
-                {loading ? (
+                {/* {loading ? (
                   <div>Fee Data Loading...</div>
                 ) : feeRule?.id ? (
                   <Card>
@@ -2264,7 +2264,7 @@ const SingleTransactionForm = ({
                       </div>{" "}
                     </CardContent>{" "}
                   </Card>
-                ) : null}
+                ) : null} */}
 
                 {selectedBeneficiaryData && (
                   <Card className="border-l-4 border-l-accent">
