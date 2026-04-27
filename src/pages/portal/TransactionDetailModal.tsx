@@ -448,10 +448,10 @@ export default function TransactionDetailModal({
             {/* Amount */}
             <div className="text-right">
               <p className="text-3xl font-black tabular-nums">
-                {transaction.currency.toUpperCase()} {transaction.amount}
+                {transaction.currency.toUpperCase()} {transaction.localAmount}
               </p>
               <p className="text-sm text-slate-400 mt-1">
-                {transaction?.destinationCurrency} {transaction.localAmount}
+                {transaction?.destinationCurrency} {transaction.amount}
               </p>
             </div>
           </div>

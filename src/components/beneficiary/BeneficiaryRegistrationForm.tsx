@@ -85,7 +85,8 @@ const humanizeField = (field: string) =>
 
 const mechanismIcon = (name: string) => {
   const lower = name.toLowerCase();
-  if (lower.includes("wallet")) return <Wallet className="h-8 w-8 text-primary" />;
+  if (lower.includes("wallet"))
+    return <Wallet className="h-8 w-8 text-primary" />;
   if (lower.includes("bank") || lower.includes("transfer"))
     return <Banknote className="h-8 w-8 text-primary" />;
   return <CreditCard className="h-8 w-8 text-primary" />;
@@ -116,29 +117,39 @@ const BeneficiaryRegistrationForm = ({
 
   // ── UI / selection states ──────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
-  const [beneficiaryType, setBeneficiaryType] = useState<"individual" | "business">(
-    editData?.type === "BUSINESS" ? "business" : "individual"
+  const [beneficiaryType, setBeneficiaryType] = useState<
+    "individual" | "business"
+  >(editData?.type === "BUSINESS" ? "business" : "individual");
+  const [residencyType, setResidencyType] = useState<"uae" | "foreign">(
+    "foreign",
   );
-  const [residencyType, setResidencyType] = useState<"uae" | "foreign">("foreign");
   const [beneficiaryCountry, setBeneficiaryCountry] = useState(
-    editData?.countryId ? String(editData.countryId) : ""
+    editData?.countryId ? String(editData.countryId) : "",
   );
-  const [beneficiariesCountries, setBeneficiariesCountries] = useState<any>(null);
+  const [beneficiariesCountries, setBeneficiariesCountries] =
+    useState<any>(null);
 
   // ── Dynamic form-fields from API ───────────────────────────────────────────
-  const [countryFormFields, setCountryFormFields] = useState<CountryFormFields | null>(null);
+  const [countryFormFields, setCountryFormFields] =
+    useState<CountryFormFields | null>(null);
   const [formFieldsLoading, setFormFieldsLoading] = useState(false);
 
   // ── Mechanism selection + multi-entry state ────────────────────────────────
-  const [selectedMechanism, setSelectedMechanism] = useState<Mechanism | null>(null);
-  const [mechanismEntries, setMechanismEntries] = useState<MechanismEntry[]>([emptyEntry()]);
+  const [selectedMechanism, setSelectedMechanism] = useState<Mechanism | null>(
+    null,
+  );
+  const [mechanismEntries, setMechanismEntries] = useState<MechanismEntry[]>([
+    emptyEntry(),
+  ]);
 
   // ── Dates ──────────────────────────────────────────────────────────────────
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(
-    editData?.dateOfBirth ? parseISO(editData.dateOfBirth) : undefined
+    editData?.dateOfBirth ? parseISO(editData.dateOfBirth) : undefined,
   );
   const [incorporationDate, setIncorporationDate] = useState<Date | undefined>(
-    editData?.incorporationDate ? parseISO(editData.incorporationDate) : undefined
+    editData?.incorporationDate
+      ? parseISO(editData.incorporationDate)
+      : undefined,
   );
 
   // ── Documents ─────────────────────────────────────────────────────────────
@@ -151,6 +162,7 @@ const BeneficiaryRegistrationForm = ({
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   // ── Static form fields ─────────────────────────────────────────────────────
+
   const [formData, setFormData] = useState({
     firstName: editData?.firstName || "",
     lastName: editData?.lastName || "",
@@ -206,8 +218,7 @@ const BeneficiaryRegistrationForm = ({
 
   // ─── Entry helpers ─────────────────────────────────────────────────────────
 
-  const addEntry = () =>
-    setMechanismEntries((prev) => [...prev, emptyEntry()]);
+  const addEntry = () => setMechanismEntries((prev) => [...prev, emptyEntry()]);
 
   const removeEntry = (id: string) =>
     setMechanismEntries((prev) => prev.filter((e) => e.id !== id));
@@ -230,7 +241,7 @@ const BeneficiaryRegistrationForm = ({
   const getCountryCurrencyId = (currencyCode: string): number | null => {
     if (!selectedMechanism) return null;
     const found = selectedMechanism.supportedCurrencies.find(
-      (c) => c.currencyCode === currencyCode
+      (c) => c.currencyCode === currencyCode,
     );
     return found ? found.countryCurrencyId : null;
   };
@@ -245,7 +256,8 @@ const BeneficiaryRegistrationForm = ({
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      if (json?.status !== true || !json.data) throw new Error("Unexpected response format");
+      if (json?.status !== true || !json.data)
+        throw new Error("Unexpected response format");
       setBeneficiariesCountries(json);
     } catch (error: any) {
       toast.error(error.message || "Failed to load payout config");
@@ -264,7 +276,8 @@ const BeneficiaryRegistrationForm = ({
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      if (json?.status !== true || !json.data) throw new Error("Unexpected response");
+      if (json?.status !== true || !json.data)
+        throw new Error("Unexpected response");
       const fields: CountryFormFields = json.data;
       setCountryFormFields(fields);
 
@@ -274,23 +287,28 @@ const BeneficiaryRegistrationForm = ({
         // to set the selected mechanism (UI supports one mechanism type at a time)
         const firstDetail = editData.payoutDetails[0];
         const matchedMechanism = fields.mechanisms.find(
-          (m) => m.payoutMechanismId === firstDetail.payoutMechanismId
+          (m) => m.payoutMechanismId === firstDetail.payoutMechanismId,
         );
         if (matchedMechanism) {
           setSelectedMechanism(matchedMechanism);
           // Build entries from ALL payoutDetails belonging to this mechanism
           const detailsForMechanism = editData.payoutDetails.filter(
-            (d: any) => d.payoutMechanismId === matchedMechanism.payoutMechanismId
+            (d: any) =>
+              d.payoutMechanismId === matchedMechanism.payoutMechanismId,
           );
-          const restoredEntries: MechanismEntry[] = detailsForMechanism.map((d: any) => ({
-            id: uid(),
-            payoutMechanismId: d.payoutMechanismId,
-            provider: d.providerName || "",
-            currency: d.currencyCode || "",
-            countryCurrencyId: d.countryCurrencyId,
-            fieldValues: d.fieldValues || {},
-          }));
-          setMechanismEntries(restoredEntries.length > 0 ? restoredEntries : [emptyEntry()]);
+          const restoredEntries: MechanismEntry[] = detailsForMechanism.map(
+            (d: any) => ({
+              id: uid(),
+              payoutMechanismId: d.payoutMechanismId,
+              provider: d.providerName || "",
+              currency: d.currencyCode || "",
+              countryCurrencyId: d.countryCurrencyId,
+              fieldValues: d.fieldValues || {},
+            }),
+          );
+          setMechanismEntries(
+            restoredEntries.length > 0 ? restoredEntries : [emptyEntry()],
+          );
         } else {
           setMechanismEntries([emptyEntry()]);
         }
@@ -321,20 +339,28 @@ const BeneficiaryRegistrationForm = ({
     const newErrors: Record<string, string[]> = {};
 
     if (!formData.email.trim()) newErrors.email = ["Email is required"];
-    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = ["Phone number is required"];
-    if (!formData.addressLine1.trim()) newErrors.addressLine1 = ["Address line 1 is required"];
+    if (!formData.phoneNumber.trim())
+      newErrors.phoneNumber = ["Phone number is required"];
+    if (!formData.addressLine1.trim())
+      newErrors.addressLine1 = ["Address line 1 is required"];
     if (!formData.city.trim()) newErrors.city = ["City is required"];
 
     if (beneficiaryType === "individual") {
-      if (!formData.firstName.trim()) newErrors.firstName = ["First name is required"];
-      if (!formData.lastName.trim()) newErrors.lastName = ["Last name is required"];
-      if (!formData.nationality.trim()) newErrors.nationality = ["Nationality is required"];
-      if (!formData.dateOfBirth) newErrors.dateOfBirth = ["Date of birth is required"];
+      if (!formData.firstName.trim())
+        newErrors.firstName = ["First name is required"];
+      if (!formData.lastName.trim())
+        newErrors.lastName = ["Last name is required"];
+      if (!formData.nationality.trim())
+        newErrors.nationality = ["Nationality is required"];
+      if (!formData.dateOfBirth)
+        newErrors.dateOfBirth = ["Date of birth is required"];
     } else {
-      if (!formData.companyName.trim()) newErrors.companyName = ["Company name is required"];
+      if (!formData.companyName.trim())
+        newErrors.companyName = ["Company name is required"];
       if (!formData.registrationNumber.trim())
         newErrors.registrationNumber = ["Registration number is required"];
-      if (!formData.businessType.trim()) newErrors.businessType = ["Business type is required"];
+      if (!formData.businessType.trim())
+        newErrors.businessType = ["Business type is required"];
     }
 
     if (residencyType === "foreign" && !beneficiaryCountry)
@@ -379,7 +405,8 @@ const BeneficiaryRegistrationForm = ({
         entry.countryCurrencyId ?? getCountryCurrencyId(entry.currency) ?? 0;
 
       return {
-        payoutMechanismId: entry.payoutMechanismId ?? selectedMechanism!.payoutMechanismId,
+        payoutMechanismId:
+          entry.payoutMechanismId ?? selectedMechanism!.payoutMechanismId,
         providerName: entry.provider,
         countryCurrencyId,
         fieldValues: entry.fieldValues,
@@ -440,7 +467,9 @@ const BeneficiaryRegistrationForm = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Server responded with ${response.status}`);
+        throw new Error(
+          errorData.message || `Server responded with ${response.status}`,
+        );
       }
 
       const result = await response.json();
@@ -449,7 +478,7 @@ const BeneficiaryRegistrationForm = ({
           result.message ||
             (isEditMode
               ? "Beneficiary updated successfully!"
-              : "Beneficiary registered successfully!")
+              : "Beneficiary registered successfully!"),
         );
       } else {
         toast.error(result.message || "Operation failed");
@@ -457,6 +486,7 @@ const BeneficiaryRegistrationForm = ({
       onSuccess();
       setView("list");
     } catch (error: any) {
+      console.log("ddd", error);
       toast.error(
         error.message === "Failed to fetch"
           ? "Network error: Cannot reach server. Check CORS or URL."
@@ -498,7 +528,9 @@ const BeneficiaryRegistrationForm = ({
                 <Card
                   key={type}
                   className={`cursor-pointer transition-all hover:shadow-md ${
-                    beneficiaryType === type ? "ring-2 ring-primary bg-primary/5" : ""
+                    beneficiaryType === type
+                      ? "ring-2 ring-primary bg-primary/5"
+                      : ""
                   }`}
                   onClick={() => setBeneficiaryType(type)}
                 >
@@ -509,9 +541,13 @@ const BeneficiaryRegistrationForm = ({
                       <Building className="h-8 w-8 text-primary" />
                     )}
                     <div>
-                      <h3 className="font-semibold text-foreground capitalize">{type}</h3>
+                      <h3 className="font-semibold text-foreground capitalize">
+                        {type}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
-                        {type === "individual" ? "Personal recipient" : "Corporate entity"}
+                        {type === "individual"
+                          ? "Personal recipient"
+                          : "Corporate entity"}
                       </p>
                     </div>
                   </CardContent>
@@ -531,7 +567,9 @@ const BeneficiaryRegistrationForm = ({
           <CardContent>
             <Card
               className={`cursor-pointer transition-all hover:shadow-md ${
-                residencyType === "foreign" ? "ring-2 ring-primary bg-primary/5" : ""
+                residencyType === "foreign"
+                  ? "ring-2 ring-primary bg-primary/5"
+                  : ""
               }`}
               onClick={() => {
                 setResidencyType("foreign");
@@ -541,8 +579,12 @@ const BeneficiaryRegistrationForm = ({
               <CardContent className="p-4 flex items-center space-x-3">
                 <Globe className="h-8 w-8 text-primary" />
                 <div>
-                  <h3 className="font-semibold text-foreground">Foreign Country</h3>
-                  <p className="text-sm text-muted-foreground">International transfers</p>
+                  <h3 className="font-semibold text-foreground">
+                    Foreign Country
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    International transfers
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -583,7 +625,9 @@ const BeneficiaryRegistrationForm = ({
                 </SelectContent>
               </Select>
               {errors.beneficiaryCountry?.map((msg, i) => (
-                <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
               ))}
             </div>
           </CardContent>
@@ -643,7 +687,8 @@ const BeneficiaryRegistrationForm = ({
                             </h3>
                             <p className="text-sm text-muted-foreground">
                               {mechanism.providers.length} provider
-                              {mechanism.providers.length !== 1 ? "s" : ""} available
+                              {mechanism.providers.length !== 1 ? "s" : ""}{" "}
+                              available
                             </p>
                           </div>
                         </CardContent>
@@ -651,14 +696,19 @@ const BeneficiaryRegistrationForm = ({
                     ))}
                   </div>
                   {errors.selectedMechanism?.map((msg, i) => (
-                    <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                    <p key={i} className="text-sm text-destructive mt-1">
+                      {msg}
+                    </p>
                   ))}
                 </div>
 
                 {selectedMechanism && (
                   <div className="space-y-4">
                     {mechanismEntries.map((entry, idx) => (
-                      <Card key={entry.id} className="border-l-4 border-l-primary">
+                      <Card
+                        key={entry.id}
+                        className="border-l-4 border-l-primary"
+                      >
                         <CardContent className="p-4 space-y-4">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium text-foreground">
@@ -705,24 +755,31 @@ const BeneficiaryRegistrationForm = ({
                                   ))}
                                 </SelectContent>
                               </Select>
-                              {errors[`entry_${idx}_provider`]?.map((msg, i) => (
-                                <p key={i} className="text-sm text-destructive mt-1">
-                                  {msg}
-                                </p>
-                              ))}
+                              {errors[`entry_${idx}_provider`]?.map(
+                                (msg, i) => (
+                                  <p
+                                    key={i}
+                                    className="text-sm text-destructive mt-1"
+                                  >
+                                    {msg}
+                                  </p>
+                                ),
+                              )}
                             </div>
 
                             <div className="space-y-2">
                               <Label>
-                                Payout Currency <span className="text-red-500">*</span>
+                                Payout Currency{" "}
+                                <span className="text-red-500">*</span>
                               </Label>
                               <Select
                                 value={entry.currency}
                                 onValueChange={(v) => {
                                   // Derive and store countryCurrencyId when currency changes
-                                  const found = selectedMechanism.supportedCurrencies.find(
-                                    (c) => c.currencyCode === v
-                                  );
+                                  const found =
+                                    selectedMechanism.supportedCurrencies.find(
+                                      (c) => c.currencyCode === v,
+                                    );
                                   updateEntry(entry.id, {
                                     currency: v,
                                     countryCurrencyId: found?.countryCurrencyId,
@@ -734,21 +791,28 @@ const BeneficiaryRegistrationForm = ({
                                   <SelectValue placeholder="Select currency" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-background border border-border z-50">
-                                  {selectedMechanism.supportedCurrencies.map((c) => (
-                                    <SelectItem
-                                      key={c.countryCurrencyId}
-                                      value={c.currencyCode}
-                                    >
-                                      {c.currencyCode}
-                                    </SelectItem>
-                                  ))}
+                                  {selectedMechanism.supportedCurrencies.map(
+                                    (c) => (
+                                      <SelectItem
+                                        key={c.countryCurrencyId}
+                                        value={c.currencyCode}
+                                      >
+                                        {c.currencyCode}
+                                      </SelectItem>
+                                    ),
+                                  )}
                                 </SelectContent>
                               </Select>
-                              {errors[`entry_${idx}_currency`]?.map((msg, i) => (
-                                <p key={i} className="text-sm text-destructive mt-1">
-                                  {msg}
-                                </p>
-                              ))}
+                              {errors[`entry_${idx}_currency`]?.map(
+                                (msg, i) => (
+                                  <p
+                                    key={i}
+                                    className="text-sm text-destructive mt-1"
+                                  >
+                                    {msg}
+                                  </p>
+                                ),
+                              )}
                             </div>
                           </div>
 
@@ -758,33 +822,43 @@ const BeneficiaryRegistrationForm = ({
                                 Required Fields
                               </p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {selectedMechanism.requiredFields.map((field) => (
-                                  <div key={field} className="space-y-2">
-                                    <Label htmlFor={`entry_${entry.id}_${field}`}>
-                                      {humanizeField(field)}{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      id={`entry_${entry.id}_${field}`}
-                                      value={entry.fieldValues[field] ?? ""}
-                                      onChange={(e) => {
-                                        updateEntryField(entry.id, field, e.target.value);
-                                        clearFieldError(`entry_${idx}_field_${field}`);
-                                      }}
-                                      placeholder={`Enter ${humanizeField(field).toLowerCase()}`}
-                                    />
-                                    {errors[`entry_${idx}_field_${field}`]?.map(
-                                      (msg, i) => (
+                                {selectedMechanism.requiredFields.map(
+                                  (field) => (
+                                    <div key={field} className="space-y-2">
+                                      <Label
+                                        htmlFor={`entry_${entry.id}_${field}`}
+                                      >
+                                        {humanizeField(field)}{" "}
+                                        <span className="text-red-500">*</span>
+                                      </Label>
+                                      <Input
+                                        id={`entry_${entry.id}_${field}`}
+                                        value={entry.fieldValues[field] ?? ""}
+                                        onChange={(e) => {
+                                          updateEntryField(
+                                            entry.id,
+                                            field,
+                                            e.target.value,
+                                          );
+                                          clearFieldError(
+                                            `entry_${idx}_field_${field}`,
+                                          );
+                                        }}
+                                        placeholder={`Enter ${humanizeField(field).toLowerCase()}`}
+                                      />
+                                      {errors[
+                                        `entry_${idx}_field_${field}`
+                                      ]?.map((msg, i) => (
                                         <p
                                           key={i}
                                           className="text-sm text-destructive mt-1"
                                         >
                                           {msg}
                                         </p>
-                                      ),
-                                    )}
-                                  </div>
-                                ))}
+                                      ))}
+                                    </div>
+                                  ),
+                                )}
                               </div>
                             </div>
                           )}
@@ -797,21 +871,29 @@ const BeneficiaryRegistrationForm = ({
                                   Additional Fields
                                 </p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {Object.entries(entry.fieldValues).map(([key, val]) => (
-                                    <div key={key} className="space-y-2">
-                                      <Label htmlFor={`entry_${entry.id}_extra_${key}`}>
-                                        {humanizeField(key)}
-                                      </Label>
-                                      <Input
-                                        id={`entry_${entry.id}_extra_${key}`}
-                                        value={val}
-                                        onChange={(e) =>
-                                          updateEntryField(entry.id, key, e.target.value)
-                                        }
-                                        placeholder={`Enter ${humanizeField(key).toLowerCase()}`}
-                                      />
-                                    </div>
-                                  ))}
+                                  {Object.entries(entry.fieldValues).map(
+                                    ([key, val]) => (
+                                      <div key={key} className="space-y-2">
+                                        <Label
+                                          htmlFor={`entry_${entry.id}_extra_${key}`}
+                                        >
+                                          {humanizeField(key)}
+                                        </Label>
+                                        <Input
+                                          id={`entry_${entry.id}_extra_${key}`}
+                                          value={val}
+                                          onChange={(e) =>
+                                            updateEntryField(
+                                              entry.id,
+                                              key,
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder={`Enter ${humanizeField(key).toLowerCase()}`}
+                                        />
+                                      </div>
+                                    ),
+                                  )}
                                 </div>
                               </div>
                             )}
@@ -862,7 +944,9 @@ const BeneficiaryRegistrationForm = ({
                   placeholder="Enter first name"
                 />
                 {errors.firstName?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
               <div className="space-y-2">
@@ -876,49 +960,35 @@ const BeneficiaryRegistrationForm = ({
                   placeholder="Enter last name"
                 />
                 {errors.lastName?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">
                   Date of Birth <span className="text-red-500">*</span>
                 </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateOfBirth}
-                      onSelect={(date) => {
-                        setDateOfBirth(date);
-                        if (date)
-                          setFormData({
-                            ...formData,
-                            dateOfBirth: format(date, "yyyy-MM-dd"),
-                          });
-                        clearFieldError("dateOfBirth");
-                      }}
-                      captionLayout="dropdown"
-                      fromYear={1900}
-                      toYear={new Date().getFullYear()}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData?.dateOfBirth || ""}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      dateOfBirth: e.target.value,
+                    });
+                    clearFieldError("dateOfBirth");
+                  }}
+                  min="1900-01-01"
+                  max={new Date().toISOString().split("T")[0]}
+                />
+
                 {errors.dateOfBirth?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
               <div className="space-y-2">
@@ -932,7 +1002,9 @@ const BeneficiaryRegistrationForm = ({
                   placeholder="Enter nationality"
                 />
                 {errors.nationality?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
             </div>
@@ -949,7 +1021,9 @@ const BeneficiaryRegistrationForm = ({
                   placeholder="Enter company name"
                 />
                 {errors.companyName?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
               <div className="space-y-2">
@@ -963,7 +1037,9 @@ const BeneficiaryRegistrationForm = ({
                   placeholder="Enter registration number"
                 />
                 {errors.registrationNumber?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
               <div className="space-y-2">
@@ -977,7 +1053,9 @@ const BeneficiaryRegistrationForm = ({
                   placeholder="e.g., Trading, Manufacturing, Services"
                 />
                 {errors.businessType?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                  <p key={i} className="text-sm text-destructive mt-1">
+                    {msg}
+                  </p>
                 ))}
               </div>
               <div className="space-y-2">
@@ -1040,7 +1118,9 @@ const BeneficiaryRegistrationForm = ({
                 />
               </div>
               {errors.email?.map((msg, i) => (
-                <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
               ))}
             </div>
             <div className="space-y-2">
@@ -1060,7 +1140,9 @@ const BeneficiaryRegistrationForm = ({
                 preferredCountries={["ae", "in"]}
               />
               {errors.phoneNumber?.map((msg, i) => (
-                <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
               ))}
             </div>
           </div>
@@ -1087,7 +1169,9 @@ const BeneficiaryRegistrationForm = ({
               placeholder="Street address, building name, etc."
             />
             {errors.addressLine1?.map((msg, i) => (
-              <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+              <p key={i} className="text-sm text-destructive mt-1">
+                {msg}
+              </p>
             ))}
           </div>
           <div className="space-y-2">
@@ -1111,7 +1195,9 @@ const BeneficiaryRegistrationForm = ({
                 placeholder="Enter city"
               />
               {errors.city?.map((msg, i) => (
-                <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+                <p key={i} className="text-sm text-destructive mt-1">
+                  {msg}
+                </p>
               ))}
             </div>
             <div className="space-y-2">
@@ -1128,7 +1214,9 @@ const BeneficiaryRegistrationForm = ({
               <Input
                 value={
                   countryFormFields?.countryName ??
-                  (beneficiaryCountry ? `Country ID: ${beneficiaryCountry}` : "")
+                  (beneficiaryCountry
+                    ? `Country ID: ${beneficiaryCountry}`
+                    : "")
                 }
                 disabled
                 placeholder="Auto-filled from country selection"
@@ -1187,7 +1275,9 @@ const BeneficiaryRegistrationForm = ({
               </SelectContent>
             </Select>
             {errors.relationshipType?.map((msg, i) => (
-              <p key={i} className="text-sm text-destructive mt-1">{msg}</p>
+              <p key={i} className="text-sm text-destructive mt-1">
+                {msg}
+              </p>
             ))}
           </div>
           <div className="space-y-2">
@@ -1221,7 +1311,9 @@ const BeneficiaryRegistrationForm = ({
               <Label>Expected Frequency</Label>
               <Select
                 value={formData.expectedFrequency}
-                onValueChange={(v) => setFormData({ ...formData, expectedFrequency: v })}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, expectedFrequency: v })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select frequency" />
@@ -1310,7 +1402,11 @@ const BeneficiaryRegistrationForm = ({
         <Button onClick={() => setView("list")} variant="ghost">
           Cancel
         </Button>
-        <Button className="min-w-[150px]" onClick={handleSubmit} disabled={loading}>
+        <Button
+          className="min-w-[150px]"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

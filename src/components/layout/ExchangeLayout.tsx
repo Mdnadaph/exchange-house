@@ -27,6 +27,7 @@ import {
   BookOpen,
   FileSpreadsheet,
   ShieldCheck,
+  Globe,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -133,7 +134,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       icon: ShieldCheck,
       code: "NAV_COMPLIANCE_REVIEW",
     },
-     {
+    {
       name: "Transaction Report",
       href: "/exchange/transaction-report",
       icon: BookOpen,
@@ -146,10 +147,10 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       code: "NAV_DISCOUNTS",
     },
     {
-     name: "Rate Deals",
-     href: "/exchange/deals",
-     icon: Handshake,
-     code: "NAV_RATE_DEALS",
+      name: "Rate Deals",
+      href: "/exchange/deals",
+      icon: Handshake,
+      code: "NAV_RATE_DEALS",
     },
     {
       name: "Documents",
@@ -193,6 +194,16 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       href: "/exchange/user",
       icon: Users,
       code: "NAV_EXCHANGE_ADMIN_USER",
+    },
+    {
+      name: "Country & Currency",
+      href: "/exchange/county-currency",
+      icon: Globe,
+    },
+    {
+      name: "Payout Mechanism",
+      href: "/exchange/payout-mechanism",
+      icon: Handshake,
     },
   ];
   const isActive = (path: string) => location.pathname === path;

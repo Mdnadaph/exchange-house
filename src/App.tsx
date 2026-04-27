@@ -59,7 +59,6 @@ import ExchangePendingVerification from "./pages/exchange/ExchangePendingVerific
 import ExchangeAdminComplianceReview from "./pages/exchange/ExchangeAdminComplianceReview";
 import ExchangeAdminTransactionReport from "./pages/exchange/ExchangeAdminTransactionReport";
 
-
 // Branch Staff
 import BranchDashboard from "./pages/branch/BranchDashboard";
 import BranchKYBQueue from "./pages/branch/BranchKYBQueue";
@@ -96,6 +95,8 @@ import ResetPassword from "./pages/ResetPassword";
 import ExchangeKybMapping from "./pages/exchange/ExchangeKybMaping";
 import AdminCountryCurrency from "./pages/admin/AdminCountryCurrency";
 import AdminPayoutMechanism from "./pages/admin/AdminPayoutMechanism";
+import ExchangeCountryCurrency from "./pages/exchange/ExchangeCountryCurrency";
+import ExchangePayoutMechanism from "./pages/exchange/ExchangePayoutMechanism";
 
 const queryClient = new QueryClient();
 
@@ -229,14 +230,14 @@ function App() {
                       path="/admin/onmapping"
                       element={<AdminKybMapping />}
                     />
-                    <Route
+                    {/* <Route
                       path="/admin/county-currency"
                       element={<AdminCountryCurrency />}
                     />
                     <Route
                       path="payout-mechanism"
                       element={<AdminPayoutMechanism />}
-                    />
+                    /> */}
 
                     <Route path="onboarding" element={<AdminOnboarding />} />
 
@@ -323,7 +324,11 @@ function App() {
                       path="compliance-review"
                       element={<ExchangeAdminComplianceReview />}
                     />
-                    <Route path="transaction-report" element={<ExchangeAdminTransactionReport />} />
+
+                    <Route
+                      path="transaction-report"
+                      element={<ExchangeAdminTransactionReport />}
+                    />
                     <Route path="discount" element={<ExchangeDiscount />} />
                     <Route path="deals" element={<ExchangeDealReview />} />
                     <Route
@@ -348,6 +353,14 @@ function App() {
                     />
                     <Route path="staff" element={<ExchangeStaffManagement />} />
                     <Route path="user" element={<ExchangeAdminUser />} />
+                    <Route
+                      path="county-currency"
+                      element={<ExchangeCountryCurrency />}
+                    />
+                    <Route
+                      path="payout-mechanism"
+                      element={<ExchangePayoutMechanism />}
+                    />
                   </Route>
                 </Route>
 

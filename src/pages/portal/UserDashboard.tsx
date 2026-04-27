@@ -134,24 +134,108 @@ const UserDashboard = () => {
   ];
 
   const getStatusBadge = (status: string) => {
-    const statusMap = {
-      COMPLETED: { variant: "default" as const, label: "Completed" },
-      PENDING_APPROVAL: {
-        variant: "secondary" as const,
-        label: "Pending Approval",
-      },
-      PROCESSING: { variant: "destructive" as const, label: "Processing" },
-      FAILED: { variant: "destructive" as const, label: "Failed" },
+    const statusMap: Record<
+      string,
+      {
+        variant: "default" | "secondary" | "destructive" | "outline";
+        label: string;
+        icon: any;
+      }
+    > = {
+      // Draft
       DRAFT: {
-        variant: "outline" as const,
+        variant: "outline",
         label: "Draft",
+        icon: FileText,
+      },
+
+      INTERNAL_REVIEW_PENDING: {
+        variant: "outline",
+        label: "Internal Review Pending",
+        icon: Clock,
+      },
+
+      // Payment flow
+      PAYMENT_PENDING: {
+        variant: "secondary",
+        label: "Payment Pending",
+        icon: Clock,
+      },
+      PAYMENT_VERIFICATION_PENDING: {
+        variant: "secondary",
+        label: "Payment Verification",
+        icon: Clock,
+      },
+      PENDING_APPROVAL: {
+        variant: "secondary",
+        label: "Pending Approval",
+        icon: Clock,
+      },
+      PROOF_OF_PAYMENT_PENDING: {
+        variant: "secondary",
+        label: "Proof Of Payment Pending",
+        icon: Clock,
+      },
+      PROCESSING: {
+        variant: "secondary",
+        label: "Processing",
+        icon: Clock,
+      },
+
+      // Final states
+      COMPLETED: {
+        variant: "default",
+        label: "Completed",
+        icon: CheckCircle,
       },
       REJECTED: {
-        variant: "destructive" as const,
+        variant: "destructive",
         label: "Rejected",
+        icon: AlertCircle,
+      },
+      FAILED: {
+        variant: "destructive",
+        label: "Failed",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_PENDING: {
+        variant: "default",
+        label: "Rate Deal Pending",
+        icon: Clock,
+      },
+
+      RATE_DEAL_APPROVED: {
+        variant: "default",
+        label: "Rate Deal Approved",
+        icon: CheckCircle,
+      },
+
+      RATE_DEAL_REJECTED: {
+        variant: "destructive",
+        label: "Rate Deal Rejected",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_COUNTER_PROPOSAL: {
+        variant: "default",
+        label: "Rate Deal Counter Proposal",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_EXPIRED: {
+        variant: "default",
+        label: "Rate Deal Expired",
+        icon: AlertCircle,
+      },
+      // Compliance
+      COMPLIANCE_REVIEW: {
+        variant: "outline",
+        label: "Compliance Review",
+        icon: AlertCircle,
       },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
+
+    return (
+      statusMap[status] || { variant: "secondary", label: status, icon: Clock }
+    );
   };
 
   if (loading) {
