@@ -48,6 +48,26 @@ interface BeneficiaryProfileProps {
     transactionCount: number;
     lastTransaction?: string;
     registrationDate: string;
+    transactionHistory: Array<{
+      reference: string;
+      bulkReference: string | null;
+      type: "SINGLE" | "BULK";
+      status: string;
+      sourceAmount: number;
+      convertedAmount: number;
+      totalDebit: number;
+      sourceCurrency: string;
+      destinationCurrency: string;
+      createdAt: string;
+    }>;
+    payoutDetails?: Array<{
+      payoutMechanismId: number;
+      payoutTypeName: string;
+      providerName: string;
+      countryCurrencyId: number;
+      currencyCode: string;
+      fieldValues: Record<string, string>;
+    }>;
     documents: {
       type: string;
       status: string;
@@ -155,9 +175,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
                   {verification.label}
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {beneficiary.type === "BUSINESS"
-                    ? "business"
-                    : "Individual"}
+                  {beneficiary.type === "BUSINESS" ? "business" : "Individual"}
                 </Badge>
               </div>
             </div>
@@ -203,7 +221,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {beneficiary.lastTransaction || "Never"}
+              {beneficiary?.lastTransaction || "Never"}
             </div>
             <p className="text-xs text-muted-foreground">Most recent payment</p>
           </CardContent>
@@ -217,7 +235,9 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             <Building className="h-5 w-5 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{beneficiary.relationship}</div>
+            <div className="text-2xl font-bold">
+              {beneficiary?.relationship}
+            </div>
             <p className="text-xs text-muted-foreground">
               Business relationship
             </p>
@@ -233,7 +253,7 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {beneficiary.registrationDate}
+              {beneficiary?.registrationDate}
             </div>
             <p className="text-xs text-muted-foreground">Registration date</p>
           </CardContent>
@@ -336,59 +356,69 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Banknote className="h-5 w-5 text-primary" />
-                Payout Methods
+                Payout Method
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {beneficiary.bankDetails.map((bank, index) => (
-                <Card key={index} className="border-l-4 border-l-accent">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">{bank.bankName}</h4>
-                          {index === 0 && (
-                            <Badge variant="default" className="text-xs">
-                              Default
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">
-                              Account Name:
-                            </span>
-                            <p className="font-medium">{bank.accountName}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Account Number:
-                            </span>
-                            <p className="font-medium font-mono">
-                              ****{bank.accountNumber.slice(-4)}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Currency:
-                            </span>
-                            <p className="font-medium">{bank.currency}</p>
-                          </div>
-                          {bank.swift && (
-                            <div>
-                              <span className="text-muted-foreground">
-                                SWIFT:
-                              </span>
-                              <p className="font-medium font-mono">
-                                {bank.swift}
-                              </p>
-                            </div>
-                          )}
-                        </div>
+              {beneficiary?.payoutDetails?.map((payout, index) => (
+                <Card
+                  key={index}
+                  className="border-l-4 border-l-accent shadow-sm"
+                >
+                  <CardContent className="p-5 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Payment Type
+                        </p>
+                        <h3 className="font-semibold text-base">
+                          {payout?.payoutTypeName}
+                        </h3>
                       </div>
-                      <Button variant="outline" size="sm">
+
+                      {/* <Button variant="outline" size="icon">
                         <Edit className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
+                    </div>
+
+                    {/* Basic Info */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Provider</p>
+                        <p className="font-medium">{payout?.providerName}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-muted-foreground">Currency</p>
+                        <p className="font-medium">{payout?.currencyCode}</p>
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t pt-3" />
+
+                    {/* Dynamic Fields */}
+                    <div>
+                      <p className="text-sm font-semibold mb-2">Details</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        {Object.entries(payout?.fieldValues || {}).map(
+                          ([key, value]) => (
+                            <div
+                              key={key}
+                              className="flex flex-col border rounded-md p-2 bg-muted/30"
+                            >
+                              <span className="text-muted-foreground text-xs">
+                                {key}
+                              </span>
+                              <span className="font-medium break-words">
+                                {value}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -401,32 +431,46 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recent Transactions</CardTitle>
-                <Button variant="ghost" size="sm">
+                {/* <Button variant="ghost" size="sm">
                   View All
-                </Button>
+                </Button> */}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentTransactions.map((transaction) => (
+              {beneficiary?.transactionHistory?.map((transaction) => (
                 <div
-                  key={transaction.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  key={transaction?.reference}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
                 >
+                  {/* Left Section */}
                   <div className="space-y-1">
                     <p className="font-medium text-foreground">
-                      {transaction.purpose}
+                      {transaction?.type} Transaction
                     </p>
+
                     <p className="text-sm text-muted-foreground">
-                      {transaction.id} • {transaction.date}
+                      {transaction?.reference}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(transaction?.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <div className="text-right">
+
+                  {/* Right Section */}
+                  <div className="text-right space-y-1">
                     <p className="font-semibold text-foreground">
-                      {transaction.currency}{" "}
-                      {Number(transaction.amount).toLocaleString()}
+                      {transaction?.sourceCurrency}{" "}
+                      {Number(transaction?.sourceAmount)?.toLocaleString()}
                     </p>
-                    <Badge variant="default" className="text-xs">
-                      {transaction.status}
+
+                    <p className="text-xs text-muted-foreground">
+                      → {transaction?.destinationCurrency}{" "}
+                      {Number(transaction?.convertedAmount)?.toLocaleString()}
+                    </p>
+
+                    <Badge variant="outline" className="text-xs">
+                      {transaction?.status}
                     </Badge>
                   </div>
                 </div>

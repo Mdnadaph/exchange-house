@@ -1279,8 +1279,6 @@
 
 // export default UserBeneficiaries;
 
-
-
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1362,6 +1360,18 @@ interface Beneficiary {
     swift?: string;
     currency: string;
   }>;
+  transactionHistory: Array<{
+    reference: string;
+    bulkReference: string | null;
+    type: "SINGLE" | "BULK";
+    status: string;
+    sourceAmount: number;
+    convertedAmount: number;
+    totalDebit: number;
+    sourceCurrency: string;
+    destinationCurrency: string;
+    createdAt: string;
+  }>;
   relationship: string;
   status: string;
   verificationStatus: string;
@@ -1425,7 +1435,9 @@ const UserBeneficiaries = () => {
   const token = cookies.token;
   const { toast } = useToast();
 
-  const [view, setView] = useState<"list" | "register" | "profile" | "edit">("list");
+  const [view, setView] = useState<"list" | "register" | "profile" | "edit">(
+    "list",
+  );
   const [selectedBeneficiary, setSelectedBeneficiary] =
     useState<Beneficiary | null>(null);
   // Beneficiary data used for editing (populated directly from list data)
@@ -1535,6 +1547,7 @@ const UserBeneficiaries = () => {
         expectedFrequency: item.expectedFrequency,
         payoutDetails: item.payoutDetails || [],
         countryId: item.countryId,
+        transactionHistory: item?.transactionHistory || [],
         address: {
           line1: item.addressLine1 || "",
           city: item.city || "",
@@ -2227,8 +2240,7 @@ const UserBeneficiaries = () => {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                    </div>
+                    <div className="flex gap-2"></div>
                   </div>
                 </CardContent>
               </Card>
@@ -2296,29 +2308,46 @@ const UserBeneficiaries = () => {
                                     <div className="flex items-center gap-2">
                                       <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <div>
-                                        <p className="text-xs text-muted-foreground">Country</p>
-                                        <p className="font-medium">{beneficiary.address?.country || "N/A"}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Country
+                                        </p>
+                                        <p className="font-medium">
+                                          {beneficiary.address?.country ||
+                                            "N/A"}
+                                        </p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <div>
-                                        <p className="text-xs text-muted-foreground">Email</p>
-                                        <p className="font-medium">{beneficiary.email || "N/A"}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Email
+                                        </p>
+                                        <p className="font-medium">
+                                          {beneficiary.email || "N/A"}
+                                        </p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <div>
-                                        <p className="text-xs text-muted-foreground">Contact</p>
-                                        <p className="font-medium">{beneficiary.phoneNumber || "N/A"}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Contact
+                                        </p>
+                                        <p className="font-medium">
+                                          {beneficiary.phoneNumber || "N/A"}
+                                        </p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <User className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <div>
-                                        <p className="text-xs text-muted-foreground">Relationship</p>
-                                        <p className="font-medium">{beneficiary.relationship || "N/A"}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Relationship
+                                        </p>
+                                        <p className="font-medium">
+                                          {beneficiary.relationship || "N/A"}
+                                        </p>
                                       </div>
                                     </div>
                                   </div>
@@ -2337,11 +2366,20 @@ const UserBeneficiaries = () => {
                                               className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg text-xs"
                                             >
                                               <Banknote className="h-3.5 w-3.5 text-primary shrink-0" />
-                                              <span className="font-medium">{pd.payoutTypeName}</span>
-                                              <span className="text-muted-foreground">·</span>
+                                              <span className="font-medium">
+                                                {pd.payoutTypeName}
+                                              </span>
+                                              <span className="text-muted-foreground">
+                                                ·
+                                              </span>
                                               <span>{pd.providerName}</span>
-                                              <span className="text-muted-foreground">·</span>
-                                              <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                              <span className="text-muted-foreground">
+                                                ·
+                                              </span>
+                                              <Badge
+                                                variant="outline"
+                                                className="text-xs px-1.5 py-0"
+                                              >
                                                 {pd.currencyCode}
                                               </Badge>
                                             </div>
@@ -2441,9 +2479,18 @@ const UserBeneficiaries = () => {
                                       <span className="text-muted-foreground">
                                         Payout Method:
                                       </span>
-                                      <p className="font-medium">
-                                        {beneficiary.payoutMethod}
-                                      </p>
+                                      <div className="flex gap-3 item-center">
+                                        {beneficiary?.payoutDetails?.map(
+                                          (
+                                            payout: { payoutTypeName: string },
+                                            index: number,
+                                          ) => (
+                                            <p className="font-medium">
+                                              {payout?.payoutTypeName}
+                                            </p>
+                                          ),
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                   {/* Documents Status */}
@@ -2487,7 +2534,7 @@ const UserBeneficiaries = () => {
                                     }}
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
-                                    View Profile
+                                    View Detail
                                   </Button>
                                   {/* Edit Details — uses data already in list */}
                                   <Button
@@ -2501,7 +2548,7 @@ const UserBeneficiaries = () => {
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit Details
                                   </Button>
-                                  {beneficiary.status === "active" && (
+                                  {beneficiary?.status === "active" && (
                                     <Button
                                       variant="business"
                                       size="sm"

@@ -1924,7 +1924,7 @@ const SingleTransactionForm = ({
 
   const beneficiariyCurrency = currencyListData?.data?.find(
     (currency: any) =>
-      currency?.name?.toLowerCase() === beneficiaryCurrencyCode.toLowerCase(),
+      currency?.name?.toLowerCase() === beneficiaryCurrencyCode?.toLowerCase(),
   );
 
   const getCustomRateDeal = async () => {

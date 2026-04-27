@@ -78,8 +78,23 @@ const SingleTransactionWithPreselected = ({
     useState<any>(null);
   const [transectionSummeryData, setTransectionSummeryData] =
     useState<any>(null);
-  const [cookie] = useCookies(["token"]);
-  const token = cookie.token;
+
+  //payout details
+  const [payoutDetails, setPayoutDetails] = useState<any>(null);
+  const [loadingPayout, setLoadingPayout] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [payoutError, setPayoutError] = useState<string | null>(null);
+  const [selectedPayoutDetailId, setSelectedPayoutDetailId] = useState<
+    number | null
+  >(null);
+  const [selectedPayoutCurrencyCode, setSelectedPayoutCurrencyCode] =
+    useState<string>("");
+  const [selectedPayoutCurrencyRate, setSelectedPayoutCurrencyRate] =
+    useState<number>(1);
+
+  const [cookie] = useCookies(["token", "currencyCode"]);
+  const token = cookie?.token;
+  const currencyCode = cookie?.currencyCode;
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Mock data - would come from backend
   const beneficiaries = [
@@ -240,7 +255,7 @@ const SingleTransactionWithPreselected = ({
   );
   const beneficiariyCurrency = currencyListData?.data?.find(
     (currency: any) =>
-      currency?.name == getSelectedBeneficiary?.currency.toLowerCase(),
+      currency?.name == getSelectedBeneficiary?.currency?.toLowerCase(),
   );
   useEffect(() => {
     setSelectedBeneficiary(beneficiaryId?.toString());
@@ -264,6 +279,7 @@ const SingleTransactionWithPreselected = ({
       // discountCode: "",
       currencyId: currency,
       notes,
+      beneficiaryPayoutDetailId: selectedPayoutDetailId,
       discountCode: discountCode.trim() || "",
     };
 
@@ -298,7 +314,10 @@ const SingleTransactionWithPreselected = ({
           title: res?.data?.message || "Transaction failed",
         });
       } else {
-        toast({ title: "Transaction created successfully" });
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Transaction created successfully",
+        });
       }
       refetch?.();
 
@@ -308,9 +327,15 @@ const SingleTransactionWithPreselected = ({
       setSelectedSource("");
       setTransactionPurpose("");
       setAmount("");
+      setReceiverAmount("");
       setCurrency("");
       setUploadedDocuments([]);
       setNotes("");
+      setDiscountCode("");
+      setFeeResponsibility("");
+      setSelectedPayoutDetailId(null);
+      setSelectedPayoutCurrencyCode("");
+      setSelectedPayoutCurrencyRate(1);
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -407,20 +432,27 @@ const SingleTransactionWithPreselected = ({
       Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
   );
   const handleTransationSummary = async () => {
+    setLoading(true);
     const payload = {
       purposeCode: transactionPurpose,
       sourceAccountId: selectedSource,
       beneficiaryId: selectedBeneficiary,
       amount: Number(receiverAmount),
-      // discountCode: "",
+      feeResponsibility,
       currencyId: currency,
       notes,
       discountCode: discountCode.trim() || "",
+      beneficiaryPayoutDetailId: selectedPayoutDetailId,
+      // currentExchangeRate: currentExchangeRate
+      //   ? Number(currentExchangeRate)
+      //   : null,
+      // requestedExchangeRate: requestedExchangeRate
+      //   ? Number(requestedExchangeRate)
+      //   : null,
     };
 
     const formData = new FormData();
 
-    // ✅ REQUIRED: data as JSON blob
     formData.append(
       "data",
       new Blob([JSON.stringify(payload)], {
@@ -428,10 +460,10 @@ const SingleTransactionWithPreselected = ({
       }),
     );
 
-    // ✅ documents
     uploadedDocuments?.forEach((file) => {
       formData.append("documents", file);
     });
+
     try {
       const res = await axios.post(
         `${BASE_URL}/api/v1/business/transactions/single/preview`,
@@ -439,7 +471,6 @@ const SingleTransactionWithPreselected = ({
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // ❌ DO NOT SET Content-Type
           },
         },
       );
@@ -455,37 +486,85 @@ const SingleTransactionWithPreselected = ({
         variant: "destructive",
         title: err?.response?.data?.message || "Transaction failed",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchFeeRulesForTransaction = async () => {
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/api/v3/fees/${beneficiaryId}/get-fee-rules-for-transaction`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      setFeeRule(res?.data?.data);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description:
-          err?.response?.data?.message ||
-          "Something went wrong while fetching rule",
-        variant: "destructive",
-      });
-    }
-  };
+  // const fetchFeeRulesForTransaction = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${BASE_URL}/api/v3/fees/${beneficiaryId}/get-fee-rules-for-transaction`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       },
+  //     );
+  //     setFeeRule(res?.data?.data);
+  //   } catch (err) {
+  //     toast({
+  //       title: "Error",
+  //       description:
+  //         err?.response?.data?.message ||
+  //         "Something went wrong while fetching rule",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+  // useEffect(() => {
+  //   if (!beneficiaryId) return;
+  //   fetchFeeRulesForTransaction();
+  // }, [beneficiaryId]);
+
+  //beneficiaries payout details
   useEffect(() => {
-    if (!beneficiaryId) return;
-    fetchFeeRulesForTransaction();
-  }, [beneficiaryId]);
+    if (!selectedBeneficiary) {
+      setPayoutDetails(null);
+      setPayoutError(null);
+      setSelectedPayoutDetailId(null);
+      setSelectedPayoutCurrencyCode("");
+      setSelectedPayoutCurrencyRate(1);
+      return;
+    }
+    const fetchPayoutDetails = async () => {
+      setLoadingPayout(true);
+      setPayoutError(null);
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/api/v1/beneficiaries/${selectedBeneficiary}/payout-details`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (res?.data?.status === true) {
+          setPayoutDetails(res?.data?.data);
+        } else {
+          setPayoutError(res.data?.message || "Failed to load payout details");
+        }
+      } catch (err: any) {
+        setPayoutError(err?.response?.data?.message || err.message);
+      } finally {
+        setLoadingPayout(false);
+      }
+    };
+
+    fetchPayoutDetails();
+  }, [selectedBeneficiary, token]);
+
+  const selectedBeneficiaryData = beneficiariesList?.find(
+    (b: any) => String(b.id) === selectedBeneficiary,
+  );
+  useEffect(() => {
+    setCurrency(beneficiariyCurrency?.id);
+  }, [beneficiariyCurrency]);
+  const isFormValid = amount && receiverAmount && feeResponsibility;
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          setOpen(open);
+        }}
+      >
         {/* <DialogTrigger asChild>
           <Button variant="business">
             <Plus className="h-4 w-4 mr-2" />
@@ -688,7 +767,7 @@ const SingleTransactionWithPreselected = ({
               </CardContent>
             </Card>
             {/* Fee Rule */}
-            {feeRule?.id && (
+            {/* {feeRule?.id && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -698,7 +777,7 @@ const SingleTransactionWithPreselected = ({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {/* Business */}
+                  
                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
                       <h2 className="text-lg font-semibold mb-3">Business</h2>
                       <div className="space-y-1 text-sm text-gray-700">
@@ -713,7 +792,7 @@ const SingleTransactionWithPreselected = ({
                       </div>
                     </div>
 
-                    {/* Beneficiary */}
+                
                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
                       <h2 className="text-lg font-semibold mb-3">
                         Beneficiary
@@ -730,7 +809,7 @@ const SingleTransactionWithPreselected = ({
                       </div>
                     </div>
 
-                    {/* Shared */}
+                    
                     <div className="p-4 border rounded-2xl shadow-sm bg-white">
                       <h2 className="text-lg font-semibold mb-3">Shared</h2>
                       <div className="space-y-1 text-sm text-gray-700">
@@ -763,7 +842,85 @@ const SingleTransactionWithPreselected = ({
                   </div>
                 </CardContent>
               </Card>
+            )} */}
+
+            {selectedBeneficiaryData && (
+              <Card className="border-l-4 border-l-accent">
+                <CardContent className="p-3">
+                  {loadingPayout && (
+                    <div className="mt-3 text-sm text-muted-foreground">
+                      Loading payout details...
+                    </div>
+                  )}
+                  {payoutError && (
+                    <div className="mt-3 text-sm text-destructive">
+                      Error: {payoutError}
+                    </div>
+                  )}
+                  {payoutDetails && payoutDetails.length > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <h4 className="text-sm font-semibold mb-2">
+                        Select Payout Method
+                      </h4>
+                      <div className="space-y-2">
+                        {payoutDetails.map((method: any, idx: number) => (
+                          <label
+                            key={idx}
+                            className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
+                          >
+                            <input
+                              type="radio"
+                              name="payoutMethod"
+                              value={method.payoutDetailId}
+                              checked={
+                                selectedPayoutDetailId === method.payoutDetailId
+                              }
+                              onChange={() => {
+                                setSelectedPayoutDetailId(
+                                  method.payoutDetailId,
+                                );
+                                setSelectedPayoutCurrencyCode(
+                                  method.currencyCode,
+                                );
+                                const currencyRate =
+                                  currencyListData?.data?.find(
+                                    (c: any) =>
+                                      c.name?.toLowerCase() ===
+                                      method.currencyCode.toLowerCase(),
+                                  )?.rate || 1;
+                                setSelectedPayoutCurrencyRate(currencyRate);
+                                const currencyObj =
+                                  currencyListData?.data?.find(
+                                    (c: any) =>
+                                      c.name?.toLowerCase() ===
+                                      method.currencyCode.toLowerCase(),
+                                  );
+                                if (currencyObj?.id)
+                                  setCurrency(String(currencyObj.id));
+                                setAmount("");
+                                setReceiverAmount("");
+                                setTransectionSummeryData(null);
+                              }}
+                              className="h-4 w-4"
+                            />
+                            <div className="flex-1 grid grid-cols-3 gap-2 text-sm">
+                              <span className="font-medium">
+                                {method.payoutMechanismType}
+                              </span>
+                              <span>{method.currencyCode}</span>
+                              <span className="text-muted-foreground">
+                                {method.providerName || "Not specified"}
+                              </span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
+
             {/* Transaction Amount */}
             <Card>
               <CardHeader>
@@ -777,7 +934,7 @@ const SingleTransactionWithPreselected = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-2">
                     <div>
                       <h4 className="text-center">Sender</h4>
-                      <Label htmlFor="amount">Amount(AED) *</Label>
+                      <Label htmlFor="amount">Amount {currencyCode} *</Label>
                       <Input
                         id="amount"
                         type="number"
@@ -785,12 +942,12 @@ const SingleTransactionWithPreselected = ({
                         onChange={(e) => {
                           const value = e.target.value;
                           setAmount(value);
-                          if (beneficiariyCurrency?.rate) {
+                          setTransectionSummeryData(null);
+                          if (selectedPayoutCurrencyRate) {
                             const result =
-                              Number(value) / beneficiariyCurrency?.rate;
+                              Number(value) / selectedPayoutCurrencyRate;
                             setReceiverAmount(String(result.toFixed(2)));
                           }
-                          setTransectionSummeryData(null);
                         }}
                         placeholder="0.00"
                         step="0.01"
@@ -800,7 +957,7 @@ const SingleTransactionWithPreselected = ({
                     <div>
                       <h4 className="text-center">Receiver</h4>
                       <Label htmlFor="receiverAmount">
-                        Amount {getSelectedBeneficiary?.currency} *
+                        Amount ({selectedPayoutCurrencyCode}) *
                       </Label>
                       <Input
                         id="receiverAmount"
@@ -810,11 +967,9 @@ const SingleTransactionWithPreselected = ({
                           const value = e.target.value;
                           setReceiverAmount(value);
                           setTransectionSummeryData(null);
-                          if (beneficiariyCurrency?.rate) {
-                            const result =
-                              Number(value) * beneficiariyCurrency?.rate;
-                            setAmount(String(result?.toFixed(2)));
-                          }
+                          setAmount(
+                            String(Number(value) * selectedPayoutCurrencyRate),
+                          );
                         }}
                         placeholder="0.00"
                         step="0.01"
@@ -835,7 +990,7 @@ const SingleTransactionWithPreselected = ({
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label htmlFor="currency">Currency *</Label>
                     <Select
                       value={currency}
@@ -846,11 +1001,11 @@ const SingleTransactionWithPreselected = ({
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border border-border z-50">
-                        {/* {Object.keys(exchangeRates).map((curr) => (
+                        {Object.keys(exchangeRates).map((curr) => (
                           <SelectItem key={curr} value={curr}>
                             {curr}
                           </SelectItem>
-                        ))} */}
+                        ))}
                         {currencyListData?.data?.map((curr: any) => (
                           <SelectItem key={curr?.id} value={curr?.id}>
                             {curr?.name?.toUpperCase()}
@@ -858,7 +1013,7 @@ const SingleTransactionWithPreselected = ({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                   <div>
                     <div>
                       <Label htmlFor="source">
@@ -893,130 +1048,141 @@ const SingleTransactionWithPreselected = ({
                 </div>
 
                 <Button
+                  onClick={handleTransationSummary}
+                  disabled={!isFormValid}
                   variant="outline"
-                  onClick={() => handleTransationSummary()}
                 >
-                  View Transaction Summary
+                  Transaction Summary
                 </Button>
-                {transectionSummeryData && amount && (
-                  <Card className="bg-accent-muted/10 border-accent/20">
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <TrendingUp className="h-4 w-4 text-accent" />
-                        <span className="font-medium text-foreground">
-                          Transaction Summary
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">
-                            PayIn Amount
+                {loading ? (
+                  <div className="flex items-center space-x-2 mb-3">
+                    <TrendingUp className="h-4 w-4 text-accent animate-pulse" />
+                    <span className="font-medium text-foreground">
+                      Loading Transaction Summary...
+                    </span>
+                  </div>
+                ) : (
+                  transectionSummeryData &&
+                  amount && (
+                    <Card className="bg-accent-muted/10 border-accent/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <TrendingUp className="h-4 w-4 text-accent" />
+                          <span className="font-medium text-foreground">
+                            Transaction Summary
                           </span>
-                          <p className="font-medium">
-                            {transectionSummeryData?.baseAedAmount?.toFixed(2)}
-                          </p>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Exchange Rate
-                          </span>
-                          <p className="font-medium">
-                            1 AED ={" "}
-                            {(
-                              1 / transectionSummeryData?.exchangeRate
-                            )?.toFixed(2)}{" "}
-                            {transectionSummeryData?.currency}
-                          </p>
-                        </div>
-                        {transectionSummeryData?.businessFee >= 1 && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <span className="text-muted-foreground">
-                              businessFee
+                              PayIn Amount
                             </span>
                             <p className="font-medium">
-                              {transectionSummeryData?.businessFee?.toLocaleString()}{" "}
-                              AED
+                              {transectionSummeryData?.baseAedAmount?.toFixed(
+                                2,
+                              )}
                             </p>
                           </div>
-                        )}
-                        {transectionSummeryData?.beneficiaryFee >= 1 && (
                           <div>
                             <span className="text-muted-foreground">
-                              Beneficiary Fee
+                              Exchange Rate
                             </span>
                             <p className="font-medium">
-                              {transectionSummeryData?.beneficiaryFee?.toLocaleString()}{" "}
-                              AED
+                              1 {currencyCode} ={" "}
+                              {(
+                                1 / transectionSummeryData?.exchangeRate
+                              )?.toFixed(2)}{" "}
+                              {selectedPayoutCurrencyCode}
                             </p>
                           </div>
-                        )}
+                          {transectionSummeryData?.businessFee >= 1 && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                businessFee
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.businessFee?.toLocaleString()}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
+                          {transectionSummeryData?.beneficiaryFee >= 1 && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Beneficiary Fee
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.beneficiaryFee?.toLocaleString()}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
 
-                        <div>
-                          <span className="text-muted-foreground">
-                            Discount Amount
-                          </span>
-                          <p className="font-medium">
-                            {transectionSummeryData?.discountAmountAed} AED
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Total Payable
-                          </span>
-                          <p className="font-medium">
-                            {transectionSummeryData?.totalDebit?.toFixed(2)} AED
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Monthly Limit
-                          </span>
-                          <p className="font-medium">
-                            {transectionSummeryData?.monthlyLimit?.toFixed(2)}{" "}
-                            AED
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Used Limit
-                          </span>
-                          <p className="font-medium">
-                            {transectionSummeryData?.currentMonthSpend?.toFixed(
-                              2,
-                            )}{" "}
-                            AED
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Remaining Limit
-                          </span>
-                          <p className="font-medium">
-                            {transectionSummeryData?.monthlyLimit?.toFixed(2) -
-                              transectionSummeryData?.currentMonthSpend?.toFixed(
+                          <div>
+                            <span className="text-muted-foreground">
+                              Discount Amount
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.discountAmountAed}{" "}
+                              {currencyCode}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Total Payable
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
+                              {currencyCode}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Monthly Limit
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.monthlyLimit?.toFixed(2)}{" "}
+                              {currencyCode}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Used Limit
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.currentMonthSpend?.toFixed(
                                 2,
                               )}{" "}
-                            AED
-                          </p>
+                              {transectionSummeryData?.currency}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Remaining Limit
+                            </span>
+                            <p className="font-medium">
+                              {transectionSummeryData?.monthlyLimit?.toFixed(
+                                2,
+                              ) -
+                                transectionSummeryData?.currentMonthSpend?.toFixed(
+                                  2,
+                                )}{" "}
+                              {currencyCode}
+                            </p>
+                          </div>
+                          {transectionSummeryData?.vatAmount > 0 && (
+                            <div>
+                              <span>Vat Amount</span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.vatAmount}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {/* <div>
-                          <span className="text-muted-foreground">
-                            Processing Fee:
-                          </span>
-                          <p className="font-medium">AED {totals.fees}</p>
-                        </div> */}
-                      </div>
-                      {/* <Separator className="my-3" /> */}
-                      {/* <div className="flex justify-between items-center">
-                        <span className="font-medium text-foreground">
-                          Total Debit from Source:
-                        </span>
-                        <span className="text-lg font-bold text-primary">
-                          AED {totals.total.toLocaleString()}
-                        </span>
-                      </div> */}
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  )
                 )}
               </CardContent>
             </Card>
