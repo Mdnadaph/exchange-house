@@ -319,6 +319,21 @@ export default function ExchangePayoutMechanism() {
       })),
     });
   }, [editablePayoutMechanismData]);
+
+  const getDefaultCurrencyIds = () => {
+    const selectedCountry = countries?.find(
+      (c) => c?.id === formData?.countryId,
+    );
+
+    if (!selectedCountry) return [];
+
+    return (
+      currencyList
+        ?.filter((c) => c?.code === selectedCountry?.currencyCode)
+        ?.map((c) => c?.id) || []
+    );
+  };
+
   return (
     <ExchangeLayout>
       <div className="space-y-6">
@@ -417,7 +432,7 @@ export default function ExchangePayoutMechanism() {
                         <Edit className="h-4 w-4 sm:mr-1" />
                         <span className="hidden sm:inline">Edit</span>
                       </Button>
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
@@ -426,7 +441,7 @@ export default function ExchangePayoutMechanism() {
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </CardContent>
@@ -593,7 +608,10 @@ export default function ExchangePayoutMechanism() {
                               ...prev,
                               mechanisms: [
                                 ...(prev.mechanisms || []),
-                                { payoutTypeId: m?.id, currencyIds: [] },
+                                {
+                                  payoutTypeId: m?.id,
+                                  currencyIds: getDefaultCurrencyIds(),
+                                },
                               ],
                             };
                           });
@@ -833,7 +851,10 @@ export default function ExchangePayoutMechanism() {
                               ...prev,
                               mechanisms: [
                                 ...(prev?.mechanisms || []),
-                                { payoutTypeId: m?.id, currencyIds: [] },
+                                {
+                                  payoutTypeId: m?.id,
+                                  currencyIds: getDefaultCurrencyIds(),
+                                },
                               ],
                             };
                           });

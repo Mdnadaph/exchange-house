@@ -15,6 +15,7 @@ import {
   Shield,
   UserCircle,
   Handshake,
+  BookOpen,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -115,7 +116,11 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
     { name: "Dashboard", href: "/user", icon: Home },
     { name: "Profile", href: `/user/profile`, icon: UserCircle },
     { name: "Transactions", href: "/user/transactions", icon: CreditCard },
-
+    {
+      name: "Transaction Report",
+      href: "/user/transaction-report",
+      icon: BookOpen,
+    },
     // { name: "Beneficiaries", href: "/user/beneficiaries", icon: Users },
     // { name: "Rate Deals", href: "/user/deals", icon: Handshake },
     // { name: "User Management", href: "/user/users", icon: Users },

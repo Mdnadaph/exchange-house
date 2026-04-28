@@ -97,6 +97,9 @@ import AdminCountryCurrency from "./pages/admin/AdminCountryCurrency";
 import AdminPayoutMechanism from "./pages/admin/AdminPayoutMechanism";
 import ExchangeCountryCurrency from "./pages/exchange/ExchangeCountryCurrency";
 import ExchangePayoutMechanism from "./pages/exchange/ExchangePayoutMechanism";
+import BusinessUserTransactionReport from "./pages/user/BusinessUserTransactionReport";
+import UserTransactionReport from "./pages/portal/UserTransactionReport";
+import BranchTransactionReport from "./pages/branch/BranchTransactionReport";
 
 const queryClient = new QueryClient();
 
@@ -273,6 +276,10 @@ function App() {
                     <Route path="governance" element={<UserGovernance />} />
                     <Route path="documents" element={<UserDocuments />} />
                     <Route path="documents/:id" element={<UserDocuments />} />
+                    <Route
+                      path="transaction-report"
+                      element={<UserTransactionReport />}
+                    />
                   </Route>
                 </Route>
 
@@ -286,6 +293,10 @@ function App() {
                     <Route
                       path="transactions"
                       element={<BussinessUserTransaction />}
+                    />
+                    <Route
+                      path="transaction-report"
+                      element={<BusinessUserTransactionReport />}
                     />
                   </Route>
                 </Route>
@@ -381,6 +392,10 @@ function App() {
                     <Route
                       path="documents"
                       element={<BranchBusinessDocuments />}
+                    />
+                    <Route
+                      path="transaction-report"
+                      element={<BranchTransactionReport />}
                     />
                   </Route>
                 </Route>

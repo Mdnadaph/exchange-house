@@ -74,6 +74,8 @@ const SingleTransactionWithPreselected = ({
   const [feeResponsibility, setFeeResponsibility] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [feeRule, setFeeRule] = useState<any>({});
+  const [loadingRateDeal, setLoadingRateDeal] = useState(false);
+  const [rateDealData, setRateDealData] = useState<any>({});
   const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
     useState<any>(null);
   const [transectionSummeryData, setTransectionSummeryData] =
@@ -557,6 +559,31 @@ const SingleTransactionWithPreselected = ({
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
   const isFormValid = amount && receiverAmount && feeResponsibility;
+  const getCustomRateDeal = async () => {
+    setLoadingRateDeal(true);
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setRateDealData(res?.data?.data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: error?.response?.data?.message || "Transaction failed",
+      });
+    } finally {
+      setLoadingRateDeal(false);
+    }
+  };
+
+  useEffect(() => {
+    getCustomRateDeal();
+  }, [amount]);
   return (
     <>
       <Dialog
@@ -1223,6 +1250,39 @@ const SingleTransactionWithPreselected = ({
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {loadingRateDeal ? (
+              <div className="text-gray-400 p-4">Loading...</div>
+            ) : rateDealData?.proposedRate && amount ? (
+              <Card className="bg-accent-muted/10 border-accent/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <TrendingUp className="h-4 w-4 text-accent" />
+                    <span className="font-medium text-foreground">
+                      Applied Rate Deal
+                    </span>
+                  </div>
+                  <div className="flex gap-7 text-base font-normal text-gray-600">
+                    <div className="flex gap-1">
+                      <p>
+                        Proposed Rate: {rateDealData.proposedRate}{" "}
+                        {rateDealData.payoutCurrency}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <p>
+                        Remaining Amount: {rateDealData.remainingAmount}{" "}
+                        {rateDealData.payoutCurrency}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-gray-400 p-4">
+                {amount && <p> No rate deal data available</p>}
+              </div>
             )}
 
             {/* Document Upload */}

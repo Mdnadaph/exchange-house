@@ -207,7 +207,6 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     },
   ];
   const isActive = (path: string) => location.pathname === path;
-
   return (
     <div className="h-screen overflow-hidden bg-muted/30">
       {/* Header */}

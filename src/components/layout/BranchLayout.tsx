@@ -13,6 +13,7 @@ import {
   CreditCard,
   Files,
   Handshake,
+  BookOpen,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 interface BranchLayoutProps {
@@ -118,6 +119,11 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
     { name: "Documents", href: "/branch/documents", icon: Files },
+    {
+      name: "Transaction Report",
+      href: "/branch/transaction-report",
+      icon: BookOpen,
+    },
   ];
 
   const isActive = (path: string) => location.pathname === path;

@@ -11,14 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle, Clock, AlertCircle } from "lucide-react";
-
 import { Switch } from "@/components/ui/switch";
 import axios from "axios";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
+import { AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Badge } from "./ui/badge";
 
 // ─── TYPES ─────────────────────────────
 
@@ -53,9 +52,7 @@ export const statusList = [
 
 const transactionTypes = ["BOTH", "SINGLE", "BULK"];
 
-// ─── COMPONENT ─────────────────────────
-
-function ExchangeAdminTransactionReport() {
+export default function TransactionReport() {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
@@ -91,7 +88,6 @@ function ExchangeAdminTransactionReport() {
   const [loading, setLoading] = useState(false);
 
   // ─── FETCH COUNTRY/CURRENCY ───────────
-
   const fetchCountryCurrency = async () => {
     try {
       const res = await axios.get(
@@ -292,249 +288,240 @@ function ExchangeAdminTransactionReport() {
   };
 
   return (
-    <ExchangeLayout>
-      <div className="space-y-6">
-        {/* HEADER */}
-        <div>
-          <h1 className="text-3xl font-bold">Transaction Report</h1>
-          <p className="text-muted-foreground">
-            Search and monitor compliance transactions
-          </p>
-        </div>
-
-        {/* FILTER */}
-        <Card>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-            <Input
-              type="date"
-              onChange={(e) =>
-                setFilters({ ...filters, fromDate: e.target.value })
-              }
-            />
-
-            <Input
-              type="date"
-              onChange={(e) =>
-                setFilters({ ...filters, toDate: e.target.value })
-              }
-            />
-
-            <Select
-              onValueChange={(val) =>
-                setFilters({ ...filters, status: val == "All" ? "" : val })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusList?.map((s, index) => (
-                  <SelectItem key={index} value={s?.value}>
-                    {s?.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              onValueChange={(val) =>
-                setFilters({
-                  ...filters,
-                  transactionType: val == "BOTH" ? "" : val,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Transaction Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {transactionTypes.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select onValueChange={handleCountryChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Country" />
-              </SelectTrigger>
-              <SelectContent>
-                {countries.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              onValueChange={(val) => setFilters({ ...filters, currency: val })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {currencies.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              placeholder="Min Amount"
-              type="number"
-              onChange={(e) =>
-                setFilters({ ...filters, minAmount: e.target.value })
-              }
-            />
-
-            <Input
-              placeholder="Max Amount"
-              type="number"
-              onChange={(e) =>
-                setFilters({ ...filters, maxAmount: e.target.value })
-              }
-            />
-
-            <Input
-              placeholder="Transaction Ref"
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  transactionReference: e.target.value,
-                })
-              }
-            />
-
-            <div className="flex justify-between items-center">
-              <Label>Blocked</Label>
-              <Switch
-                checked={filters.blocked}
-                onCheckedChange={(val) =>
-                  setFilters({ ...filters, blocked: val })
-                }
-              />
-            </div>
-
-            <div className="flex justify-between items-center">
-              <Label>Requires Review</Label>
-              <Switch
-                checked={filters.requiresReview}
-                onCheckedChange={(val) =>
-                  setFilters({ ...filters, requiresReview: val })
-                }
-              />
-            </div>
-
-            <Button onClick={handleSearch} disabled={loading}>
-              {loading ? "Searching..." : "Search"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* RESULT */}
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            {loading ? (
-              <div className="text-center text-muted-foreground py-10">
-                Loading...
-              </div>
-            ) : reports?.length === 0 ? (
-              <p className="text-center text-muted-foreground">No data found</p>
-            ) : (
-              reports?.map((txn) => (
-                <div
-                  key={txn.id + txn.reference}
-                  className="border rounded-lg p-4 space-y-2"
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm">{txn?.reference}</h3>
-
-                    <Badge variant={getStatusBadge(txn?.status)?.variant}>
-                      <span className="flex items-center gap-1">
-                        {React.createElement(
-                          getStatusBadge(txn?.status)?.icon,
-                          { className: "w-3 h-3" },
-                        )}
-                        {getStatusBadge(txn?.status)?.label}
-                      </span>
-                    </Badge>
-                  </div>
-
-                  {/* Main Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 text-sm text-muted-foreground">
-                    <p>
-                      <span className="font-medium text-foreground">Type:</span>{" "}
-                      {txn?.transactionType}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Amount:
-                      </span>{" "}
-                      {txn?.sourceAmount} {txn?.sourceCurrency}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Net Payout:
-                      </span>{" "}
-                      {txn?.netPayoutAmount} {txn?.destinationCurrency}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Gross Payout:
-                      </span>{" "}
-                      {txn?.grossPayoutAmount} {txn?.destinationCurrency}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">Fee:</span>{" "}
-                      {txn?.feeAmount} {txn?.sourceCurrency}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Vat Amount:
-                      </span>{" "}
-                      {txn?.vatAmount} {txn?.sourceCurrency}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Total Debit:
-                      </span>{" "}
-                      {txn?.totalDebit} {txn?.destinationCurrency}
-                    </p>
-
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Fee Responsibility:
-                      </span>{" "}
-                      {txn?.feeResponsibility}
-                    </p>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t">
-                    <span>
-                      Created: {new Date(txn.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl font-bold">Transaction Report</h1>
+        <p className="text-muted-foreground">
+          Search and monitor compliance transactions
+        </p>
       </div>
-    </ExchangeLayout>
+
+      {/* FILTER */}
+      <Card>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+          <Input
+            type="date"
+            onChange={(e) =>
+              setFilters({ ...filters, fromDate: e.target.value })
+            }
+          />
+
+          <Input
+            type="date"
+            onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
+          />
+
+          <Select
+            onValueChange={(val) =>
+              setFilters({ ...filters, status: val == "All" ? "" : val })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusList?.map((s, index) => (
+                <SelectItem key={index} value={s?.value}>
+                  {s?.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            onValueChange={(val) =>
+              setFilters({
+                ...filters,
+                transactionType: val == "BOTH" ? "" : val,
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Transaction Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {transactionTypes.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select onValueChange={handleCountryChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Country" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            onValueChange={(val) => setFilters({ ...filters, currency: val })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Input
+            placeholder="Min Amount"
+            type="number"
+            onChange={(e) =>
+              setFilters({ ...filters, minAmount: e.target.value })
+            }
+          />
+
+          <Input
+            placeholder="Max Amount"
+            type="number"
+            onChange={(e) =>
+              setFilters({ ...filters, maxAmount: e.target.value })
+            }
+          />
+
+          <Input
+            placeholder="Transaction Ref"
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                transactionReference: e.target.value,
+              })
+            }
+          />
+
+          <div className="flex justify-between items-center">
+            <Label>Blocked</Label>
+            <Switch
+              checked={filters.blocked}
+              onCheckedChange={(val) =>
+                setFilters({ ...filters, blocked: val })
+              }
+            />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <Label>Requires Review</Label>
+            <Switch
+              checked={filters.requiresReview}
+              onCheckedChange={(val) =>
+                setFilters({ ...filters, requiresReview: val })
+              }
+            />
+          </div>
+
+          <Button onClick={handleSearch} disabled={loading}>
+            {loading ? "Searching..." : "Search"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* RESULT */}
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          {loading ? (
+            <div className="text-center text-muted-foreground py-10">
+              Loading...
+            </div>
+          ) : reports?.length === 0 ? (
+            <p className="text-center text-muted-foreground">No data found</p>
+          ) : (
+            reports?.map((txn) => (
+              <div
+                key={txn.id + txn.reference}
+                className="border rounded-lg p-4 space-y-2"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">{txn?.reference}</h3>
+
+                  <Badge variant={getStatusBadge(txn?.status)?.variant}>
+                    <span className="flex items-center gap-1">
+                      {React.createElement(getStatusBadge(txn?.status)?.icon, {
+                        className: "w-3 h-3",
+                      })}
+                      {getStatusBadge(txn?.status)?.label}
+                    </span>
+                  </Badge>
+                </div>
+
+                {/* Main Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 text-sm text-muted-foreground">
+                  <p>
+                    <span className="font-medium text-foreground">Type:</span>{" "}
+                    {txn?.transactionType}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">Amount:</span>{" "}
+                    {txn?.sourceAmount} {txn?.sourceCurrency}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Net Payout:
+                    </span>{" "}
+                    {txn?.netPayoutAmount} {txn?.destinationCurrency}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Gross Payout:
+                    </span>{" "}
+                    {txn?.grossPayoutAmount} {txn?.destinationCurrency}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">Fee:</span>{" "}
+                    {txn?.feeAmount} {txn?.sourceCurrency}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Vat Amount:
+                    </span>{" "}
+                    {txn?.vatAmount} {txn?.sourceCurrency}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Total Debit:
+                    </span>{" "}
+                    {txn?.totalDebit} {txn?.destinationCurrency}
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Fee Responsibility:
+                    </span>{" "}
+                    {txn?.feeResponsibility}
+                  </p>
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t">
+                  <span>
+                    Created: {new Date(txn.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
-
-export default ExchangeAdminTransactionReport;
