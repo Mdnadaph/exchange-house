@@ -327,14 +327,16 @@ const ExchangeKYBConfig = () => {
                               </div>
                             </div>
                             <div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditClick(rule)}
-                              >
-                                <Edit className="h-3 w-3 mr-1" />
-                                Edit
-                              </Button>
+                              <PermissionGate permission="BTN_EDIT_KYB_RULE">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditClick(rule)}
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Edit
+                                </Button>
+                              </PermissionGate>
                             </div>
                           </div>
                         </CardContent>

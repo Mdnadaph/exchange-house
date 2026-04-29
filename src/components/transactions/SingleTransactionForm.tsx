@@ -2593,7 +2593,7 @@ const SingleTransactionForm = ({
                                 {transectionSummeryData?.currentMonthSpend?.toFixed(
                                   2,
                                 )}{" "}
-                                {transectionSummeryData?.currency}
+                                {currencyCode}
                               </p>
                             </div>
                             <div>
@@ -2641,7 +2641,7 @@ const SingleTransactionForm = ({
                   <div className="flex gap-7 text-base font-normal text-gray-600">
                     <div className="flex gap-1">
                       <p>
-                        Proposed Rate: {rateDealData.proposedRate}{" "}
+                        Applied Rate: {rateDealData.appliedRate}{" "}
                         {rateDealData.payoutCurrency}
                       </p>
                     </div>

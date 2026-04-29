@@ -17,6 +17,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import BASE_URL from "@/config/config";
+import { Badge } from "../ui/badge";
 
 // ─── Types ────────────────────────────────────────────────────
 interface ProofDocument {
@@ -420,8 +421,7 @@ const ProofOfPaymentUpload = ({
         <div className="space-y-3">
           <h4 className="font-semibold text-foreground flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-success" />
-            Uploaded Proof of Payment Documents{" "}
-            {!isFetching && `(${documents.length})`}
+            Transaction Documents {!isFetching && `(${documents?.length})`}
           </h4>
 
           {isFetching && (
@@ -478,9 +478,15 @@ const ProofOfPaymentUpload = ({
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <FileText className="h-8 w-8 text-primary shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate">
-                              {doc.fileName}
-                            </p>
+                            <div className="flex gap-2 items-center">
+                              <p className="font-medium truncate">
+                                {doc.fileName}
+                              </p>
+                              <Badge variant="secondary" className="text-xs">
+                                {doc?.documentType}
+                              </Badge>
+                            </div>
+
                             <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 mt-1">
                               <span>{formatDate(doc.uploadedAt)}</span>
                               {doc.uploadedBy && (

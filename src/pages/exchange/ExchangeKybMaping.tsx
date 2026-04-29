@@ -47,6 +47,7 @@ import {
   Pencil,
 } from "lucide-react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -454,23 +455,29 @@ const ExchangeKybMapping = () => {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateBT(true)}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Create Business Type
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateKYB(true)}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Create KYB Type
-            </Button>
-            <Button size="sm" onClick={handleOpenMappingDialog}>
-              <Layers className="h-4 w-4 mr-1" /> Create Mapping
-            </Button>
+            <PermissionGate permission="BTN_CREATE_BUSINESS_TYPE">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateBT(true)}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Create Business Type
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="BTN_CREATE_KYB_TYPE">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateKYB(true)}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Create KYB Type
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="BTN_CREATE_MAPPING">
+              <Button size="sm" onClick={handleOpenMappingDialog}>
+                <Layers className="h-4 w-4 mr-1" /> Create Mapping
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 

@@ -57,6 +57,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 export default function ExchangePayoutMechanism() {
   const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
@@ -347,10 +348,12 @@ export default function ExchangePayoutMechanism() {
               currencies.
             </p>
           </div>
-          <Button variant="business" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Payout Mechanism
-          </Button>
+          <PermissionGate permission="BTN_ADD_PAYOUT_MECHANISM">
+            <Button variant="business" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Payout Mechanism
+            </Button>
+          </PermissionGate>
         </div>
       </div>
       <div className="relative w-64 my-4">
@@ -421,17 +424,20 @@ export default function ExchangePayoutMechanism() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setIsEditOpen(true);
-                          setEditablePayoutMechanism(payout);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Edit</span>
-                      </Button>
+                      <PermissionGate permission="BTN_EDIT_PAYOUT_MECHANISM">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsEditOpen(true);
+                            setEditablePayoutMechanism(payout);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Edit</span>
+                        </Button>
+                      </PermissionGate>
+
                       {/* <Button
                         variant="outline"
                         size="sm"

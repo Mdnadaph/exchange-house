@@ -520,7 +520,7 @@ const ExchangeComplianceConfig = () => {
   const getPayoutCountryId = (countryCode: string): string => {
     if (!countryCode) return "";
     const found = payoutCountryData.find(
-      (c: any) => c?.countryCode === countryCode || c?.isoCode === countryCode
+      (c: any) => c?.countryCode === countryCode || c?.isoCode === countryCode,
     );
     return found ? found.id : "";
   };
@@ -888,7 +888,9 @@ const ExchangeComplianceConfig = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const payoutId = getPayoutCountryId(rule.payoutCountry);
+                            const payoutId = getPayoutCountryId(
+                              rule.payoutCountry,
+                            );
                             setEditForm({
                               ...rule,
                               payoutCountry: payoutId,
@@ -1002,7 +1004,10 @@ const ExchangeComplianceConfig = () => {
                         const selectedCountry = payoutCountryData.find(
                           (c: any) => c?.id === v,
                         );
-                        const newCurrency = selectedCountry?.currencyCode || selectedCountry?.payoutCurrency || "";
+                        const newCurrency =
+                          selectedCountry?.currencyCode ||
+                          selectedCountry?.payoutCurrency ||
+                          "";
                         setEditForm({
                           ...editForm,
                           payoutCountry: v,

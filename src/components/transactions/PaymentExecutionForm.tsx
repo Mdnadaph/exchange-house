@@ -690,6 +690,7 @@ interface PaymentExecutionFormProps {
     discount?: any;
     vatAmount?: number;
     payoutMechanismType?: string;
+    destinationCurrency?: string;
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;
@@ -863,7 +864,7 @@ const PaymentExecutionForm = ({
                   <div>
                     <span className="text-muted-foreground">Amount:</span>
                     <p className="font-medium">
-                      {transaction?.amount} {transaction?.currency}
+                      {transaction?.amount} {transaction?.destinationCurrency}
                     </p>
                   </div>
                   <div>

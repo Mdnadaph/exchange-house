@@ -467,9 +467,8 @@ export default function TransactionReport() {
 
                   <p>
                     <span className="font-medium text-foreground">Amount:</span>{" "}
-                    {txn?.sourceAmount} {txn?.sourceCurrency}
+                    {txn?.sourceAmount} {txn?.destinationCurrency}
                   </p>
-
                   <p>
                     <span className="font-medium text-foreground">
                       Net Payout:

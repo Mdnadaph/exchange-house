@@ -477,7 +477,7 @@ function ExchangeAdminTransactionReport() {
                       <span className="font-medium text-foreground">
                         Amount:
                       </span>{" "}
-                      {txn?.sourceAmount} {txn?.sourceCurrency}
+                      {txn?.sourceAmount} {txn?.destinationCurrency}
                     </p>
 
                     <p>

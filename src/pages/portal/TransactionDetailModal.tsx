@@ -448,7 +448,7 @@ export default function TransactionDetailModal({
             {/* Amount */}
             <div className="text-right">
               <p className="text-3xl font-black tabular-nums">
-                {transaction.currency.toUpperCase()} {transaction.localAmount}
+                {transaction.currency?.toUpperCase()} {transaction.localAmount}
               </p>
               <p className="text-sm text-slate-400 mt-1">
                 {transaction?.destinationCurrency} {transaction.amount}
@@ -632,7 +632,7 @@ export default function TransactionDetailModal({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-muted/30 rounded-xl p-4">
               <DetailField
                 label="Exchange Rate"
-                value={`1 ${transaction.currency.toUpperCase()} =${
+                value={`1 ${transaction.currency?.toUpperCase()} =${
                   transaction?.exchangeRate
                     ? (1 / Number(transaction.exchangeRate)).toFixed(2)
                     : ""

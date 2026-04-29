@@ -75,8 +75,9 @@ interface FeeRule {
 }
 
 const ExchangeFeeManagement = () => {
-  const [cookies] = useCookies(["token"]);
-  const token = cookies.token;
+  const [cookies] = useCookies(["token", "currencyCode"]);
+  const token = cookies?.token;
+  const currencyCode = cookies?.currencyCode;
 
   const { toast } = useToast();
 
@@ -253,7 +254,7 @@ const ExchangeFeeManagement = () => {
     value: number | null | string,
   ): string => {
     if (!type || value == null) return "";
-    if (type === "FLAT") return `AED ${value}`;
+    if (type === "FLAT") return `${currencyCode} ${value}`;
     if (type === "BPS") return `${value} BPS`;
     return `${value} ${type}`;
   };
@@ -818,7 +819,7 @@ const ExchangeFeeManagement = () => {
                 <Label>
                   Fee Responsibility <span className="text-red-500">*</span>
                 </Label>
-                <Input value="BUSINESS" disabled onChange={() => { }} />
+                <Input value="BUSINESS" disabled onChange={() => {}} />
 
                 {/* {formErrors.feeType && (
                   <p className="text-sm text-red-500 mt-1">
@@ -846,7 +847,9 @@ const ExchangeFeeManagement = () => {
                       <SelectValue placeholder="Select Businss Fee Type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                      <SelectItem value="FLAT">
+                        Flat Fee {currencyCode}
+                      </SelectItem>
                       <SelectItem value="BPS">BPS (Basis Points %)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -861,7 +864,7 @@ const ExchangeFeeManagement = () => {
                     Business Fee Value <span className="text-red-500">*</span>
                     {newFeeRule.businessFeeType === "BPS"
                       ? "(in basis points)"
-                      : "(in AED)"}
+                      : `(in ${currencyCode})`}
                   </Label>
                   <Input
                     onWheel={(e) => e.currentTarget.blur()}
@@ -891,7 +894,7 @@ const ExchangeFeeManagement = () => {
                     <Label>
                       Fee Responsibility <span className="text-red-500">*</span>
                     </Label>
-                    <Input value="BENEFICIARY" disabled onChange={() => { }} />
+                    <Input value="BENEFICIARY" disabled onChange={() => {}} />
 
                     {/* {formErrors.feeType && (
                   <p className="text-sm text-red-500 mt-1">
@@ -925,7 +928,9 @@ const ExchangeFeeManagement = () => {
                           <SelectValue placeholder="Please select beneficiary Fee Type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                          <SelectItem value="FLAT">
+                            Flat Fee ({currencyCode})
+                          </SelectItem>
                           <SelectItem value="BPS">
                             BPS (Basis Points %)
                           </SelectItem>
@@ -943,7 +948,7 @@ const ExchangeFeeManagement = () => {
                         <span className="text-red-500">*</span>
                         {newFeeRule.beneficiaryFeeType === "BPS"
                           ? "(in basis points)"
-                          : "(in AED)"}
+                          : `(in ${currencyCode})`}
                       </Label>
                       <Input
                         onWheel={(e) => e.currentTarget.blur()}
@@ -974,7 +979,7 @@ const ExchangeFeeManagement = () => {
                       Shared Fee Responsibility{" "}
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Input value="SHARED" disabled onChange={() => { }} />
+                    <Input value="SHARED" disabled onChange={() => {}} />
 
                     {/* <p className="text-xs text-muted-foreground mt-1">
                   {newFeeRule.feeResponsibility === "SHARED" &&
@@ -1005,7 +1010,9 @@ const ExchangeFeeManagement = () => {
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                            <SelectItem value="FLAT">
+                              Flat Fee ({currencyCode})
+                            </SelectItem>
                             <SelectItem value="BPS">
                               BPS (Basis Points %)
                             </SelectItem>
@@ -1025,7 +1032,7 @@ const ExchangeFeeManagement = () => {
                           Business Fee Value *{" "}
                           {newFeeRule.sharedBusinessFeeType === "BPS"
                             ? "(BPS)"
-                            : "(AED)"}
+                            : `(${currencyCode})`}
                         </Label>
                         <Input
                           type="number"
@@ -1067,7 +1074,9 @@ const ExchangeFeeManagement = () => {
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="FLAT">Flat Fee (AED)</SelectItem>
+                            <SelectItem value="FLAT">
+                              Flat Fee ({currencyCode})
+                            </SelectItem>
                             <SelectItem value="BPS">
                               BPS (Basis Points %)
                             </SelectItem>
@@ -1087,7 +1096,7 @@ const ExchangeFeeManagement = () => {
                           Beneficiary Fee Value *{" "}
                           {newFeeRule.sharedBeneficiaryFeeType === "BPS"
                             ? "(BPS)"
-                            : "(AED)"}
+                            : `(${currencyCode})`}
                         </Label>
                         <Input
                           onWheel={(e) => e.currentTarget.blur()}

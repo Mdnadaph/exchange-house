@@ -180,7 +180,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       name: "Branch Oversight",
       href: "/exchange/branches",
       icon: GitBranch,
-      code: "NAV_BRANCH_OVERSIGHT",
+      code: "NAV_BRANCH_MANAGEMENT",
     },
     {
       name: "Staff Management",
@@ -199,11 +199,13 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       name: "Country & Currency",
       href: "/exchange/county-currency",
       icon: Globe,
+      code: "NAV_COUNTRY_CURRENCY",
     },
     {
       name: "Payout Mechanism",
       href: "/exchange/payout-mechanism",
       icon: Handshake,
+      code: "NAV_PAYOUT_MECHANISM",
     },
   ];
   const isActive = (path: string) => location.pathname === path;

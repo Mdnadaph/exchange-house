@@ -60,6 +60,7 @@ import { cn } from "@/lib/utils";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import axios from "axios";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 export default function ExchangeCountryCurrency() {
   const { toast } = useToast();
@@ -305,15 +306,17 @@ export default function ExchangeCountryCurrency() {
               Manage countries and their associated currencies
             </p>
           </div>
-          <Button
-            variant="business"
-            onClick={() => {
-              setIsCreateOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Country
-          </Button>
+          <PermissionGate permission="BTN_ADD_COUNTRY">
+            <Button
+              variant="business"
+              onClick={() => {
+                setIsCreateOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Country
+            </Button>
+          </PermissionGate>
         </div>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -373,27 +376,31 @@ export default function ExchangeCountryCurrency() {
                       </div>
 
                       <div className="flex flex-wrap gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditOpen(true);
-                            setEditableCountryData(cc);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 sm:mr-1" />
-                          <span className="hidden sm:inline">Edit</span>
-                        </Button>
+                        <PermissionGate permission="BTN_EDIT_COUNTRY">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsEditOpen(true);
+                              setEditableCountryData(cc);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </Button>
+                        </PermissionGate>
 
-                        <Button
-                          disabled
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsDeleteOpen(true)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
+                        <PermissionGate permission="BTN_DELETE_COUNTRY">
+                          <Button
+                            disabled
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsDeleteOpen(true)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </PermissionGate>
                       </div>
                     </div>
                   </CardContent>

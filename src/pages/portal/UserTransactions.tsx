@@ -1077,6 +1077,8 @@ const UserTransactions = () => {
                                       localAmount: transaction.localAmount,
                                       localCurrency: transaction.localCurrency,
                                       purpose: transaction.purpose,
+                                      destinationCurrency:
+                                        transaction?.destinationCurrency,
                                     }}
                                     fetchTransactions={fetchTransactions}
                                   />
