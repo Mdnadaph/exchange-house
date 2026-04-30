@@ -1535,6 +1535,9 @@ const SingleTransactionForm = ({
   const [selectedPayoutDetailId, setSelectedPayoutDetailId] = useState<
     number | null
   >(null);
+  const [activeField, setActiveField] = useState<"sender" | "receiver" | null>(
+    null,
+  );
   const [selectedPayoutCurrencyCode, setSelectedPayoutCurrencyCode] =
     useState<string>("");
   const [selectedPayoutCurrencyRate, setSelectedPayoutCurrencyRate] =
@@ -1983,7 +1986,50 @@ const SingleTransactionForm = ({
       Number(amount) >= fee?.minAmount && Number(amount) <= fee?.maxAmount,
   );
   const isFormValid = amount && receiverAmount && feeResponsibility;
+  useEffect(() => {
+    if (!amount && !receiverAmount) return;
 
+    const sender = Number(amount);
+    const receiver = Number(receiverAmount);
+
+    // ✅ Sender → Receiver
+    if (activeField === "sender") {
+      if (!sender) {
+        setReceiverAmount("");
+        return;
+      }
+
+      if (rateDealData?.appliedRate) {
+        const result = sender * rateDealData.appliedRate;
+        setReceiverAmount(result.toFixed(2));
+      } else {
+        const result = sender / selectedPayoutCurrencyRate;
+        setReceiverAmount(result.toFixed(2));
+      }
+    }
+
+    // ✅ Receiver → Sender
+    if (activeField === "receiver") {
+      if (!receiver) {
+        setAmount("");
+        return;
+      }
+
+      if (rateDealData?.appliedRate) {
+        const result = receiver / rateDealData.appliedRate;
+        setAmount(result.toFixed(2));
+      } else {
+        const result = receiver * selectedPayoutCurrencyRate;
+        setAmount(result.toFixed(2));
+      }
+    }
+  }, [
+    amount,
+    receiverAmount,
+    rateDealData?.appliedRate,
+    selectedPayoutCurrencyRate,
+    activeField,
+  ]);
   return (
     <>
       <Dialog
@@ -2372,14 +2418,24 @@ const SingleTransactionForm = ({
                           value={amount}
                           onChange={(e) => {
                             const value = e.target.value;
+                            setActiveField("sender");
                             setAmount(value);
                             setTransectionSummeryData(null);
-                            if (selectedPayoutCurrencyRate) {
-                              const result =
-                                Number(value) / selectedPayoutCurrencyRate;
-                              setReceiverAmount(String(result.toFixed(2)));
-                            }
                           }}
+                          // onChange={(e) => {
+                          //   const value = e.target.value;
+                          //   setAmount(value);
+                          //   setTransectionSummeryData(null);
+                          //   // if (rateDealData?.appliedRate) {
+                          //   //   const result =
+                          //   //     Number(value) * rateDealData?.appliedRate;
+                          //   //   setReceiverAmount(String(result?.toFixed(2)));
+                          //   // } else {
+                          //   //   const result =
+                          //   //     Number(value) / selectedPayoutCurrencyRate;
+                          //   //   setReceiverAmount(String(result.toFixed(2)));
+                          //   // }
+                          // }}
                           placeholder="0.00"
                           step="0.01"
                           onWheel={(e) => e.currentTarget.blur()}
@@ -2390,22 +2446,41 @@ const SingleTransactionForm = ({
                           Receiver
                         </h5>
                         <Label htmlFor="receiverAmount">
-                          Amount ({selectedPayoutCurrencyCode})
+                          Amount ({selectedPayoutCurrencyCode}){" "}
+                          {rateDealData?.appliedRate && "Applied Rate "}
                         </Label>
+
                         <Input
                           id="receiverAmount"
                           type="number"
                           value={receiverAmount}
                           onChange={(e) => {
                             const value = e.target.value;
+                            setActiveField("receiver");
                             setReceiverAmount(value);
                             setTransectionSummeryData(null);
-                            setAmount(
-                              String(
-                                Number(value) * selectedPayoutCurrencyRate,
-                              ),
-                            );
                           }}
+                          // onChange={(e) => {
+                          //   const value = e.target.value;
+                          //   setReceiverAmount(value);
+                          //   setTransectionSummeryData(null);
+
+                          //   if (!value) return;
+
+                          //   if (rateDealData?.appliedRate) {
+                          //     setAmount(
+                          //       String(
+                          //         Number(value) / rateDealData.appliedRate,
+                          //       ),
+                          //     );
+                          //   } else {
+                          //     setAmount(
+                          //       String(
+                          //         Number(value) * selectedPayoutCurrencyRate,
+                          //       ),
+                          //     );
+                          //   }
+                          // }}
                           placeholder="0.00"
                           step="0.01"
                           onWheel={(e) => e.currentTarget.blur()}
@@ -2648,7 +2723,7 @@ const SingleTransactionForm = ({
                     <div className="flex gap-1">
                       <p>
                         Remaining Amount: {rateDealData.remainingAmount}{" "}
-                        {rateDealData.payoutCurrency}
+                        {currencyCode}
                       </p>
                     </div>
                   </div>

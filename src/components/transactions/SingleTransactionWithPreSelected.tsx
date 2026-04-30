@@ -89,6 +89,9 @@ const SingleTransactionWithPreselected = ({
   const [selectedPayoutDetailId, setSelectedPayoutDetailId] = useState<
     number | null
   >(null);
+  const [activeField, setActiveField] = useState<"sender" | "receiver" | null>(
+    null,
+  );
   const [selectedPayoutCurrencyCode, setSelectedPayoutCurrencyCode] =
     useState<string>("");
   const [selectedPayoutCurrencyRate, setSelectedPayoutCurrencyRate] =
@@ -584,6 +587,50 @@ const SingleTransactionWithPreselected = ({
   useEffect(() => {
     getCustomRateDeal();
   }, [amount]);
+  useEffect(() => {
+    if (!amount && !receiverAmount) return;
+
+    const sender = Number(amount);
+    const receiver = Number(receiverAmount);
+
+    // ✅ Sender → Receiver
+    if (activeField === "sender") {
+      if (!sender) {
+        setReceiverAmount("");
+        return;
+      }
+
+      if (rateDealData?.appliedRate) {
+        const result = sender * rateDealData.appliedRate;
+        setReceiverAmount(result.toFixed(2));
+      } else {
+        const result = sender / selectedPayoutCurrencyRate;
+        setReceiverAmount(result.toFixed(2));
+      }
+    }
+
+    // ✅ Receiver → Sender
+    if (activeField === "receiver") {
+      if (!receiver) {
+        setAmount("");
+        return;
+      }
+
+      if (rateDealData?.appliedRate) {
+        const result = receiver / rateDealData.appliedRate;
+        setAmount(result.toFixed(2));
+      } else {
+        const result = receiver * selectedPayoutCurrencyRate;
+        setAmount(result.toFixed(2));
+      }
+    }
+  }, [
+    amount,
+    receiverAmount,
+    rateDealData?.appliedRate,
+    selectedPayoutCurrencyRate,
+    activeField,
+  ]);
   return (
     <>
       <Dialog
@@ -966,15 +1013,21 @@ const SingleTransactionWithPreselected = ({
                         id="amount"
                         type="number"
                         value={amount}
+                        // onChange={(e) => {
+                        //   const value = e.target.value;
+                        //   setAmount(value);
+                        //   setTransectionSummeryData(null);
+                        //   if (selectedPayoutCurrencyRate) {
+                        //     const result =
+                        //       Number(value) / selectedPayoutCurrencyRate;
+                        //     setReceiverAmount(String(result.toFixed(2)));
+                        //   }
+                        // }}
                         onChange={(e) => {
                           const value = e.target.value;
+                          setActiveField("sender");
                           setAmount(value);
                           setTransectionSummeryData(null);
-                          if (selectedPayoutCurrencyRate) {
-                            const result =
-                              Number(value) / selectedPayoutCurrencyRate;
-                            setReceiverAmount(String(result.toFixed(2)));
-                          }
                         }}
                         placeholder="0.00"
                         step="0.01"
@@ -984,19 +1037,26 @@ const SingleTransactionWithPreselected = ({
                     <div>
                       <h4 className="text-center">Receiver</h4>
                       <Label htmlFor="receiverAmount">
-                        Amount ({selectedPayoutCurrencyCode}) *
+                        Amount ({selectedPayoutCurrencyCode}){" "}
+                        {rateDealData?.appliedRate && "Applied Rate"} *
                       </Label>
                       <Input
                         id="receiverAmount"
                         type="number"
                         value={receiverAmount}
+                        // onChange={(e) => {
+                        //   const value = e.target.value;
+                        //   setReceiverAmount(value);
+                        //   setTransectionSummeryData(null);
+                        //   setAmount(
+                        //     String(Number(value) * selectedPayoutCurrencyRate),
+                        //   );
+                        // }}
                         onChange={(e) => {
                           const value = e.target.value;
+                          setActiveField("receiver");
                           setReceiverAmount(value);
                           setTransectionSummeryData(null);
-                          setAmount(
-                            String(Number(value) * selectedPayoutCurrencyRate),
-                          );
                         }}
                         placeholder="0.00"
                         step="0.01"

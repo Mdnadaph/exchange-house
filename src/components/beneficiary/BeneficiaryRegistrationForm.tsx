@@ -112,8 +112,9 @@ const BeneficiaryRegistrationForm = ({
 }) => {
   const isEditMode = !!editData;
 
-  const [cookie] = useCookies(["token"]);
+  const [cookie] = useCookies(["token", "currencyCode"]);
   const token = cookie.token;
+  const currencyCode = cookie?.currencyCode;
 
   // ── UI / selection states ──────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -1293,7 +1294,7 @@ const BeneficiaryRegistrationForm = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="expectedMonthlyVolume">
-                Expected Monthly Volume (AED)
+                Expected Monthly Volume ({currencyCode})
               </Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
