@@ -100,6 +100,9 @@ import ExchangePayoutMechanism from "./pages/exchange/ExchangePayoutMechanism";
 import BusinessUserTransactionReport from "./pages/user/BusinessUserTransactionReport";
 import UserTransactionReport from "./pages/portal/UserTransactionReport";
 import BranchTransactionReport from "./pages/branch/BranchTransactionReport";
+import AdminReports from "./pages/admin/AdminReports";
+import ExchangeReports from "./pages/exchange/ExchangeReports";
+import UserReports from "./pages/portal/UserReports";
 
 const queryClient = new QueryClient();
 
@@ -233,6 +236,7 @@ function App() {
                       path="/admin/onmapping"
                       element={<AdminKybMapping />}
                     />
+                    <Route path="/admin/reports" element={<AdminReports />} />
                     {/* <Route
                       path="/admin/county-currency"
                       element={<AdminCountryCurrency />}
@@ -280,6 +284,7 @@ function App() {
                       path="transaction-report"
                       element={<UserTransactionReport />}
                     />
+                    <Route path="reports" element={<UserReports />} />
                   </Route>
                 </Route>
 
@@ -372,6 +377,7 @@ function App() {
                       path="payout-mechanism"
                       element={<ExchangePayoutMechanism />}
                     />
+                    <Route path="reports" element={<ExchangeReports />} />
                   </Route>
                 </Route>
 

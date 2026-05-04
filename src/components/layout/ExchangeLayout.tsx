@@ -28,6 +28,7 @@ import {
   FileSpreadsheet,
   ShieldCheck,
   Globe,
+  FileBarChart,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -206,6 +207,11 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       href: "/exchange/payout-mechanism",
       icon: Handshake,
       code: "NAV_PAYOUT_MECHANISM",
+    },
+    {
+      name: "Reports",
+      href: "/exchange/reports",
+      icon: FileBarChart,
     },
   ];
   const isActive = (path: string) => location.pathname === path;

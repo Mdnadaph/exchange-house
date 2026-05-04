@@ -16,6 +16,7 @@ import {
   UserCircle,
   Handshake,
   BookOpen,
+  FileBarChart,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 
@@ -120,6 +121,11 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     { name: "User Management", href: "/portal/users", icon: Users },
     { name: "Governance", href: "/portal/governance", icon: Shield },
     { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },
+    {
+      name: "Reports",
+      href: "/portal/reports",
+      icon: FileBarChart,
+    },
     {
       name: "Transaction Report",
       href: "/portal/transaction-report",

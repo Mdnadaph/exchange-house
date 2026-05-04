@@ -17,6 +17,7 @@ import {
   Handshake,
   Landmark,
   Globe,
+  FileBarChart,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 interface AdminLayoutProps {
@@ -33,6 +34,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       name: "Exchange House Management",
       href: "/admin/exchange-houses",
       icon: Landmark,
+    },
+    {
+      name: "Reports",
+      href: "/admin/reports",
+      icon: FileBarChart,
     },
 
     // { name: "KYB Mappning", href: "/admin/onmapping", icon: FileCheck },
