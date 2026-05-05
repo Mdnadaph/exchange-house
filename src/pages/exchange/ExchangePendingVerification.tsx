@@ -202,7 +202,7 @@ const ExchangeTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&status=PAYMENT_VERIFICATION_PENDING`,
         config,
       );
 
@@ -792,12 +792,12 @@ const ExchangeTransactions = () => {
                             </div> */}
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction?.currency?.toUpperCase()}{" "}
-                                {transaction.localCurrency}
+                                {transaction?.destinationCurrency}{" "}
+                                {/* {transaction.localCurrency} */}
                                 {transaction.localAmount}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {transaction?.destinationCurrency}{" "}
+                                {transaction?.currency?.toUpperCase()}{" "}
                                 {transaction.amount}
                               </p>
                             </div>

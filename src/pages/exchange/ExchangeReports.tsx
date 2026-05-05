@@ -249,13 +249,21 @@ export default function ExchangeReports() {
         <Card>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={points}>
+              <BarChart
+                data={points}
+                margin={{
+                  top: 5,
+                  right: 0,
+                  left: 0,
+                  bottom: 0,
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
 
                 <XAxis
                   dataKey="label"
                   interval={0}
-                  angle={-30}
+                  angle={-9}
                   textAnchor="end"
                 />
 

@@ -801,12 +801,12 @@ const ExchangeAdminComplianceReview = () => {
                             </div> */}
                             <div className="text-right space-y-1">
                               <p className="text-xl font-bold text-foreground">
-                                {transaction?.currency?.toUpperCase()}{" "}
-                                {transaction.localCurrency}
+                                {transaction?.destinationCurrency}{" "}
+                                {/* {transaction.localCurrency} */}
                                 {transaction.localAmount}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {transaction?.destinationCurrency}{" "}
+                                {transaction?.currency?.toUpperCase()}{" "}
                                 {transaction.amount}
                               </p>
                             </div>

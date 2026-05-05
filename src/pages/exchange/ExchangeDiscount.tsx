@@ -61,8 +61,9 @@ type Stats = {
 };
 
 const ExchangeDiscount = () => {
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies.token;
+  const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -228,7 +229,9 @@ const ExchangeDiscount = () => {
   };
 
   const getTypeLabel = (type: string, value: number) => {
-    return type === "PERCENTAGE" ? `${value}% off` : `AED ${value} off`;
+    return type === "PERCENTAGE"
+      ? `${value}% off`
+      : `${currencyCode} ${value} off`;
   };
 
   // Determine current status based on dates
@@ -346,7 +349,9 @@ const ExchangeDiscount = () => {
 
                   <div>
                     <Label htmlFor="discountValue">
-                      Value {form.type === "PERCENTAGE" ? "(%)" : "(AED)"} *
+                      Value{" "}
+                      {form.type === "PERCENTAGE" ? "(%)" : `(${currencyCode})`}{" "}
+                      *
                     </Label>
                     <Input
                       id="discountValue"

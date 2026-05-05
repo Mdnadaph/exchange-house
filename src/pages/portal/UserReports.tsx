@@ -237,7 +237,7 @@ export default function UserReports() {
                 <XAxis
                   dataKey="label"
                   interval={0}
-                  angle={-30}
+                  angle={-9}
                   textAnchor="end"
                 />
 

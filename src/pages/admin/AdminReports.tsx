@@ -224,7 +224,7 @@ export default function AdminReports() {
                 <XAxis
                   dataKey="label"
                   interval={0}
-                  angle={-30}
+                  angle={-9}
                   textAnchor="end"
                 />
 
