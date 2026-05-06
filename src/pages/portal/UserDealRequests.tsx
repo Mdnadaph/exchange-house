@@ -554,7 +554,7 @@ const UserDealRequests = () => {
                           {selectedDeal === deal.id ? "Hide" : "View"} Timeline
                         </Button>
                       </div>
-                      {deal?.dealStatus === "COUNTER_PROPOSAL" && (
+                      {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
                         <div className="flex gap-2">
                           <Button
                             variant="default"
@@ -573,7 +573,7 @@ const UserDealRequests = () => {
                             Decline
                           </Button>
                         </div>
-                      )}
+                      )} */}
                       {deal?.dealStatus === "APPROVED" && (
                         <Badge
                           variant="default"
@@ -612,7 +612,11 @@ const UserDealRequests = () => {
                                 refetch={getRateDeals}
                                 dealId={deal?.id}
                                 businessName={deal?.companyName}
-                                requestedRate={deal?.proposedRate}
+                                requestedRate={
+                                  deal?.negotiationHistory[
+                                    deal?.negotiationHistory?.length - 1
+                                  ]?.rate
+                                }
                                 currency={deal?.payoutCurrency}
                               />
                             ))}

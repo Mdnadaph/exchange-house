@@ -358,6 +358,7 @@ const DealRequestForm = ({
                           sendingAmount: e.target.value,
                         })
                       }
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </div>
 
@@ -470,6 +471,7 @@ const DealRequestForm = ({
                           proposedRate: e.target.value,
                         })
                       }
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                     <p className="text-xs text-muted-foreground">
                       Rate you would like to negotiate

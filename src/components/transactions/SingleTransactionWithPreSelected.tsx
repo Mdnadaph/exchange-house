@@ -78,6 +78,7 @@ const SingleTransactionWithPreselected = ({
   const [rateDealData, setRateDealData] = useState<any>({});
   const [selectedBeneficiaryFee, setSelectedBeneficiaryFee] =
     useState<any>(null);
+  const [transactionPurposeList, setTransactionPurposeList] = useState<any>([]);
   const [transectionSummeryData, setTransectionSummeryData] =
     useState<any>(null);
 
@@ -178,17 +179,17 @@ const SingleTransactionWithPreselected = ({
     },
   ];
 
-  const purposeOptions = [
-    { value: "INVOICE_PAYMENT", label: "Invoice Payment", requiresDoc: true },
-    { value: "SALARY_PAYMENT", label: "Salary Payment", requiresDoc: false },
-    { value: "VENDOR_PAYMENT", label: "Vendor Payment", requiresDoc: true },
-    { value: "SUPPLIER_PAYMENT", label: "Supplier Payment", requiresDoc: true },
-    { value: "SERVICE_PAYMENT", label: "Service Payment", requiresDoc: true },
-    { value: "RENT_PAYMENT", label: "Rent Payment", requiresDoc: true },
-    { value: "UTILITY_PAYMENT", label: "Utility Payment", requiresDoc: false },
-    { value: "LOAN_REPAYMENT", label: "Loan Repayment", requiresDoc: false },
-    { value: "OTHER", label: "Other", requiresDoc: false },
-  ];
+  // const purposeOptions = [
+  //   { value: "INVOICE_PAYMENT", label: "Invoice Payment", requiresDoc: true },
+  //   { value: "SALARY_PAYMENT", label: "Salary Payment", requiresDoc: false },
+  //   { value: "VENDOR_PAYMENT", label: "Vendor Payment", requiresDoc: true },
+  //   { value: "SUPPLIER_PAYMENT", label: "Supplier Payment", requiresDoc: true },
+  //   { value: "SERVICE_PAYMENT", label: "Service Payment", requiresDoc: true },
+  //   { value: "RENT_PAYMENT", label: "Rent Payment", requiresDoc: true },
+  //   { value: "UTILITY_PAYMENT", label: "Utility Payment", requiresDoc: false },
+  //   { value: "LOAN_REPAYMENT", label: "Loan Repayment", requiresDoc: false },
+  //   { value: "OTHER", label: "Other", requiresDoc: false },
+  // ];
 
   const getSelectedBeneficiaryDetails = () => {
     return beneficiaries.find((b) => b.id === selectedBeneficiary);
@@ -199,7 +200,7 @@ const SingleTransactionWithPreselected = ({
   };
 
   const getSelectedPurposeDetails = () => {
-    return purposeOptions.find((p) => p.value === transactionPurpose);
+    return transactionPurposeList?.find((p) => p?.code === transactionPurpose);
   };
 
   const calculateTotalAmount = () => {
@@ -631,6 +632,40 @@ const SingleTransactionWithPreselected = ({
     selectedPayoutCurrencyRate,
     activeField,
   ]);
+  const getTransactionPurpose = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/business/transactions/purpose`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!response?.data?.status) {
+        toast({
+          title: "Error",
+          description:
+            response?.data?.message ||
+            "Something went wrong while fetching transaction purpose data",
+          variant: "destructive",
+        });
+      }
+      setTransactionPurposeList(response?.data?.data || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while fetching transaction purpose ",
+        variant: "destructive",
+      });
+    }
+  };
+  useEffect(() => {
+    if (!open) return;
+    getTransactionPurpose();
+  }, [open]);
   return (
     <>
       <Dialog
@@ -672,11 +707,11 @@ const SingleTransactionWithPreselected = ({
                       <SelectValue placeholder="Select transaction purpose" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
-                      {purposeOptions?.map((purpose) => (
-                        <SelectItem key={purpose.value} value={purpose.value}>
+                      {transactionPurposeList?.map((purpose) => (
+                        <SelectItem key={purpose?.id} value={purpose?.code}>
                           <div className="flex items-center justify-between w-full">
-                            <span>{purpose.label}</span>
-                            {purpose.requiresDoc && (
+                            <span>{purpose?.name}</span>
+                            {purpose?.documentRequired && (
                               <Badge variant="outline" className="ml-2 text-xs">
                                 Doc Required
                               </Badge>
@@ -688,7 +723,7 @@ const SingleTransactionWithPreselected = ({
                   </Select>
                 </div>
 
-                {getSelectedPurposeDetails()?.requiresDoc && (
+                {getSelectedPurposeDetails()?.documentRequired && (
                   <div className="bg-accent-muted/20 rounded-lg p-3">
                     <div className="flex items-start space-x-2">
                       <Info className="h-4 w-4 text-accent mt-0.5" />
@@ -698,7 +733,7 @@ const SingleTransactionWithPreselected = ({
                         </p>
                         <p className="text-muted-foreground">
                           Please upload relevant documents for{" "}
-                          {getSelectedPurposeDetails()?.label.toLowerCase()}{" "}
+                          {getSelectedPurposeDetails()?.name.toLowerCase()}{" "}
                           verification.
                         </p>
                       </div>

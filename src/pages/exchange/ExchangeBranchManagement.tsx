@@ -83,7 +83,6 @@ const ExchangeBranchManagement = () => {
     "UMM_AL_QUWAIN",
   ];
 
-
   /* =========================
      FETCH BRANCHES
   ========================= */
@@ -103,7 +102,7 @@ const ExchangeBranchManagement = () => {
       newErrors.name = "Branch name must be at least 2 characters";
 
     // Emirate
-    if (!form.emirate) newErrors.emirate = "Emirate is required";
+    if (!form.emirate) newErrors.emirate = "City is required";
 
     // Location
     if (!form.location.trim()) newErrors.location = "Location is required";
@@ -459,7 +458,16 @@ const ExchangeBranchManagement = () => {
                     <Label htmlFor="emirate">
                       city <span className="text-red-500">*</span>
                     </Label>
-                    <Select
+                    <Input
+                      id="emirate"
+                      value={form.emirate}
+                      onChange={(e) => {
+                        setForm({ ...form, emirate: e.target.value });
+                        clearError("emirate");
+                      }}
+                      placeholder="Enter City"
+                    />
+                    {/* <Select
                       value={form.emirate}
                       onValueChange={(v) => {
                         setForm({ ...form, emirate: v });
@@ -476,7 +484,7 @@ const ExchangeBranchManagement = () => {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
+                    </Select> */}
                     {errors.emirate && (
                       <p className="text-sm text-red-500 mt-1">
                         {errors.emirate}

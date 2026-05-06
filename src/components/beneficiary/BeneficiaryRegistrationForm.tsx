@@ -111,7 +111,8 @@ const BeneficiaryRegistrationForm = ({
   editData?: any; // pre-populated beneficiary data for edit mode
 }) => {
   const isEditMode = !!editData;
-
+  console.log("isEditMode", isEditMode);
+  console.log("editData", editData);
   const [cookie] = useCookies(["token", "currencyCode"]);
   const token = cookie.token;
   const currencyCode = cookie?.currencyCode;
@@ -429,6 +430,7 @@ const BeneficiaryRegistrationForm = ({
       companyName: formData.companyName,
       registrationNumber: formData.registrationNumber,
       incorporationDate: formData.incorporationDate,
+      businessType: formData?.businessType,
       firstName: formData.firstName,
       lastName: formData.lastName,
       dateOfBirth: formData.dateOfBirth,
@@ -528,12 +530,19 @@ const BeneficiaryRegistrationForm = ({
               {(["individual", "business"] as const).map((type) => (
                 <Card
                   key={type}
-                  className={`cursor-pointer transition-all hover:shadow-md ${
+                  className={`transition-all ${
+                    isEditMode && editData?.type !== type
+                      ? "opacity-50 cursor-not-allowed pointer-events-none"
+                      : "cursor-pointer hover:shadow-md"
+                  } ${
                     beneficiaryType === type
                       ? "ring-2 ring-primary bg-primary/5"
                       : ""
                   }`}
-                  onClick={() => setBeneficiaryType(type)}
+                  onClick={() => {
+                    if (isEditMode && editData?.type !== type) return;
+                    setBeneficiaryType(type);
+                  }}
                 >
                   <CardContent className="p-4 flex items-center space-x-3">
                     {type === "individual" ? (
@@ -1061,43 +1070,21 @@ const BeneficiaryRegistrationForm = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="incorporationDate">Incorporation Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !incorporationDate && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {incorporationDate ? (
-                        format(incorporationDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={incorporationDate}
-                      onSelect={(date) => {
-                        setIncorporationDate(date);
-                        if (date)
-                          setFormData({
-                            ...formData,
-                            incorporationDate: format(date, "yyyy-MM-dd"),
-                          });
-                      }}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  id="incorporationDate"
+                  type="date"
+                  value={formData?.incorporationDate || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({
+                      ...formData,
+                      incorporationDate: value,
+                    });
+                    setIncorporationDate(value ? new Date(value) : undefined);
+                  }}
+                  min="1900-01-01"
+                  max={new Date().toISOString().split("T")[0]}
+                />
               </div>
             </div>
           )}

@@ -1563,7 +1563,7 @@ const UserBeneficiaries = () => {
             currency: item.currency,
           },
         ],
-        relationship: item.relationshipType,
+        relationshipType: item.relationshipType,
         status: mapStatus(item.active, item.approvalStatus),
         verificationStatus: mapVerificationStatus(item.approvalStatus),
         lastUsed: item.lastPaymentDate || "Never",

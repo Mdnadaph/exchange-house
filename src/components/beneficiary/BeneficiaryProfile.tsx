@@ -437,44 +437,50 @@ const BeneficiaryProfile = ({ beneficiary }: BeneficiaryProfileProps) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {beneficiary?.transactionHistory?.map((transaction) => (
-                <div
-                  key={transaction?.reference}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
-                >
-                  {/* Left Section */}
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">
-                      {transaction?.type} Transaction
-                    </p>
+              {beneficiary?.transactionHistory?.length > 0 ? (
+                beneficiary?.transactionHistory?.map((transaction) => (
+                  <div
+                    key={transaction?.reference}
+                    className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
+                  >
+                    {/* Left Section */}
+                    <div className="space-y-1">
+                      <p className="font-medium text-foreground">
+                        {transaction?.type} Transaction
+                      </p>
 
-                    <p className="text-sm text-muted-foreground">
-                      {transaction?.reference}
-                    </p>
+                      <p className="text-sm text-muted-foreground">
+                        {transaction?.reference}
+                      </p>
 
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(transaction?.createdAt).toLocaleString()}
-                    </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(transaction?.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Right Section */}
+                    <div className="text-right space-y-1">
+                      <p className="font-semibold text-foreground">
+                        {transaction?.sourceCurrency}{" "}
+                        {Number(transaction?.sourceAmount)?.toLocaleString()}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        → {transaction?.destinationCurrency}{" "}
+                        {Number(transaction?.convertedAmount)?.toLocaleString()}
+                      </p>
+
+                      <Badge variant="outline" className="text-xs">
+                        {transaction?.status}
+                      </Badge>
+                    </div>
                   </div>
-
-                  {/* Right Section */}
-                  <div className="text-right space-y-1">
-                    <p className="font-semibold text-foreground">
-                      {transaction?.sourceCurrency}{" "}
-                      {Number(transaction?.sourceAmount)?.toLocaleString()}
-                    </p>
-
-                    <p className="text-xs text-muted-foreground">
-                      → {transaction?.destinationCurrency}{" "}
-                      {Number(transaction?.convertedAmount)?.toLocaleString()}
-                    </p>
-
-                    <Badge variant="outline" className="text-xs">
-                      {transaction?.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-center text-gray-600 text-lg py-5">
+                  No Transaction Data
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

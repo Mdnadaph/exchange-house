@@ -194,15 +194,15 @@ export default function ExchangePayoutMechanism() {
   }, [formData?.countryId]);
 
   const handleCountryChange = (country: string) => {
-    const countryData = countries.find((c) => c?.id === country);
-    setFormData((prev) => ({ ...prev, countryId: country }));
-    setSelectedCurrencies((prev) => [...prev, countryData?.currencyCode]);
+    const countryData = countries?.find((c) => c?.id === country);
+    setFormData((prev) => ({ ...prev, countryId: country, mechanisms: [] }));
+    setSelectedCurrencies(
+      countryData?.currencyCode ? [countryData?.currencyCode] : [],
+    );
     clearError("countryId");
   };
-
   const validateForm = () => {
     const newErrors: any = {};
-
     if (!formData?.countryId) {
       newErrors.countryId = "Country is required";
     }
@@ -545,15 +545,12 @@ export default function ExchangePayoutMechanism() {
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-
                 <PopoverContent className="w-full p-0">
                   <Command>
                     {/* 🔍 Search Input */}
                     <CommandInput placeholder="Search country..." />
-
-                    <CommandList>
+                    <CommandList className="max-h-60 overflow-y-auto scroll-smooth">
                       <CommandEmpty>No country found.</CommandEmpty>
-
                       <CommandGroup>
                         {countries?.map((country) => (
                           <CommandItem
@@ -654,7 +651,6 @@ export default function ExchangePayoutMechanism() {
                         className="w-full justify-start"
                       >
                         <Globe className="mr-2 h-4 w-4" />
-
                         {mechanism?.currencyIds?.length
                           ? currencyList
                               .filter((c) =>
@@ -662,7 +658,9 @@ export default function ExchangePayoutMechanism() {
                               )
                               .map((c) => c?.code)
                               .join(", ")
-                          : "Select currencies..."}
+                          : countries?.find(
+                              (c) => c?.id === formData?.countryId,
+                            )?.currencyCode || "Select currencies..."}
                       </Button>
                     </PopoverTrigger>
 

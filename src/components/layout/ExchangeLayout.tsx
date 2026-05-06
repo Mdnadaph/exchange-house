@@ -91,6 +91,123 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
     }
   };
 
+  //   const navigationGroups = [
+  //   {
+  //     group: "Dashboard",
+  //     items: [
+  //       {
+  //         name: "Dashboard",
+  //         href: "/exchange",
+  //         icon: Home,
+  //         code: "NAV_DASHBOARD",
+  //       },
+  //       {
+  //         name: "Reports",
+  //         href: "/exchange/reports",
+  //         icon: FileBarChart,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     group: "Onboarding",
+  //     items: [
+  //       {
+  //         name: "Onboard Business",
+  //         href: "/exchange/onboard-business",
+  //         icon: Building2,
+  //         code: "NAV_ONBOARD_BUSINESS",
+  //       },
+  //       {
+  //         name: "KYB Review",
+  //         href: "/exchange/kyb-review",
+  //         icon: FileCheck,
+  //         code: "NAV_KYB_REVIEW",
+  //       },
+  //       {
+  //         name: "KYB Mapping",
+  //         href: "/exchange/onmapping",
+  //         icon: FileCheck,
+  //         code: "NAV_KYB_MAPPING",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     group: "Transactions",
+  //     items: [
+  //       {
+  //         name: "Transactions",
+  //         href: "/exchange/transactions",
+  //         icon: CreditCard,
+  //         code: "NAV_TRANSACTION",
+  //       },
+  //       {
+  //         name: "Pending Payment",
+  //         href: "/exchange/pending-verification",
+  //         icon: Loader,
+  //         code: "NAV_PENDING_PEMENT_VERIFICATION",
+  //       },
+  //       {
+  //         name: "Rate Deals",
+  //         href: "/exchange/deals",
+  //         icon: Handshake,
+  //         code: "NAV_RATE_DEALS",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     group: "Configuration",
+  //     items: [
+  //       {
+  //         name: "KYB Config",
+  //         href: "/exchange/kyb-config",
+  //         icon: Settings,
+  //         code: "NAV_KYB_CONFIG",
+  //       },
+  //       {
+  //         name: "Fee Management",
+  //         href: "/exchange/fee-management",
+  //         icon: Calculator,
+  //         code: "NAV_FEE_MANAGEMENT",
+  //       },
+  //       {
+  //         name: "Payout Config",
+  //         href: "/exchange/payout-config",
+  //         icon: DollarSign,
+  //         code: "NAV_PAYMENT_CONFIG",
+  //       },
+  //       {
+  //         name: "Country & Currency",
+  //         href: "/exchange/county-currency",
+  //         icon: Globe,
+  //         code: "NAV_COUNTRY_CURRENCY",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     group: "Management",
+  //     items: [
+  //       {
+  //         name: "Branch Oversight",
+  //         href: "/exchange/branches",
+  //         icon: GitBranch,
+  //         code: "NAV_BRANCH_MANAGEMENT",
+  //       },
+  //       {
+  //         name: "Staff Management",
+  //         href: "/exchange/staff",
+  //         icon: Users,
+  //         code: "NAV_STAFF_MANAGEMENT",
+  //       },
+  //       {
+  //         name: "Exchange Members",
+  //         href: "/exchange/user",
+  //         icon: Users,
+  //         code: "NAV_EXCHANGE_ADMIN_USER",
+  //       },
+  //     ],
+  //   },
+  // ];
+
   const navigation = [
     { name: "Dashboard", href: "/exchange", icon: Home, code: "NAV_DASHBOARD" },
     {
@@ -284,6 +401,43 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
                 );
               })}
           </nav>
+          {/* <nav className="p-4 space-y-6">
+  {navigationGroups.map((group) => (
+    <div key={group.group}>
+      
+      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-2">
+        {group.group}
+      </p>
+
+      <div className="space-y-1">
+        {group.items
+          .filter(
+            (item) =>
+              role === "ROLE_EXCHANGE_ADMIN" ||
+              (role === "ROLE_EXCHANGE_USER" && can(item.code)),
+          )
+          .map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all ${
+                  isActive(item.href)
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="text-sm font-medium">{item.name}</span>
+              </Link>
+            );
+          })}
+      </div>
+    </div>
+  ))}
+</nav> */}
         </aside>
 
         {/* Main Content (Scrollable) */}

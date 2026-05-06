@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import UserLayout from "@/components/layout/UserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,6 +140,7 @@ const UserProfile = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Helper function for KYB Status color
   const getKybStatusColor = (status?: string): string => {
@@ -440,7 +441,9 @@ const UserProfile = () => {
         setSelectedFile(null);
         setDocumentType("");
         setDocumentNumber("");
-
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
         toast({
           title: "Document Uploaded",
           description:
@@ -1088,6 +1091,7 @@ const UserProfile = () => {
                   id="fileUpload"
                   type="file"
                   onChange={handleFileSelect}
+                  ref={fileInputRef}
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />
               </div>
@@ -1104,10 +1108,26 @@ const UserProfile = () => {
                     </p>
                   </div>
                 </div>
-                <Button onClick={handleUploadDocument} variant="default">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
-                </Button>
+                <div className="flex gap-3 items-center">
+                  <Button
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setDocumentType("");
+                      setDocumentNumber("");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                    variant="outline"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUploadDocument} variant="default">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </Button>
+                </div>
               </div>
             )}
 

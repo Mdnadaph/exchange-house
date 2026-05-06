@@ -283,13 +283,27 @@ const DealResponseForm = ({
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
         onConfirm={confirmAction}
-        title={`Confirm ${action === "DEAL_APPROVED" ? "Approval" : action === "DEAL_REJECTED" ? "Rejection" : "Counter Proposal"}`}
+        title={`Confirm ${
+          action === "DEAL_APPROVED"
+            ? "Approval"
+            : action === "DEAL_REJECTED"
+              ? "Rejection"
+              : action === "COUNTER_PROPOSAL_ACCEPTED"
+                ? "Counter Acceptance"
+                : action === "COUNTER_PROPOSAL_DECLINED"
+                  ? "Counter Rejection"
+                  : "Counter Proposal"
+        }`}
         description={
           action === "DEAL_APPROVED"
             ? `Approve the requested rate of ${requestedRate} ${currency} for ${businessName}? This will lock the rate for the deal validity period.`
             : action === "DEAL_REJECTED"
               ? `Reject the deal request from ${businessName}? They will be notified of the rejection.`
-              : `Send counter proposal of ${counterRate} ${currency} to ${businessName}? They can accept or decline this rate.`
+              : action === "COUNTER_PROPOSAL_ACCEPTED"
+                ? `Accept the counter rate of ${requestedRate} ${currency} from ${businessName}? This will finalize the deal.`
+                : action === "COUNTER_PROPOSAL_DECLINED"
+                  ? `Reject the counter proposal from ${businessName}?`
+                  : `Send counter proposal of ${counterRate} ${currency} to ${businessName}? They can accept or decline this rate.`
         }
         confirmText={
           action === "DEAL_APPROVED"

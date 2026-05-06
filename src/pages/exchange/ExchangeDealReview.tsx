@@ -463,7 +463,11 @@ const ExchangeDealReview = () => {
                                 refetch={getRateDeals}
                                 dealId={deal?.id}
                                 businessName={deal?.companyName}
-                                requestedRate={deal?.proposedRate}
+                                requestedRate={
+                                  deal?.negotiationHistory[
+                                    deal?.negotiationHistory?.length - 1
+                                  ]?.rate
+                                }
                                 currency={deal?.payoutCurrency}
                                 hasMultipleCounterProposals={hasMultipleCounterProposals(
                                   deal?.negotiationHistory,
