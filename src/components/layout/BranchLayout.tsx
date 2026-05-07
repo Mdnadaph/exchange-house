@@ -14,6 +14,7 @@ import {
   Files,
   Handshake,
   BookOpen,
+  Users,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 interface BranchLayoutProps {
@@ -116,6 +117,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
       icon: Building2,
     },
     { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
+    { name: "Beneficiaries", href: "/branch/beneficiaries", icon: Users },
     { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
     { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
     { name: "Documents", href: "/branch/documents", icon: Files },

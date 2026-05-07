@@ -306,16 +306,27 @@ const ExchangeKYBConfig = () => {
                                 Required Documents
                               </h5>
                               <div className="flex flex-wrap gap-2">
-                                {rule.requiredDocuments &&
-                                rule.requiredDocuments.length > 0 ? (
-                                  rule.requiredDocuments.map(
-                                    (doc: string, index: number) => (
+                                {rule?.documents &&
+                                rule?.documents?.length > 0 ? (
+                                  rule?.documents?.map(
+                                    (
+                                      doc: { documentCode: string },
+                                      index: number,
+                                    ) => (
                                       <Badge
                                         key={index}
                                         variant="outline"
                                         className="text-xs"
                                       >
-                                        {doc}
+                                        {doc?.documentCode
+                                          ?.toLocaleLowerCase()
+                                          ?.split("_")
+                                          ?.map(
+                                            (word) =>
+                                              word?.charAt(0)?.toUpperCase() +
+                                              word?.slice(1),
+                                          )
+                                          ?.join(" ")}
                                       </Badge>
                                     ),
                                   )

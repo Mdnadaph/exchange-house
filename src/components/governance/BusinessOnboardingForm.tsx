@@ -92,10 +92,8 @@ const BusinessOnboardingForm = ({
   // ]);
 
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>(
-  currencyCode ? [currencyCode] : []
-);
-
-
+    currencyCode ? [currencyCode] : [],
+  );
 
   const [businessTypeData, setBusinessTypeData] = useState([]);
   const [countryOptions, setCountryOptions] = useState<
@@ -173,6 +171,7 @@ const BusinessOnboardingForm = ({
 
     // Account Settings
     monthlyLimit: "",
+    sendCredential: true,
     dealValidityDays: "7",
   });
 
@@ -347,6 +346,7 @@ const BusinessOnboardingForm = ({
         alternatePhone: formData.alternatePhone,
         businessAddress: formData.businessAddress,
         addressLine2: formData.addressLine2,
+        sendCredential: formData?.sendCredential,
       };
 
       const admin = {
@@ -455,6 +455,7 @@ const BusinessOnboardingForm = ({
           adminDesignation: "",
           monthlyLimit: "",
           dealValidityDays: "7",
+          sendCredential: true,
         });
       } else {
         const errorMessage = response.data.message || "";
@@ -628,6 +629,7 @@ const BusinessOnboardingForm = ({
         adminDesignation: "",
         monthlyLimit: "",
         dealValidityDays: "7",
+        sendCredential: true,
       });
     }
   }, [open]);
@@ -1438,6 +1440,22 @@ const BusinessOnboardingForm = ({
                 placeholder="Area, landmark (optional)"
               />
             </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={formData?.sendCredential}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      sendCredential: checked === true,
+                    }))
+                  }
+                />
+                <Label className="text-sm font-normal cursor-pointer">
+                  Send Credentail to Business Email
+                </Label>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -2145,6 +2163,7 @@ const BusinessOnboardingForm = ({
               </p>
             </div>
           </div>
+
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
               <Globe className="h-4 w-4" />

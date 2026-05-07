@@ -124,6 +124,7 @@ const StaffOnboardingForm = ({
     businessAddress: "",
     addressLine2: "",
     branchId: branchId,
+    sendCredential: true,
 
     // WorkerAppz API Fields
     legalForm: "",
@@ -262,6 +263,7 @@ const StaffOnboardingForm = ({
         adminDesignation: "",
         monthlyLimit: "",
         dealValidityDays: "7",
+        sendCredential: true,
       });
     }
   }, [open]);
@@ -303,6 +305,7 @@ const StaffOnboardingForm = ({
         alternatePhone: formData.alternatePhone,
         businessAddress: formData.businessAddress,
         addressLine2: formData.addressLine2,
+        sendCredential: formData?.sendCredential,
       };
 
       const admin = {
@@ -419,6 +422,7 @@ const StaffOnboardingForm = ({
           adminDesignation: "",
           monthlyLimit: "",
           dealValidityDays: "7",
+          sendCredential: true,
         });
       } else {
         toast({
@@ -1137,6 +1141,22 @@ const StaffOnboardingForm = ({
                 }
                 placeholder="Area, landmark (optional)"
               />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={formData?.sendCredential}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      sendCredential: checked === true,
+                    }))
+                  }
+                />
+                <Label className="text-sm font-normal cursor-pointer">
+                  Send Credentail to Business Email
+                </Label>
+              </div>
             </div>
           </div>
         </CardContent>

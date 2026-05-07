@@ -35,6 +35,8 @@ import TransactionDetailModal, {
   handleDownloadReceipt,
 } from "../portal/TransactionDetailModal";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
+import BranchSingleTransaction from "@/components/transactions/BranchSingleTransaction";
+import BranchBulkTransactionForm from "@/components/transactions/BranchBulkTransactionForm";
 
 interface TransactionDocument {
   id: number;
@@ -510,6 +512,10 @@ const BranchTransactions = () => {
               Export Branch Data
             </Button>
           </div> */}
+          <div className="flex gap-5">
+            <BranchBulkTransactionForm refetch={fetchTransactions} />
+            <BranchSingleTransaction refetch={fetchTransactions} />
+          </div>
         </div>
 
         {error && (

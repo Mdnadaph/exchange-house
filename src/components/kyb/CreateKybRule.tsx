@@ -1321,6 +1321,7 @@ import { useToast } from "@/hooks/use-toast";
 interface DocumentType {
   documentCode: string;
   required: boolean;
+  expiryDateRequired: boolean;
 }
 
 interface RiskType {
@@ -1397,6 +1398,7 @@ const Step2Schema = Yup.object().shape({
       Yup.object().shape({
         documentCode: Yup.string().required("Document type is required"),
         required: Yup.boolean(),
+        expiryDateRequired: Yup.boolean(),
       }),
     )
     .min(1, "At least one document is required"),
@@ -1781,6 +1783,30 @@ const Step2: React.FC<Step2Props> = ({
                             </p>
                           </div>
                         </div>
+                        <div className="flex items-center gap-3 pt-9">
+                          <Switch
+                            id={`documents.${index}.expiryDateRequired`}
+                            checked={doc.expiryDateRequired}
+                            onCheckedChange={(checked) =>
+                              setFieldValue(
+                                `documents.${index}.expiryDateRequired`,
+                                checked,
+                              )
+                            }
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                          <div>
+                            <Label
+                              htmlFor={`documents.${index}.expiryDateRequired`}
+                              className="font-semibold text-slate-900 cursor-pointer"
+                            >
+                              Expiry Date
+                            </Label>
+                            <p className="text-xs text-slate-600 mt-0.5">
+                              Must be provided
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
                       {values.documents.length > 1 && (
@@ -2155,15 +2181,17 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
         autoApprovalLimit: ruleToEdit.autoApprovalLimit || 100000,
         reviewTiers: ruleToEdit.reviewTiers || 2,
         maxProcessingHours: ruleToEdit.maxProcessingHours || 48,
-        documents: (ruleToEdit.requiredDocuments || []).map(
-          (docName: string) => {
-            const matchedDoc = documentTypes.find((d) => d.name === docName);
-            return {
-              documentCode: matchedDoc ? matchedDoc.code : "",
-              required: true,
-            };
-          },
-        ),
+        documents: (ruleToEdit.documents || []).map((doc) => {
+          // const matchedDoc = documentTypes.find(
+          //   (d) => d.name === doc?.documentCode,
+          // );
+          return {
+            // documentCode: matchedDoc ? matchedDoc.code : "",\
+            documentCode: doc?.documentCode,
+            required: doc?.required,
+            expiryDateRequired: doc?.expiryDateRequired,
+          };
+        }),
         risks: ruleToEdit.risks || [],
         escalation: ruleToEdit.escalation || {
           highRisk: 50000,
@@ -2433,7 +2461,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
                       Cancel
                     </Button>
                   )}
-
                   {!isModal && step === 1 && (
                     <Button
                       type="button"

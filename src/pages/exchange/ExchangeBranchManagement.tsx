@@ -136,7 +136,13 @@ const ExchangeBranchManagement = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      if (!res?.data?.status) {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
       const apiData = res.data.data || [];
 
       const formatted = apiData.map((b: any) => ({
@@ -145,7 +151,7 @@ const ExchangeBranchManagement = () => {
         name: b.name,
         location: b.location,
         address: b.location,
-        emirate: b.emirate,
+        emirate: b.city,
         email: b.email,
         phone: b.contactNumber,
 
@@ -225,7 +231,7 @@ const ExchangeBranchManagement = () => {
         `${BASE_URL}/api/v3/branch/create`,
         {
           name: form.name,
-          emirate: form.emirate,
+          city: form.emirate,
           location: form.location,
           address: form.address,
           contactNumber: form.phone,
@@ -237,7 +243,7 @@ const ExchangeBranchManagement = () => {
           },
         },
       );
-      console.log("res", res);
+
       if (res?.data?.status) {
         toast({
           title: "Success",
@@ -275,7 +281,7 @@ const ExchangeBranchManagement = () => {
         `${BASE_URL}/api/v3/branch/update/${editingBranchId}`,
         {
           name: form.name,
-          emirate: form.emirate,
+          city: form.emirate,
           location: form.location,
           address: form.address,
           contactNumber: form.phone,

@@ -103,6 +103,7 @@ import BranchTransactionReport from "./pages/branch/BranchTransactionReport";
 import AdminReports from "./pages/admin/AdminReports";
 import ExchangeReports from "./pages/exchange/ExchangeReports";
 import UserReports from "./pages/portal/UserReports";
+import BranchBeneficries from "./pages/branch/BranchBeneficries";
 
 const queryClient = new QueryClient();
 
@@ -390,6 +391,10 @@ function App() {
                       element={<BranchBusinessOnboarding />}
                     />
                     <Route path="kyb-queue" element={<BranchKYBQueue />} />
+                    <Route
+                      path="beneficiaries"
+                      element={<BranchBeneficries />}
+                    />
                     <Route
                       path="transactions"
                       element={<BranchTransactions />}

@@ -137,7 +137,9 @@ const UserProfile = () => {
   const [documentType, setDocumentType] = useState("");
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [documentNumber, setDocumentNumber] = useState("");
+  const [expiryDate, setExpireDate] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [documentsData, setDocumentsData] = useState([]);
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -300,6 +302,7 @@ const UserProfile = () => {
           },
         );
         const data = response?.data?.data;
+        setDocumentsData(response?.data?.data?.documents || []);
         if (data?.documents) {
           setKybContext(data);
 
@@ -408,7 +411,9 @@ const UserProfile = () => {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("documentType", selectedDoc.code);
-
+      if (expiryDate) {
+        formData.append("expiryDate", expiryDate);
+      }
       if (documentNumber) {
         formData.append("documentNumber", documentNumber);
       }
@@ -441,6 +446,7 @@ const UserProfile = () => {
         setSelectedFile(null);
         setDocumentType("");
         setDocumentNumber("");
+        setExpireDate("");
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -666,6 +672,11 @@ const UserProfile = () => {
       });
     }
   };
+
+  const expiryDateRequired = documentsData?.find(
+    (context) => context?.name == documentType,
+  )?.expiryDateRequired;
+
   if (isLoading) {
     return (
       <UserLayout>
@@ -729,7 +740,6 @@ const UserProfile = () => {
                     className="hidden"
                     onChange={handleImageUpload}
                   />
-
                   {/* Clickable Image */}
                   {isEditing ? (
                     <label htmlFor="profileUpload" className="cursor-pointer">
@@ -1067,7 +1077,10 @@ const UserProfile = () => {
                 <select
                   id="documentType"
                   value={documentType}
-                  onChange={(e) => setDocumentType(e.target.value)}
+                  onChange={(e) => {
+                    setDocumentType(e.target.value);
+                    setExpireDate("");
+                  }}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
                   <option value="">Select document type...</option>
@@ -1094,6 +1107,20 @@ const UserProfile = () => {
                   ref={fileInputRef}
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />
+                {expiryDateRequired && (
+                  <div className="space-y-1">
+                    <Label htmlFor="expiryDate">Expiry Date</Label>
+                    <Input
+                      value={expiryDate}
+                      id="expiryDate"
+                      type="date"
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => {
+                        setExpireDate(e.target.value);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
