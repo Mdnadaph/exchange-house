@@ -114,10 +114,12 @@ interface Transaction {
   destinationCurrency: string;
   status: string;
   type: "SINGLE" | "BULK";
+  staffName: string;
   purpose: string;
   date: string;
   processedDate: string | null;
   referenceNumber: string;
+  exchangeRateDisplay: string;
   fees: string;
   feeResponsibility: string;
   branch: string;
@@ -127,7 +129,15 @@ interface Transaction {
   beneficiaryFeeAmount: string;
   netPayoutAmount: string;
   complianceStatus: string;
+  vatAmount: number;
+  receivingCurrency: string;
+  finalProcessingFee: number;
+  baseProcessingFee: number;
   totalDebit: number;
+  discounts: {
+    type: string;
+    discountValue: number;
+  }[];
   singleBeneficiary: {
     name: string;
     phone: string;
@@ -137,6 +147,9 @@ interface Transaction {
     nationality: string;
     city: string;
     state: string;
+    type: string;
+    companyName: string;
+    country: string;
   };
   discountValue: string;
   logoUrl: string | undefined;
@@ -289,6 +302,8 @@ const ExchangeTransactions = () => {
             return {
               id: apiTx.reference,
               businessPhone: apiTx?.businessPhone,
+              baseProcessingFee: apiTx?.baseProcessingFee,
+              finalProcessingFee: apiTx?.finalProcessingFee,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
               logoUrl: apiTx?.logUrl,
@@ -309,7 +324,7 @@ const ExchangeTransactions = () => {
               localCurrency: apiTx.targetCurrency,
               status: apiTx?.status,
               type: apiTx?.type,
-              purpose: apiTx.purpose || "",
+              purpose: apiTx.purposeName || "",
               date: new Date(apiTx.createdAt)
                 .toLocaleString("en-US", {
                   year: "numeric",
@@ -322,6 +337,7 @@ const ExchangeTransactions = () => {
                 .replace(",", ""),
               processedDate: null,
               referenceNumber: apiTx?.reference,
+              exchangeRateDisplay: apiTx?.exchangeRateDisplay,
               fees: apiTx.feeAmount?.toFixed(2),
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
@@ -329,11 +345,14 @@ const ExchangeTransactions = () => {
               failureReason: apiTx.failureReason || "",
               documents: apiTx.documents,
               commentCount: apiTx.commentCount || 0,
+              staffName: apiTx?.staffName,
               latestComment: apiTx.latestComment || null,
               bulkCount: apiTx?.itemCount,
               complianceStatus: apiTx.complianceStatus || "",
               totalDebit: apiTx.totalDebit,
               complianceRules: apiTx?.complianceRules,
+              receivingCurrency: apiTx?.receivingCurrency,
+              vatAmount: apiTx?.vatAmount,
               beneficiaryFeeAmount:
                 apiTx.beneficiaryFeeAmount?.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
@@ -346,6 +365,7 @@ const ExchangeTransactions = () => {
                 }) || "0.00",
               discountValue: discountValueDisplay,
               discountAmount: discountAmountDisplay,
+              discounts: apiTx?.discounts,
               singleBeneficiary: {
                 name: apiTx?.singleBeneficiary?.name,
                 phone: apiTx?.singleBeneficiary?.phone,
@@ -355,6 +375,9 @@ const ExchangeTransactions = () => {
                 nationality: apiTx?.singleBeneficiary?.nationality,
                 city: apiTx?.singleBeneficiary?.city,
                 state: apiTx?.singleBeneficiary?.state,
+                country: apiTx?.singleBeneficiary?.country,
+                type: apiTx?.singleBeneficiary?.type,
+                companyName: apiTx?.singleBeneficiary?.companyName,
               },
               rateDeal: apiTx.rateDeal,
             };
@@ -540,7 +563,7 @@ const ExchangeTransactions = () => {
   };
 
   const statistics = calculateStatistics();
-
+  console.log("transaction", filteredTransactions);
   if (isLoading) {
     return (
       <ExchangeLayout>
@@ -751,23 +774,30 @@ const ExchangeTransactions = () => {
                           {/* Transaction Header */}
                           <div className="flex items-start justify-between">
                             <div className="space-y-2">
-                              {transaction.branchName && (
+                              {transaction.businessName && (
                                 <div className="flex items-center gap-3">
                                   <Building2 className="h-8 w-8 text-primary" />
                                   <span className=" text-primary text-2xl font-bold">
-                                    {transaction.branchName}
+                                    {transaction?.businessName}
                                   </span>
                                   {transaction.businessId && (
                                     <span className="text-xs text-muted-foreground">
-                                      ({transaction.businessId})
+                                      ({transaction?.businessId})
                                     </span>
                                   )}
                                 </div>
                               )}
                               <div className="flex items-center gap-3">
                                 <h3 className="font-semibold text-foreground">
-                                  {transaction.beneficiary || "Beneficiary"}
+                                  {transaction?.singleBeneficiary?.type ==
+                                  "INDIVIDUAL"
+                                    ? transaction?.singleBeneficiary?.name
+                                    : transaction?.singleBeneficiary
+                                        ?.companyName}{" "}
+                                  ({transaction?.singleBeneficiary?.country}) (
+                                  {transaction?.receivingCurrency})
                                 </h3>
+
                                 <Badge
                                   variant={status.variant}
                                   className="flex items-center gap-1"
@@ -787,6 +817,11 @@ const ExchangeTransactions = () => {
                                 {transaction.id}
                                 {transaction.purpose &&
                                   ` • ${transaction.purpose}`}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Initiated By:
+                                {transaction?.staffName &&
+                                  `  ${transaction?.staffName}`}
                               </p>
                             </div>
 
@@ -808,7 +843,7 @@ const ExchangeTransactions = () => {
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 {transaction?.currency?.toUpperCase()}{" "}
-                                {transaction.amount}
+                                {transaction?.amount}
                               </p>
                             </div>
                           </div>
@@ -832,7 +867,7 @@ const ExchangeTransactions = () => {
                               <span className="text-muted-foreground">
                                 Exchange Rate:
                               </span>
-                              <p className="font-medium">
+                              {/* <p className="font-medium">
                                 1 {transaction?.currency.toUpperCase()} =
                                 {transaction?.exchangeRate
                                   ? (
@@ -840,10 +875,13 @@ const ExchangeTransactions = () => {
                                     ).toFixed(2)
                                   : "-"}{" "}
                                 {transaction?.destinationCurrency.toUpperCase()}
+                              </p> */}
+                              <p className="font-medium">
+                                {transaction?.exchangeRateDisplay}
                               </p>
                             </div>
 
-                            <div className="space-y-1">
+                            {/* <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Fee Details:
                               </span>
@@ -856,7 +894,7 @@ const ExchangeTransactions = () => {
                                   Paid by: {transaction.feeResponsibility}
                                 </p>
                               )}
-                            </div>
+                            </div> */}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
@@ -872,6 +910,86 @@ const ExchangeTransactions = () => {
                               )}
                             </div>
 
+                            {transaction.complianceStatus && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Compliance Status:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.complianceStatus.replace(
+                                    /_/g,
+                                    " ",
+                                  )}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Base Processing Fee:
+                              </span>
+                              <p className="font-medium">
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.baseProcessingFee}
+                              </p>
+                              {transaction.feeResponsibility && (
+                                <p className="text-xs text-muted-foreground">
+                                  Paid by: {transaction.feeResponsibility}
+                                </p>
+                              )}
+                            </div>
+                            {transaction?.discountAmount && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Amount:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction?.currency.toUpperCase()}{" "}
+                                  {transaction.discountAmount}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Vat Amount:
+                              </span>
+                              <p className="font-medium">
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.vatAmount}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Final Processing Fee
+                              </span>
+                              <p className="font-medium">
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.finalProcessingFee}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Total Debit:
+                              </span>
+                              <p className="font-medium">
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.totalDebit}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Net Payout Amount:
+                              </span>
+                              <p className="font-medium">
+                                {transaction?.destinationCurrency?.toUpperCase()}{" "}
+                                {transaction.netPayoutAmount}
+                              </p>
+                            </div>
+
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Beneficiary Fee Amount:
@@ -882,56 +1000,19 @@ const ExchangeTransactions = () => {
                               </p>
                             </div>
 
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Net Payout Amount:
-                              </span>
-                              <p className="font-medium">
-                                {transaction?.currency.toUpperCase()}{" "}
-                                {transaction.netPayoutAmount}
-                              </p>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Total Debit:
-                              </span>
-                              <p className="font-medium">
-                                {transaction?.currency.toUpperCase()}{" "}
-                                {transaction.totalDebit}
-                              </p>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Compliance Status:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.complianceStatus.replace(
-                                  /_/g,
-                                  " ",
-                                )}
-                              </p>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Discount Value:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.discountValue}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Discount Amount:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.discountAmount === "0.00"
-                                  ? "—"
-                                  : `${transaction?.currency.toUpperCase()} ${transaction.discountAmount}`}
-                              </p>
-                            </div>
+                            {/* {transaction?.discounts?.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Value:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.discounts[0]?.type ==
+                                  "FIXED_AMOUNT"
+                                    ? transaction.discounts[0]?.discountValue
+                                    : `${transaction?.discounts[0]?.discountValue} %`}
+                                </p>
+                              </div>
+                            )} */}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
