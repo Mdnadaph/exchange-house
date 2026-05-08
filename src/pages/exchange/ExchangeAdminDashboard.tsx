@@ -9,11 +9,16 @@ import {
   ArrowUpRight,
   MapPin,
   DollarSign,
+  CheckCircle,
+  ArrowRight,
+  Lock,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
 
 interface Stats {
   totalKYBApplications: number;
@@ -42,11 +47,14 @@ interface ApiResponse {
 const ExchangeAdminDashboard = () => {
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const token = cookies.token;
+  const { toast } = useToast();
 
   const [statsData, setStatsData] = useState<any[]>([]);
   const [recentKYBApplications, setRecentKYBApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exchangeSetupConfigurationList, setExchangeSetupConfigurationList] =
+    useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -144,6 +152,32 @@ const ExchangeAdminDashboard = () => {
     );
   };
 
+  const exchangeSetupConfiguration = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v1/exchange/setup/status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res?.data?.status) {
+        toast({
+          title: "Error",
+          description: res?.data?.message || "Failed to load setup data",
+        });
+      }
+      setExchangeSetupConfigurationList(res?.data?.data?.steps);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Failed to load setup",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    exchangeSetupConfiguration();
+  }, []);
   // ✅ Loading state — shown before layout renders
   if (loading) {
     return (
@@ -172,7 +206,6 @@ const ExchangeAdminDashboard = () => {
   return (
     <ExchangeLayout>
       <div className="space-y-8">
-
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -211,10 +244,107 @@ const ExchangeAdminDashboard = () => {
           })}
         </div>
 
+        <div className="lg:col-span-2">
+          {" "}
+          <Card className="shadow-card">
+            {" "}
+            <CardHeader>
+              {" "}
+              <div className="space-y-2">
+                {" "}
+                <CardTitle>Exchange Setup Configuration</CardTitle>{" "}
+                <p className="text-muted-foreground text-sm">
+                  {" "}
+                  Complete all setup steps to configure your exchange platform
+                  successfully.{" "}
+                </p>{" "}
+              </div>{" "}
+            </CardHeader>{" "}
+            <CardContent className="space-y-3 max-h-[500px] overflow-y-auto">
+              {" "}
+              {exchangeSetupConfigurationList?.length === 0 ? (
+                <p className="text-center text-muted-foreground py-6">
+                  {" "}
+                  No Exchange Setup Configuration Data.{" "}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {" "}
+                  {exchangeSetupConfigurationList?.map((item: any) => {
+                    const isCompleted = item?.completed;
+                    const isAvailable = item?.available;
+                    return (
+                      <div
+                        key={item?.step}
+                        className={`rounded-xl border p-3 shadow-sm transition-all                  ${isCompleted ? "border-green-500 bg-green-50" : isAvailable ? "border-primary bg-background" : "border-gray-200 bg-gray-100 opacity-80"}                `}
+                      >
+                        {" "}
+                        {/* Top Section */}{" "}
+                        <div className="flex items-center justify-between">
+                          {" "}
+                          <div>
+                            {" "}
+                            <p className="text-xs text-muted-foreground">
+                              {" "}
+                              Step {item?.step}{" "}
+                            </p>{" "}
+                            <h2 className="text-sm font-semibold mt-1">
+                              {" "}
+                              {item?.title}{" "}
+                            </h2>{" "}
+                          </div>{" "}
+                          {isCompleted ? (
+                            <CheckCircle className="text-green-600 w-5 h-5" />
+                          ) : !isAvailable ? (
+                            <Lock className="text-gray-400 w-4 h-4" />
+                          ) : null}{" "}
+                        </div>{" "}
+                        {/* Count */}{" "}
+                        <div className="mt-2">
+                          {" "}
+                          <p className="text-xs text-muted-foreground">
+                            {" "}
+                            Configured Items{" "}
+                          </p>{" "}
+                          <h3 className="text-lg font-bold">
+                            {" "}
+                            {item?.count}{" "}
+                          </h3>{" "}
+                        </div>{" "}
+                        {/* Action */}{" "}
+                        <div className="mt-3">
+                          {" "}
+                          {isCompleted ? (
+                            <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                              {" "}
+                              <CheckCircle className="w-4 h-4" /> Completed{" "}
+                            </div>
+                          ) : isAvailable ? (
+                            <button
+                              onClick={() => navigate(item?.path)}
+                              className="w-full bg-primary text-white rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-1 hover:opacity-90 transition-all"
+                            >
+                              {" "}
+                              Setup <ArrowRight className="w-4 h-4" />{" "}
+                            </button>
+                          ) : (
+                            <div className="text-xs text-gray-500">
+                              {" "}
+                              Complete previous step first{" "}
+                            </div>
+                          )}{" "}
+                        </div>{" "}
+                      </div>
+                    );
+                  })}{" "}
+                </div>
+              )}{" "}
+            </CardContent>{" "}
+          </Card>
+        </div>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Recent KYB Applications */}
           <div className="lg:col-span-2">
             <Card className="shadow-card">
               <CardHeader>
@@ -309,7 +439,6 @@ const ExchangeAdminDashboard = () => {
             </p>
           </Card>
         </div>
-
       </div>
     </ExchangeLayout>
   );

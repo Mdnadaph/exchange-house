@@ -327,7 +327,10 @@ function App() {
                     />
                     <Route path="kyb-review" element={<ExchangeKYBReview />} />
                     <Route path="kyb-config" element={<ExchangeKYBConfig />} />
-                    <Route path="onmapping" element={<ExchangeKybMapping />} />
+                    <Route
+                      path="kyb-mapping"
+                      element={<ExchangeKybMapping />}
+                    />
                     <Route path="create-kyb-rule" element={<CreateKybRule />} />
                     <Route
                       path="transactions"
@@ -371,7 +374,7 @@ function App() {
                     <Route path="staff" element={<ExchangeStaffManagement />} />
                     <Route path="user" element={<ExchangeAdminUser />} />
                     <Route
-                      path="county-currency"
+                      path="country-currency"
                       element={<ExchangeCountryCurrency />}
                     />
                     <Route

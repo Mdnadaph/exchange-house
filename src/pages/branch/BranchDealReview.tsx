@@ -25,6 +25,7 @@ import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { formateDateTime } from "@/utils/formateDateTime";
+import BranchDealRequestForm from "@/components/deals/BranchDealRequestForm";
 
 // ──────────────────────────────────────────────
 // Simple debounce hook (no external dependency needed)
@@ -64,7 +65,7 @@ const BranchDealReview = () => {
     setLoading(true);
     try {
       let url = `${BASE_URL}/api/v1/rate-deals?query=${encodeURIComponent(
-        debouncedSearch
+        debouncedSearch,
       )}&page=${page}&size=10`;
 
       if (filterStatus !== "ALL") {
@@ -169,6 +170,9 @@ const BranchDealReview = () => {
               Review deals from your registered businesses
             </p>
           </div>
+          <div>
+            <BranchDealRequestForm refetch={getRateDeals} />
+          </div>
         </div>
 
         {/* Statistics */}
@@ -181,7 +185,9 @@ const BranchDealReview = () => {
               <Building2 className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.branchBusiness ?? 0}</div>
+              <div className="text-2xl font-bold">
+                {stats.branchBusiness ?? 0}
+              </div>
               <p className="text-xs text-muted-foreground">Active businesses</p>
             </CardContent>
           </Card>
@@ -265,7 +271,9 @@ const BranchDealReview = () => {
                   All
                 </Button>
                 <Button
-                  variant={filterStatus === "PENDING_REVIEW" ? "default" : "outline"}
+                  variant={
+                    filterStatus === "PENDING_REVIEW" ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => {
                     setFilterStatus("PENDING_REVIEW");
@@ -309,7 +317,9 @@ const BranchDealReview = () => {
                     <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-3 flex-wrap">
                         <Building2 className="h-4 w-4 text-primary" />
-                        <h3 className="font-semibold">{deal?.companyName || "—"}</h3>
+                        <h3 className="font-semibold">
+                          {deal?.companyName || "—"}
+                        </h3>
                         <span className="text-sm text-muted-foreground">
                           {deal?.dealCode}
                         </span>
@@ -324,7 +334,8 @@ const BranchDealReview = () => {
 
                     <div className="text-right shrink-0">
                       <p className="text-2xl font-bold">
-                        {deal?.sendingCurrency} {deal?.amount?.toLocaleString() || "—"}
+                        {deal?.sendingCurrency}{" "}
+                        {deal?.amount?.toLocaleString() || "—"}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         to {deal?.country || "—"}
@@ -334,15 +345,21 @@ const BranchDealReview = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
                     <div className="space-y-1">
-                      <span className="text-muted-foreground">Requested Rate</span>
-                      <p className="font-semibold text-lg">{deal?.proposedRate || "—"}</p>
+                      <span className="text-muted-foreground">
+                        Requested Rate
+                      </span>
+                      <p className="font-semibold text-lg">
+                        {deal?.proposedRate || "—"}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {deal?.payoutCurrency}
                       </p>
                     </div>
                     <div className="space-y-1">
                       <span className="text-muted-foreground">Market Rate</span>
-                      <p className="font-medium">{deal?.currentMarketRate || "—"}</p>
+                      <p className="font-medium">
+                        {deal?.currentMarketRate || "—"}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {deal?.payoutCurrency}
                       </p>
@@ -351,13 +368,29 @@ const BranchDealReview = () => {
                       <span className="text-muted-foreground">Difference</span>
                       <p
                         className={`font-medium ${
-                          Number(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) >= 0
+                          Number(
+                            calculateRateDifference(
+                              deal?.proposedRate,
+                              deal?.currentMarketRate,
+                            ),
+                          ) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
-                        {Number(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) >= 0 ? "+" : ""}
-                        {calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)}%
+                        {Number(
+                          calculateRateDifference(
+                            deal?.proposedRate,
+                            deal?.currentMarketRate,
+                          ),
+                        ) >= 0
+                          ? "+"
+                          : ""}
+                        {calculateRateDifference(
+                          deal?.proposedRate,
+                          deal?.currentMarketRate,
+                        )}
+                        %
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -366,7 +399,9 @@ const BranchDealReview = () => {
                         Submitted
                       </span>
                       <p className="font-medium">
-                        {deal?.submittedAt ? formateDateTime(deal.submittedAt) : "—"}
+                        {deal?.submittedAt
+                          ? formateDateTime(deal.submittedAt)
+                          : "—"}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -374,7 +409,8 @@ const BranchDealReview = () => {
                       <p className="font-medium">
                         {deal?.payoutCurrency}{" "}
                         {(
-                          Number(deal?.amount || 0) * Number(deal?.proposedRate || 0)
+                          Number(deal?.amount || 0) *
+                          Number(deal?.proposedRate || 0)
                         ).toLocaleString() || "—"}
                       </p>
                     </div>
@@ -392,7 +428,9 @@ const BranchDealReview = () => {
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        setExpandedDeal(expandedDeal === deal.id ? null : deal.id)
+                        setExpandedDeal(
+                          expandedDeal === deal.id ? null : deal.id,
+                        )
                       }
                     >
                       <Eye className="h-4 w-4 mr-2" />

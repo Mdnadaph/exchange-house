@@ -127,7 +127,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       items: [
         {
           name: "KYB Mapping",
-          href: "/exchange/onmapping",
+          href: "/exchange/kyb-mapping",
           icon: FileCheck,
           code: "NAV_KYB_MAPPING",
         },
@@ -139,7 +139,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
         },
         {
           name: "Country & Currency",
-          href: "/exchange/county-currency",
+          href: "/exchange/country-currency",
           icon: Globe,
           code: "NAV_COUNTRY_CURRENCY",
         },

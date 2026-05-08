@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import BeneficiaryRegistrationForm from "@/components/beneficiary/BeneficiaryRegistrationForm";
 import BeneficiaryProfile from "@/components/beneficiary/BeneficiaryProfile";
 import BeneficiaryGroupForm from "@/components/beneficiary/BeneficiaryGroupForm";
 import {
@@ -40,6 +39,8 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
+import BranchBeneficiaryRegistrationForm from "@/components/beneficiary/BranchBeneficiaryRegistrationForm";
+import BranchBeneficiaryGroupForm from "@/components/beneficiary/BranchBeneficiaryGroupForm";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -260,6 +261,7 @@ export default function BranchBeneficries() {
         addressLine1: item.addressLine1,
         addressLine2: item.addressLine2,
         city: item.city,
+        businessId: item?.businessId,
         state: item.state,
         postalCode: item.postalCode,
         purpose: item.purpose,
@@ -556,7 +558,7 @@ export default function BranchBeneficries() {
               </p>
             </div>
             <div className="flex gap-2">
-              <BeneficiaryGroupForm
+              <BranchBeneficiaryGroupForm
                 onGroupCreated={handleGroupCreated}
                 trigger={
                   <Button variant="outline">
@@ -823,7 +825,9 @@ export default function BranchBeneficries() {
                       <Layers className="h-5 w-5" />
                       Beneficiary Groups
                     </CardTitle>
-                    <BeneficiaryGroupForm onGroupCreated={handleGroupCreated} />
+                    <BranchBeneficiaryGroupForm
+                      onGroupCreated={handleGroupCreated}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -883,7 +887,7 @@ export default function BranchBeneficries() {
                                   )}
                                 </div>
                               </div>
-                              <div className="flex gap-2">
+                              {/* <div className="flex gap-2">
                                 <Button variant="outline" size="sm">
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -894,7 +898,7 @@ export default function BranchBeneficries() {
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
-                              </div>
+                              </div> */}
                             </div>
                           </CardContent>
                         </Card>
@@ -1338,9 +1342,13 @@ export default function BranchBeneficries() {
           <Button variant="outline" onClick={() => setView("list")}>
             Back to List
           </Button>
-          <BeneficiaryRegistrationForm
-            onSuccess={fetchBeneficiaries}
+          <BranchBeneficiaryRegistrationForm
+            onSuccess={() => {
+              fetchBeneficiaries();
+              setEditBeneficiary(null);
+            }}
             setView={setView}
+            editData={editBeneficiary}
           />
         </div>
       )}
@@ -1357,7 +1365,7 @@ export default function BranchBeneficries() {
           >
             Back to List
           </Button>
-          <BeneficiaryRegistrationForm
+          <BranchBeneficiaryRegistrationForm
             onSuccess={() => {
               fetchBeneficiaries();
               setEditBeneficiary(null);
