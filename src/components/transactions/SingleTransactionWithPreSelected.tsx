@@ -1099,43 +1099,6 @@ const SingleTransactionWithPreselected = ({
                       />
                     </div>
                   </div>
-
-                  {/* ← New: Discount Code */}
-                  <div>
-                    <Label htmlFor="discountCode">Discount Code</Label>
-                    <Input
-                      id="discountCode"
-                      value={discountCode}
-                      onChange={(e) => setDiscountCode(e.target.value.trim())}
-                      placeholder="e.g. S43U3ZSC"
-                      maxLength={12}
-                    />
-                  </div>
-
-                  {/* <div>
-                    <Label htmlFor="currency">Currency *</Label>
-                    <Select
-                      value={currency}
-                      onValueChange={setCurrency}
-                      disabled
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border border-border z-50">
-                        {Object.keys(exchangeRates).map((curr) => (
-                          <SelectItem key={curr} value={curr}>
-                            {curr}
-                          </SelectItem>
-                        ))}
-                        {currencyListData?.data?.map((curr: any) => (
-                          <SelectItem key={curr?.id} value={curr?.id}>
-                            {curr?.name?.toUpperCase()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div> */}
                   <div>
                     <div>
                       <Label htmlFor="source">
@@ -1167,6 +1130,44 @@ const SingleTransactionWithPreselected = ({
                       </Select>
                     </div>
                   </div>
+                  {/* ← New: Discount Code */}
+                  {feeResponsibility !== "BENEFICIARY" && (
+                    <div>
+                      <Label htmlFor="discountCode">Discount Code</Label>
+                      <Input
+                        id="discountCode"
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value.trim())}
+                        placeholder="e.g. S43U3ZSC"
+                        maxLength={12}
+                      />
+                    </div>
+                  )}
+
+                  {/* <div>
+                    <Label htmlFor="currency">Currency *</Label>
+                    <Select
+                      value={currency}
+                      onValueChange={setCurrency}
+                      disabled
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border border-border z-50">
+                        {Object.keys(exchangeRates).map((curr) => (
+                          <SelectItem key={curr} value={curr}>
+                            {curr}
+                          </SelectItem>
+                        ))}
+                        {currencyListData?.data?.map((curr: any) => (
+                          <SelectItem key={curr?.id} value={curr?.id}>
+                            {curr?.name?.toUpperCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div> */}
                 </div>
 
                 <Button
@@ -1200,6 +1201,7 @@ const SingleTransactionWithPreselected = ({
                               PayIn Amount
                             </span>
                             <p className="font-medium">
+                              {currencyCode}{" "}
                               {transectionSummeryData?.baseAedAmount?.toFixed(
                                 2,
                               )}
@@ -1211,9 +1213,7 @@ const SingleTransactionWithPreselected = ({
                             </span>
                             <p className="font-medium">
                               1 {currencyCode} ={" "}
-                              {(
-                                1 / transectionSummeryData?.exchangeRate
-                              )?.toFixed(2)}{" "}
+                              {transectionSummeryData?.exchangeRate?.toFixed(2)}{" "}
                               {selectedPayoutCurrencyCode}
                             </p>
                           </div>

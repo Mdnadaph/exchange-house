@@ -107,6 +107,8 @@ interface Transaction {
   destinationCurrency: string;
   businessId: string;
   beneficiary: string;
+  finalProcessingFee: string;
+  vatAmount: number;
   amount: string;
   currency: string;
   exchangeRate: string;
@@ -120,13 +122,17 @@ interface Transaction {
   referenceNumber: string;
   fees: string;
   feeResponsibility: string;
+  receivingCurrency: string;
   branch: string;
   bulkCount?: number;
   failureReason?: string;
   documents?: TransactionDocument[];
   beneficiaryFeeAmount: string;
+  baseProcessingFee: number;
   netPayoutAmount: string;
+  staffName: string;
   complianceStatus: string;
+  exchangeRateDisplay: string;
   totalDebit: number;
   singleBeneficiary: {
     name: string;
@@ -137,6 +143,9 @@ interface Transaction {
     nationality: string;
     city: string;
     state: string;
+    country: string;
+    type: string;
+    companyName: string;
   };
   discountValue: string;
   logoUrl: string | undefined;
@@ -287,8 +296,10 @@ const ExchangeAdminComplianceReview = () => {
             return {
               id: apiTx.reference,
               businessPhone: apiTx?.businessPhone,
+              vatAmount: apiTx?.vatAmount,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
+              staffName: apiTx?.staffName,
               destinationCurrency: apiTx?.destinationCurrency,
               logoUrl: apiTx?.logUrl,
               branchName: apiTx.branchName || "",
@@ -306,6 +317,7 @@ const ExchangeAdminComplianceReview = () => {
                 maximumFractionDigits: 2,
               }),
               localCurrency: apiTx.targetCurrency,
+              finalProcessingFee: apiTx?.finalProcessingFee,
               status: apiTx?.status,
               type: apiTx?.type,
               purpose: apiTx.purposeName || "",
@@ -324,7 +336,10 @@ const ExchangeAdminComplianceReview = () => {
               fees: apiTx.feeAmount?.toFixed(2),
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
+              exchangeRateDisplay: apiTx.exchangeRateDisplay,
+              baseProcessingFee: apiTx?.baseProcessingFee,
               failureReason: apiTx.failureReason || "",
+              receivingCurrency: apiTx?.receivingCurrency,
               documents: apiTx.documents,
               commentCount: apiTx.commentCount || 0,
               latestComment: apiTx.latestComment || null,
@@ -353,6 +368,9 @@ const ExchangeAdminComplianceReview = () => {
                 nationality: apiTx?.singleBeneficiary?.nationality,
                 city: apiTx?.singleBeneficiary?.city,
                 state: apiTx?.singleBeneficiary?.state,
+                country: apiTx?.singleBeneficiary?.country,
+                type: apiTx?.singleBeneficiary?.type,
+                companyName: apiTx?.singleBeneficiary?.companyName,
               },
               rateDeal: apiTx.rateDeal,
             };
@@ -477,7 +495,7 @@ const ExchangeAdminComplianceReview = () => {
       },
       PROCESSING: {
         variant: "destructive" as const,
-        label: "Processing",
+        label: "Proof of Payment Sent",
         icon: Clock,
       },
       FAILED: {
@@ -739,7 +757,6 @@ const ExchangeAdminComplianceReview = () => {
                 {filteredTransactions.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status.icon;
-
                   return (
                     <Card
                       key={transaction.id}
@@ -750,22 +767,28 @@ const ExchangeAdminComplianceReview = () => {
                           {/* Transaction Header */}
                           <div className="flex items-start justify-between">
                             <div className="space-y-2">
-                              {transaction.branchName && (
+                              {transaction.businessName && (
                                 <div className="flex items-center gap-3">
                                   <Building2 className="h-8 w-8 text-primary" />
                                   <span className=" text-primary text-2xl font-bold">
-                                    {transaction.branchName}
+                                    {transaction?.businessName}
                                   </span>
                                   {transaction.businessId && (
                                     <span className="text-xs text-muted-foreground">
-                                      ({transaction.businessId})
+                                      ({transaction?.businessId})
                                     </span>
                                   )}
                                 </div>
                               )}
                               <div className="flex items-center gap-3">
                                 <h3 className="font-semibold text-foreground">
-                                  {transaction.beneficiary || "Beneficiary"}
+                                  {transaction?.singleBeneficiary?.type ==
+                                  "INDIVIDUAL"
+                                    ? transaction?.singleBeneficiary?.name
+                                    : transaction?.singleBeneficiary
+                                        ?.companyName}{" "}
+                                  ({transaction?.singleBeneficiary?.country}) (
+                                  {transaction?.receivingCurrency})
                                 </h3>
                                 <Badge
                                   variant={status.variant}
@@ -786,6 +809,11 @@ const ExchangeAdminComplianceReview = () => {
                                 {transaction.id}
                                 {transaction.purpose &&
                                   ` • ${transaction.purpose}`}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Initiated By:
+                                {transaction?.staffName &&
+                                  `  ${transaction?.staffName}`}
                               </p>
                             </div>
 
@@ -826,28 +854,30 @@ const ExchangeAdminComplianceReview = () => {
                                 </p>
                               )}
                             </div>
-
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Exchange Rate:
                               </span>
-                              <p className="font-medium">
-                                1 {transaction.currency.toUpperCase()} =
+                              {/* <p className="font-medium">
+                                1 {transaction?.currency.toUpperCase()} =
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
                                     ).toFixed(2)
                                   : "-"}{" "}
-                                {transaction?.destinationCurrency}
+                                {transaction?.destinationCurrency.toUpperCase()}
+                              </p> */}
+                              <p className="font-medium">
+                                {transaction?.exchangeRateDisplay}
                               </p>
                             </div>
 
-                            <div className="space-y-1">
+                            {/* <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Fee Details:
                               </span>
                               <p className="font-medium">
-                                {transaction.currency.toUpperCase()}{" "}
+                                {transaction?.currency?.toUpperCase()}{" "}
                                 {transaction.fees}
                               </p>
                               {transaction.feeResponsibility && (
@@ -855,7 +885,7 @@ const ExchangeAdminComplianceReview = () => {
                                   Paid by: {transaction.feeResponsibility}
                                 </p>
                               )}
-                            </div>
+                            </div> */}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
@@ -871,23 +901,64 @@ const ExchangeAdminComplianceReview = () => {
                               )}
                             </div>
 
+                            {transaction.complianceStatus && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Compliance Status:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.complianceStatus.replace(
+                                    /_/g,
+                                    " ",
+                                  )}
+                                </p>
+                              </div>
+                            )}
+
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
-                                Beneficiary Fee Amount:
+                                Base Processing Fee:
                               </span>
                               <p className="font-medium">
-                                {transaction.currency.toUpperCase()}{" "}
-                                {transaction.beneficiaryFeeAmount}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.baseProcessingFee}
+                              </p>
+                              {transaction.feeResponsibility && (
+                                <p className="text-xs text-muted-foreground">
+                                  Paid by: {transaction.feeResponsibility}
+                                </p>
+                              )}
+                            </div>
+
+                            {transaction?.discountAmount && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Amount:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction?.currency.toUpperCase()}{" "}
+                                  {transaction.discountAmount}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Vat Amount:
+                              </span>
+                              <p className="font-medium">
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.vatAmount}
                               </p>
                             </div>
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
-                                Net Payout Amount:
+                                Final Processing Fee
                               </span>
                               <p className="font-medium">
-                                {transaction.currency.toUpperCase()}{" "}
-                                {transaction.netPayoutAmount}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.finalProcessingFee}
                               </p>
                             </div>
 
@@ -896,41 +967,44 @@ const ExchangeAdminComplianceReview = () => {
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                {transaction.currency.toUpperCase()}{" "}
-                                {transaction.totalDebit}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.totalDebit}
                               </p>
                             </div>
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
-                                Compliance Status:
+                                Net Payout Amount:
                               </span>
                               <p className="font-medium">
-                                {transaction.complianceStatus.replace(
-                                  /_/g,
-                                  " ",
-                                )}
+                                {transaction?.destinationCurrency?.toUpperCase()}{" "}
+                                {transaction.netPayoutAmount}
                               </p>
                             </div>
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
-                                Discount Value:
+                                Beneficiary Fee Amount:
                               </span>
                               <p className="font-medium">
-                                {transaction.discountValue}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction.beneficiaryFeeAmount}
                               </p>
                             </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Discount Amount:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.discountAmount === "0.00"
-                                  ? "—"
-                                  : `${transaction.currency.toUpperCase()} ${transaction.discountAmount}`}
-                              </p>
-                            </div>
+
+                            {/* {transaction?.discounts?.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Value:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.discounts[0]?.type ==
+                                  "FIXED_AMOUNT"
+                                    ? transaction.discounts[0]?.discountValue
+                                    : `${transaction?.discounts[0]?.discountValue} %`}
+                                </p>
+                              </div>
+                            )} */}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">

@@ -502,7 +502,7 @@ const ExchangeTransactions = () => {
       },
       PROCESSING: {
         variant: "destructive" as const,
-        label: "Processing",
+        label: "Proof of Payment Sent",
         icon: Clock,
       },
       FAILED: {

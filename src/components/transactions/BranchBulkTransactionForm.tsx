@@ -482,7 +482,7 @@ const BranchBulkTransactionForm = ({
                       {p?.name}
                       {p.documentRequired && (
                         <Badge variant="outline" className="text-xs ml-2">
-                          Doc
+                          Doc Required
                         </Badge>
                       )}
                     </div>

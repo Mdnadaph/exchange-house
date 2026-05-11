@@ -72,6 +72,7 @@ const BulkTransactionForm = ({
   const [currencyListData, setCurrencyListData] = useState<any>(null);
   const [beneficiaryGroupsList, setBeneficiaryGroupList] = useState<any>(null);
   const [payoutDetail, setPayoutDetail] = useState([]);
+  const [transactionPurposeList, setTransactionPurposeList] = useState([]);
   // Per-beneficiary inputs
   const [beneficiaryAmounts, setBeneficiaryAmounts] = useState<
     Record<number, string>
@@ -169,9 +170,9 @@ const BulkTransactionForm = ({
     }));
   };
 
-  const requiredDocForPorpose = purposeOptions?.find(
-    (purpose) => purpose?.value == transactionPurpose,
-  )?.requiresDoc;
+  const requiredDocForPorpose = transactionPurposeList?.find(
+    (purpose) => purpose?.code == transactionPurpose,
+  )?.documentRequired;
   // Submit
 
   // Get selected payout currency for a beneficiary
@@ -392,6 +393,42 @@ const BulkTransactionForm = ({
     getBeneficiaryPayout();
   }, [selectedGroup]);
 
+  const getTransactionPurpose = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/business/transactions/purpose`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!response?.data?.status) {
+        toast({
+          title: "Error",
+          description:
+            response?.data?.message ||
+            "Something went wrong while fetching transaction purpose data",
+          variant: "destructive",
+        });
+      }
+      setTransactionPurposeList(response?.data?.data || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while fetching transaction purpose ",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    getTransactionPurpose();
+  }, [open]);
+
   // ─── UI ─────────────────────────────────────────────
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
@@ -439,11 +476,11 @@ const BulkTransactionForm = ({
                 <SelectValue placeholder="Select purpose" />
               </SelectTrigger>
               <SelectContent>
-                {purposeOptions.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
+                {transactionPurposeList.map((p) => (
+                  <SelectItem key={p?.id} value={p?.code}>
                     <div className="flex items-center gap-2">
-                      {p.label}
-                      {p.requiresDoc && (
+                      {p?.name}
+                      {p.documentRequired && (
                         <Badge variant="outline" className="text-xs ml-2">
                           Doc
                         </Badge>

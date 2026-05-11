@@ -36,11 +36,13 @@ interface Transaction {
   branchName: string;
   businessId: string;
   beneficiary: string;
+  vatAmount: number;
   amount: string;
   currency: string;
   exchangeRate: string;
   localAmount: string;
   localCurrency: string;
+  exchangeRateDisplay: string;
   status: string;
   type: "SINGLE" | "BULK";
   purpose: string;
@@ -71,6 +73,8 @@ interface Transaction {
     nationality: string;
     city: string;
     state: string;
+    type: string;
+    companyName: string;
   };
 }
 
@@ -303,7 +307,7 @@ const handleDownloadReceipt = (
       <div class="label">Payment Details</div>
       <div class="row amount">PayIn Amount: ${transaction.convertedAmount} ${transaction?.currency}</div>
       <div class="row amount">Charges: ${transaction.fees} ${transaction?.currency}</div>
-      <div class="row amount">VAT: 0</div>
+      <div class="row amount">VAT: ${transaction?.vatAmount}</div>
       <div class="row amount"><b>Total Payable: ${transaction.totalDebit} ${transaction?.currency}</b></div>
       <div class="row amount">Exchange Rate: ${transaction.exchangeRate}</div>
       <div class="row amount"><b>Actual Payout Amount: ${transaction?.sourceAmount} ${transaction?.currency}</b></div>
@@ -407,11 +411,11 @@ export default function TransactionDetailModal({
         <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-t-lg px-8 py-6">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              {transaction.branchName && (
+              {transaction.businessName && (
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-slate-300" />
                   <span className="text-lg font-bold text-white">
-                    {transaction.branchName}
+                    {transaction.businessName}
                   </span>
                   {transaction.businessId && (
                     <span className="text-xs text-slate-400">
@@ -421,7 +425,9 @@ export default function TransactionDetailModal({
                 </div>
               )}
               <h2 className="text-2xl font-extrabold tracking-tight">
-                {transaction.beneficiary}
+                {transaction?.singleBeneficiary?.type == "INDIVIDUAL"
+                  ? transaction?.singleBeneficiary?.name
+                  : transaction?.singleBeneficiary?.companyName}{" "}
               </h2>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge
@@ -448,10 +454,10 @@ export default function TransactionDetailModal({
             {/* Amount */}
             <div className="text-right">
               <p className="text-3xl font-black tabular-nums">
-                {transaction.currency?.toUpperCase()} {transaction.localAmount}
+                {transaction?.destinationCurrency} {transaction.localAmount}
               </p>
               <p className="text-sm text-slate-400 mt-1">
-                {transaction?.destinationCurrency} {transaction.amount}
+                {transaction?.currency?.toUpperCase()} {transaction.amount}
               </p>
             </div>
           </div>
@@ -632,11 +638,12 @@ export default function TransactionDetailModal({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-muted/30 rounded-xl p-4">
               <DetailField
                 label="Exchange Rate"
-                value={`1 ${transaction.currency?.toUpperCase()} =${
-                  transaction?.exchangeRate
-                    ? (1 / Number(transaction.exchangeRate)).toFixed(2)
-                    : ""
-                } ${transaction?.destinationCurrency}`}
+                // value={`1 ${transaction.currency?.toUpperCase()} =${
+                //   transaction?.exchangeRate
+                //     ? (1 / Number(transaction.exchangeRate)).toFixed(2)
+                //     : ""
+                // } ${transaction?.destinationCurrency}`}
+                value={transaction?.exchangeRateDisplay}
               />
               <DetailField
                 label="Fee"

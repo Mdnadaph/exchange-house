@@ -45,31 +45,31 @@ const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let url = `${BASE_URL}/api/v1/business-users?page=${currentPage}&size=10`;
-        if (debouncedSearch.trim()) {
-          url += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
-        }
-
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const json = await response.json();
-        if (json.status) {
-          setDashboard(json.data.dashboard);
-          setUsers(json.data.users);
-          setPagination(json.data.pagination);
-        }
-      } catch (error) {
-        toast({
-          title: "Failed to Counter Proposal Declined",
-          description: error?.message || "Please try again",
-          variant: "destructive",
-        });
+  const fetchData = async () => {
+    try {
+      let url = `${BASE_URL}/api/v1/business-users?page=${currentPage}&size=10`;
+      if (debouncedSearch.trim()) {
+        url += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
       }
-    };
+
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await response.json();
+      if (json.status) {
+        setDashboard(json.data.dashboard);
+        setUsers(json.data.users);
+        setPagination(json.data.pagination);
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to Counter Proposal Declined",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+  useEffect(() => {
     fetchData();
   }, [currentPage, token, refreshKey, debouncedSearch]);
 
@@ -150,7 +150,10 @@ const UserManagement = () => {
               hierarchies
             </p>
           </div>
-          <UserCreationForm onUserCreated={handleUserCreated} />
+          <UserCreationForm
+            onUserCreated={handleUserCreated}
+            refetch={fetchData}
+          />
         </div>
 
         {/* Statistics Cards */}
@@ -341,11 +344,9 @@ const UserManagement = () => {
                               <span className="text-muted-foreground">
                                 Tier:
                               </span>
-                              <p className="font-medium">
-                                {user.tier}
-                              </p>
+                              <p className="font-medium">{user.tier}</p>
                             </div>
-                            
+
                             {/*<div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Calendar className="h-3 w-3 mr-1" />

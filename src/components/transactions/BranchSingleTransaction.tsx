@@ -1096,16 +1096,6 @@ export default function BranchSingleTransaction({
                         </div> */}
 
                     <div>
-                      <Label htmlFor="discountCode">Discount Code</Label>
-                      <Input
-                        id="discountCode"
-                        value={discountCode}
-                        onChange={(e) => setDiscountCode(e.target.value.trim())}
-                        placeholder="e.g. S43U3ZSC"
-                        maxLength={12}
-                      />
-                    </div>
-                    <div>
                       <Label htmlFor="source">
                         Select Fee Responsibility{" "}
                         <span className="text-red-500">*</span>
@@ -1135,6 +1125,21 @@ export default function BranchSingleTransaction({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {feeResponsibility !== "BENEFICIARY" && (
+                      <div>
+                        <Label htmlFor="discountCode">Discount Code</Label>
+                        <Input
+                          id="discountCode"
+                          value={discountCode}
+                          onChange={(e) =>
+                            setDiscountCode(e.target.value.trim())
+                          }
+                          placeholder="e.g. S43U3ZSC"
+                          maxLength={12}
+                        />
+                      </div>
+                    )}
                   </div>
                   <Button
                     onClick={handleTransationSummary}
@@ -1167,6 +1172,7 @@ export default function BranchSingleTransaction({
                                 PayIn Amount
                               </span>
                               <p className="font-medium">
+                                {currencyCode}{" "}
                                 {transectionSummeryData?.baseAedAmount?.toFixed(
                                   2,
                                 )}
@@ -1178,9 +1184,9 @@ export default function BranchSingleTransaction({
                               </span>
                               <p className="font-medium">
                                 1 {currencyCode} ={" "}
-                                {(
-                                  1 / transectionSummeryData?.exchangeRate
-                                )?.toFixed(2)}{" "}
+                                {transectionSummeryData?.exchangeRate?.toFixed(
+                                  2,
+                                )}{" "}
                                 {selectedPayoutCurrencyCode}
                               </p>
                             </div>
@@ -1216,15 +1222,20 @@ export default function BranchSingleTransaction({
                                 {currencyCode}
                               </p>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Total Payable
-                              </span>
-                              <p className="font-medium">
-                                {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
-                                {currencyCode}
-                              </p>
-                            </div>
+                            {feeResponsibility == "BUSINESS" && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Total Payable
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.totalDebit?.toFixed(
+                                    2,
+                                  )}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+
                             <div>
                               <span className="text-muted-foreground">
                                 Monthly Limit
