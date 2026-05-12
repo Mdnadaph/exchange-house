@@ -66,6 +66,7 @@ interface KYBApplication {
   kybEvaluatedAt: string | null;
   createdDate: string;
   documents: KYBDocument[];
+  canUploadDocuments: boolean;
 }
 
 interface ApiResponse {
@@ -95,7 +96,9 @@ const ExchangeKYBReview = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [cookies] = useCookies(["token", "email"]);
-
+  const [isUploadDocumentModal, setIsUploadDocumentModal] =
+    useState<boolean>(false);
+  const [businessId, setBusinessId] = useState<number | null>(null);
   // Comments state for each application
   const [comments, setComments] = useState<Record<string, string>>({});
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
@@ -180,6 +183,7 @@ const ExchangeKYBReview = () => {
         const mappedApplications = data.data.map((app) => ({
           id: `KYB-${app.id.toString().padStart(4, "0")}`,
           businessName: app.companyName || "",
+          canUploadDocuments: app?.canUploadDocuments,
           businessType: app.businessType || "",
           submittedDate: formatDate(app.createdDate) || "",
           priority: determinePriority(app.kybStatus, app.createdDate),
@@ -1091,6 +1095,9 @@ const ExchangeKYBReview = () => {
                     </div>
 
                     {/* Documents Review */}
+                    {/* <Button onClick={() => setIsUploadDocumentModal(true)}>
+                      Upload Document
+                    </Button> */}
                     <div>
                       <h4 className="font-semibold text-foreground mb-3">
                         Documents Review
@@ -1336,7 +1343,44 @@ const ExchangeKYBReview = () => {
               </div>
             </div>
           )}
-
+          {/* 
+        Upload Document Modal
+         */}
+          <Dialog
+            open={isUploadDocumentModal}
+            onOpenChange={(open) => {
+              setIsUploadDocumentModal(open);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-xl">
+                  Upload New Document
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>this is uplload </div>
+                <div className="flex justify-between pt-6 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsUploadDocumentModal(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <div className="space-x-3">
+                    <Button
+                      variant="business"
+                      // onClick={() => setShowConfirmation(true)}
+                    >
+                      Upload Documents
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           {/* Document Viewer Dialog */}
           <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
             <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-y-auto">

@@ -1106,7 +1106,10 @@ const SingleTransactionWithPreselected = ({
                       </Label>
                       <Select
                         value={feeResponsibility}
-                        onValueChange={setFeeResponsibility}
+                        onValueChange={(value) => {
+                          setFeeResponsibility(value);
+                          setTransectionSummeryData(null);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose fee responsibility" />
@@ -1217,7 +1220,9 @@ const SingleTransactionWithPreselected = ({
                               {selectedPayoutCurrencyCode}
                             </p>
                           </div>
-                          {transectionSummeryData?.businessFee >= 1 && (
+                          {["BUSINESS", "SHARED"].includes(
+                            transectionSummeryData?.feeResponsibility,
+                          ) && (
                             <div>
                               <span className="text-muted-foreground">
                                 businessFee
@@ -1239,25 +1244,75 @@ const SingleTransactionWithPreselected = ({
                               </p>
                             </div>
                           )}
+                          {["BUSINESS", "SHARED"].includes(
+                            transectionSummeryData?.feeResponsibility,
+                          ) && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Discount Amount
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.discountAmountAed}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
 
-                          <div>
-                            <span className="text-muted-foreground">
-                              Discount Amount
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.discountAmountAed}{" "}
-                              {currencyCode}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Total Payable
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
-                              {currencyCode}
-                            </p>
-                          </div>
+                          {transectionSummeryData?.vatAmount > 0 &&
+                            ["BUSINESS", "SHARED"].includes(
+                              transectionSummeryData?.feeResponsibility,
+                            ) && (
+                              <div>
+                                <span>Vat Amount</span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.vatAmount}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+
+                          {transectionSummeryData?.vatAmount > 0 &&
+                            ["BUSINESS", "SHARED"].includes(
+                              transectionSummeryData?.feeResponsibility,
+                            ) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Final Processing Fee
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.finalProcessingFee?.toFixed(
+                                    2,
+                                  )}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+                          {transectionSummeryData?.feeResponsibility ==
+                            "BUSINESS" && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Total Payout
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.netPayout?.toFixed(2)}{" "}
+                                {transectionSummeryData?.currency}
+                              </p>
+                            </div>
+                          )}
+
+                          {transectionSummeryData?.feeResponsibility ==
+                            "BUSINESS" && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Total Payable
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
+
                           <div>
                             <span className="text-muted-foreground">
                               Monthly Limit
@@ -1275,7 +1330,7 @@ const SingleTransactionWithPreselected = ({
                               {transectionSummeryData?.currentMonthSpend?.toFixed(
                                 2,
                               )}{" "}
-                              {transectionSummeryData?.currency}
+                              {currencyCode}
                             </p>
                           </div>
                           <div>
@@ -1283,24 +1338,12 @@ const SingleTransactionWithPreselected = ({
                               Remaining Limit
                             </span>
                             <p className="font-medium">
-                              {transectionSummeryData?.monthlyLimit?.toFixed(
+                              {transectionSummeryData?.remainingLimit?.toFixed(
                                 2,
-                              ) -
-                                transectionSummeryData?.currentMonthSpend?.toFixed(
-                                  2,
-                                )}{" "}
+                              )}{" "}
                               {currencyCode}
                             </p>
                           </div>
-                          {transectionSummeryData?.vatAmount > 0 && (
-                            <div>
-                              <span>Vat Amount</span>
-                              <p className="font-medium">
-                                {transectionSummeryData?.vatAmount}
-                                {currencyCode}
-                              </p>
-                            </div>
-                          )}
                         </div>
                       </CardContent>
                     </Card>

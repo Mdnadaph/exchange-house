@@ -35,6 +35,7 @@ interface Transaction {
   destinationCurrency: string;
   branchName: string;
   businessId: string;
+  staffName: string;
   beneficiary: string;
   vatAmount: number;
   amount: string;
@@ -305,12 +306,13 @@ const handleDownloadReceipt = (
        <div class="row"><b>Address:</b> ${transaction.singleBeneficiary?.email || "-"}</div>
 
       <div class="label">Payment Details</div>
-      <div class="row amount">PayIn Amount: ${transaction.convertedAmount} ${transaction?.currency}</div>
-      <div class="row amount">Charges: ${transaction.fees} ${transaction?.currency}</div>
-      <div class="row amount">VAT: ${transaction?.vatAmount}</div>
-      <div class="row amount"><b>Total Payable: ${transaction.totalDebit} ${transaction?.currency}</b></div>
-      <div class="row amount">Exchange Rate: ${transaction.exchangeRate}</div>
-      <div class="row amount"><b>Actual Payout Amount: ${transaction?.sourceAmount} ${transaction?.currency}</b></div>
+      <div class="row amount">PayIn Amount:  ${transaction?.sourceAmount} ${transaction?.currency}</div>
+      <div class="row amount">Charges: ${transaction?.baseProcessingFee} ${transaction?.currency}</div>
+                  <div class="row amount">Discount: ${transaction?.discountAmount} ${transaction?.currency}</div>
+      <div class="row amount">VAT: ${transaction?.vatAmount} ${transaction?.currency}</div>
+      <div class="row amount"><b>Total Payable: ${transaction?.totalDebit} ${transaction?.destinationCurrency}</b></div>
+      <div class="row amount">Exchange Rate:${transaction?.exchangeRateDisplay}</div>
+      <div class="row amount"><b>Actual Payout Amount:${transaction.convertedAmount}${transaction?.destinationCurrency}</b></div>
     </div>
 
   </div>
@@ -324,7 +326,7 @@ const handleDownloadReceipt = (
   <!-- Signatures -->
   <div class="signatures">
     <div>Remitter Signature</div>
-    <div>${OperatorName}</div>
+    <div>${transaction?.staffName}</div>
     <div>Cashier</div>
   </div>
 
@@ -660,7 +662,7 @@ export default function TransactionDetailModal({
               />
               <DetailField
                 label="Total Debit"
-                value={`${transaction?.currency} ${transaction.totalDebit}`}
+                value={`${transaction?.destinationCurrency} ${transaction.totalDebit}`}
               />
               <DetailField
                 label="Discount %"
