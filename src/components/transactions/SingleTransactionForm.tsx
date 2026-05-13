@@ -1958,7 +1958,7 @@ const SingleTransactionForm = ({
     setLoadingRateDeal(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
+        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${receiverAmount}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1978,7 +1978,7 @@ const SingleTransactionForm = ({
 
   useEffect(() => {
     getCustomRateDeal();
-  }, [amount]);
+  }, [receiverAmount]);
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
@@ -2780,7 +2780,7 @@ const SingleTransactionForm = ({
             )}
             {loadingRateDeal ? (
               <div className="text-gray-400 p-4">Loading...</div>
-            ) : rateDealData?.proposedRate && amount ? (
+            ) : rateDealData?.proposedRate && receiverAmount ? (
               <Card className="bg-accent-muted/10 border-accent/20">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -2793,13 +2793,13 @@ const SingleTransactionForm = ({
                     <div className="flex gap-1">
                       <p>
                         Applied Rate: {rateDealData.appliedRate}{" "}
-                        {rateDealData.payoutCurrency}
+                        {rateDealData?.payoutCurrency}
                       </p>
                     </div>
                     <div className="flex gap-1">
                       <p>
                         Remaining Amount: {rateDealData.remainingAmount}{" "}
-                        {currencyCode}
+                        {rateDealData?.payoutCurrency}
                       </p>
                     </div>
                   </div>
@@ -2807,7 +2807,7 @@ const SingleTransactionForm = ({
               </Card>
             ) : (
               <div className="text-gray-400 p-4">
-                {amount && <p> No rate deal data available</p>}
+                {receiverAmount && <p> No rate deal data available</p>}
               </div>
             )}
             {range && (

@@ -24,8 +24,9 @@ import {
   X,
   FileImage,
   File,
+  Upload,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCookies } from "react-cookie";
 import axios from "axios";
 import BASE_URL from "@/config/config";
@@ -37,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Type definitions for API response
 interface KYBDocument {
@@ -92,6 +94,14 @@ const filterToBackendStatus: Record<string, string> = {
 };
 const ExchangeKYBReview = () => {
   const [kybApplications, setKybApplications] = useState<any[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadDocumentLoading, setUploadDocumentLoading] = useState(false);
+  const [documentType, setDocumentType] = useState("");
+  const [documentTypes, setDocumentTypes] = useState<string[]>([]);
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [expiryDate, setExpireDate] = useState("");
+  const [kybContext, setKybContext] = useState<any>(null);
+  const [documentsData, setDocumentsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -123,6 +133,9 @@ const ExchangeKYBReview = () => {
   const [pageSize] = useState(2);
 
   const token = cookies.token;
+  const { toast } = useToast();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     fetchKYBApplications(currentPage, searchTerm, filterStatus);
@@ -178,10 +191,10 @@ const ExchangeKYBReview = () => {
         setTotalPages(data.totalPages || 0);
         setCurrentPage(data.currentPage || 0);
         setTotalElements(data.totalElements || 0);
-
         // Map API data to component structure
         const mappedApplications = data.data.map((app) => ({
           id: `KYB-${app.id.toString().padStart(4, "0")}`,
+          businessApiId: app?.id,
           businessName: app.companyName || "",
           canUploadDocuments: app?.canUploadDocuments,
           businessType: app.businessType || "",
@@ -794,6 +807,153 @@ const ExchangeKYBReview = () => {
     return pages;
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 20 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Maximum file size is 20MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const uploadDocument = async () => {
+    if (!selectedFile || !documentType || !businessId) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a file and document type",
+        variant: "destructive",
+      });
+      return;
+    }
+    setUploadDocumentLoading(true);
+    try {
+      const selectedDoc = kybContext?.documents.find(
+        (doc) => doc.name === documentType,
+      );
+
+      if (!selectedDoc) {
+        toast({
+          title: "Document Type Error",
+          description: `Could not find document type "${documentType}" in KYB rules`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("documentType", selectedDoc.code);
+      if (expiryDate) {
+        formData.append("expiryDate", expiryDate);
+      }
+      if (documentNumber) {
+        formData.append("documentNumber", documentNumber);
+      }
+
+      const response = await axios.post(
+        `${BASE_URL}/api/business/${businessId}/documents/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      if (response.data.status) {
+        // const newDocument: Document = {
+        //   id: `DOC-${String(documents.length + 1).padStart(3, "0")}`,
+        //   name: selectedFile.name,
+        //   type: documentType,
+        //   uploadDate: new Date().toISOString().split("T")[0],
+        //   uploadedBy: businessProfile.companyName,
+        //   fileSize: `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`,
+        //   status: "pending_review",
+        // };
+
+        // setDocuments([...documents, newDocument]);
+        // await loadDocumentsFromServer();
+        fetchKYBApplications(currentPage);
+        setIsUploadDocumentModal(false);
+        setSelectedFile(null);
+        setDocumentType("");
+        setDocumentNumber("");
+        setExpireDate("");
+        setDocumentsData([]);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        toast({
+          title: "Document Uploaded",
+          description:
+            response.data.message ||
+            "Document uploaded successfully and is pending review.",
+        });
+      } else {
+        toast({
+          title: "Upload Failed",
+          description: response.data.message || "Upload failed",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Upload Failed",
+        description:
+          error.response?.data?.message || "Failed to upload document",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadDocumentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchKYBContext = async () => {
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/api/business/${businessId}/kyb-context`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        const data = response?.data?.data;
+        setDocumentsData(response?.data?.data?.documents || []);
+        if (data?.documents) {
+          setKybContext(data);
+
+          const types = data.documents.map((doc) => doc.name);
+          setDocumentTypes(types);
+
+          // await loadDocumentsFromServer();
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load KYB context",
+          variant: "destructive",
+        });
+      }
+    };
+
+    if (businessId && token && isUploadDocumentModal) {
+      fetchKYBContext();
+    }
+  }, [businessId, token, isUploadDocumentModal]);
+
+  const expiryDateRequired = documentsData?.find(
+    (context) => context?.name == documentType,
+  )?.expiryDateRequired;
+
   if (loading) {
     return (
       <BranchLayout>
@@ -1095,9 +1255,18 @@ const ExchangeKYBReview = () => {
                     </div>
 
                     {/* Documents Review */}
-                    {/* <Button onClick={() => setIsUploadDocumentModal(true)}>
-                      Upload Document
-                    </Button> */}
+                    {application?.canUploadDocuments && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsUploadDocumentModal(true);
+                          setBusinessId(application?.businessApiId);
+                        }}
+                      >
+                        Upload Document
+                      </Button>
+                    )}
+
                     <div>
                       <h4 className="font-semibold text-foreground mb-3">
                         Documents Review
@@ -1350,6 +1519,17 @@ const ExchangeKYBReview = () => {
             open={isUploadDocumentModal}
             onOpenChange={(open) => {
               setIsUploadDocumentModal(open);
+              if (!open) {
+                setIsUploadDocumentModal(false);
+                setSelectedFile(null);
+                setDocumentType("");
+                setDocumentNumber("");
+                setDocumentsData([]);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+                setBusinessId(null);
+              }
             }}
           >
             <DialogContent>
@@ -1359,12 +1539,120 @@ const ExchangeKYBReview = () => {
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div>this is uplload </div>
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="documentNumber">Document Number</Label>
+                      <Input
+                        id="documentNumber"
+                        type="text"
+                        placeholder="e.g., License No. 12345"
+                        value={documentNumber}
+                        onChange={(e) => setDocumentNumber(e.target.value)}
+                        className="w-full"
+                      />
+
+                      <Label htmlFor="documentType">Document Type</Label>
+                      <select
+                        id="documentType"
+                        value={documentType}
+                        onChange={(e) => {
+                          setDocumentType(e.target.value);
+                          setExpireDate("");
+                        }}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                      >
+                        <option value="">Select document type...</option>
+                        {documentTypes.map((type) => {
+                          const docInfo = kybContext?.documents.find(
+                            (d) => d.name === type,
+                          );
+                          return (
+                            <option key={type} value={type}>
+                              {type} {docInfo?.code ? `(${docInfo.code})` : ""}{" "}
+                              {docInfo?.required ? "- Required" : "- Optional"}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fileUpload">Select File</Label>
+                      <Input
+                        id="fileUpload"
+                        type="file"
+                        onChange={handleFileSelect}
+                        ref={fileInputRef}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      />
+                      {expiryDateRequired && (
+                        <div className="space-y-1">
+                          <Label htmlFor="expiryDate">Expiry Date</Label>
+                          <Input
+                            value={expiryDate}
+                            id="expiryDate"
+                            type="date"
+                            min={new Date().toISOString().split("T")[0]}
+                            onChange={(e) => {
+                              setExpireDate(e.target.value);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedFile && (
+                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {selectedFile.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 items-center">
+                        <Button
+                          onClick={() => {
+                            setSelectedFile(null);
+                            setDocumentType("");
+                            setDocumentNumber("");
+                            setDocumentsData([]);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = "";
+                            }
+                          }}
+                          variant="outline"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">
+                    Accepted formats: PDF, DOC, DOCX, JPG, PNG. Maximum file
+                    size: 20MB
+                  </p>
+                </div>
                 <div className="flex justify-between pt-6 border-t">
                   <Button
                     variant="outline"
                     onClick={() => {
                       setIsUploadDocumentModal(false);
+                      setSelectedFile(null);
+                      setDocumentType("");
+                      setDocumentNumber("");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                      setBusinessId(null);
                     }}
                   >
                     Cancel
@@ -1372,9 +1660,10 @@ const ExchangeKYBReview = () => {
                   <div className="space-x-3">
                     <Button
                       variant="business"
-                      // onClick={() => setShowConfirmation(true)}
+                      disabled={uploadDocumentLoading}
+                      onClick={uploadDocument}
                     >
-                      Upload Documents
+                      Submit
                     </Button>
                   </div>
                 </div>

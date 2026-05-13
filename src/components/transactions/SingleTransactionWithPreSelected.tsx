@@ -567,7 +567,7 @@ const SingleTransactionWithPreselected = ({
     setLoadingRateDeal(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
+        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${receiverAmount}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -587,7 +587,7 @@ const SingleTransactionWithPreselected = ({
 
   useEffect(() => {
     getCustomRateDeal();
-  }, [amount]);
+  }, [receiverAmount]);
   useEffect(() => {
     if (!amount && !receiverAmount) return;
 
@@ -1392,7 +1392,7 @@ const SingleTransactionWithPreselected = ({
 
             {loadingRateDeal ? (
               <div className="text-gray-400 p-4">Loading...</div>
-            ) : rateDealData?.proposedRate && amount ? (
+            ) : rateDealData?.proposedRate && receiverAmount ? (
               <Card className="bg-accent-muted/10 border-accent/20">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -1419,7 +1419,7 @@ const SingleTransactionWithPreselected = ({
               </Card>
             ) : (
               <div className="text-gray-400 p-4">
-                {amount && <p> No rate deal data available</p>}
+                {receiverAmount && <p> No rate deal data available</p>}
               </div>
             )}
 
