@@ -668,30 +668,36 @@ export default function BranchBeneficries() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {supportedPayoutMechanisms?.mechanisms?.map(
-                    (mechanisms: any) => (
-                      <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
-                        <Banknote className="h-6 w-6 text-primary" />
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {mechanisms?.name
-                              ?.toLowerCase()
-                              .split("_")
-                              ?.map(
-                                (word: any) =>
-                                  word[0].toUpperCase() + word.slice(1),
-                              )
-                              ?.join(" ")}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Fee Range:{mechanisms?.feeRange}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Processing Time:{mechanisms?.processingTime}
-                          </p>
+                  {supportedPayoutMechanisms?.mechanisms?.length > 0 ? (
+                    supportedPayoutMechanisms?.mechanisms?.map(
+                      (mechanisms: any) => (
+                        <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
+                          <Banknote className="h-6 w-6 text-primary" />
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {mechanisms?.name
+                                ?.toLowerCase()
+                                .split("_")
+                                ?.map(
+                                  (word: any) =>
+                                    word[0].toUpperCase() + word.slice(1),
+                                )
+                                ?.join(" ")}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Fee Range:{mechanisms?.feeRange}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Processing Time:{mechanisms?.processingTime}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ),
+                      ),
+                    )
+                  ) : (
+                    <p className="text-center font-medium text-xl text-gray-500">
+                      No Supported Payout Mechanisms Data Available
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -1069,7 +1075,8 @@ export default function BranchBeneficries() {
                                           Relationship
                                         </p>
                                         <p className="font-medium">
-                                          {beneficiary.relationship || "N/A"}
+                                          {beneficiary.relationshipType ||
+                                            "N/A"}
                                         </p>
                                       </div>
                                     </div>
@@ -1113,7 +1120,7 @@ export default function BranchBeneficries() {
                                   )}
 
                                   {/* Enhanced Beneficiary Details */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                                  {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                                     <div className="space-y-1">
                                       <div className="flex items-center text-muted-foreground">
                                         <Banknote className="h-3 w-3 mr-1" />
@@ -1176,9 +1183,9 @@ export default function BranchBeneficries() {
                                           : "N/A"}
                                       </p>
                                     </div>
-                                  </div>
+                                  </div> */}
                                   {/* Risk & Compliance Info */}
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                  {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                                     <div className="space-y-1">
                                       <span className="text-muted-foreground">
                                         Relationship:
@@ -1215,7 +1222,7 @@ export default function BranchBeneficries() {
                                         )}
                                       </div>
                                     </div>
-                                  </div>
+                                  </div> */}
                                   {/* Documents Status */}
                                   {beneficiary.documents.length > 0 && (
                                     <div className="border-t pt-3">

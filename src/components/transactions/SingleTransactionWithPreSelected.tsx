@@ -586,8 +586,14 @@ const SingleTransactionWithPreselected = ({
   };
 
   useEffect(() => {
-    getCustomRateDeal();
+    const delayDebounce = setTimeout(() => {
+      if (receiverAmount) {
+        getCustomRateDeal();
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounce);
   }, [receiverAmount]);
+
   useEffect(() => {
     if (!amount && !receiverAmount) return;
 

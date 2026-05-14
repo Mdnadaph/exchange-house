@@ -451,7 +451,7 @@ const BranchDealReview = () => {
                         currency={deal.payoutCurrency}
                       />
 
-                      {deal?.dealStatus === "PENDING_REVIEW" && (
+                      {/* {deal?.dealStatus === "PENDING_REVIEW" && (
                         <DealResponseForm
                           refetch={getRateDeals}
                           dealId={deal.id}
@@ -459,7 +459,7 @@ const BranchDealReview = () => {
                           requestedRate={deal.proposedRate}
                           currency={deal.payoutCurrency}
                         />
-                      )}
+                      )} */}
                     </div>
                   )}
                 </div>

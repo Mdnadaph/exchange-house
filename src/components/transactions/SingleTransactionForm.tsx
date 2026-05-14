@@ -1977,7 +1977,12 @@ const SingleTransactionForm = ({
   };
 
   useEffect(() => {
-    getCustomRateDeal();
+    const delayDebounce = setTimeout(() => {
+      if (receiverAmount) {
+        getCustomRateDeal();
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounce);
   }, [receiverAmount]);
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);

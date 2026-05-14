@@ -160,7 +160,6 @@ const ExchangeKYBReview = () => {
     try {
       setLoading(true);
       setError(null);
-
       if (!token) {
         setError("Authentication required. Please login first.");
         setLoading(false);
@@ -755,9 +754,18 @@ const ExchangeKYBReview = () => {
       if (response.data?.status) {
         // Refresh the applications list
         await fetchKYBApplications(currentPage);
+        toast({
+          title: "Success",
+          description: response?.data?.message,
+        });
         setError(null);
       } else {
         setError(response.data?.message || `Failed to ${action} business`);
+        toast({
+          title: "Error",
+          description: response?.data?.message || "Some thing went wrong",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       console.error(`Error ${action}ing business:`, err);
@@ -768,8 +776,18 @@ const ExchangeKYBReview = () => {
           err.response.data?.error ||
           `Server error: ${err.response.status}`;
         setError(errorMessage);
+        toast({
+          title: "Error",
+          description: err?.response?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
       } else if (err.request) {
         setError("No response from server. Please check your connection.");
+        toast({
+          title: "Error",
+          variant: "destructive",
+          description: "No response from server. Please check your connection",
+        });
       } else {
         setError(err.message || `Failed to ${action} business`);
       }
@@ -1206,7 +1224,7 @@ const ExchangeKYBReview = () => {
                     </div>
 
                     {/* Transaction Profile */}
-                    <div>
+                    {/* <div>
                       <h4 className="font-semibold text-foreground mb-3">
                         Transaction Profile
                       </h4>
@@ -1252,7 +1270,7 @@ const ExchangeKYBReview = () => {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* Documents Review */}
                     {application?.canUploadDocuments && (
