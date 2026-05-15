@@ -112,20 +112,41 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
     }
   };
 
+  // const navigation = [
+  //   { name: "Dashboard", href: "/user", icon: Home },
+  //   { name: "Profile", href: `/user/profile`, icon: UserCircle },
+  //   { name: "Transactions", href: "/user/transactions", icon: CreditCard },
+  //   {
+  //     name: "Transaction Report",
+  //     href: "/user/transaction-report",
+  //     icon: BookOpen,
+  //   },
+  //   // { name: "Beneficiaries", href: "/user/beneficiaries", icon: Users },
+  //   // { name: "Rate Deals", href: "/user/deals", icon: Handshake },
+  //   // { name: "User Management", href: "/user/users", icon: Users },
+  //   // { name: "Governance", href: "/user/governance", icon: Shield },
+  //   // { name: "Documents", href: `/user/documents/${id}`, icon: FileText },
+  // ];
+
   const navigation = [
-    { name: "Dashboard", href: "/user", icon: Home },
-    { name: "Profile", href: `/user/profile`, icon: UserCircle },
-    { name: "Transactions", href: "/user/transactions", icon: CreditCard },
     {
-      name: "Transaction Report",
-      href: "/user/transaction-report",
-      icon: BookOpen,
+      group: "Home",
+      items: [
+        { name: "Dashboard", href: "/user", icon: Home },
+        { name: "Profile", href: `/user/profile`, icon: UserCircle },
+        {
+          name: "Transaction Report",
+          href: "/user/transaction-report",
+          icon: BookOpen,
+        },
+      ],
     },
-    // { name: "Beneficiaries", href: "/user/beneficiaries", icon: Users },
-    // { name: "Rate Deals", href: "/user/deals", icon: Handshake },
-    // { name: "User Management", href: "/user/users", icon: Users },
-    // { name: "Governance", href: "/user/governance", icon: Shield },
-    // { name: "Documents", href: `/user/documents/${id}`, icon: FileText },
+    {
+      group: "Transaction",
+      items: [
+        { name: "Transactions", href: "/user/transactions", icon: CreditCard },
+      ],
+    },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -168,7 +189,7 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
         {/* Sidebar */}
         <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
+            {/* {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -184,7 +205,37 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );
-            })}
+            })} */}
+            {navigation.map((group) => (
+              <div key={group.group}>
+                {/* Group Title */}
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-2">
+                  {group.group}
+                </p>
+
+                {/* Items */}
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
+                          isActive(item.href)
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
 

@@ -528,6 +528,21 @@ const ExchangeTransactions = () => {
         label: "Compliance Review",
         icon: AlertCircle,
       },
+      CANCELLATION_REQUESTED: {
+        variant: "outline" as const,
+        label: "Cancellation Requested",
+        icon: AlertCircle,
+      },
+      CANCELLED: {
+        variant: "outline" as const,
+        label: "Cancelled",
+        icon: AlertCircle,
+      },
+      CANCELLED_WITH_REFUND: {
+        variant: "outline" as const,
+        label: "Cancelled With Refund",
+        icon: AlertCircle,
+      },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap?.PROCESSING;
   };

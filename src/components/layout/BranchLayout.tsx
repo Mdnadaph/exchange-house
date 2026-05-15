@@ -109,22 +109,65 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     }
   };
 
+  // const navigation = [
+  //   { name: "Dashboard", href: "/branch", icon: Home },
+  //   {
+  //     name: "Onboard Business",
+  //     href: "/branch/onboard-business",
+  //     icon: Building2,
+  //   },
+  //   { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
+  //   { name: "Beneficiaries", href: "/branch/beneficiaries", icon: Users },
+  //   { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
+  //   { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
+  //   { name: "Documents", href: "/branch/documents", icon: Files },
+  //   {
+  //     name: "Transaction Report",
+  //     href: "/branch/transaction-report",
+  //     icon: BookOpen,
+  //   },
+  // ];
+
   const navigation = [
-    { name: "Dashboard", href: "/branch", icon: Home },
     {
-      name: "Onboard Business",
-      href: "/branch/onboard-business",
-      icon: Building2,
+      group: "Home",
+      items: [
+        { name: "Dashboard", href: "/branch", icon: Home },
+        { name: "Documents", href: "/branch/documents", icon: Files },
+        {
+          name: "Transaction Report",
+          href: "/branch/transaction-report",
+          icon: BookOpen,
+        },
+      ],
     },
-    { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
-    { name: "Beneficiaries", href: "/branch/beneficiaries", icon: Users },
-    { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
-    { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
-    { name: "Documents", href: "/branch/documents", icon: Files },
     {
-      name: "Transaction Report",
-      href: "/branch/transaction-report",
-      icon: BookOpen,
+      group: "Configuration",
+      items: [
+        { name: "Beneficiaries", href: "/branch/beneficiaries", icon: Users },
+      ],
+    },
+    {
+      group: "OnBoarding",
+      items: [
+        {
+          name: "Onboard Business",
+          href: "/branch/onboard-business",
+          icon: Building2,
+        },
+        { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
+      ],
+    },
+    {
+      group: "Transaction",
+      items: [
+        {
+          name: "Transactions",
+          href: "/branch/transactions",
+          icon: CreditCard,
+        },
+        { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
+      ],
     },
   ];
 
@@ -168,7 +211,7 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
         {/* Sidebar */}
         <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
+            {/* {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -184,7 +227,37 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );
-            })}
+            })} */}
+            {navigation.map((group) => (
+              <div key={group.group}>
+                {/* Group Title */}
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-2">
+                  {group.group}
+                </p>
+
+                {/* Items */}
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
+                          isActive(item.href)
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
         {/* Main Content */}
