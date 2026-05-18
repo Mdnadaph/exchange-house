@@ -53,9 +53,9 @@ const BulkTransactionForm = ({
   refetch?: () => void;
 }) => {
   const { toast } = useToast();
-  const [cookie] = useCookies(["token"]);
+  const [cookie] = useCookies(["token", "currencyCode"]);
   const token = cookie.token;
-
+  const currencyCode = cookie?.currencyCode;
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -116,9 +116,12 @@ const BulkTransactionForm = ({
   // ─── Fetch data ────────────────────────────────────────
   const getCurrency = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/exchange_rate`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/exchange_rate/${currencyCode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error();
       const json = await res.json();
       setCurrencyListData(json);

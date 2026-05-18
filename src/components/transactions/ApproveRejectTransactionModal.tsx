@@ -6,20 +6,23 @@ import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
-type ActionType = "APPROVE" | "REJECT" | null;
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface ApproveRejectTransactionModalProps {
-  actionType: ActionType;
-  setActionType: React.Dispatch<React.SetStateAction<ActionType>>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   open: boolean;
   fetchTransactions: () => void;
   reference: string;
   setReference: React.Dispatch<React.SetStateAction<string>>;
 }
+
 export default function ApproveRejectTransactionModal({
-  actionType,
-  setActionType,
   setOpen,
   open,
   fetchTransactions,
@@ -28,20 +31,59 @@ export default function ApproveRejectTransactionModal({
 }: ApproveRejectTransactionModalProps) {
   const [note, setNote] = useState("");
   const { toast } = useToast();
+  const [actionType, setActionType] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
+  const actionTypeData = ["Mark As Complete", "Cancel", "Cancel And Refund"];
+  const actionUIMap: Record<
+    string,
+    { title: string; placeholder: string; button: string }
+  > = {
+    "Mark As Complete": {
+      title: "Complete Transaction",
+      placeholder: "Add completion note...",
+      button: "Mark as Complete",
+    },
+    Cancel: {
+      title: "Cancel Transaction",
+      placeholder: "Add cancellation reason...",
+      button: "Cancel Transaction",
+    },
+    "Cancel And Refund": {
+      title: "Cancel & Refund Transaction",
+      placeholder: "Add refund reason...",
+      button: "Cancel & Refund",
+    },
+  };
+
   const handleSubmit = async () => {
     if (!actionType) return;
     setLoading(true);
-    const payload = {
-      approved: actionType == "APPROVE" ? true : false,
-      notes: note,
+    const actionPayloadMap: Record<
+      string,
+      { approved: boolean; notes: string; fullRefund?: boolean }
+    > = {
+      "Mark As Complete": {
+        approved: true,
+        notes: note,
+      },
+      Cancel: {
+        approved: false,
+        notes: note,
+        fullRefund: false,
+      },
+      "Cancel And Refund": {
+        approved: false,
+        fullRefund: true,
+        notes: note,
+      },
     };
+
     try {
       const res = await axios.patch(
         `${BASE_URL}/api/v1/transactions/${reference}/final-approval`,
-        payload,
+        actionPayloadMap[actionType],
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -55,7 +97,7 @@ export default function ApproveRejectTransactionModal({
           description: res?.data?.message || "Final Approve success",
         });
         setNote("");
-        setActionType(null);
+        setActionType("");
         setOpen(false);
         setReference("");
         fetchTransactions();
@@ -76,8 +118,6 @@ export default function ApproveRejectTransactionModal({
       setLoading(false);
     }
 
-    console.log("Submit:", payload);
-
     // 👉 call API here
   };
   return (
@@ -87,7 +127,7 @@ export default function ApproveRejectTransactionModal({
         setOpen(open);
         if (!open) {
           setNote("");
-          setActionType(null);
+          setActionType("");
           setOpen(false);
           setReference("");
         }
@@ -96,18 +136,31 @@ export default function ApproveRejectTransactionModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {actionType === "APPROVE"
-              ? "Approve Transaction"
-              : "Reject Transaction"}
+            {actionType ? actionUIMap[actionType]?.title : "Select Action"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
+          <Select value={actionType} onValueChange={setActionType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select transaction Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border border-border z-50">
+              {actionTypeData?.map((action, index) => (
+                <SelectItem key={index} value={action}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{action}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Textarea
             placeholder={
-              actionType === "APPROVE"
-                ? "Add approval note..."
-                : "Add rejection reason..."
+              actionType
+                ? actionUIMap[actionType]?.placeholder
+                : "Enter details..."
             }
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -120,7 +173,7 @@ export default function ApproveRejectTransactionModal({
             </Button>
 
             <Button
-              variant={actionType === "REJECT" ? "destructive" : "default"}
+              variant={actionType === "Cancel" ? "destructive" : "default"}
               onClick={handleSubmit}
               disabled={!note || loading}
             >

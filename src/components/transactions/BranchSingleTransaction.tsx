@@ -332,9 +332,12 @@ export default function BranchSingleTransaction({
 
   const getCurrency = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/exchange_rate`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/exchange_rate/${currencyCode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();

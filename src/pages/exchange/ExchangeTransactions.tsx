@@ -34,8 +34,8 @@ import TransactionDetailModal, {
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
-import { formateDateTime } from "@/utils/formateDateTime";
 import ApproveRejectTransactionModal from "@/components/transactions/ApproveRejectTransactionModal";
+
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -217,7 +217,8 @@ const ExchangeTransactions = () => {
     null,
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-
+  const [isCancellationFundModalOpen, setIsCancellationFundModalOpen] =
+    useState<boolean>(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -1146,22 +1147,11 @@ const ExchangeTransactions = () => {
                                   <Button
                                     variant="outline"
                                     onClick={() => {
-                                      setActionType("APPROVE");
                                       setOpen(true);
                                       setReference(transaction?.id);
                                     }}
                                   >
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setActionType("REJECT");
-                                      setOpen(true);
-                                      setReference(transaction?.id);
-                                    }}
-                                  >
-                                    Reject
+                                    Manage Transaction
                                   </Button>
                                 </div>
                               )}
@@ -1291,8 +1281,6 @@ const ExchangeTransactions = () => {
           fetchTransactions={fetchTransactions}
           setOpen={setOpen}
           open={open}
-          actionType={actionType}
-          setActionType={setActionType}
           reference={reference}
           setReference={setReference}
         />
