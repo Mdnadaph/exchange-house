@@ -175,9 +175,12 @@ const ExchangeAdminUser = () => {
   const fetchAllPermissions = async () => {
     try {
       setLoadingPermissions(true);
-      const res = await axios.get(`${BASE_URL}/api/v3/permissions/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/permissions/all?portalType=EXCHANGE_ADMIN`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const treeData = res.data?.data || [];
       console.log("res", res);
       const { filtered: treeDataFiltered, dashboardId } =
@@ -232,25 +235,6 @@ const ExchangeAdminUser = () => {
       }
     });
     return Array.from(effective);
-  };
-
-  const fetchUserPermissions = async (userUuid: string) => {
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/api/v3/admin/staff/${userUuid}/permissions`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const assigned = res.data?.data || [];
-      setAssignedPermissionIds(assigned.map((p: any) => String(p.id)));
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load user permissions",
-        variant: "destructive",
-      });
-    }
   };
 
   // Recursively collect all permission IDs (for Select All)
@@ -421,10 +405,8 @@ const ExchangeAdminUser = () => {
       const allSelected = allIds.every((id) => prev.includes(id));
 
       if (allSelected) {
-        // ❌ uncheck parent + all children
         return prev.filter((id) => !allIds.includes(id));
       } else {
-        // ✅ check parent + all children
         return [...new Set([...prev, ...allIds])];
       }
     });

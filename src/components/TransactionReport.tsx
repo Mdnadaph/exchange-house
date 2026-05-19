@@ -18,6 +18,7 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 // ─── TYPES ─────────────────────────────
 
@@ -422,6 +423,11 @@ export default function TransactionReport() {
               }
             />
           </div>
+          {/*<PermissionGate permission="BTN_BRANCH_TRANSACTION_REPORT_SEARCH">
+            <Button onClick={handleSearch} disabled={loading}>
+              {loading ? "Searching..." : "Search"}
+            </Button>
+          </PermissionGate>*/}
 
           <Button onClick={handleSearch} disabled={loading}>
             {loading ? "Searching..." : "Search"}
