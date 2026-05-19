@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { usePermission } from "@/hooks/usePermission"; // <-- added
 import axios from "axios";
 import BASE_URL from "@/config/config";
 import {
@@ -17,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
+
 interface BranchLayoutProps {
   children: React.ReactNode;
 }
@@ -24,6 +26,7 @@ interface BranchLayoutProps {
 const BranchLayout = ({ children }: BranchLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { can } = usePermission(); // <-- permission checker
 
   const [cookie, , removeCookie] = useCookies([
     "accessToken",
@@ -31,13 +34,11 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     "twoFactorEnabled",
     "requiresTwoFactor",
     "email",
-
     "token",
     "role",
     "fullName",
     "firstName",
     "lastName",
-
     "uuid",
     "branchId",
     "contactNumber",
@@ -48,25 +49,12 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     "currencyCode",
   ]);
 
-  const id = cookie.branchId;
+  const branchName = cookie.branchName;
   const fullName = cookie.fullName;
   const firstName = cookie.firstName;
   const lastName = cookie.lastName;
-  const branchName = cookie.branchName;
-
   const token = cookie.token;
-  const role = cookie.role;
-  const tempToken = cookie.tempToken;
-  const email = cookie.email;
-  const uuid = cookie.uuid;
-  const requiresTwoFactor = cookie.requiresTwoFactor;
-  const branchId = cookie.branchId;
-  const contactNumber = cookie.contactNumber;
-  const roleName = cookie.roleName;
   const refreshToken = cookie.refreshToken;
-
-  // console.log(firstName);
-  // console.log(id);
 
   const clearAllCookies = () => {
     removeCookie("token", { path: "/" });
@@ -109,42 +97,39 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
     }
   };
 
-  // const navigation = [
-  //   { name: "Dashboard", href: "/branch", icon: Home },
-  //   {
-  //     name: "Onboard Business",
-  //     href: "/branch/onboard-business",
-  //     icon: Building2,
-  //   },
-  //   { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
-  //   { name: "Beneficiaries", href: "/branch/beneficiaries", icon: Users },
-  //   { name: "Transactions", href: "/branch/transactions", icon: CreditCard },
-  //   { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
-  //   { name: "Documents", href: "/branch/documents", icon: Files },
-  //   {
-  //     name: "Transaction Report",
-  //     href: "/branch/transaction-report",
-  //     icon: BookOpen,
-  //   },
-  // ];
-
   const navigation = [
     {
       group: "Home",
       items: [
-        { name: "Dashboard", href: "/branch", icon: Home },
-        { name: "Documents", href: "/branch/documents", icon: Files },
+        {
+          name: "Dashboard",
+          href: "/branch",
+          icon: Home,
+          code: "NAV_BRANCH_DASHBOARD",
+        },
+        {
+          name: "Documents",
+          href: "/branch/documents",
+          icon: Files,
+          code: "NAV_BRANCH_DOCUMENTS",
+        },
         {
           name: "Transaction Report",
           href: "/branch/transaction-report",
           icon: BookOpen,
+          code: "NAV_BRANCH_TRANSACTION_REPORT",
         },
       ],
     },
     {
       group: "Configuration",
       items: [
-        { name: "Beneficiaries", href: "/branch/beneficiaries", icon: Users },
+        {
+          name: "Beneficiaries",
+          href: "/branch/beneficiaries",
+          icon: Users,
+          code: "NAV_BRANCH_BENEFICIARIES",
+        },
       ],
     },
     {
@@ -154,8 +139,14 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
           name: "Onboard Business",
           href: "/branch/onboard-business",
           icon: Building2,
+          code: "NAV_BRANCH_ONBOARD_BUSINESS",
         },
-        { name: "KYB Queue", href: "/branch/kyb-queue", icon: FileCheck },
+        {
+          name: "KYB Queue",
+          href: "/branch/kyb-queue",
+          icon: FileCheck,
+          code: "NAV_BRANCH_KYB_QUEUE",
+        },
       ],
     },
     {
@@ -165,8 +156,14 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
           name: "Transactions",
           href: "/branch/transactions",
           icon: CreditCard,
+          code: "NAV_BRANCH_TRANSACTIONS",
         },
-        { name: "Rate Deals", href: "/branch/deals", icon: Handshake },
+        {
+          name: "Rate Deals",
+          href: "/branch/deals",
+          icon: Handshake,
+          code: "NAV_BRANCH_RATE_DEALS",
+        },
       ],
     },
   ];
@@ -210,56 +207,42 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
       <div className="flex">
         {/* Sidebar */}
         <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
-          <nav className="p-4 space-y-2">
-            {/* {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
-                    isActive(item.href)
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })} */}
-            {navigation.map((group) => (
+          <nav className="p-4 space-y-6">
+            {navigation?.map((group) => (
               <div key={group.group}>
-                {/* Group Title */}
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-2">
                   {group.group}
                 </p>
 
-                {/* Items */}
                 <div className="space-y-1">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
+                  {group.items
+                    .filter((item) => can(item.code))
+                    .map((item) => {
+                      const Icon = item.icon;
 
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
-                          isActive(item.href)
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                        <span className="font-medium">{item.name}</span>
-                      </Link>
-                    );
-                  })}
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.href}
+                          className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all ${
+                            isActive(item.href)
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="text-sm font-medium">
+                            {item.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
             ))}
           </nav>
         </aside>
+
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-6 py-2 mb-4">{children}</div>
