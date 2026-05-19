@@ -26,7 +26,16 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { formateDateTime } from "@/utils/formateDateTime";
 import BranchDealRequestForm from "@/components/deals/BranchDealRequestForm";
-
+import DealCounterResponseForm from "@/components/deals/DealCounterResponseForm";
+type NegotiationHistoryItem = {
+  id: number;
+  actionType: string;
+  rate: number;
+  comments?: string | null;
+  createdAt: string;
+  performedBy: string;
+  performedByRole: string;
+};
 // ──────────────────────────────────────────────
 // Simple debounce hook (no external dependency needed)
 // ──────────────────────────────────────────────
@@ -53,6 +62,7 @@ const BranchDealReview = () => {
   const [page, setPage] = useState<number>(0);
   const [searchValue, setSearchValue] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
 
   // Debounce search input — API called only after 500ms pause
   const debouncedSearch = useDebounce(searchValue, 500);
@@ -143,6 +153,17 @@ const BranchDealReview = () => {
   const stats = rateDealsData?.branchStats || {};
   const content = rateDealsData?.rateDeals?.content || [];
   const totalElements = rateDealsData?.rateDeals?.totalElements || 0;
+  const hasMultipleCounterProposals = (
+    negotiationHistory?: NegotiationHistoryItem[],
+  ): boolean => {
+    if (!negotiationHistory || negotiationHistory.length === 0) return false;
+
+    const count = negotiationHistory.filter(
+      (item) => item.actionType === "COUNTER_PROPOSAL",
+    ).length;
+
+    return count >= 2;
+  };
 
   if (loading) {
     return (
@@ -428,14 +449,14 @@ const BranchDealReview = () => {
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        setExpandedDeal(
-                          expandedDeal === deal.id ? null : deal.id,
+                        setSelectedDeal(
+                          selectedDeal === deal.id ? null : deal.id,
                         )
                       }
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      {expandedDeal === deal.id ? "Hide" : "View"} details
-                      {expandedDeal === deal.id ? (
+                      <Eye className="h-4 w-4 mr-1" />
+                      {selectedDeal === deal.id ? "Hide" : "View"} Timeline
+                      {selectedDeal === deal.id ? (
                         <ChevronUp className="h-4 w-4 ml-2" />
                       ) : (
                         <ChevronDown className="h-4 w-4 ml-2" />
@@ -443,7 +464,7 @@ const BranchDealReview = () => {
                     </Button>
                   </div>
 
-                  {expandedDeal === deal.id && (
+                  {/* {expandedDeal === deal.id && (
                     <div className="pt-4 border-t grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <DealNegotiationTimeline
                         events={deal?.negotiationHistory || []}
@@ -451,7 +472,7 @@ const BranchDealReview = () => {
                         currency={deal.payoutCurrency}
                       />
 
-                      {deal?.dealStatus === "PENDING_REVIEW" && (
+                      {deal?.dealStatus === "COUNTER_PROPOSAL" && (
                         <DealResponseForm
                           refetch={getRateDeals}
                           dealId={deal.id}
@@ -460,6 +481,45 @@ const BranchDealReview = () => {
                           currency={deal.payoutCurrency}
                         />
                       )}
+                    </div>
+                  )} */}
+
+                  {selectedDeal === deal?.id && (
+                    <div className="pt-4 border-t">
+                      <div className="grid grid-cols-2 gap-6">
+                        <DealNegotiationTimeline
+                          events={deal?.negotiationHistory}
+                          currentRate={deal?.proposedRate}
+                          currency={deal?.payoutCurrency}
+                        />
+                        {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
+                                              <DealResponseForm
+                                                refetch={getRateDeals}
+                                                dealId={deal?.id}
+                                                businessName={deal?.companyName}
+                                                requestedRate={deal?.proposedRate}
+                                                currency={deal?.payoutCurrency}
+                                              />
+                                            )} */}
+                        {deal?.dealStatus === "COUNTER_PROPOSAL" &&
+                          (hasMultipleCounterProposals(
+                            deal?.negotiationHistory,
+                          ) ? (
+                            <div></div>
+                          ) : (
+                            <DealCounterResponseForm
+                              refetch={getRateDeals}
+                              dealId={deal?.id}
+                              businessName={deal?.companyName}
+                              requestedRate={
+                                deal?.negotiationHistory[
+                                  deal?.negotiationHistory?.length - 1
+                                ]?.rate
+                              }
+                              currency={deal?.payoutCurrency}
+                            />
+                          ))}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -352,9 +352,12 @@ const SingleTransactionWithPreselected = ({
 
   const getCurrency = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/exchange_rate`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/exchange_rate/${currencyCode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
@@ -567,7 +570,7 @@ const SingleTransactionWithPreselected = ({
     setLoadingRateDeal(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
+        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${receiverAmount}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -586,8 +589,14 @@ const SingleTransactionWithPreselected = ({
   };
 
   useEffect(() => {
-    getCustomRateDeal();
-  }, [amount]);
+    const delayDebounce = setTimeout(() => {
+      if (receiverAmount) {
+        getCustomRateDeal();
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounce);
+  }, [receiverAmount]);
+
   useEffect(() => {
     if (!amount && !receiverAmount) return;
 
@@ -1099,18 +1108,53 @@ const SingleTransactionWithPreselected = ({
                       />
                     </div>
                   </div>
-
-                  {/* ← New: Discount Code */}
                   <div>
-                    <Label htmlFor="discountCode">Discount Code</Label>
-                    <Input
-                      id="discountCode"
-                      value={discountCode}
-                      onChange={(e) => setDiscountCode(e.target.value.trim())}
-                      placeholder="e.g. S43U3ZSC"
-                      maxLength={12}
-                    />
+                    <div>
+                      <Label htmlFor="source">
+                        Select Fee Responsibility *
+                      </Label>
+                      <Select
+                        value={feeResponsibility}
+                        onValueChange={(value) => {
+                          setFeeResponsibility(value);
+                          setTransectionSummeryData(null);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose fee responsibility" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50">
+                          {feeResponsibilityList?.map(
+                            (feeResponsibility, index) => (
+                              <SelectItem
+                                key={index}
+                                value={feeResponsibility.value}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {feeResponsibility.label}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+                  {/* ← New: Discount Code */}
+                  {feeResponsibility !== "BENEFICIARY" && (
+                    <div>
+                      <Label htmlFor="discountCode">Discount Code</Label>
+                      <Input
+                        id="discountCode"
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value.trim())}
+                        placeholder="e.g. S43U3ZSC"
+                        maxLength={12}
+                      />
+                    </div>
+                  )}
 
                   {/* <div>
                     <Label htmlFor="currency">Currency *</Label>
@@ -1136,37 +1180,6 @@ const SingleTransactionWithPreselected = ({
                       </SelectContent>
                     </Select>
                   </div> */}
-                  <div>
-                    <div>
-                      <Label htmlFor="source">
-                        Select Fee Responsibility *
-                      </Label>
-                      <Select
-                        value={feeResponsibility}
-                        onValueChange={setFeeResponsibility}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose fee responsibility" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border z-50">
-                          {feeResponsibilityList?.map(
-                            (feeResponsibility, index) => (
-                              <SelectItem
-                                key={index}
-                                value={feeResponsibility.value}
-                              >
-                                <div className="flex flex-col">
-                                  <span className="font-medium">
-                                    {feeResponsibility.label}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
                 </div>
 
                 <Button
@@ -1200,6 +1213,7 @@ const SingleTransactionWithPreselected = ({
                               PayIn Amount
                             </span>
                             <p className="font-medium">
+                              {currencyCode}{" "}
                               {transectionSummeryData?.baseAedAmount?.toFixed(
                                 2,
                               )}
@@ -1211,13 +1225,13 @@ const SingleTransactionWithPreselected = ({
                             </span>
                             <p className="font-medium">
                               1 {currencyCode} ={" "}
-                              {(
-                                1 / transectionSummeryData?.exchangeRate
-                              )?.toFixed(2)}{" "}
+                              {transectionSummeryData?.exchangeRate?.toFixed(2)}{" "}
                               {selectedPayoutCurrencyCode}
                             </p>
                           </div>
-                          {transectionSummeryData?.businessFee >= 1 && (
+                          {["BUSINESS", "SHARED"].includes(
+                            transectionSummeryData?.feeResponsibility,
+                          ) && (
                             <div>
                               <span className="text-muted-foreground">
                                 businessFee
@@ -1239,25 +1253,75 @@ const SingleTransactionWithPreselected = ({
                               </p>
                             </div>
                           )}
+                          {["BUSINESS", "SHARED"].includes(
+                            transectionSummeryData?.feeResponsibility,
+                          ) && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Discount Amount
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.discountAmountAed}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
 
-                          <div>
-                            <span className="text-muted-foreground">
-                              Discount Amount
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.discountAmountAed}{" "}
-                              {currencyCode}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Total Payable
-                            </span>
-                            <p className="font-medium">
-                              {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
-                              {currencyCode}
-                            </p>
-                          </div>
+                          {transectionSummeryData?.vatAmount > 0 &&
+                            ["BUSINESS", "SHARED"].includes(
+                              transectionSummeryData?.feeResponsibility,
+                            ) && (
+                              <div>
+                                <span>Vat Amount</span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.vatAmount}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+
+                          {transectionSummeryData?.vatAmount > 0 &&
+                            ["BUSINESS", "SHARED"].includes(
+                              transectionSummeryData?.feeResponsibility,
+                            ) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Final Processing Fee
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.finalProcessingFee?.toFixed(
+                                    2,
+                                  )}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+                          {transectionSummeryData?.feeResponsibility ==
+                            "BUSINESS" && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Total Payout
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.netPayout?.toFixed(2)}{" "}
+                                {transectionSummeryData?.currency}
+                              </p>
+                            </div>
+                          )}
+
+                          {transectionSummeryData?.feeResponsibility ==
+                            "BUSINESS" && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Total Payable
+                              </span>
+                              <p className="font-medium">
+                                {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
+                                {currencyCode}
+                              </p>
+                            </div>
+                          )}
+
                           <div>
                             <span className="text-muted-foreground">
                               Monthly Limit
@@ -1275,7 +1339,7 @@ const SingleTransactionWithPreselected = ({
                               {transectionSummeryData?.currentMonthSpend?.toFixed(
                                 2,
                               )}{" "}
-                              {transectionSummeryData?.currency}
+                              {currencyCode}
                             </p>
                           </div>
                           <div>
@@ -1283,24 +1347,12 @@ const SingleTransactionWithPreselected = ({
                               Remaining Limit
                             </span>
                             <p className="font-medium">
-                              {transectionSummeryData?.monthlyLimit?.toFixed(
+                              {transectionSummeryData?.remainingLimit?.toFixed(
                                 2,
-                              ) -
-                                transectionSummeryData?.currentMonthSpend?.toFixed(
-                                  2,
-                                )}{" "}
+                              )}{" "}
                               {currencyCode}
                             </p>
                           </div>
-                          {transectionSummeryData?.vatAmount > 0 && (
-                            <div>
-                              <span>Vat Amount</span>
-                              <p className="font-medium">
-                                {transectionSummeryData?.vatAmount}
-                                {currencyCode}
-                              </p>
-                            </div>
-                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -1349,7 +1401,7 @@ const SingleTransactionWithPreselected = ({
 
             {loadingRateDeal ? (
               <div className="text-gray-400 p-4">Loading...</div>
-            ) : rateDealData?.proposedRate && amount ? (
+            ) : rateDealData?.proposedRate && receiverAmount ? (
               <Card className="bg-accent-muted/10 border-accent/20">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -1376,7 +1428,7 @@ const SingleTransactionWithPreselected = ({
               </Card>
             ) : (
               <div className="text-gray-400 p-4">
-                {amount && <p> No rate deal data available</p>}
+                {receiverAmount && <p> No rate deal data available</p>}
               </div>
             )}
 

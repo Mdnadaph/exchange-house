@@ -37,6 +37,7 @@ import {
 
 interface UserCreationFormProps {
   trigger?: React.ReactNode;
+  refetch?: () => void;
   onUserCreated?: () => void;
 }
 
@@ -64,6 +65,7 @@ const EMPTY_FORM = {
 
 const UserCreationForm = ({
   trigger,
+  refetch,
   onUserCreated,
 }: UserCreationFormProps) => {
   const [cookies] = useCookies(["token"]);
@@ -246,6 +248,7 @@ const UserCreationForm = ({
 
       if (res.ok) {
         const data = await res.json();
+        refetch();
         toast({ title: "Success", description: data.message });
         onUserCreated?.(); // <-- triggers list refresh in parent
         handleOpenChange(false); // closes + resets form

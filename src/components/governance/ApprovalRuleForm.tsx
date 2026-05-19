@@ -139,9 +139,9 @@ const ApprovalRuleForm = ({
   const transactionTypes = [
     "Single Transfer",
     "Bulk Transfer",
-    "Salary Payment",
-    "Supplier Payment",
-    "Invoice Payment",
+    // "Salary Payment",
+    // "Supplier Payment",
+    // "Invoice Payment",
   ];
 
   const approverRoles = [
@@ -430,9 +430,7 @@ const ApprovalRuleForm = ({
                       setFormData((prev) => ({
                         ...prev,
                         currencyCode: value,
-                        currencyId: selected
-                          ? String(selected.currencyId)
-                          : "",
+                        currencyId: selected ? String(selected.currencyId) : "",
                       }));
                       clearFieldError("currencyCode");
                     }}
@@ -442,10 +440,7 @@ const ApprovalRuleForm = ({
                     </SelectTrigger>
                     <SelectContent>
                       {currencies.map((c) => (
-                        <SelectItem
-                          key={c.currencyCode}
-                          value={c.currencyCode}
-                        >
+                        <SelectItem key={c.currencyCode} value={c.currencyCode}>
                           {c.currencyCode}
                         </SelectItem>
                       ))}

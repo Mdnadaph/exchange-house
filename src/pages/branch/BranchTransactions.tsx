@@ -122,8 +122,15 @@ interface Transaction {
   currency: string;
   exchangeRate: string;
   localAmount: string;
+  businessPays: string;
   localCurrency: string;
   status: string;
+  canExecutePayment?: boolean;
+  vatAmount: number;
+  payoutMechanismType: string;
+  baseProcessingFee: number;
+  finalProcessingFee: number;
+  receivingCurrency: string;
   type: "SINGLE" | "BULK";
   purpose: string;
   date: string;
@@ -133,16 +140,15 @@ interface Transaction {
   feeResponsibility: string;
   branch: string;
   bulkCount?: number;
+  staffName: string;
   failureReason?: string;
   documents?: TransactionDocument[];
-
+  exchangeRateDisplay: string;
   beneficiaryFeeAmount: string;
   netPayoutAmount: string;
   complianceStatus: string;
   totalDebit: number;
-
   discountValue: string;
-
   discountAmount: String;
   beneficiaryName?: string;
   businessName?: string;
@@ -155,6 +161,9 @@ interface Transaction {
     nationality: string;
     city: string;
     state: string;
+    type: string;
+    companyName: string;
+    country: string;
   };
 }
 
@@ -255,9 +264,11 @@ const BranchTransactions = () => {
             return {
               id: apiTx.reference,
               destinationCurrency: apiTx?.destinationCurrency,
+              canExecutePayment: apiTx.canExecutePayment,
               bulkCount: apiTx?.itemCount,
               businessPhone: apiTx?.businessPhone,
               logoUrl: apiTx?.logUrl,
+              vatAmount: apiTx?.vatAmount,
               complianceRules: apiTx?.complianceRules,
               sourceAmount: apiTx?.sourceAmount,
               businessName: apiTx?.businessName,
@@ -269,6 +280,9 @@ const BranchTransactions = () => {
                 maximumFractionDigits: 2,
               }),
               currency: apiTx.sourceCurrency,
+              payoutMechanismType: apiTx?.payoutMechanismType,
+              baseProcessingFee: apiTx?.baseProcessingFee,
+              receivingCurrency: apiTx?.receivingCurrency,
               convertedAmount: apiTx?.convertedAmount,
               exchangeRate: apiTx?.exchangeRate?.toFixed(3),
               localAmount: apiTx.convertedAmount?.toLocaleString("en-US", {
@@ -278,7 +292,7 @@ const BranchTransactions = () => {
               localCurrency: apiTx.targetCurrency,
               status: apiTx?.status,
               type: apiTx?.type,
-              purpose: apiTx.purpose || "Transaction",
+              purpose: apiTx.purposeName || "Transaction",
               date: new Date(apiTx.createdAt)
                 .toLocaleString("en-US", {
                   year: "numeric",
@@ -291,6 +305,8 @@ const BranchTransactions = () => {
                 .replace(",", ""),
               processedDate: null,
               referenceNumber: apiTx?.reference,
+              finalProcessingFee: apiTx?.finalProcessingFee,
+              staffName: apiTx?.staffName,
               fees: apiTx?.feeAmount?.toFixed(2),
               feeResponsibility: apiTx.feeResponsibility || "",
               branch: apiTx.branchName,
@@ -312,7 +328,9 @@ const BranchTransactions = () => {
 
               // Add the discount fields
               discountValue: discountValueDisplay,
+              exchangeRateDisplay: apiTx?.exchangeRateDisplay,
               discountAmount: discountAmountDisplay,
+              businessPays: apiTx?.businessPays,
               singleBeneficiary: {
                 name: apiTx?.singleBeneficiary?.name,
                 phone: apiTx?.singleBeneficiary?.phone,
@@ -322,6 +340,9 @@ const BranchTransactions = () => {
                 nationality: apiTx?.singleBeneficiary?.nationality,
                 city: apiTx?.singleBeneficiary?.city,
                 state: apiTx?.singleBeneficiary?.state,
+                type: apiTx?.singleBeneficiary?.type,
+                country: apiTx?.singleBeneficiary?.country,
+                companyName: apiTx?.singleBeneficiary?.companyName,
               },
             };
           });
@@ -445,7 +466,7 @@ const BranchTransactions = () => {
       },
       PROCESSING: {
         variant: "destructive" as const,
-        label: "Processing",
+        label: "Proof of Payment Sent",
         icon: Clock,
       },
       FAILED: {
@@ -695,22 +716,28 @@ const BranchTransactions = () => {
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
                             <div className="space-y-2">
-                              {transaction.branchName && (
+                              {transaction.businessName && (
                                 <div className="flex items-center gap-3">
                                   <Building2 className="h-8 w-8 text-primary" />
-                                  <span className="text-primary text-2xl font-bold">
-                                    {transaction.branchName}
+                                  <span className=" text-primary text-2xl font-bold">
+                                    {transaction?.businessName}
                                   </span>
                                   {transaction.businessId && (
                                     <span className="text-xs text-muted-foreground">
-                                      ({transaction.businessId})
+                                      ({transaction?.businessId})
                                     </span>
                                   )}
                                 </div>
                               )}
                               <div className="flex items-center gap-3">
                                 <h3 className="font-semibold text-foreground">
-                                  {transaction.beneficiary}
+                                  {transaction?.singleBeneficiary?.type ==
+                                  "INDIVIDUAL"
+                                    ? transaction?.singleBeneficiary?.name
+                                    : transaction?.singleBeneficiary
+                                        ?.companyName}{" "}
+                                  ({transaction?.singleBeneficiary?.country}) (
+                                  {transaction?.receivingCurrency})
                                 </h3>
                                 <Badge
                                   variant={status.variant}
@@ -733,6 +760,11 @@ const BranchTransactions = () => {
                                 {transaction.id}
                                 {transaction.purpose &&
                                   ` • ${transaction.purpose}`}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Initiated By:
+                                {transaction?.staffName &&
+                                  `  ${transaction?.staffName}`}
                               </p>
                             </div>
 
@@ -762,23 +794,25 @@ const BranchTransactions = () => {
                                 </p>
                               )}
                             </div>
-
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Exchange Rate:
                               </span>
-                              <p className="font-medium">
-                                1 {transaction?.currency?.toUpperCase()} =
+                              {/* <p className="font-medium">
+                                1 {transaction?.currency.toUpperCase()} =
                                 {transaction?.exchangeRate
                                   ? (
                                       1 / Number(transaction?.exchangeRate)
                                     ).toFixed(2)
                                   : "-"}{" "}
-                                {transaction?.destinationCurrency}
+                                {transaction?.destinationCurrency.toUpperCase()}
+                              </p> */}
+                              <p className="font-medium">
+                                {transaction?.exchangeRateDisplay}
                               </p>
                             </div>
 
-                            <div className="space-y-1">
+                            {/* <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Fee Details:
                               </span>
@@ -791,7 +825,7 @@ const BranchTransactions = () => {
                                   Paid by: {transaction.feeResponsibility}
                                 </p>
                               )}
-                            </div>
+                            </div> */}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
@@ -807,73 +841,148 @@ const BranchTransactions = () => {
                               )}
                             </div>
 
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Beneficiary Fee Amount:
-                              </span>
-                              <p className="font-medium">
-                                {transaction?.currency?.toUpperCase()}{" "}
-                                {transaction.beneficiaryFeeAmount}
-                              </p>
-                            </div>
+                            {transaction.complianceStatus && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Compliance Status:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.complianceStatus.replace(
+                                    /_/g,
+                                    " ",
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                            {transaction?.feeResponsibility !==
+                              "BENEFICIARY" && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Base Processing Fee:
+                                </span>
+                                {transaction?.feeResponsibility == "SHARED" ? (
+                                  <p>
+                                    {transaction?.currency.toUpperCase()}{" "}
+                                    {transaction?.businessPays}
+                                  </p>
+                                ) : (
+                                  <p className="font-medium">
+                                    {transaction?.currency.toUpperCase()}{" "}
+                                    {transaction?.baseProcessingFee}
+                                  </p>
+                                )}
 
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Net Payout Amount:
-                              </span>
-                              <p className="font-medium">
-                                {transaction?.currency?.toUpperCase()}{" "}
-                                {transaction.netPayoutAmount}
-                              </p>
-                            </div>
+                                {transaction.feeResponsibility && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Paid by: {transaction.feeResponsibility}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {transaction?.discountAmount &&
+                              transaction?.feeResponsibility !==
+                                "BENEFICIARY" && (
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground">
+                                    Discount Amount:
+                                  </span>
+                                  <p className="font-medium">
+                                    {transaction?.currency.toUpperCase()}{" "}
+                                    {transaction.discountAmount}
+                                  </p>
+                                </div>
+                              )}
+                            {transaction?.feeResponsibility !==
+                              "BENEFICIARY" && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Vat Amount:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction?.currency.toUpperCase()}{" "}
+                                  {transaction?.vatAmount}
+                                </p>
+                              </div>
+                            )}
+                            {transaction?.feeResponsibility !==
+                              "BENEFICIARY" && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Final Processing Fee
+                                </span>
+                                {transaction?.feeResponsibility == "SHARED" ? (
+                                  <p>
+                                    <p className="font-medium">
+                                      {transaction?.currency.toUpperCase()}{" "}
+                                      {transaction?.fees}
+                                    </p>
+                                  </p>
+                                ) : (
+                                  <p className="font-medium">
+                                    {transaction?.currency.toUpperCase()}{" "}
+                                    {transaction?.finalProcessingFee}
+                                  </p>
+                                )}
+                              </div>
+                            )}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Total Debit:
                               </span>
                               <p className="font-medium">
-                                {transaction?.currency?.toUpperCase()}{" "}
-                                {transaction.totalDebit}
+                                {transaction?.currency.toUpperCase()}{" "}
+                                {transaction?.totalDebit}
                               </p>
                             </div>
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
-                                Compliance Status:
+                                {["BENEFICIARY", "SHARED"].includes(
+                                  transaction?.feeResponsibility,
+                                )
+                                  ? "Payout Amount"
+                                  : "Net Payout Amount"}
                               </span>
                               <p className="font-medium">
-                                {transaction.complianceStatus.replace(
-                                  /_/g,
-                                  " ",
-                                )}
+                                {transaction?.destinationCurrency?.toUpperCase()}{" "}
+                                {transaction.localAmount}
                               </p>
                             </div>
+                            {/* {transaction?.feeResponsibility !== "BENEFICIARY" &&
+                              transaction?.feeResponsibility !== "BUSINESS" && (
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground">
+                                    Beneficiary Fee Amount:
+                                  </span>
+                                  <p className="font-medium">
+                                    {transaction?.currency.toUpperCase()}{" "}
+                                    {transaction.beneficiaryFeeAmount}
+                                  </p>
+                                </div>
+                              )} */}
+
+                            {/* {transaction?.discounts?.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-muted-foreground">
+                                  Discount Value:
+                                </span>
+                                <p className="font-medium">
+                                  {transaction.discounts[0]?.type ==
+                                  "FIXED_AMOUNT"
+                                    ? transaction.discounts[0]?.discountValue
+                                    : `${transaction?.discounts[0]?.discountValue} %`}
+                                </p>
+                              </div>
+                            )} */}
 
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
                                 Reference:
                               </span>
-                              <p className="font-medium font-mono text-xs">
+                              <p className="font-medium">
                                 {transaction.referenceNumber}
-                              </p>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Discount Value:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.discountValue}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">
-                                Discount Amount:
-                              </span>
-                              <p className="font-medium">
-                                {transaction.discountAmount === "0.00"
-                                  ? "—"
-                                  : `${transaction?.currency?.toUpperCase()} ${transaction.discountAmount}`}
                               </p>
                             </div>
                           </div>
@@ -946,7 +1055,7 @@ const BranchTransactions = () => {
                                   Retry Payment
                                 </Button>
                               )}
-                              {transaction.status === "pending_payment" && (
+                              {/* {transaction.status === "pending_payment" && (
                                 <PaymentExecutionForm
                                   transaction={{
                                     id: transaction.id,
@@ -958,7 +1067,33 @@ const BranchTransactions = () => {
                                     purpose: transaction.purpose,
                                   }}
                                 />
-                              )}
+                              )} */}
+                              {transaction.canExecutePayment &&
+                                transaction.status === "PAYMENT_PENDING" && (
+                                  <PaymentExecutionForm
+                                    transaction={{
+                                      id: transaction.id,
+                                      beneficiary:
+                                        transaction.singleBeneficiary?.name,
+                                      email:
+                                        transaction.singleBeneficiary?.email,
+                                      address:
+                                        transaction?.singleBeneficiary?.address,
+                                      discount: transaction?.discountAmount,
+                                      vatAmount: transaction?.vatAmount,
+                                      payoutMechanismType:
+                                        transaction?.payoutMechanismType,
+                                      amount: transaction.amount,
+                                      currency: transaction.currency,
+                                      localAmount: transaction.localAmount,
+                                      localCurrency: transaction.localCurrency,
+                                      purpose: transaction.purpose,
+                                      destinationCurrency:
+                                        transaction?.destinationCurrency,
+                                    }}
+                                    fetchTransactions={fetchTransactions}
+                                  />
+                                )}
                             </div>
                           </div>
 

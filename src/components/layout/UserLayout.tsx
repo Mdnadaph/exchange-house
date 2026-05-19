@@ -112,24 +112,67 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     }
   };
 
+  // const navigation = [
+  //   { name: "Dashboard", href: "/portal", icon: Home },
+  //   { name: "Profile", href: `/portal/profile/${id}`, icon: UserCircle },
+  //   { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
+  //   { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
+  //   { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
+  //   { name: "User Management", href: "/portal/users", icon: Users },
+  //   { name: "Governance", href: "/portal/governance", icon: Shield },
+  //   { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },
+  //   {
+  //     name: "Reports",
+  //     href: "/portal/reports",
+  //     icon: FileBarChart,
+  //   },
+  //   {
+  //     name: "Transaction Report",
+  //     href: "/portal/transaction-report",
+  //     icon: BookOpen,
+  //   },
+  // ];
+
   const navigation = [
-    { name: "Dashboard", href: "/portal", icon: Home },
-    { name: "Profile", href: `/portal/profile/${id}`, icon: UserCircle },
-    { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
-    { name: "Transactions", href: "/portal/transactions", icon: CreditCard },
-    { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
-    { name: "User Management", href: "/portal/users", icon: Users },
-    { name: "Governance", href: "/portal/governance", icon: Shield },
-    { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },
     {
-      name: "Reports",
-      href: "/portal/reports",
-      icon: FileBarChart,
+      group: "Home",
+      items: [
+        { name: "Dashboard", href: "/portal", icon: Home },
+        { name: "Profile", href: `/portal/profile/${id}`, icon: UserCircle },
+        {
+          name: "Reports",
+          href: "/portal/reports",
+          icon: FileBarChart,
+        },
+        {
+          name: "Transaction Report",
+          href: "/portal/transaction-report",
+          icon: BookOpen,
+        },
+        { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },
+      ],
     },
     {
-      name: "Transaction Report",
-      href: "/portal/transaction-report",
-      icon: BookOpen,
+      group: "Configuration",
+      items: [
+        { name: "Beneficiaries", href: "/portal/beneficiaries", icon: Users },
+        { name: "Governance", href: "/portal/governance", icon: Shield },
+      ],
+    },
+    {
+      group: "OnBoarding",
+      items: [{ name: "User Management", href: "/portal/users", icon: Users }],
+    },
+    {
+      group: "Transaction",
+      items: [
+        {
+          name: "Transactions",
+          href: "/portal/transactions",
+          icon: CreditCard,
+        },
+        { name: "Rate Deals", href: "/portal/deals", icon: Handshake },
+      ],
     },
   ];
 
@@ -172,8 +215,8 @@ const UserLayout = ({ children }: UserLayoutProps) => {
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
         <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
-          <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
+          <nav className="p-4 space-y-6">
+            {/* {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -189,7 +232,37 @@ const UserLayout = ({ children }: UserLayoutProps) => {
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );
-            })}
+            })} */}
+            {navigation.map((group) => (
+              <div key={group.group}>
+                {/* Group Title */}
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-2">
+                  {group.group}
+                </p>
+
+                {/* Items */}
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
+                          isActive(item.href)
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
 

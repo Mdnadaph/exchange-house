@@ -1781,9 +1781,12 @@ const SingleTransactionForm = ({
 
   const getCurrency = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/exchange_rate`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE_URL}/api/v1/exchange_rate/${currencyCode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
@@ -1958,7 +1961,7 @@ const SingleTransactionForm = ({
     setLoadingRateDeal(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${amount}`,
+        `${BASE_URL}/api/v1/transactions/applicable-deal?beneficiaryPayoutDetailId=${selectedPayoutDetailId}&amount=${receiverAmount}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1977,8 +1980,13 @@ const SingleTransactionForm = ({
   };
 
   useEffect(() => {
-    getCustomRateDeal();
-  }, [amount]);
+    const delayDebounce = setTimeout(() => {
+      if (receiverAmount) {
+        getCustomRateDeal();
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounce);
+  }, [receiverAmount]);
   useEffect(() => {
     setCurrency(beneficiariyCurrency?.id);
   }, [beneficiariyCurrency]);
@@ -2054,7 +2062,7 @@ const SingleTransactionForm = ({
     selectedPayoutCurrencyRate,
     activeField,
   ]);
-
+  console.log("xyxy", transectionSummeryData);
   return (
     <>
       <Dialog
@@ -2474,7 +2482,6 @@ const SingleTransactionForm = ({
                           Amount ({selectedPayoutCurrencyCode}){" "}
                           {rateDealData?.appliedRate && "Applied Rate "}
                         </Label>
-
                         <Input
                           id="receiverAmount"
                           type="number"
@@ -2544,17 +2551,6 @@ const SingleTransactionForm = ({
                         step="0.0001"
                       />
                     </div> */}
-
-                    <div>
-                      <Label htmlFor="discountCode">Discount Code</Label>
-                      <Input
-                        id="discountCode"
-                        value={discountCode}
-                        onChange={(e) => setDiscountCode(e.target.value.trim())}
-                        placeholder="e.g. S43U3ZSC"
-                        maxLength={12}
-                      />
-                    </div>
                     <div>
                       <Label htmlFor="source">
                         Select Fee Responsibility{" "}
@@ -2562,7 +2558,10 @@ const SingleTransactionForm = ({
                       </Label>
                       <Select
                         value={feeResponsibility}
-                        onValueChange={setFeeResponsibility}
+                        onValueChange={(value) => {
+                          setFeeResponsibility(value);
+                          setTransectionSummeryData(null);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose fee responsibility" />
@@ -2585,6 +2584,20 @@ const SingleTransactionForm = ({
                         </SelectContent>
                       </Select>
                     </div>
+                    {feeResponsibility !== "BENEFICIARY" && (
+                      <div>
+                        <Label htmlFor="discountCode">Discount Code</Label>
+                        <Input
+                          id="discountCode"
+                          value={discountCode}
+                          onChange={(e) =>
+                            setDiscountCode(e.target.value.trim())
+                          }
+                          placeholder="e.g. S43U3ZSC"
+                          maxLength={12}
+                        />
+                      </div>
+                    )}
                   </div>
                   <Button
                     onClick={handleTransationSummary}
@@ -2617,6 +2630,7 @@ const SingleTransactionForm = ({
                                 PayIn Amount
                               </span>
                               <p className="font-medium">
+                                {currencyCode}{" "}
                                 {transectionSummeryData?.baseAedAmount?.toFixed(
                                   2,
                                 )}
@@ -2628,13 +2642,15 @@ const SingleTransactionForm = ({
                               </span>
                               <p className="font-medium">
                                 1 {currencyCode} ={" "}
-                                {(
-                                  1 / transectionSummeryData?.exchangeRate
-                                )?.toFixed(2)}{" "}
+                                {transectionSummeryData?.exchangeRate?.toFixed(
+                                  2,
+                                )}{" "}
                                 {selectedPayoutCurrencyCode}
                               </p>
                             </div>
-                            {transectionSummeryData?.businessFee >= 1 && (
+                            {["BUSINESS", "SHARED"].includes(
+                              transectionSummeryData?.feeResponsibility,
+                            ) && (
                               <div>
                                 <span className="text-muted-foreground">
                                   businessFee
@@ -2656,25 +2672,79 @@ const SingleTransactionForm = ({
                                 </p>
                               </div>
                             )}
+                            {["BUSINESS", "SHARED"].includes(
+                              transectionSummeryData?.feeResponsibility,
+                            ) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Discount Amount
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.discountAmountAed}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
 
-                            <div>
-                              <span className="text-muted-foreground">
-                                Discount Amount
-                              </span>
-                              <p className="font-medium">
-                                {transectionSummeryData?.discountAmountAed}{" "}
-                                {currencyCode}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Total Payable
-                              </span>
-                              <p className="font-medium">
-                                {transectionSummeryData?.totalDebit?.toFixed(2)}{" "}
-                                {currencyCode}
-                              </p>
-                            </div>
+                            {transectionSummeryData?.vatAmount > 0 &&
+                              ["BUSINESS", "SHARED"].includes(
+                                transectionSummeryData?.feeResponsibility,
+                              ) && (
+                                <div>
+                                  <span>Vat Amount</span>
+                                  <p className="font-medium">
+                                    {transectionSummeryData?.vatAmount}
+                                    {currencyCode}
+                                  </p>
+                                </div>
+                              )}
+                            {transectionSummeryData?.vatAmount > 0 &&
+                              ["BUSINESS", "SHARED"].includes(
+                                transectionSummeryData?.feeResponsibility,
+                              ) && (
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Final Processing Fee
+                                  </span>
+                                  <p className="font-medium">
+                                    {transectionSummeryData?.finalProcessingFee?.toFixed(
+                                      2,
+                                    )}{" "}
+                                    {currencyCode}
+                                  </p>
+                                </div>
+                              )}
+
+                            {transectionSummeryData?.feeResponsibility ==
+                              "BUSINESS" && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Total Payout
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.netPayout?.toFixed(
+                                    2,
+                                  )}{" "}
+                                  {transectionSummeryData?.currency}
+                                </p>
+                              </div>
+                            )}
+
+                            {transectionSummeryData?.feeResponsibility ==
+                              "BUSINESS" && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Total Payable
+                                </span>
+                                <p className="font-medium">
+                                  {transectionSummeryData?.totalDebit?.toFixed(
+                                    2,
+                                  )}{" "}
+                                  {currencyCode}
+                                </p>
+                              </div>
+                            )}
+
                             <div>
                               <span className="text-muted-foreground">
                                 Monthly Limit
@@ -2702,24 +2772,12 @@ const SingleTransactionForm = ({
                                 Remaining Limit
                               </span>
                               <p className="font-medium">
-                                {transectionSummeryData?.monthlyLimit?.toFixed(
+                                {transectionSummeryData?.remainingLimit?.toFixed(
                                   2,
-                                ) -
-                                  transectionSummeryData?.currentMonthSpend?.toFixed(
-                                    2,
-                                  )}{" "}
+                                )}{" "}
                                 {currencyCode}
                               </p>
                             </div>
-                            {transectionSummeryData?.vatAmount > 0 && (
-                              <div>
-                                <span>Vat Amount</span>
-                                <p className="font-medium">
-                                  {transectionSummeryData?.vatAmount}
-                                  {currencyCode}
-                                </p>
-                              </div>
-                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -2730,7 +2788,7 @@ const SingleTransactionForm = ({
             )}
             {loadingRateDeal ? (
               <div className="text-gray-400 p-4">Loading...</div>
-            ) : rateDealData?.proposedRate && amount ? (
+            ) : rateDealData?.proposedRate && receiverAmount ? (
               <Card className="bg-accent-muted/10 border-accent/20">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -2743,13 +2801,13 @@ const SingleTransactionForm = ({
                     <div className="flex gap-1">
                       <p>
                         Applied Rate: {rateDealData.appliedRate}{" "}
-                        {rateDealData.payoutCurrency}
+                        {rateDealData?.payoutCurrency}
                       </p>
                     </div>
                     <div className="flex gap-1">
                       <p>
                         Remaining Amount: {rateDealData.remainingAmount}{" "}
-                        {currencyCode}
+                        {rateDealData?.payoutCurrency}
                       </p>
                     </div>
                   </div>
@@ -2757,7 +2815,7 @@ const SingleTransactionForm = ({
               </Card>
             ) : (
               <div className="text-gray-400 p-4">
-                {amount && <p> No rate deal data available</p>}
+                {receiverAmount && <p> No rate deal data available</p>}
               </div>
             )}
             {range && (

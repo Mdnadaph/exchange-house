@@ -31,6 +31,7 @@ import {
   FileBarChart,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
+import { useEffect, useRef } from "react";
 
 interface ExchangeLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,7 @@ interface ExchangeLayoutProps {
 
 const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   const navigate = useNavigate();
+  const sidebarRef = useRef(null);
   const location = useLocation();
   const { can } = usePermission();
   const [cookies, , removeCookie] = useCookies([
@@ -367,6 +369,19 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
   //   },
   // ];
   const isActive = (path: string) => location.pathname === path;
+  // restore scroll position
+  useEffect(() => {
+    const saved = sessionStorage.getItem("sidebar-scroll");
+    if (sidebarRef.current && saved) {
+      sidebarRef.current.scrollTop = Number(saved);
+    }
+  }, [location.pathname]);
+
+  const handleScroll = () => {
+    if (sidebarRef.current) {
+      sessionStorage.setItem("sidebar-scroll", sidebarRef.current.scrollTop);
+    }
+  };
   return (
     <div className="h-screen overflow-hidden bg-muted/30">
       {/* Header */}
@@ -410,7 +425,11 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
       {/* Body */}
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
-        <aside className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+        <aside
+          ref={sidebarRef}
+          onScroll={handleScroll}
+          className="w-64 bg-background border-r sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto"
+        >
           {/* <nav className="p-4 space-y-2">
             {navigation
               .filter(
