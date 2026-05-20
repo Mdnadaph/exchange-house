@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formateDateTime } from "@/utils/formateDateTime";
 import BranchDealRequestForm from "@/components/deals/BranchDealRequestForm";
 import DealCounterResponseForm from "@/components/deals/DealCounterResponseForm";
+import { PermissionGate } from "@/contexts/PermissionGate";
 type NegotiationHistoryItem = {
   id: number;
   actionType: string;
@@ -192,7 +193,9 @@ const BranchDealReview = () => {
             </p>
           </div>
           <div>
-            <BranchDealRequestForm refetch={getRateDeals} />
+            <PermissionGate permission="BTN_BRANCH_CREATE_RATE_DEALS">
+              <BranchDealRequestForm refetch={getRateDeals} />
+            </PermissionGate>
           </div>
         </div>
 
@@ -507,17 +510,19 @@ const BranchDealReview = () => {
                           ) ? (
                             <div></div>
                           ) : (
-                            <DealCounterResponseForm
-                              refetch={getRateDeals}
-                              dealId={deal?.id}
-                              businessName={deal?.companyName}
-                              requestedRate={
-                                deal?.negotiationHistory[
-                                  deal?.negotiationHistory?.length - 1
-                                ]?.rate
-                              }
-                              currency={deal?.payoutCurrency}
-                            />
+                            <PermissionGate permission="BTN_BRANCH_RATE_DEALS_HANDLE_DEAL">
+                              <DealCounterResponseForm
+                                refetch={getRateDeals}
+                                dealId={deal?.id}
+                                businessName={deal?.companyName}
+                                requestedRate={
+                                  deal?.negotiationHistory[
+                                    deal?.negotiationHistory?.length - 1
+                                  ]?.rate
+                                }
+                                currency={deal?.payoutCurrency}
+                              />
+                            </PermissionGate>
                           ))}
                       </div>
                     </div>

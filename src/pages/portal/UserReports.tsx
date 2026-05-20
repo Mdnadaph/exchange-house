@@ -373,8 +373,12 @@ export default function UserReports() {
   const chartData = transformStackedData(rawPoints);
   const currencies = Array.from(new Set(rawPoints.map((p) => p?.group)));
   const getDynamicColor = (index: number, total: number) => {
-    const hue = (index * 360) / total; // spread colors evenly
-    return `hsl(${hue}, 70%, 55%)`;
+    const baseHue = 210; // blue tone
+
+    const lightness = 35 + index * (40 / Math.max(total - 1, 1));
+    const saturation = 70;
+
+    return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
   };
   const rowHeight = 45; // space per bar (adjust)
   const baseHeight = 120; // header + padding
@@ -412,7 +416,10 @@ export default function UserReports() {
           </p>
         </div>
         <div className="flex gap-4 items-center flex-wrap">
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Beneficiaries
+            </h2>
             <Select
               value={beneficiaryType}
               onValueChange={(val) =>
@@ -432,7 +439,8 @@ export default function UserReports() {
               </SelectContent>
             </Select>
           </div>
-          <div className="w-[200px]">
+          <div className="w-[200px] space-y-1">
+            <h2 className="text-base font-normal text-gray-700">Country</h2>
             <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Select Country" />
@@ -469,7 +477,8 @@ export default function UserReports() {
               </SelectContent>
             </Select>
           </div>
-          <div className="w-[200px]">
+          <div className="w-[200px] space-y-1">
+            <h2 className="text-base font-normal text-gray-700">Currency</h2>
             <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Select Currency" />
@@ -545,14 +554,16 @@ export default function UserReports() {
               </SelectContent>
             </Select>
           </div> */}
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">From Date</h2>
             <Input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">To Date</h2>
             <Input
               type="date"
               placeholder="Select To Date"
@@ -560,7 +571,10 @@ export default function UserReports() {
               onChange={(e) => setToDate(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Transaction Status
+            </h2>
             <Select
               value={transactionStatus}
               onValueChange={(val) =>
@@ -579,7 +593,10 @@ export default function UserReports() {
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Transaction Type
+            </h2>
             <Select
               value={transactionType}
               onValueChange={(val) =>

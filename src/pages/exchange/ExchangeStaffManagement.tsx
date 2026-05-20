@@ -1674,6 +1674,7 @@ const ExchangeStaffManagement = () => {
           className="flex items-start space-x-2"
         >
           <input
+            disabled={isEditStaffModalOpen && node?.name == "Dashboard"}
             type="checkbox"
             id={`perm-${nodeId}`}
             checked={isChecked}
@@ -1883,7 +1884,16 @@ const ExchangeStaffManagement = () => {
           open={isCreateModalOpen}
           onOpenChange={(open) => {
             setIsCreateModalOpen(open);
-            if (!open) setStaffErrors({});
+            if (!open) {
+              setStaffForm({
+                fullName: "",
+                email: "",
+                contactNumber: "",
+                branchId: "",
+                roleId: "",
+              });
+              setStaffErrors({});
+            }
           }}
         >
           <DialogContent className="sm:max-w-2xl">
@@ -2045,7 +2055,16 @@ const ExchangeStaffManagement = () => {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={() => {
+                  setStaffForm({
+                    fullName: "",
+                    email: "",
+                    contactNumber: "",
+                    branchId: "",
+                    roleId: "",
+                  });
+                  setIsCreateModalOpen(false);
+                }}
               >
                 Cancel
               </Button>
@@ -2072,6 +2091,16 @@ const ExchangeStaffManagement = () => {
             if (!open) {
               setEditableStaffData({});
               setStaffUUID("");
+              if (!open) {
+                setStaffForm({
+                  fullName: "",
+                  email: "",
+                  contactNumber: "",
+                  branchId: "",
+                  roleId: "",
+                });
+                setStaffErrors({});
+              }
               setStaffErrors({});
               setEditStaffPermissionIds([]);
             }
@@ -2232,6 +2261,13 @@ const ExchangeStaffManagement = () => {
                 variant="outline"
                 onClick={() => {
                   setIsEditStaffModalOpen(false);
+                  setStaffForm({
+                    fullName: "",
+                    email: "",
+                    contactNumber: "",
+                    branchId: "",
+                    roleId: "",
+                  });
                   setEditableStaffData({});
                   setStaffUUID("");
                   setStaffErrors({});

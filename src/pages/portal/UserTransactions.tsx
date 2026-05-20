@@ -1125,7 +1125,7 @@ const UserTransactions = () => {
                                 <FileText className="h-4 w-4 mr-1" />
                                 Upload Documents
                               </Button>
-                              {transaction.rateDeal && (
+                              {/* {transaction.rateDeal && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1145,7 +1145,7 @@ const UserTransactions = () => {
                                     <ChevronDown className="h-4 w-4 ml-1" />
                                   )}
                                 </Button>
-                              )}
+                              )} */}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1197,7 +1197,7 @@ const UserTransactions = () => {
                                       vatAmount: transaction?.vatAmount,
                                       payoutMechanismType:
                                         transaction?.payoutMechanismType,
-                                      amount: transaction.amount,
+                                      amount: transaction.totalDebit,
                                       currency: transaction.currency,
                                       localAmount: transaction.localAmount,
                                       localCurrency: transaction.localCurrency,
@@ -1228,7 +1228,7 @@ const UserTransactions = () => {
                             />
                           )} */}
                           {/* Expanded Deal Content */}
-                          {expandedDealTxId === transaction.id &&
+                          {/* {expandedDealTxId === transaction.id &&
                             transaction.rateDeal && (
                               <div className="pt-4 border-t space-y-4">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1259,7 +1259,7 @@ const UserTransactions = () => {
                                   )}
                                 </div>
                               </div>
-                            )}
+                            )} */}
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">

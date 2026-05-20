@@ -41,6 +41,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
 import BranchBeneficiaryRegistrationForm from "@/components/beneficiary/BranchBeneficiaryRegistrationForm";
 import BranchBeneficiaryGroupForm from "@/components/beneficiary/BranchBeneficiaryGroupForm";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -507,6 +508,7 @@ export default function BranchBeneficries() {
   const supportedPayoutMechanisms = payOutConfigData?.data?.countries?.find(
     (data: { id: number }) => data?.id == payOutId,
   );
+  console.log("supportedPayoutMechanisms", supportedPayoutMechanisms);
   useEffect(() => {
     setPayOutId(payOutConfigData?.data?.countries[0]?.id);
   }, [payOutConfigData?.data?.countries]);
@@ -558,19 +560,23 @@ export default function BranchBeneficries() {
               </p>
             </div>
             <div className="flex gap-2">
-              <BranchBeneficiaryGroupForm
-                onGroupCreated={handleGroupCreated}
-                trigger={
-                  <Button variant="outline">
-                    <FolderPlus className="h-4 w-4 mr-2" />
-                    Create Group
-                  </Button>
-                }
-              />
-              <Button variant="business" onClick={() => setView("register")}>
-                <Plus className="h-4 w-4 mr-2" />
-                Register Beneficiary
-              </Button>
+              <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_GROUP">
+                <BranchBeneficiaryGroupForm
+                  onGroupCreated={handleGroupCreated}
+                  trigger={
+                    <Button variant="outline">
+                      <FolderPlus className="h-4 w-4 mr-2" />
+                      Create Group
+                    </Button>
+                  }
+                />
+              </PermissionGate>
+              <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_SINGLE">
+                <Button variant="business" onClick={() => setView("register")}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Register Beneficiary
+                </Button>
+              </PermissionGate>
             </div>
           </div>
 
@@ -601,7 +607,7 @@ export default function BranchBeneficries() {
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                                 <span className="text-xs font-bold text-primary">
-                                  {destination?.currency}
+                                  {destination?.countryCode}
                                 </span>
                               </div>
                               <div>
@@ -668,32 +674,36 @@ export default function BranchBeneficries() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {supportedPayoutMechanisms?.mechanisms?.length > 0 ? (
-                    supportedPayoutMechanisms?.mechanisms?.map(
-                      (mechanisms: any) => (
-                        <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
-                          <Banknote className="h-6 w-6 text-primary" />
+                  {supportedPayoutMechanisms?.mechanismLists ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(
+                        supportedPayoutMechanisms?.mechanismLists || {},
+                      ).map(([key, value]: any) => (
+                        <div
+                          key={key}
+                          className="flex  gap-3 p-4 rounded-lg border bg-accent-muted/20"
+                        >
+                          <Banknote className="h-8 w-8 text-primary" />
+
                           <div>
-                            <p className="font-medium text-foreground">
-                              {mechanisms?.name
-                                ?.toLowerCase()
-                                .split("_")
-                                ?.map(
-                                  (word: any) =>
-                                    word[0].toUpperCase() + word.slice(1),
-                                )
-                                ?.join(" ")}
+                            <p className="font-semibold text-foreground">
+                              {key}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              Fee Range:{mechanisms?.feeRange}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Processing Time:{mechanisms?.processingTime}
-                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {value?.map((item: string) => (
+                                <span
+                                  key={item}
+                                  className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20"
+                                >
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      ),
-                    )
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-center font-medium text-xl text-gray-500">
                       No Supported Payout Mechanisms Data Available
@@ -1255,40 +1265,48 @@ export default function BranchBeneficries() {
                                 </div>
                                 {/* Enhanced Actions */}
                                 <div className="flex flex-col space-y-2 ml-4">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedBeneficiary(beneficiary);
-                                      setView("profile");
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View Detail
-                                  </Button>
-                                  {/* Edit Details — uses data already in list */}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditBeneficiary(beneficiary);
-                                      setView("edit");
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4 mr-1" />
-                                    Edit Details
-                                  </Button>
-                                  {beneficiary?.status === "active" && (
+                                  <PermissionGate permission="BTN_BRANCH_BENEFICIARY_VIEW">
                                     <Button
-                                      variant="business"
+                                      variant="outline"
                                       size="sm"
                                       onClick={() => {
-                                        setOpen(true);
-                                        setBeneficiaryId(beneficiary?.id);
+                                        setSelectedBeneficiary(beneficiary);
+                                        setView("profile");
                                       }}
                                     >
-                                      Send Payment
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      View Detail
                                     </Button>
+                                  </PermissionGate>
+
+                                  {/* Edit Details — uses data already in list */}
+                                  <PermissionGate permission="BTN_BRANCH_BENEFICIARY_EDIT">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditBeneficiary(beneficiary);
+                                        setView("edit");
+                                      }}
+                                    >
+                                      <Edit className="h-4 w-4 mr-1" />
+                                      Edit Details
+                                    </Button>
+                                  </PermissionGate>
+
+                                  {beneficiary?.status === "active" && (
+                                    <PermissionGate permission="BTN_BRANCH_BENEFICIARY_SEND_PAYMENT">
+                                      <Button
+                                        variant="business"
+                                        size="sm"
+                                        onClick={() => {
+                                          setOpen(true);
+                                          setBeneficiaryId(beneficiary?.id);
+                                        }}
+                                      >
+                                        Send Payment
+                                      </Button>
+                                    </PermissionGate>
                                   )}
                                   {(beneficiary.verificationStatus ===
                                     "expired" ||

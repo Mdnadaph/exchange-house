@@ -37,6 +37,7 @@ import TransactionDetailModal, {
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import BranchSingleTransaction from "@/components/transactions/BranchSingleTransaction";
 import BranchBulkTransactionForm from "@/components/transactions/BranchBulkTransactionForm";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 interface TransactionDocument {
   id: number;
@@ -534,11 +535,14 @@ const BranchTransactions = () => {
             </Button>
           </div> */}
           <div className="flex gap-5">
-            <BranchBulkTransactionForm refetch={fetchTransactions} />
-            <BranchSingleTransaction refetch={fetchTransactions} />
+            <PermissionGate permission="BTN_BRANCH_CREATE_BULK_TRANSACTION">
+              <BranchBulkTransactionForm refetch={fetchTransactions} />
+            </PermissionGate>
+            <PermissionGate permission="BTN_BRANCH_CREATE_SINGLE_TRANSACTION">
+              <BranchSingleTransaction refetch={fetchTransactions} />
+            </PermissionGate>
           </div>
         </div>
-
         {error && (
           <Card className="border-red-200 bg-red-50 shadow-card">
             <CardContent className="p-4">
@@ -705,7 +709,7 @@ const BranchTransactions = () => {
               <div className="space-y-4">
                 {filteredTransactions.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
-                  const StatusIcon = status.icon;
+                  const StatusIcon = status?.icon;
 
                   return (
                     <Card
@@ -989,30 +993,35 @@ const BranchTransactions = () => {
 
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setSelectedTransaction(transaction)
-                                }
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View Details
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleDownloadReceipt(
-                                    transaction,
-                                    operatorName,
-                                    currencyCode,
-                                  )
-                                }
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Receipt
-                              </Button>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_VIEW">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setSelectedTransaction(transaction)
+                                  }
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Details
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_DOWNLOAD_RECEIPT">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownloadReceipt(
+                                      transaction,
+                                      operatorName,
+                                      currencyCode,
+                                    )
+                                  }
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Receipt
+                                </Button>
+                              </PermissionGate>
+
                               {/* {transaction?.documents &&
                                 transaction?.documents?.length > 0 && (
                                   <Button variant="outline" size="sm">
@@ -1020,36 +1029,41 @@ const BranchTransactions = () => {
                                     Documents
                                   </Button>
                                 )} */}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setUploadModalOpen(true);
-                                  setUploadTransaction(transaction);
-                                }}
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                Upload Documents
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setExpandedTransaction(
-                                    expandedTransaction === transaction.id
-                                      ? null
-                                      : transaction.id,
-                                  )
-                                }
-                              >
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                Comments
-                                {expandedTransaction === transaction.id ? (
-                                  <ChevronUp className="h-4 w-4 ml-1" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 ml-1" />
-                                )}
-                              </Button>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_UPLOAD_DOCUMENTS">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setUploadModalOpen(true);
+                                    setUploadTransaction(transaction);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-1" />
+                                  Upload Documents
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_COMMENTS">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setExpandedTransaction(
+                                      expandedTransaction === transaction.id
+                                        ? null
+                                        : transaction.id,
+                                    )
+                                  }
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Comments
+                                  {expandedTransaction === transaction.id ? (
+                                    <ChevronUp className="h-4 w-4 ml-1" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                  )}
+                                </Button>
+                              </PermissionGate>
+
                               {transaction.status === "failed" && (
                                 <Button variant="default" size="sm">
                                   Retry Payment
@@ -1070,29 +1084,33 @@ const BranchTransactions = () => {
                               )} */}
                               {transaction.canExecutePayment &&
                                 transaction.status === "PAYMENT_PENDING" && (
-                                  <PaymentExecutionForm
-                                    transaction={{
-                                      id: transaction.id,
-                                      beneficiary:
-                                        transaction.singleBeneficiary?.name,
-                                      email:
-                                        transaction.singleBeneficiary?.email,
-                                      address:
-                                        transaction?.singleBeneficiary?.address,
-                                      discount: transaction?.discountAmount,
-                                      vatAmount: transaction?.vatAmount,
-                                      payoutMechanismType:
-                                        transaction?.payoutMechanismType,
-                                      amount: transaction.amount,
-                                      currency: transaction.currency,
-                                      localAmount: transaction.localAmount,
-                                      localCurrency: transaction.localCurrency,
-                                      purpose: transaction.purpose,
-                                      destinationCurrency:
-                                        transaction?.destinationCurrency,
-                                    }}
-                                    fetchTransactions={fetchTransactions}
-                                  />
+                                  <PermissionGate permission="BTN_BRANCH_TRANSACTION_EXECUTE_PAYMENT">
+                                    <PaymentExecutionForm
+                                      transaction={{
+                                        id: transaction.id,
+                                        beneficiary:
+                                          transaction.singleBeneficiary?.name,
+                                        email:
+                                          transaction.singleBeneficiary?.email,
+                                        address:
+                                          transaction?.singleBeneficiary
+                                            ?.address,
+                                        discount: transaction?.discountAmount,
+                                        vatAmount: transaction?.vatAmount,
+                                        payoutMechanismType:
+                                          transaction?.payoutMechanismType,
+                                        amount: transaction.totalDebit,
+                                        currency: transaction.currency,
+                                        localAmount: transaction.localAmount,
+                                        localCurrency:
+                                          transaction.localCurrency,
+                                        purpose: transaction.purpose,
+                                        destinationCurrency:
+                                          transaction?.destinationCurrency,
+                                      }}
+                                      fetchTransactions={fetchTransactions}
+                                    />
+                                  </PermissionGate>
                                 )}
                             </div>
                           </div>
@@ -1104,12 +1122,15 @@ const BranchTransactions = () => {
                                 userRole={token}
                                 userName={fullname}
                               />*/}
-                              <ProofOfPaymentUpload
-                                transactionId={transaction.id}
-                                userRole="Branch"
-                                userName={fullname}
-                                initialDocuments={transaction.documents}
-                              />
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_UPLOAD_PROOF_OF_PAYMENT">
+                                <ProofOfPaymentUpload
+                                  transactionId={transaction.id}
+                                  userRole="Branch"
+                                  userName={fullname}
+                                  initialDocuments={transaction.documents}
+                                />
+                              </PermissionGate>
+
                               <TransactionComments
                                 transactionId={transaction.id}
                                 userRole="Branch"

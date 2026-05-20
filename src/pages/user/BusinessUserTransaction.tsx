@@ -253,7 +253,6 @@ const BusinessUserTransaction = () => {
         setDashboardStats(data.data?.dashboard);
 
         setTotalTransactionsData(data.data?.pagination?.totalItems);
-        console.log("data", data?.data?.transactions);
         const transformedTransactions: Transaction[] =
           data.data.transactions.map((apiTx: any) => {
             // --- Discount logic ---
@@ -1223,7 +1222,7 @@ const BusinessUserTransaction = () => {
                                     transaction={{
                                       id: transaction.id,
                                       beneficiary: transaction.beneficiary,
-                                      amount: transaction.amount,
+                                      amount: transaction.totalDebit,
                                       currency: transaction.currency,
                                       localAmount: transaction.localAmount,
                                       localCurrency: transaction.localCurrency,

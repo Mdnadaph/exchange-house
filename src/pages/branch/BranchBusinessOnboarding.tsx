@@ -17,6 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useEffect, useState } from "react";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 const BranchBusinessOnboarding = () => {
   const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
@@ -173,11 +174,13 @@ const BranchBusinessOnboarding = () => {
               Register and manage new business accounts
             </p>
           </div>
-          <StaffOnboardingForm
-            refetch={() =>
-              fetchBusinesses(pagination.pageNumber, pagination.pageSize)
-            }
-          />
+          <PermissionGate permission="BTN_BRANCH_ONBOARD_BUSINESS">
+            <StaffOnboardingForm
+              refetch={() =>
+                fetchBusinesses(pagination.pageNumber, pagination.pageSize)
+              }
+            />
+          </PermissionGate>
         </div>
 
         {/* Stats Grid */}

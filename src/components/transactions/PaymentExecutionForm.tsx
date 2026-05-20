@@ -680,7 +680,7 @@ interface PaymentExecutionFormProps {
   transaction: {
     id: string;
     beneficiary: string;
-    amount: string;
+    amount: number;
     currency: string;
     localAmount: string;
     localCurrency: string;
@@ -864,13 +864,14 @@ const PaymentExecutionForm = ({
                   <div>
                     <span className="text-muted-foreground">Amount:</span>
                     <p className="font-medium">
-                      {transaction?.amount} {transaction?.destinationCurrency}
+                      {transaction.localAmount}{" "}
+                      {transaction?.destinationCurrency}
                     </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Total Debit:</span>
                     <p className="font-medium text-primary">
-                      {transaction.localAmount} {transaction?.currency}
+                      {transaction?.amount} {transaction?.currency}
                     </p>
                   </div>
                 </div>

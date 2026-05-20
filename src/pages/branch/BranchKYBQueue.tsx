@@ -39,6 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 // Type definitions for API response
 interface KYBDocument {
@@ -1322,36 +1323,39 @@ const ExchangeKYBReview = () => {
                                       {docStatus.label}
                                     </Badge>
                                     {doc.status !== "approved" && (
+                                      <PermissionGate permission="BTN_BRANCH_VIEW_KYB_DOCUMENT">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleViewDocument(doc, application)
+                                          }
+                                          disabled={!doc.viewUrl}
+                                          title="View Document"
+                                        >
+                                          <Eye className="h-3 w-3" />
+                                        </Button>
+                                      </PermissionGate>
+                                    )}
+                                    <PermissionGate permission="BTN_BRANCH_DOWNLOAD_KYB_DOCUMENT">
                                       <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
                                         onClick={() =>
-                                          handleViewDocument(doc, application)
+                                          doc.viewUrl &&
+                                          handleDownloadDocument(
+                                            doc.viewUrl,
+                                            doc.documentName,
+                                          )
                                         }
                                         disabled={!doc.viewUrl}
-                                        title="View Document"
+                                        title="Download Document"
                                       >
-                                        <Eye className="h-3 w-3" />
+                                        <Download className="h-3 w-3" />
                                       </Button>
-                                    )}
-
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        doc.viewUrl &&
-                                        handleDownloadDocument(
-                                          doc.viewUrl,
-                                          doc.documentName,
-                                        )
-                                      }
-                                      disabled={!doc.viewUrl}
-                                      title="Download Document"
-                                    >
-                                      <Download className="h-3 w-3" />
-                                    </Button>
+                                    </PermissionGate>
                                   </div>
                                 </div>
                               );
@@ -1400,53 +1404,57 @@ const ExchangeKYBReview = () => {
                           <div className="space-y-4">
                             <Label>Review Actions</Label>
                             <div className="grid grid-cols-2 gap-3">
-                              <Button
-                                type="button"
-                                variant="default"
-                                className="w-full"
-                                disabled={!allDocumentsApproved}
-                                title={
-                                  !allDocumentsApproved
-                                    ? "All documents must be approved first"
-                                    : "Approve business application"
-                                }
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleKybAction(
-                                    application.originalData.id,
-                                    "approve",
-                                    comments[application.uuid] ||
-                                      "Application approved",
-                                  );
-                                }}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Approve
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                className="w-full"
-                                disabled={application.documents.length === 0} // <-- added
-                                title={
-                                  application.documents.length === 0
-                                    ? "No documents uploaded"
-                                    : ""
-                                }
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleKybAction(
-                                    application.originalData.id,
-                                    "reject",
-                                    comments[application.uuid] ||
-                                      "Application rejected",
-                                  );
-                                }}
-                              >
-                                Reject
-                              </Button>
+                              <PermissionGate permission="BTN_BRANCH_APPROVE_OR_REJECT_KYB_DOCUMENT">
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  className="w-full"
+                                  disabled={!allDocumentsApproved}
+                                  title={
+                                    !allDocumentsApproved
+                                      ? "All documents must be approved first"
+                                      : "Approve business application"
+                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleKybAction(
+                                      application.originalData.id,
+                                      "approve",
+                                      comments[application.uuid] ||
+                                        "Application approved",
+                                    );
+                                  }}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Approve
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="BTN_BRANCH_APPROVE_OR_REJECT_KYB">
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  className="w-full"
+                                  disabled={application.documents.length === 0} // <-- added
+                                  title={
+                                    application.documents.length === 0
+                                      ? "No documents uploaded"
+                                      : ""
+                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleKybAction(
+                                      application.originalData.id,
+                                      "reject",
+                                      comments[application.uuid] ||
+                                        "Application rejected",
+                                    );
+                                  }}
+                                >
+                                  Reject
+                                </Button>
+                              </PermissionGate>
                             </div>
                           </div>
                         )}

@@ -20,6 +20,7 @@ import {
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
 import axios from "axios";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 interface Document {
   id: string;
@@ -441,22 +442,28 @@ const BranchBusinessDocuments = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleView(doc.viewUrl)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(doc.viewUrl, doc.name)}
-                        >
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
-                        </Button>
+                        <PermissionGate permission="BTN_BRANCH_VIEW_DOCUMENT">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleView(doc.viewUrl)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </PermissionGate>
+                        <PermissionGate permission="BTN_BRANCH_DOWNLOAD_DOCUMENT">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleDownload(doc.viewUrl, doc.name)
+                            }
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </Button>
+                        </PermissionGate>
                       </div>
                     </div>
                   </CardContent>

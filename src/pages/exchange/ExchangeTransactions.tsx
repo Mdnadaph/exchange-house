@@ -158,18 +158,29 @@ interface Transaction {
   beneficiaryName?: string;
   businessName?: string;
   rateDeal?: {
-    requestedExchangeRate: number | null;
-    currentExchangeRate: number | null;
-    counterProposalCount: number;
-    counterProposalsRemaining: number;
+    requestedExchangeRate?: number | null;
+    currentExchangeRate?: number | null;
+    counterProposalCount?: number;
+    counterProposalsRemaining?: number;
+    payoutCurrency: string;
+    proposedRate: number;
     isTerminal: boolean;
+    dealStatus: string;
+    dealAmount: number | null;
+    usedAmount: number | null;
+    remainingAmount: number | null;
+    appliedRate: number | null;
+    currentMarketRate: number | null;
+    country: string;
     waitingForEmail: string | null;
-    history: Array<{
-      action: string;
-      actorEmail: string;
+    negotiationHistory: Array<{
+      id: number;
+      actionType: string;
+      performedBy: string;
       rate: number | null;
-      message: string | null;
-      actedAt: string;
+      comments: string | null;
+      createdAt: string;
+      performedByRole: string;
     }>;
   };
 }
@@ -582,7 +593,6 @@ const ExchangeTransactions = () => {
   };
 
   const statistics = calculateStatistics();
-  console.log("transaction", filteredTransactions);
   if (isLoading) {
     return (
       <ExchangeLayout>
@@ -1163,7 +1173,7 @@ const ExchangeTransactions = () => {
                             transaction.rateDeal && (
                               <div className="pt-4 border-t space-y-4">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                  <DealNegotiationTimeline
+                                  {/* <DealNegotiationTimeline
                                     events={transformDealHistory(
                                       transaction.rateDeal.history,
                                       transaction.id,
@@ -1173,8 +1183,19 @@ const ExchangeTransactions = () => {
                                       ""
                                     }
                                     currency={transaction.localCurrency}
+                                  /> */}
+                                  <DealNegotiationTimeline
+                                    events={
+                                      transaction.rateDeal?.negotiationHistory
+                                    }
+                                    currentRate={
+                                      transaction?.rateDeal?.proposedRate
+                                    }
+                                    currency={
+                                      transaction?.rateDeal?.payoutCurrency
+                                    }
                                   />
-                                  {!transaction.rateDeal.isTerminal && (
+                                  {/* {!transaction.rateDeal.isTerminal && (
                                     <DealResponseForm
                                       refetch={fetchTransactions}
                                       dealId={transaction.id}
@@ -1187,7 +1208,118 @@ const ExchangeTransactions = () => {
                                       }
                                       currency={transaction.localCurrency}
                                     />
-                                  )}
+                                  )} */}
+                                  <Card>
+                                    <CardContent className="p-6">
+                                      <h3 className="font-semibold mb-4">
+                                        Rate Deal History
+                                      </h3>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Deal Status:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.dealStatus}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Deal Amount:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.dealAmount}{" "}
+                                            {currencyCode}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Used Amount:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.usedAmount}{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Remaining Amount:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {
+                                              transaction?.rateDeal
+                                                ?.remainingAmount
+                                            }{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Applied Rate:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.appliedRate}{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Current Market Rate:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {
+                                              transaction?.rateDeal
+                                                ?.currentMarketRate
+                                            }{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            proposed Rate:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {
+                                              transaction?.rateDeal
+                                                ?.proposedRate
+                                            }{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Country:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.country}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
                                 </div>
                               </div>
                             )}
