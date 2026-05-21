@@ -22,7 +22,7 @@ export const PermissionGate = ({
   const role = cookies.role;
 
   // Define which roles bypass permission checks (here just EXCHANGE_ADMIN)
-  const adminRoles = ["ROLE_EXCHANGE_ADMIN", "ROLE_BRANCH_MANAGER"];
+  const adminRoles = ["ROLE_EXCHANGE_ADMIN"];
 
   const isAdmin = adminRoles.includes(role);
   const hasPermission = can(permission);
@@ -30,8 +30,8 @@ export const PermissionGate = ({
   // Condition: admin OR (exchange user with permission)
   const hasAccess =
     isAdmin ||
-    role === "ROLE_EXCHANGE_USER" ||
-    (role === "ROLE_BRANCH_MANAGER" && hasPermission);
+    (["ROLE_EXCHANGE_USER", "ROLE_BRANCH_MANAGER"].includes(role) &&
+      hasPermission);
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
 };

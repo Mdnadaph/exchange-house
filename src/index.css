@@ -53,9 +53,22 @@ All colors MUST be HSL for consistent theming across light/dark modes.
     --ring: 215 85% 27%;
 
     /* Professional Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 50%, hsl(var(--accent)) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(var(--primary)),
+      hsl(var(--primary-glow))
+    );
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary-hover)) 50%,
+      hsl(var(--accent)) 100%
+    );
+    --gradient-card: linear-gradient(
+      145deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--muted)) 100%
+    );
 
     /* Professional Shadows */
     --shadow-card: 0 4px 20px -4px hsl(var(--primary) / 0.1);
@@ -133,6 +146,3 @@ All colors MUST be HSL for consistent theming across light/dark modes.
     @apply bg-background text-foreground;
   }
 }
-
-
-

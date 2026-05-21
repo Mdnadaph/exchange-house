@@ -841,9 +841,11 @@ export default function BranchBeneficries() {
                       <Layers className="h-5 w-5" />
                       Beneficiary Groups
                     </CardTitle>
-                    <BranchBeneficiaryGroupForm
-                      onGroupCreated={handleGroupCreated}
-                    />
+                    <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_GROUP">
+                      <BranchBeneficiaryGroupForm
+                        onGroupCreated={handleGroupCreated}
+                      />
+                    </PermissionGate>
                   </div>
                 </CardHeader>
                 <CardContent>

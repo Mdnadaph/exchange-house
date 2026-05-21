@@ -1,5 +1,6 @@
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Input } from "@/components/ui/input";
+import Tree, { RawNodeDatum } from "react-d3-tree";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
 import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 
 type ChartPoint = {
@@ -89,8 +90,10 @@ export default function AdminReports() {
   const [countryIsoCode, setCountryIsoCode] = useState([]);
   const [currency, setCurrency] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exchangeAdminData, setExchangeAdminData] = useState([]);
   const [transactionStatus, setTransactionStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
+  const [exchangeAdminId, setExchnageAdminId] = useState<string>("");
   const [toDate, setToDate] = useState("");
   const [transactionType, setTransactionType] = useState("");
   const [currencyData, setCurrencyData] = useState<any>([]);
@@ -98,7 +101,11 @@ export default function AdminReports() {
   const [reportData, setReportData] = useState<any>(null);
   const [cookies] = useCookies(["token"]);
   const token = cookies?.token;
-
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const pageSize = 10;
+  const [exchangeAdminLoading, setExchangeAdminLoading] = useState(false);
   const buildAnalyticsUrl = () => {
     const params = new URLSearchParams();
 
@@ -117,7 +124,9 @@ export default function AdminReports() {
     if (fromDate) {
       params.append("fromDate", fromDate);
     }
-
+    if (exchangeAdminId) {
+      params.append("exchangeAdminId", exchangeAdminId);
+    }
     if (toDate) {
       params.append("toDate", toDate);
     }
@@ -203,9 +212,103 @@ export default function AdminReports() {
     }
   };
 
+  const getExchangeAdminList = async () => {
+    // IMPORTANT
+    if (exchangeAdminLoading || !hasMore) return;
+
+    try {
+      setExchangeAdminLoading(true);
+
+      const currentPage = page;
+
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&pageSize=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        const newData = res?.data?.data?.exchangeAdminResponse || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMore(false);
+        }
+
+        // Prevent duplicate data
+        setExchangeAdminData((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setPage((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+      });
+    } finally {
+      setExchangeAdminLoading(false);
+    }
+  };
+
+  // OBSERVER
+  // useEffect(() => {
+  //   if (!hasMore) return;
+
+  //   const observer = new IntersectionObserver(
+  //     (entries) => {
+  //       const target = entries[0];
+
+  //       if (target.isIntersecting && !exchangeAdminLoading) {
+  //         getExchangeAdminList();
+  //       }
+  //     },
+  //     {
+  //       rootMargin: "200px",
+  //     },
+  //   );
+
+  //   const current = sentinelRef.current;
+
+  //   if (current) {
+  //     observer.observe(current);
+  //   }
+
+  //   return () => {
+  //     if (current) {
+  //       observer.unobserve(current);
+  //     }
+  //   };
+  // }, [exchangeAdminLoading, hasMore]);
+  const handleScroll = () => {
+    if (!listRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !exchangeAdminLoading && hasMore) {
+      getExchangeAdminList();
+    }
+  };
+
   useEffect(() => {
     getCurrency();
     getCountries();
+    getExchangeAdminList();
   }, []);
 
   useEffect(() => {
@@ -217,6 +320,7 @@ export default function AdminReports() {
     toDate,
     transactionStatus,
     transactionType,
+    exchangeAdminId,
   ]);
 
   // const EmptyChart = () => (
@@ -281,6 +385,92 @@ export default function AdminReports() {
   const businessPoints = reportData?.transactionVolumeByBusiness?.points || [];
 
   const businessChartHeight = businessPoints.length * 45 + 120; // row height + padding
+  const orgChart = {
+    name: "CEO",
+    children: [
+      {
+        name: "Manager",
+        attributes: {
+          department: "Production",
+        },
+        children: [
+          {
+            name: "Foreman",
+            attributes: {
+              department: "Fabrication",
+            },
+            children: [
+              {
+                name: "Worker",
+              },
+            ],
+          },
+          {
+            name: "Foreman",
+            attributes: {
+              department: "Assembly",
+            },
+            children: [
+              {
+                name: "Worker",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+  // const transformTree = (node) => {
+  //   return {
+  //     name: `${node.label}`, // show label + type
+  //     attributes: {
+  //       type: node.type
+  //         ?.toLowerCase()
+  //         ?.split("_")
+  //         ?.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  //         ?.join(" "),
+  //     },
+  //     children: node.children?.map(transformTree) || [],
+  //   };
+  // };
+  const transformTree = (node: any): RawNodeDatum | null => {
+    if (!node) return null;
+
+    const children = node.children?.map(transformTree)?.filter(Boolean) || [];
+
+    return {
+      name: `${node.label}`,
+      attributes: {
+        type: node.type
+          ?.toLowerCase()
+          ?.split("_")
+          ?.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          ?.join(" "),
+      },
+      children,
+    };
+  };
+  const treeData = reportData?.onboardingTreeMap
+    ? transformTree(reportData?.onboardingTreeMap)
+    : null;
+
+  const getIcon = (type) => {
+    switch (type) {
+      case "EXCHANGE_ADMIN":
+        return "🏦";
+      case "BUSINESS_ADMIN":
+        return "👨‍💼";
+      case "BUSINESS_USER":
+        return "👤";
+      case "BRANCH":
+        return "🏢";
+      case "ROOT":
+        return "🌳";
+      default:
+        return "📦";
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -430,10 +620,47 @@ export default function AdminReports() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Exchange Admin
+            </h2>
+            <Select
+              value={exchangeAdminId}
+              onValueChange={(val) => setExchnageAdminId(val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Exchnage Admin" />
+              </SelectTrigger>
+              <SelectContent>
+                <div
+                  ref={listRef}
+                  onScroll={handleScroll}
+                  className="max-h-60 overflow-y-auto"
+                >
+                  {exchangeAdminData?.map((c, index) => (
+                    <SelectItem key={index} value={c?.id}>
+                      {c?.fullName}
+                    </SelectItem>
+                  ))}
+                  {/* OBSERVER TARGET */}
+                  {exchangeAdminLoading && (
+                    <div className="py-2 text-center text-sm text-gray-500">
+                      Loading...
+                    </div>
+                  )}
+                  {!hasMore && (
+                    <div className="py-2 text-center text-sm text-gray-400">
+                      No More Data
+                    </div>
+                  )}
+                </div>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div>
           {loading ? (
-            <div className="text-center font-semibold text-xl text-gray-700">
+            <div className="text-center font-normal text-base text-gray-700">
               Loading...
             </div>
           ) : (
@@ -533,7 +760,14 @@ export default function AdminReports() {
                               STATUS_COLORS[d?.label] || "#94A3B8",
                           }}
                         />
-                        {d.label}
+                        {d.label
+                          ?.toLowerCase()
+                          ?.split("_")
+                          ?.map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() + word.slice(1),
+                          )
+                          ?.join(" ")}
                       </div>
                     ))}
                   </div>
@@ -615,7 +849,6 @@ export default function AdminReports() {
                           ),
                         )}
                       </Pie>
-
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
@@ -632,7 +865,14 @@ export default function AdminReports() {
                                 STATUS_COLORSCODE[d?.label] || "#94A3B8",
                             }}
                           />
-                          {d.label}
+                          {d.label
+                            ?.toLowerCase()
+                            ?.split("_")
+                            ?.map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            ?.join(" ")}
                         </div>
                       ),
                     )}
@@ -655,6 +895,25 @@ export default function AdminReports() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              {reportData?.onboardingTreeMap && (
+                <div className="bg-white p-4 rounded-xl shadow h-[70vh]">
+                  <h2 className="font-semibold mb-4">On Boarding Tree</h2>
+                  <div
+                    id="treeWrapper"
+                    style={{ width: "100%", height: "100%" }}
+                  >
+                    <Tree
+                      data={treeData}
+                      pathFunc="step"
+                      orientation="vertical"
+                      translate={{ x: 500, y: 10 }}
+                      zoom={0.7}
+                      nodeSize={{ x: 220, y: 140 }}
+                      separation={{ siblings: 1.2, nonSiblings: 1.5 }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

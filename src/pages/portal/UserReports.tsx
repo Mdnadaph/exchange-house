@@ -618,7 +618,7 @@ export default function UserReports() {
         </div>
         <div>
           {loading ? (
-            <div className="text-center font-semibold text-xl text-gray-700">
+            <div className="text-center font-normal text-base text-gray-700">
               Loading...
             </div>
           ) : (
@@ -723,7 +723,14 @@ export default function UserReports() {
                                 BENEFICIARY_COLORS[d?.label] || "#94A3B8",
                             }}
                           />
-                          {d.label}
+                          {d?.label
+                            ?.toLowerCase()
+                            ?.split("_")
+                            ?.map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            ?.join(" ")}
                         </div>
                       ),
                     )}
@@ -770,13 +777,10 @@ export default function UserReports() {
                       layout="vertical" // 👈 makes it horizontal
                     >
                       <CartesianGrid strokeDasharray="3 3" />
-
                       {/* Swap axes */}
                       <XAxis type="number" />
                       <YAxis type="category" dataKey="label" />
-
                       <Tooltip />
-
                       <Bar dataKey="value" fill="#6366F1" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -823,7 +827,14 @@ export default function UserReports() {
                                 STATUS_COLORSCODE[d?.label] || "#94A3B8",
                             }}
                           />
-                          {d.label}
+                          {d.label
+                            ?.toLowerCase()
+                            ?.split("_")
+                            ?.map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            ?.join(" ")}
                         </div>
                       ),
                     )}

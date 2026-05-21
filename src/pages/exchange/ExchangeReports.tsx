@@ -605,7 +605,7 @@ export default function ExchangeReports() {
         </div>
         <div>
           {loading ? (
-            <div className="text-center font-semibold text-xl text-gray-700">
+            <div className="text-center font-normal text-base text-gray-700">
               Loading...
             </div>
           ) : (
@@ -689,11 +689,9 @@ export default function ExchangeReports() {
                           ),
                         )}
                       </Pie>
-
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
-
                   {/* Custom Legend */}
                   <div className="flex flex-wrap gap-2 mt-3 text-xs">
                     {reportData?.transactionCountByStatus?.points?.map(
@@ -706,7 +704,14 @@ export default function ExchangeReports() {
                                 STATUS_COLORSCODE[d?.label] || "#94A3B8",
                             }}
                           />
-                          {d.label}
+                          {d.label
+                            ?.toLowerCase()
+                            ?.split("_")
+                            ?.map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            ?.join(" ")}
                         </div>
                       ),
                     )}
