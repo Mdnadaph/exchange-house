@@ -1947,32 +1947,36 @@ const UserBeneficiaries = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {supportedPayoutMechanisms?.mechanisms?.length > 0 ? (
-                    supportedPayoutMechanisms?.mechanisms?.map(
-                      (mechanisms: any) => (
-                        <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
-                          <Banknote className="h-6 w-6 text-primary" />
+                  {supportedPayoutMechanisms?.mechanismLists ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(
+                        supportedPayoutMechanisms?.mechanismLists || {},
+                      ).map(([key, value]: any) => (
+                        <div
+                          key={key}
+                          className="flex  gap-3 p-4 rounded-lg border bg-accent-muted/20"
+                        >
+                          <Banknote className="h-8 w-8 text-primary" />
+
                           <div>
-                            <p className="font-medium text-foreground">
-                              {mechanisms?.name
-                                ?.toLowerCase()
-                                .split("_")
-                                ?.map(
-                                  (word: any) =>
-                                    word[0].toUpperCase() + word.slice(1),
-                                )
-                                ?.join(" ")}
+                            <p className="font-semibold text-foreground">
+                              {key}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              Fee Range:{mechanisms?.feeRange}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Processing Time:{mechanisms?.processingTime}
-                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {value?.map((item: string) => (
+                                <span
+                                  key={item}
+                                  className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20"
+                                >
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      ),
-                    )
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-center font-medium text-xl text-gray-500">
                       No Supported Payout Mechanisms Data Available

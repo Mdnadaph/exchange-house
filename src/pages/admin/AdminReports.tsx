@@ -355,7 +355,7 @@ export default function AdminReports() {
 
     points?.forEach((item) => {
       const country = item.label;
-      const currency = item.group; // or item.currency
+      const currency = item.currency; // or item.currency
 
       if (!map[country]) {
         map[country] = { label: country };
@@ -891,12 +891,12 @@ export default function AdminReports() {
                     <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#6366F1" />
+                    <Bar dataKey="value" fill="#6366F1" barSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               {reportData?.onboardingTreeMap && (
-                <div className="bg-white p-4 rounded-xl shadow h-[70vh]">
+                <div className="bg-white p-4 rounded-xl shadow h-[70vh] overflow-hidden">
                   <h2 className="font-semibold mb-4">On Boarding Tree</h2>
                   <div
                     id="treeWrapper"

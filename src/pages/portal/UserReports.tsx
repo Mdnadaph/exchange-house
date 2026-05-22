@@ -111,8 +111,9 @@ export default function UserReports() {
   const [countryData, setCountryData] = useState<any>([]);
   const [beneficiaryType, setBeneficiaryType] = useState("");
   const [reportData, setReportData] = useState<any>(null);
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
+  const currencyCode = cookies?.currencyCode;
   const buildAnalyticsUrl = () => {
     const params = new URLSearchParams();
 
@@ -356,14 +357,13 @@ export default function UserReports() {
     const map: Record<string, any> = {};
 
     points?.forEach((item) => {
-      const country = item.label;
-      const currency = item.group; // or item.currency
+      const country = item?.label;
+      const currency = item?.currency; // or item.currency
 
       if (!map[country]) {
         map[country] = { label: country };
       }
-
-      map[country][currency] = item.value;
+      map[country][currency] = `${item.value} ${currencyCode}`;
     });
 
     return Object.values(map);

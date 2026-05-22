@@ -109,12 +109,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
           icon: FileBarChart,
           code: "NAV_REPORTS",
         },
-        {
-          name: "Transaction Report",
-          href: "/exchange/transaction-report",
-          icon: BookOpen,
-          code: "NAV_TRANSACTION_REPORT",
-        },
+        // {
+        //   name: "Transaction Report",
+        //   href: "/exchange/transaction-report",
+        //   icon: BookOpen,
+        //   code: "NAV_TRANSACTION_REPORT",
+        // },
         {
           name: "Documents",
           href: "/exchange/documents",
