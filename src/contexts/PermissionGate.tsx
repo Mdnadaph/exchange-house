@@ -30,7 +30,12 @@ export const PermissionGate = ({
   // Condition: admin OR (exchange user with permission)
   const hasAccess =
     isAdmin ||
-    (["ROLE_EXCHANGE_USER", "ROLE_BRANCH_MANAGER"].includes(role) &&
+    ([
+      "ROLE_EXCHANGE_USER",
+      "ROLE_BRANCH_MANAGER",
+      "ROLE_SENIOR_KYB_OFFICER",
+      "ROLE_KYB_OFFICER",
+    ].includes(role) &&
       hasPermission);
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
