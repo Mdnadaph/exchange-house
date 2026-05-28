@@ -1380,7 +1380,7 @@ const BranchBeneficiaryRegistrationForm = ({
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {["weekly", "monthly", "quarterly", "annually"].map((f) => (
+                  {["weekly", "monthly", "quarterly"].map((f) => (
                     <SelectItem key={f} value={f}>
                       {f.charAt(0).toUpperCase() + f.slice(1)}
                     </SelectItem>
