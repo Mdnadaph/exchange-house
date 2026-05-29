@@ -695,11 +695,11 @@ const UserTransactions = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Amount
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {dashboardData?.totalAmount?.toLocaleString("en-US") ??
                   statistics.totalVolume.toLocaleString("en-US")}
               </div>

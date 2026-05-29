@@ -58,8 +58,9 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const BranchDealReview = () => {
   const [expandedDeal, setExpandedDeal] = useState<string | null>(null);
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
+  const currencyCode = cookies?.currencyCode;
   const [page, setPage] = useState<number>(0);
   const [searchValue, setSearchValue] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
@@ -129,6 +130,27 @@ const BranchDealReview = () => {
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             <MessageSquare className="h-3 w-3 mr-1" />
             Counter Proposal
+          </Badge>
+        );
+      case "EXPIRED":
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Expire
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_DECLINED":
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Counter Proposal Declined
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_ACCEPTED":
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Counter Propsal Accepted
           </Badge>
         );
       case "REJECTED":
@@ -251,11 +273,11 @@ const BranchDealReview = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Volume
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-accent" />
+              {/* <DollarSign className="h-5 w-5 text-accent" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats.totalVolume?.toLocaleString() ?? "0"}
+                {currencyCode} {stats.totalVolume?.toLocaleString() ?? "0"}
               </div>
               <p className="text-xs text-muted-foreground">Deals volume</p>
             </CardContent>

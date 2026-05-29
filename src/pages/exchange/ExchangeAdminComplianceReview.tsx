@@ -623,7 +623,7 @@ const ExchangeAdminComplianceReview = () => {
                 {/* {statistics.totalTransactions} */}
                 {transitionDashboardData?.dashboard?.totalTransactions}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -668,11 +668,11 @@ const ExchangeAdminComplianceReview = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Volume
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {transitionDashboardData?.dashboard?.totalAmount?.toLocaleString(
                   "en-US",
                 )}

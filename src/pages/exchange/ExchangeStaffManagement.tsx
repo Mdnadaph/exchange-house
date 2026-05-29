@@ -1574,6 +1574,7 @@ const ExchangeStaffManagement = () => {
       const { filtered: treeDataFiltered, dashboardId } =
         filterOutDashboard(treeData);
       setPermissionTree(treeDataFiltered);
+      setViewingPermissionsTree(treeDataFiltered);
       setDashboardPermissionId(dashboardId);
 
       const buildParentMap = (
@@ -1714,7 +1715,7 @@ const ExchangeStaffManagement = () => {
     // Use the permissions directly from the staff object (already in the response)
     const perms = staff.permissions?.map((id: number) => String(id)) || [];
     setViewingAssignedIds(perms);
-    setViewingPermissionsTree(permissionTree);
+    // setViewingPermissionsTree(permissionTree);
     setLoadingViewTree(false);
     setIsViewPermissionsModalOpen(true);
   };

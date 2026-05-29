@@ -613,7 +613,7 @@ const BusinessUserTransaction = () => {
               <div className="text-2xl font-bold">
                 {dashboardStats.totalTransactions}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -656,11 +656,11 @@ const BusinessUserTransaction = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Amount
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {dashboardStats.totalAmount.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
