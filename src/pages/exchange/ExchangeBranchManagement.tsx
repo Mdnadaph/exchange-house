@@ -150,7 +150,7 @@ const ExchangeBranchManagement = () => {
         uuid: b.uuid,
         name: b.name,
         location: b.location,
-        address: b.location,
+        address: b.address,
         emirate: b.city,
         email: b.email,
         phone: b.contactNumber,
@@ -168,6 +168,7 @@ const ExchangeBranchManagement = () => {
         operatingHours: "N/A",
         openingDate: b.createdDate,
         efficiency: 0,
+        managerRole: b?.managerRoleName,
       }));
 
       setBranches(formatted);
@@ -462,7 +463,7 @@ const ExchangeBranchManagement = () => {
 
                   <div>
                     <Label htmlFor="emirate">
-                      city <span className="text-red-500">*</span>
+                      City <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="emirate"
@@ -620,7 +621,7 @@ const ExchangeBranchManagement = () => {
               <div className="text-2xl font-bold">
                 {totalStats.totalBranches}
               </div>
-              <p className="text-xs text-muted-foreground">Across UAE</p>
+              {/* <p className="text-xs text-muted-foreground">Across UAE</p> */}
             </CardContent>
           </Card>
 
@@ -743,24 +744,24 @@ const ExchangeBranchManagement = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
                             <h3 className="text-xl font-semibold text-foreground">
-                              {branch.name}
+                              {branch?.name}
                             </h3>
                             <Badge
                               variant={status.variant}
                               className="flex items-center gap-1"
                             >
                               <StatusIcon className="h-3 w-3" />
-                              {status.label}
+                              {status?.label}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <MapPin className="h-4 w-4" />
-                              {branch.location}
+                              {branch?.location}
                             </span>
                             <span className="flex items-center gap-1">
                               <Globe className="h-4 w-4" />
-                              {branch.emirate}
+                              {branch?.emirate}
                             </span>
                           </div>
                         </div>
@@ -771,10 +772,19 @@ const ExchangeBranchManagement = () => {
                         <div className="space-y-1">
                           <div className="flex items-center text-muted-foreground">
                             <Users className="h-3 w-3 mr-1" />
-                            Branch Manager:
+                            {branch?.managerRole
+                              ?.replace(/^ROLE_/, "")
+                              ?.split("_")
+                              ?.map(
+                                (word) =>
+                                  word?.charAt(0)?.toUpperCase() +
+                                  word?.slice(1)?.toLowerCase(),
+                              )
+                              ?.join(" ")}
+                            :
                           </div>
                           <p className="font-medium">{branch.manager}</p>
-                          <p className="text-xs">ID: {branch.managerId}</p>
+                          {/* <p className="text-xs">ID: {branch.managerId}</p> */}
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center text-muted-foreground">
@@ -804,7 +814,7 @@ const ExchangeBranchManagement = () => {
                       </div>
 
                       {/* Performance Metrics */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="text-center p-3 bg-primary/10 rounded-lg">
                           <p className="font-semibold text-primary text-lg">
                             {branch.completedKYB}
@@ -843,7 +853,7 @@ const ExchangeBranchManagement = () => {
                             Efficiency
                           </p>
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Address */}
                       <div className="text-sm text-muted-foreground border-t pt-3">
@@ -860,7 +870,7 @@ const ExchangeBranchManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          navigate(`/exchange/Details/${branch.uuid}`)
+                          navigate(`/exchange/branches/Details/${branch.uuid}`)
                         }
                       >
                         <Eye className="h-4 w-4 mr-1" />

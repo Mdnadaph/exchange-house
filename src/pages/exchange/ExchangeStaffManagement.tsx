@@ -1940,69 +1940,72 @@ const ExchangeStaffManagement = () => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <Label>
-                    Contact Number <span className="text-red-500">*</span>
-                  </Label>
-                  <PhoneInput
-                    country={"ae"}
-                    value={staffForm.contactNumber}
-                    onChange={(value) => {
-                      setStaffForm({ ...staffForm, contactNumber: value });
-                      clearStaffError("contactNumber");
-                    }}
-                    inputProps={{ name: "phone", id: "phone" }}
-                    containerClass="w-full mt-1"
-                    inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
-                    buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
-                    dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
-                    enableSearch
-                    searchPlaceholder="Search country..."
-                    preferredCountries={["ae", "in"]}
-                  />
-                  {staffErrors.contactNumber && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.contactNumber}
-                    </p>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label>
+                      Select Branch <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={staffForm.branchId}
+                      onValueChange={(value) => {
+                        setStaffForm({ ...staffForm, branchId: value });
+                        clearStaffError("branchId");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            branchLoading
+                              ? "Loading branches..."
+                              : "Select Branch"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchList.map((branch) => (
+                          <SelectItem
+                            key={branch.branchId}
+                            value={String(branch.branchId)}
+                          >
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {staffErrors.branchId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.branchId}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>
+                      Contact Number <span className="text-red-500">*</span>
+                    </Label>
+                    <PhoneInput
+                      country={"ae"}
+                      value={staffForm.contactNumber}
+                      onChange={(value) => {
+                        setStaffForm({ ...staffForm, contactNumber: value });
+                        clearStaffError("contactNumber");
+                      }}
+                      inputProps={{ name: "phone", id: "phone" }}
+                      containerClass="w-full mt-1"
+                      inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                      buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                      dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                      enableSearch
+                      searchPlaceholder="Search country..."
+                      preferredCountries={["ae", "in"]}
+                    />
+                    {staffErrors.contactNumber && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.contactNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label>
-                    Select Branch <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={staffForm.branchId}
-                    onValueChange={(value) => {
-                      setStaffForm({ ...staffForm, branchId: value });
-                      clearStaffError("branchId");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          branchLoading
-                            ? "Loading branches..."
-                            : "Select Branch"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branchList.map((branch) => (
-                        <SelectItem
-                          key={branch.branchId}
-                          value={String(branch.branchId)}
-                        >
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {staffErrors.branchId && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.branchId}
-                    </p>
-                  )}
-                </div>
+
                 <div>
                   <Label>
                     Staff Role <span className="text-red-500">*</span>
@@ -2151,69 +2154,72 @@ const ExchangeStaffManagement = () => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <Label>
-                    Contact Number <span className="text-red-500">*</span>
-                  </Label>
-                  <PhoneInput
-                    country={"ae"}
-                    value={staffForm.contactNumber}
-                    onChange={(value) => {
-                      setStaffForm({ ...staffForm, contactNumber: value });
-                      clearStaffError("contactNumber");
-                    }}
-                    inputProps={{ name: "phone", id: "phone" }}
-                    containerClass="w-full mt-1"
-                    inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
-                    buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
-                    dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
-                    enableSearch
-                    searchPlaceholder="Search country..."
-                    preferredCountries={["ae", "in"]}
-                  />
-                  {staffErrors.contactNumber && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.contactNumber}
-                    </p>
-                  )}
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label>
+                      Select Branch <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={staffForm.branchId}
+                      onValueChange={(value) => {
+                        setStaffForm({ ...staffForm, branchId: value });
+                        clearStaffError("branchId");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            branchLoading
+                              ? "Loading branches..."
+                              : "Select Branch"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchList.map((branch) => (
+                          <SelectItem
+                            key={branch?.branchId}
+                            value={String(branch?.branchId)}
+                          >
+                            {branch?.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {staffErrors.branchId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.branchId}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>
+                      Contact Number <span className="text-red-500">*</span>
+                    </Label>
+                    <PhoneInput
+                      country={"ae"}
+                      value={staffForm.contactNumber}
+                      onChange={(value) => {
+                        setStaffForm({ ...staffForm, contactNumber: value });
+                        clearStaffError("contactNumber");
+                      }}
+                      inputProps={{ name: "phone", id: "phone" }}
+                      containerClass="w-full mt-1"
+                      inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                      buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                      dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                      enableSearch
+                      searchPlaceholder="Search country..."
+                      preferredCountries={["ae", "in"]}
+                    />
+                    {staffErrors.contactNumber && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.contactNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label>
-                    Select Branch <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={staffForm.branchId}
-                    onValueChange={(value) => {
-                      setStaffForm({ ...staffForm, branchId: value });
-                      clearStaffError("branchId");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          branchLoading
-                            ? "Loading branches..."
-                            : "Select Branch"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branchList.map((branch) => (
-                        <SelectItem
-                          key={branch.branchId}
-                          value={String(branch.branchId)}
-                        >
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {staffErrors.branchId && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.branchId}
-                    </p>
-                  )}
-                </div>
+
                 <div>
                   <Label>
                     Staff Role <span className="text-red-500">*</span>

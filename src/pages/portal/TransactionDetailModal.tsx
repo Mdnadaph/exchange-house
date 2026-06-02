@@ -310,7 +310,7 @@ const handleDownloadReceipt = (
       <div class="row amount">Charges: ${transaction?.baseProcessingFee} ${transaction?.currency}</div>
                   <div class="row amount">Discount: ${transaction?.discountAmount} ${transaction?.currency}</div>
       <div class="row amount">VAT: ${transaction?.vatAmount} ${transaction?.currency}</div>
-      <div class="row amount"><b>Total Payable: ${transaction?.totalDebit} ${transaction?.destinationCurrency}</b></div>
+      <div class="row amount"><b>Total Payable: ${transaction?.totalDebit} ${transaction?.currency}</b></div>
       <div class="row amount">Exchange Rate:${transaction?.exchangeRateDisplay}</div>
       <div class="row amount"><b>Actual Payout Amount:${transaction.convertedAmount}${transaction?.destinationCurrency}</b></div>
     </div>

@@ -100,9 +100,9 @@ type DestinationForm = {
 
 const ExchangePayoutConfig = () => {
   const { toast } = useToast();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
-
+  const currencyCode = cookies?.currencyCode;
   const [countries, setCountries] = useState([]);
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
@@ -906,7 +906,7 @@ const ExchangePayoutConfig = () => {
               <Banknote className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{`$ ${summaryData?.totalMonthlyVolumeUsd} M`}</div>
+              <div className="text-2xl font-bold">{`${currencyCode} ${summaryData?.totalMonthlyVolumeUsd}`}</div>
               <p className="text-xs text-muted-foreground">
                 +18% {t("fromLastMonth") || "from last month"}
               </p>

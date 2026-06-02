@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,11 +39,21 @@ import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ExchangeBusinessDocuments = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const [documents, setDocuments] = useState<any[]>([]);
   const [dashboard, setDashboard] = useState<any>({
@@ -60,6 +70,9 @@ const ExchangeBusinessDocuments = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [businessLoading, setBusinessLoading] = useState<boolean>(false);
+  const [businessAdminList, setBusinessAdminList] = useState([]);
+  const [businessId, setBusinessId] = useState("");
 
   const [previewOpen, setPreviewOpen] = useState(false);
   // ✅ CHANGED: track loading per document ID instead of a single boolean
@@ -69,6 +82,69 @@ const ExchangeBusinessDocuments = () => {
     "image" | "pdf" | "other"
   >("other");
   const [previewFileName, setPreviewFileName] = useState("");
+  const getBusinessAdminList = async () => {
+    // IMPORTANT
+    if (businessLoading || !hasMore) return;
+
+    try {
+      setBusinessLoading(true);
+
+      const currentPage = page;
+
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/business?page=${currentPage}&pageSize=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        const newData = res?.data?.data?.businesses?.items || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMore(false);
+        }
+
+        // Prevent duplicate data
+        setBusinessAdminList((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setPage((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+      });
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !businessLoading && hasMore) {
+      getBusinessAdminList();
+    }
+  };
 
   /* ================= VIEW DOCUMENT ================= */
   const handleView = async (doc: any) => {
@@ -151,12 +227,12 @@ const ExchangeBusinessDocuments = () => {
       setLoading(true);
 
       const res = await axios.get(
-        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}`,
+        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}&businessId=${businessId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (res.data?.status) {
@@ -179,7 +255,10 @@ const ExchangeBusinessDocuments = () => {
 
   useEffect(() => {
     fetchDocuments(currentPage);
-  }, [currentPage]);
+  }, [currentPage, businessId]);
+  useEffect(() => {
+    getBusinessAdminList();
+  }, []);
 
   /* ================= FILTER (status + search) ================= */
   const filteredDocuments = documents.filter((doc) => {
@@ -319,7 +398,28 @@ const ExchangeBusinessDocuments = () => {
 
             <div>
               <Label>Status</Label>
-              <select
+              <Select
+                value={selectedStatus}
+                onValueChange={(val) => {
+                  setSelectedStatus(val);
+                  setCurrentPage(0);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="max-h-60 overflow-y-auto">
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="verified">Verified</SelectItem>
+                    <SelectItem value="pending_review">
+                      Pending Review
+                    </SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </div>
+                </SelectContent>
+              </Select>
+              {/* <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="h-10 px-3 border rounded-md"
@@ -328,7 +428,45 @@ const ExchangeBusinessDocuments = () => {
                 <option value="verified">Verified</option>
                 <option value="pending_review">Pending Review</option>
                 <option value="rejected">Rejected</option>
-              </select>
+              </select> */}
+            </div>
+            <div>
+              <label>Filter By Business</label>
+              <Select
+                value={businessId}
+                onValueChange={(val) => {
+                  setBusinessId(val);
+                  setCurrentPage(0);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Business Admin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div
+                    ref={listRef}
+                    onScroll={handleScroll}
+                    className="max-h-60 overflow-y-auto"
+                  >
+                    {businessAdminList?.map((c, index) => (
+                      <SelectItem key={index} value={c?.id}>
+                        {c?.companyName}
+                      </SelectItem>
+                    ))}
+                    {/* OBSERVER TARGET */}
+                    {businessLoading && (
+                      <div className="py-2 text-center text-sm text-gray-500">
+                        Loading...
+                      </div>
+                    )}
+                    {!hasMore && (
+                      <div className="py-2 text-center text-sm text-gray-400">
+                        No More Data
+                      </div>
+                    )}
+                  </div>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

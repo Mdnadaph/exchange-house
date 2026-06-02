@@ -320,7 +320,6 @@ function App() {
                 >
                   <Route path="/exchange">
                     <Route index element={<ExchangeAdminDashboard />} />
-                    <Route path="Details/:uuid" element={<BranchDetails />} />
                     <Route
                       path="onboard-business"
                       element={<ExchangeBusinessOnboarding />}
@@ -370,6 +369,10 @@ function App() {
                     <Route
                       path="branches"
                       element={<ExchangeBranchManagement />}
+                    />
+                    <Route
+                      path="branches/Details/:uuid"
+                      element={<BranchDetails />}
                     />
                     <Route path="staff" element={<ExchangeStaffManagement />} />
                     <Route path="user" element={<ExchangeAdminUser />} />

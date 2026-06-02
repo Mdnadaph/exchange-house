@@ -425,7 +425,7 @@ const AdminDashboard = () => {
                   </Button> */}
                 </CardTitle>
               </CardHeader>
-              {/* <CardContent className="space-y-4">
+              <CardContent className="space-y-4">
                 {recentActivities.map((a, i) => (
                   <div
                     key={i}
@@ -446,8 +446,8 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-              </CardContent> */}
-              <p className="text-center pb-2">No data found</p>
+              </CardContent>
+              {/* <p className="text-center pb-2">No data found</p> */}
             </Card>
           </div>
 

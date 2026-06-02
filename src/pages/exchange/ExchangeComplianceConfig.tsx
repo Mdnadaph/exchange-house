@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { previousDay } from "date-fns";
 
 type ComplianceFormData = {
   highRiskCountries: string[];
@@ -84,6 +85,7 @@ const ExchangeComplianceConfig = () => {
   const [countryMap, setCountryMap] = useState<{ [key: string]: string }>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [createForm, setCreateForm] = useState({
     name: "",
     transactionType: "SINGLE",
@@ -168,7 +170,6 @@ const ExchangeComplianceConfig = () => {
         },
       );
       setPayoutCountryData(res?.data?.data);
-      console.log("res", res);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -437,7 +438,40 @@ const ExchangeComplianceConfig = () => {
     }
   };
 
+  const validateComplianceForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!complianceFormData?.sanctionsListUpdate) {
+      newErrors.sanctionsListUpdate = "Please select the sanctions list update";
+    }
+    if (!complianceFormData?.pepDatabaseRefresh) {
+      newErrors.pepDatabaseRefresh = "Please select the pep database refresh";
+    }
+    if (!complianceFormData?.adverseMediaCheck) {
+      newErrors.adverseMediaCheck = "Please select the adverse media check";
+    }
+    if (!complianceFormData?.highRiskCountries?.length) {
+      newErrors.highRiskCountries = "Please select the high risk countries";
+    }
+    if (!complianceFormData?.prohibitedCountries?.length) {
+      newErrors.prohibitedCountries = "Please select the prohibited countries";
+    }
+    if (!complianceFormData?.enhancedMonitoringCountries?.length) {
+      newErrors.enhancedMonitoringCountries =
+        "Please select the enhanced monitoring countries";
+    }
+    if (!complianceFormData?.complianceOfficerAlerts) {
+      newErrors.complianceOfficerAlerts =
+        "Please select the compliance officer alerts";
+    }
+    if (!complianceFormData?.managementReports) {
+      newErrors.managementReports = "Please select the management reports";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleComplianceConfiguration = async () => {
+    if (!validateComplianceForm()) return;
     setLoading(true);
     try {
       const res = await fetch(
@@ -1223,12 +1257,16 @@ const ExchangeComplianceConfig = () => {
                     </Label>
                     <Select
                       value={complianceFormData?.sanctionsListUpdate}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           sanctionsListUpdate: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          sanctionsListUpdate: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select sanctions update" />
@@ -1240,17 +1278,26 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="WEEKLY">Weekly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.sanctionsListUpdate && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.sanctionsListUpdate}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pep-frequency">PEP Database Refresh</Label>
                     <Select
                       value={complianceFormData?.pepDatabaseRefresh}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           pepDatabaseRefresh: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          pepDatabaseRefresh: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select PEP Database Refresh" />
@@ -1261,17 +1308,26 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="MONTHLY">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.pepDatabaseRefresh && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.pepDatabaseRefresh}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="media-frequency">Adverse Media Check</Label>
                     <Select
                       value={complianceFormData?.adverseMediaCheck}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           adverseMediaCheck: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          adverseMediaCheck: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select adverse media check" />
@@ -1282,6 +1338,11 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="MONTHLY">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.adverseMediaCheck && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.adverseMediaCheck}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1345,6 +1406,10 @@ const ExchangeComplianceConfig = () => {
                                       highRiskCountries: newCountries,
                                     };
                                   });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    highRiskCountries: "",
+                                  }));
                                 }}
                               >
                                 <Check
@@ -1362,6 +1427,11 @@ const ExchangeComplianceConfig = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.highRiskCountries && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.highRiskCountries}
+                  </p>
+                )}
               </div>
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
@@ -1409,6 +1479,10 @@ const ExchangeComplianceConfig = () => {
                                       prohibitedCountries: newCountries,
                                     };
                                   });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    prohibitedCountries: "",
+                                  }));
                                 }}
                               >
                                 <Check
@@ -1426,6 +1500,11 @@ const ExchangeComplianceConfig = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.prohibitedCountries && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.prohibitedCountries}
+                  </p>
+                )}
               </div>
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
@@ -1475,6 +1554,10 @@ const ExchangeComplianceConfig = () => {
                                       enhancedMonitoringCountries: newCountries,
                                     };
                                   });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    enhancedMonitoringCountries: "",
+                                  }));
                                 }}
                               >
                                 <Check
@@ -1492,6 +1575,11 @@ const ExchangeComplianceConfig = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.enhancedMonitoringCountries && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.enhancedMonitoringCountries}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -1572,12 +1660,16 @@ const ExchangeComplianceConfig = () => {
                     </Label>
                     <Select
                       value={complianceFormData?.complianceOfficerAlerts}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           complianceOfficerAlerts: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          complianceOfficerAlerts: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select compliance officer alerts" />
@@ -1592,6 +1684,11 @@ const ExchangeComplianceConfig = () => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.complianceOfficerAlerts && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.complianceOfficerAlerts}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="audit-trail">
@@ -1619,12 +1716,16 @@ const ExchangeComplianceConfig = () => {
                     </Label>
                     <Select
                       value={complianceFormData?.managementReports}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           managementReports: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          managementReports: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select management report" />
@@ -1635,6 +1736,11 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="QUARTERLY">Quarterly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.managementReports && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.managementReports}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

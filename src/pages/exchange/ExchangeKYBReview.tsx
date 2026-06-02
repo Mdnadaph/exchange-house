@@ -121,31 +121,6 @@ const ExchangeKYBReview = () => {
   const [pageSize] = useState(2);
   const { toast } = useToast();
   const token = cookies.token;
-
-  useEffect(() => {
-    fetchKYBApplications(currentPage, searchTerm, filterStatus);
-  }, [currentPage, filterStatus]);
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [searchTerm]);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchKYBApplications(0, searchTerm, filterStatus);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-  // Clean up blob URLs when component unmounts or when viewer closes
-  useEffect(() => {
-    return () => {
-      if (imageBlobUrl) {
-        URL.revokeObjectURL(imageBlobUrl);
-      }
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
-      }
-    };
-  }, [imageBlobUrl, pdfBlobUrl]);
-
   const fetchKYBApplications = async (
     page = 0,
     search = searchTerm,
@@ -248,6 +223,29 @@ const ExchangeKYBReview = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchKYBApplications(currentPage, searchTerm, filterStatus);
+  }, [currentPage, filterStatus]);
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchKYBApplications(0, searchTerm, filterStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+  // Clean up blob URLs when component unmounts or when viewer closes
+  useEffect(() => {
+    return () => {
+      if (imageBlobUrl) {
+        URL.revokeObjectURL(imageBlobUrl);
+      }
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [imageBlobUrl, pdfBlobUrl]);
 
   // Helper function to format date
   const formatDate = (dateString: string): string => {
@@ -1025,7 +1023,9 @@ const ExchangeKYBReview = () => {
                           <MapPin className="h-3 w-3 mr-1" />
                           Location:
                         </div>
-                        <p className="font-medium">{application.address}</p>
+                        <p className="font-medium break-words">
+                          {application.address}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {application.phone}
                         </p>
