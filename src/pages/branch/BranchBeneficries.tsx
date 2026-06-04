@@ -508,7 +508,6 @@ export default function BranchBeneficries() {
   const supportedPayoutMechanisms = payOutConfigData?.data?.countries?.find(
     (data: { id: number }) => data?.id == payOutId,
   );
-  console.log("supportedPayoutMechanisms", supportedPayoutMechanisms);
   useEffect(() => {
     setPayOutId(payOutConfigData?.data?.countries[0]?.id);
   }, [payOutConfigData?.data?.countries]);
@@ -592,70 +591,90 @@ export default function BranchBeneficries() {
               <CardContent>
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {payOutConfigData?.data?.countries?.length > 0 ? (
-                    payOutConfigData?.data?.countries?.map(
-                      (destination: any) => {
-                        const status = getAvailabePayoutDestinationStatusBadge(
-                          destination?.status,
-                        );
-                        const StatusIcon = status.icon;
-                        return (
-                          <div
-                            key={destination.countryId}
-                            onClick={() => setPayOutId(destination?.id)}
-                            className="cursor-pointer flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-primary">
-                                  {destination?.countryCode}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium text-foreground">
-                                  {destination?.countryName}
-                                </p>
-                              </div>
+                    payOutConfigData?.data?.countries?.map((destination) => {
+                      const status = getAvailabePayoutDestinationStatusBadge(
+                        destination?.status,
+                      );
+
+                      const StatusIcon = status.icon;
+
+                      const isActive = payOutId === destination?.id;
+
+                      return (
+                        <div
+                          key={destination?.id}
+                          onClick={() => setPayOutId(destination?.id)}
+                          className={`cursor-pointer flex items-center justify-between p-3 border rounded-lg transition-all duration-200
+            ${
+              isActive
+                ? "bg-primary/10 border-primary shadow-sm"
+                : "hover:bg-muted/50"
+            }
+          `}
+                        >
+                          {/* LEFT SIDE */}
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center
+                ${isActive ? "bg-primary text-white" : "bg-primary/10 text-primary"}
+              `}
+                            >
+                              <span className="text-xs font-bold">
+                                {destination?.countryCode}
+                              </span>
                             </div>
-                            <div className="text-right">
-                              <Badge
-                                variant={status?.variant}
-                                className="flex items-center gap-1 self-start sm:self-auto"
-                              >
-                                <StatusIcon className="h-3 w-3" />
-                                {status?.label}
-                              </Badge>
+
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {destination?.countryName}
+                              </p>
                             </div>
                           </div>
-                        );
-                      },
-                    )
+
+                          {/* RIGHT SIDE */}
+                          <div className="text-right flex items-center gap-2">
+                            <Badge
+                              variant={status?.variant}
+                              className="flex items-center gap-1"
+                            >
+                              <StatusIcon className="h-3 w-3" />
+                              {status?.label}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
                     <p className="text-center font-medium text-gray-400 text-xl">
                       No Data Found
                     </p>
                   )}
+
+                  {/* PAGINATION */}
                   {totalPayOutConfigDataList > 10 && (
                     <div className="flex items-center justify-between mt-6 pt-6 border-t">
                       <p className="text-sm text-muted-foreground">
                         Showing {payOutConfigData?.data?.countries?.length} of{" "}
                         {totalPayOutConfigDataList} beneficiaries
                       </p>
+
                       <div className="flex space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={page === 0}
-                          onClick={() => setPage(page - 1)}
+                          onClick={() => setPage((prev) => prev - 1)}
                         >
                           Previous
                         </Button>
+
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={
                             (page + 1) * 10 >= totalPayOutConfigDataList
                           }
-                          onClick={() => setPage(page + 1)}
+                          onClick={() => setPage((prev) => prev + 1)}
                         >
                           Next
                         </Button>

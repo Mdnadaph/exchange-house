@@ -227,7 +227,7 @@ const ExchangeBusinessDocuments = () => {
       setLoading(true);
 
       const res = await axios.get(
-        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}&businessId=${businessId}`,
+        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}&businessId=${businessId}&documentStatus=${selectedStatus}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -255,37 +255,37 @@ const ExchangeBusinessDocuments = () => {
 
   useEffect(() => {
     fetchDocuments(currentPage);
-  }, [currentPage, businessId]);
+  }, [currentPage, businessId, selectedStatus]);
   useEffect(() => {
     getBusinessAdminList();
   }, []);
 
   /* ================= FILTER (status + search) ================= */
-  const filteredDocuments = documents.filter((doc) => {
-    if (selectedStatus !== "all") {
-      if (selectedStatus === "verified" && doc.status !== "Verified")
-        return false;
-      if (
-        selectedStatus === "pending_review" &&
-        doc.status !== "Pending Review"
-      )
-        return false;
-      if (selectedStatus === "rejected" && doc.status !== "Rejected")
-        return false;
-    }
+  // const filteredDocuments = documents.filter((doc) => {
+  //   if (selectedStatus !== "all") {
+  //     if (selectedStatus === "verified" && doc.status !== "Verified")
+  //       return false;
+  //     if (
+  //       selectedStatus === "pending_review" &&
+  //       doc.status !== "Pending Review"
+  //     )
+  //       return false;
+  //     if (selectedStatus === "rejected" && doc.status !== "Rejected")
+  //       return false;
+  //   }
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        doc.documentName?.toLowerCase().includes(q) ||
-        doc.businessName?.toLowerCase().includes(q) ||
-        doc.documentType?.toLowerCase().includes(q) ||
-        doc.branchName?.toLowerCase().includes(q)
-      );
-    }
+  //   if (searchQuery.trim()) {
+  //     const q = searchQuery.toLowerCase();
+  //     return (
+  //       doc.documentName?.toLowerCase().includes(q) ||
+  //       doc.businessName?.toLowerCase().includes(q) ||
+  //       doc.documentType?.toLowerCase().includes(q) ||
+  //       doc.branchName?.toLowerCase().includes(q)
+  //     );
+  //   }
 
-    return true;
-  });
+  //   return true;
+  // });
 
   /* ================= STATUS BADGE ================= */
   const getStatusBadge = (status: string) => {
@@ -382,8 +382,8 @@ const ExchangeBusinessDocuments = () => {
 
         {/* ================= FILTERS ================= */}
         <Card>
-          <CardContent className="p-6 flex gap-4 flex-wrap">
-            <div className="flex-1">
+          <CardContent className="p-6 flex justify-between flex-wrap">
+            <div className="">
               <Label>Search Documents</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -395,31 +395,29 @@ const ExchangeBusinessDocuments = () => {
                 />
               </div>
             </div>
-
-            <div>
-              <Label>Status</Label>
-              <Select
-                value={selectedStatus}
-                onValueChange={(val) => {
-                  setSelectedStatus(val);
-                  setCurrentPage(0);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className="max-h-60 overflow-y-auto">
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                    <SelectItem value="pending_review">
-                      Pending Review
-                    </SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </div>
-                </SelectContent>
-              </Select>
-              {/* <select
+            <div className="flex gap-4 flex-wrap">
+              <div className="w-[200px]">
+                <Label>Status</Label>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={(val) => {
+                    setSelectedStatus(val);
+                    setCurrentPage(0);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="max-h-60 overflow-y-auto">
+                      <SelectItem value="All">All</SelectItem>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                    </div>
+                  </SelectContent>
+                </Select>
+                {/* <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="h-10 px-3 border rounded-md"
@@ -429,44 +427,45 @@ const ExchangeBusinessDocuments = () => {
                 <option value="pending_review">Pending Review</option>
                 <option value="rejected">Rejected</option>
               </select> */}
-            </div>
-            <div>
-              <label>Filter By Business</label>
-              <Select
-                value={businessId}
-                onValueChange={(val) => {
-                  setBusinessId(val);
-                  setCurrentPage(0);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Business Admin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div
-                    ref={listRef}
-                    onScroll={handleScroll}
-                    className="max-h-60 overflow-y-auto"
-                  >
-                    {businessAdminList?.map((c, index) => (
-                      <SelectItem key={index} value={c?.id}>
-                        {c?.companyName}
-                      </SelectItem>
-                    ))}
-                    {/* OBSERVER TARGET */}
-                    {businessLoading && (
-                      <div className="py-2 text-center text-sm text-gray-500">
-                        Loading...
-                      </div>
-                    )}
-                    {!hasMore && (
-                      <div className="py-2 text-center text-sm text-gray-400">
-                        No More Data
-                      </div>
-                    )}
-                  </div>
-                </SelectContent>
-              </Select>
+              </div>
+              <div className="w-[250px]">
+                <label>Filter By Business</label>
+                <Select
+                  value={businessId}
+                  onValueChange={(val) => {
+                    setBusinessId(val);
+                    setCurrentPage(0);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Business Admin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div
+                      ref={listRef}
+                      onScroll={handleScroll}
+                      className="max-h-60 overflow-y-auto"
+                    >
+                      {businessAdminList?.map((c, index) => (
+                        <SelectItem key={index} value={c?.id}>
+                          {c?.companyName}
+                        </SelectItem>
+                      ))}
+                      {/* OBSERVER TARGET */}
+                      {businessLoading && (
+                        <div className="py-2 text-center text-sm text-gray-500">
+                          Loading...
+                        </div>
+                      )}
+                      {!hasMore && (
+                        <div className="py-2 text-center text-sm text-gray-400">
+                          No More Data
+                        </div>
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -474,7 +473,7 @@ const ExchangeBusinessDocuments = () => {
         {/* ================= DOCUMENT LIST ================= */}
         <Card>
           <CardHeader>
-            <CardTitle>Documents ({filteredDocuments.length})</CardTitle>
+            <CardTitle>Documents ({documents.length})</CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-3">
@@ -485,7 +484,7 @@ const ExchangeBusinessDocuments = () => {
             )}
 
             {!loading &&
-              filteredDocuments.map((doc) => {
+              documents?.map((doc) => {
                 // ✅ CHANGED: each row checks if ITS OWN ID is loading
                 const isThisDocLoading = loadingDocId === doc.documentId;
 
@@ -561,7 +560,7 @@ const ExchangeBusinessDocuments = () => {
                 );
               })}
 
-            {!loading && filteredDocuments.length === 0 && (
+            {!loading && documents.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
                 <p>No documents found</p>

@@ -106,6 +106,7 @@ const ExchangePayoutConfig = () => {
   const [countries, setCountries] = useState([]);
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
+  const [mechanismErrors, setMechanismErrors] = useState({});
   const [page, setPage] = useState<number>(0);
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
@@ -352,6 +353,11 @@ const ExchangePayoutConfig = () => {
       updated[index] = value;
       return { ...prev, [mechanism]: updated };
     });
+    setMechanismErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[`list-${mechanism}-${index}`];
+      return updated;
+    });
   };
 
   const addToInformation = (mechanism: string) => {
@@ -378,6 +384,11 @@ const ExchangePayoutConfig = () => {
       const updated = [...current];
       updated[index] = value;
       return { ...prev, [mechanism]: updated };
+    });
+    setMechanismErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[`info-${mechanism}-${index}`];
+      return updated;
     });
   };
 
@@ -498,6 +509,28 @@ const ExchangePayoutConfig = () => {
     };
   };
 
+  const validateMechanisms = () => {
+    const errors = {};
+
+    destinationForm?.mechanisms?.forEach((m) => {
+      (mechanismLists[m] || []).forEach((item, idx) => {
+        if (!item?.trim()) {
+          errors[`list-${m}-${idx}`] = "This field is required";
+        }
+      });
+
+      (mechanismInformation[m] || []).forEach((item, idx) => {
+        if (!item?.trim()) {
+          errors[`info-${m}-${idx}`] = "This field is required";
+        }
+      });
+    });
+
+    setMechanismErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
   const handleAddDestination = async () => {
     // if (!destinationForm.country || destinationForm.mechanisms.length === 0) {
     //   toast({
@@ -515,6 +548,10 @@ const ExchangePayoutConfig = () => {
 
     setErrors(newErrors);
 
+    const mechanismValid = validateMechanisms();
+
+    const hasMainErrors = Object.keys(newErrors).length > 0;
+    if (!mechanismValid || hasMainErrors) return;
     // Stop if any errors
     if (Object.keys(newErrors).length > 0) return;
     const payload = buildPayload();
@@ -594,6 +631,8 @@ const ExchangePayoutConfig = () => {
     // );
 
     // setDestinations(updatedDestinations);
+    const mechanismValid = validateMechanisms();
+    if (!mechanismValid) return;
     const payload = buildPayload();
     try {
       const res = await fetch(
@@ -813,6 +852,15 @@ const ExchangePayoutConfig = () => {
         },
       };
     });
+    setMechanismLists((prev) => ({
+      ...prev,
+      [mechanism]: [""],
+    }));
+
+    setMechanismInformation((prev) => ({
+      ...prev,
+      [mechanism]: [""],
+    }));
   };
 
   return (
@@ -1152,7 +1200,15 @@ const ExchangePayoutConfig = () => {
 
         {/* Add Destination Dialog */}
 
-        <Dialog open={addDestinationOpen} onOpenChange={setAddDestinationOpen}>
+        <Dialog
+          open={addDestinationOpen}
+          onOpenChange={(open) => {
+            setAddDestinationOpen(open);
+            if (!open) {
+              setMechanismErrors({});
+            }
+          }}
+        >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -1391,14 +1447,22 @@ const ExchangePayoutConfig = () => {
                       <p className="font-serif">List</p>
                       {(mechanismLists[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateListField(m, idx, e.target.value)
-                            }
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateListField(m, idx, e.target.value)
+                              }
+                            />
+                            {mechanismErrors[`list-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`list-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1424,14 +1488,22 @@ const ExchangePayoutConfig = () => {
                       <p className="font-serif">Customer Information</p>
                       {(mechanismInformation[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateInformation(m, idx, e.target.value)
-                            }
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateInformation(m, idx, e.target.value)
+                              }
+                            />
+                            {mechanismErrors[`info-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`info-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1808,21 +1880,28 @@ const ExchangePayoutConfig = () => {
                     <h4 className="font-semibold">
                       {formatEnumText(m)} Configuration
                     </h4>
-
                     {/* List Section */}
                     <div className="mt-6 border-t pt-4">
                       <p className="font-serif">List</p>
                       {(mechanismLists[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateListField(m, idx, e.target.value)
-                            }
-                            className="w-56"
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateListField(m, idx, e.target.value)
+                              }
+                              // className="w-56"
+                            />
+                            {mechanismErrors[`list-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`list-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1850,15 +1929,23 @@ const ExchangePayoutConfig = () => {
                       <p className="font-serif">Customer Information</p>
                       {(mechanismInformation[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateInformation(m, idx, e.target.value)
-                            }
-                            className="w-56"
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateInformation(m, idx, e.target.value)
+                              }
+                              // className="w-56"
+                            />
+                            {mechanismErrors[`info-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`info-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"

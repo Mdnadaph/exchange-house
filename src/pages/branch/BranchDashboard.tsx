@@ -22,10 +22,12 @@ const BranchDashboard = () => {
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const token = cookies.token;
   const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(false);
   const [dashboardData, setDashboardData] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      setLoading(true);
       try {
         const response = await fetch(`${BASE_URL}/api/v1/dashboard/branch`, {
           method: "GET",
@@ -40,6 +42,8 @@ const BranchDashboard = () => {
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -77,27 +81,28 @@ const BranchDashboard = () => {
   ];
 
   const myKYBQueue = dashboardData ? dashboardData.kybQueues : [];
+  const recentActivities = dashboardData ? dashboardData?.recentActivities : [];
 
-  const recentActivities = [
-    {
-      type: "kyb_approved",
-      message: "Approved KYB application for Global Suppliers Inc",
-      time: "2 hours ago",
-      status: "success",
-    },
-    {
-      type: "document_requested",
-      message: "Requested additional documents for Tech Solutions Ltd",
-      time: "4 hours ago",
-      status: "pending",
-    },
-    {
-      type: "kyb_completed",
-      message: "Completed KYB review for Dubai Trading Co",
-      time: "1 day ago",
-      status: "success",
-    },
-  ];
+  // const recentActivities = [
+  //   {
+  //     type: "kyb_approved",
+  //     message: "Approved KYB application for Global Suppliers Inc",
+  //     time: "2 hours ago",
+  //     status: "success",
+  //   },
+  //   {
+  //     type: "document_requested",
+  //     message: "Requested additional documents for Tech Solutions Ltd",
+  //     time: "4 hours ago",
+  //     status: "pending",
+  //   },
+  //   {
+  //     type: "kyb_completed",
+  //     message: "Completed KYB review for Dubai Trading Co",
+  //     time: "1 day ago",
+  //     status: "success",
+  //   },
+  // ];
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -254,64 +259,78 @@ const BranchDashboard = () => {
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4 ">
-                {myKYBQueue.map((application) => {
-                  const status = getStatusBadge(application.kybStatus);
-                  return (
-                    <Card
-                      key={application.id}
-                      className={`border-l-4 ${getPriorityColor(application.priority)}`}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-foreground">
-                                {application.companyName}
-                              </h4>
-                              <Badge
-                                variant={status.variant}
-                                className="text-xs"
-                              >
-                                {status.label}
-                              </Badge>
-                              {application.priority && (
-                                <Badge variant="outline" className="text-xs">
-                                  {application.priority?.toUpperCase()}
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {application.id} • {application.businessType}
-                            </p>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Created:
-                                </span>
-                                <p className="font-medium">
-                                  {new Date(
-                                    application.createdAt,
-                                  ).toLocaleDateString()}
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
+                {loading ? (
+                  <p className="text-center font-normal text-base text-gray-700">
+                    Loading...
+                  </p>
+                ) : myKYBQueue?.length > 0 ? (
+                  <div className="w-full">
+                    {myKYBQueue?.map((application) => {
+                      const status = getStatusBadge(application.kybStatus);
+                      return (
+                        <Card
+                          key={application.id}
+                          className={`border-l-4 ${getPriorityColor(application.priority)}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-2 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold text-foreground">
+                                    {application.companyName}
+                                  </h4>
+                                  <Badge
+                                    variant={status.variant}
+                                    className="text-xs"
+                                  >
+                                    {status.label}
+                                  </Badge>
+                                  {application.priority && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {application.priority?.toUpperCase()}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {application.id} • {application.businessType}
                                 </p>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                                  <div>
+                                    <span className="text-muted-foreground">
+                                      Created:
+                                    </span>
+                                    <p className="font-medium">
+                                      {new Date(
+                                        application.createdAt,
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2 ml-4">
+                                <Button variant="outline" size="sm">
+                                  Continue
+                                </Button>
+                                {application.kybStatus ===
+                                  "READY_FOR_REVIEW" && (
+                                  <Button variant="business" size="sm">
+                                    Review
+                                  </Button>
+                                )}
                               </div>
                             </div>
-                          </div>
-                          <div className="flex space-x-2 ml-4">
-                            <Button variant="outline" size="sm">
-                              Continue
-                            </Button>
-                            {application.kybStatus === "READY_FOR_REVIEW" && (
-                              <Button variant="business" size="sm">
-                                Review
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>No KYB Que is available</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -322,22 +341,55 @@ const BranchDashboard = () => {
               <CardHeader>
                 <CardTitle>Recent Activities</CardTitle>
               </CardHeader>
-              {/* <CardContent className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/50">
-                    <div className="flex-shrink-0 mt-0.5">
-                      {activity.status === "success" && <CheckCircle className="h-5 w-5 text-success" />}
-                      {activity.status === "pending" && <Clock className="h-5 w-5 text-warning" />}
-                      {activity.status === "info" && <AlertCircle className="h-5 w-5 text-primary" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
+                {loading ? (
+                  <p className="text-center text-base font-normal text-gray-700">
+                    Loading
+                  </p>
+                ) : recentActivities?.length > 0 ? (
+                  <div>
+                    {recentActivities.map((activity, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-3 p-3 rounded-lg bg-muted/50"
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {activity?.kybStatus === "APPROVED" && (
+                            <CheckCircle className="h-5 w-5 text-success" />
+                          )}
+                          {activity.kybStatus === "NOT_STARTED" && (
+                            <Clock className="h-5 w-5 text-warning" />
+                          )}
+                          {activity.kybStatus === "REJECTED" && (
+                            <AlertCircle className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">
+                            {activity?.kybStatus == "APPROVED"
+                              ? "Approved"
+                              : activity?.kybStatus == "NOT_STARTED"
+                                ? "Pending"
+                                : "Rejected"}{" "}
+                            KYB Application for {activity?.companyName}
+                          </p>
+                          {/* <p className="text-sm font-medium text-foreground">
+                        {activity.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {activity.time}
+                      </p> */}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </CardContent> */}
-              <p className="text-center pb-3">No Data Available</p>
+                ) : (
+                  <p className="text-center font-normal text-base text-gray-700">
+                    No Recent Activities
+                  </p>
+                )}
+              </CardContent>
+              {/* <p className="text-center pb-3">No Data Available</p> */}
             </Card>
           </div>
         </div>
