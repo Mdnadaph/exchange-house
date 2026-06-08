@@ -1221,6 +1221,12 @@ const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 
 const ExchangeStaffManagement = () => {
   const [cookies] = useCookies(["token", "email"]);
+  const [dashboardStats, setDashboardStats] = useState<Record<string, number>>({
+    totalStaff: 0,
+    activeStaff: 0,
+    totalStaffs: 0,
+    activeMembers: 0,
+  });
   const [branches, setBranches] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -1240,6 +1246,7 @@ const ExchangeStaffManagement = () => {
   const [editableStaffData, setEditableStaffData] = useState<any>({});
   const [staffUUID, setStaffUUID] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounceValue, setDebounceValue] = useState<string>("");
   const [filterByRole, setFilterByRole] = useState("");
   const [staffForm, setStaffForm] = useState({
     fullName: "",
@@ -1296,7 +1303,7 @@ const ExchangeStaffManagement = () => {
   const validateAllStaff = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!staffForm.fullName.trim()) {
+    if (!staffForm?.fullName?.trim()) {
       newErrors.fullName = "Full name is required";
     } else if (staffForm.fullName.trim().length < 2) {
       newErrors.fullName = "Full name must be at least 2 characters";
@@ -1338,6 +1345,15 @@ const ExchangeStaffManagement = () => {
     { id: 4, label: "KYB Officer", value: "ROLE_KYB_OFFICER" },
   ];
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchQuery);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchQuery]);
+
   const fetchBranchWithStaff = async (page = 0) => {
     if (!token) return;
     try {
@@ -1347,13 +1363,20 @@ const ExchangeStaffManagement = () => {
         params: {
           page,
           size: pageSize,
-          query: searchQuery,
+          query: debounceValue,
           role: filterByRole,
         },
       });
+      console.log("branch", res?.data?.data?.content);
       setBranches(res?.data?.data?.content || []);
       setTotalPages(res?.data?.data?.totalPages || 0);
       setCurrentPage(res?.data?.data?.page || 0);
+      setDashboardStats({
+        totalBranches: res?.data?.data?.dashboardStats?.totalBranches || 0,
+        activeBranches: res?.data?.data?.dashboardStats?.activeBranches || 0,
+        totalStaffs: res?.data?.data?.dashboardStats?.totalStaffs || 0,
+        activeMembers: res?.data?.data?.dashboardStats?.activeMembers || 0,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -1367,7 +1390,7 @@ const ExchangeStaffManagement = () => {
 
   useEffect(() => {
     if (token) fetchBranchWithStaff(currentPage);
-  }, [token, currentPage, searchQuery, filterByRole]);
+  }, [token, currentPage, debounceValue, filterByRole]);
 
   const createStaff = async () => {
     if (!validateAllStaff()) {
@@ -1769,7 +1792,7 @@ const ExchangeStaffManagement = () => {
       acc + (branch.staff?.filter((s: any) => s.active)?.length || 0),
     0,
   );
-  const totalBranches = branches.length;
+  // const totalBranches = branches.length;
   const individualStaffData = editableStaffData?.staff?.find(
     (staff: any) => staff?.uuid == staffUUID,
   );
@@ -1826,9 +1849,11 @@ const ExchangeStaffManagement = () => {
               <Users className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalStaff}</div>
+              <div className="text-2xl font-bold">
+                {dashboardStats?.totalStaffs}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Across {totalBranches} branches
+                Across {dashboardStats?.totalBranches} branches
               </p>
             </CardContent>
           </Card>
@@ -1841,16 +1866,16 @@ const ExchangeStaffManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {activeStaff}
+                {dashboardStats?.activeMembers}
               </div>
               <p className="text-xs text-muted-foreground">
-                {totalStaff > 0
-                  ? `${Math.round((activeStaff / totalStaff) * 100)}% availability`
+                {dashboardStats?.totalStaffs > 0
+                  ? `${Math.round((dashboardStats?.activeMembers / dashboardStats?.totalStaffs) * 100)}% availability`
                   : "No staff"}
               </p>
             </CardContent>
           </Card>
-          <Card className="shadow-card">
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Avg Efficiency
@@ -1877,7 +1902,7 @@ const ExchangeStaffManagement = () => {
                 Data not available
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* ----------------- Create Staff Modal ----------------- */}
@@ -2452,29 +2477,47 @@ const ExchangeStaffManagement = () => {
                     id="search"
                     placeholder="Search by name, role, or branch..."
                     className="pl-9"
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(0);
+                    }}
                   />
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setFilterByRole("")}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFilterByRole("");
+                    setCurrentPage(0);
+                  }}
+                >
                   All Staff
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setFilterByRole("BRANCH_MANAGER")}
+                  onClick={() => {
+                    setFilterByRole("BRANCH_MANAGER");
+                    setCurrentPage(0);
+                  }}
                 >
                   Branch Managers
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setFilterByRole("KYB_OFFICER")}
+                  onClick={() => {
+                    setFilterByRole("KYB_OFFICER");
+                    setCurrentPage(0);
+                  }}
                 >
                   KYB Officers
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setFilterByRole("SENIOR_KYB_OFFICER")}
+                  onClick={() => {
+                    setFilterByRole("SENIOR_KYB_OFFICER");
+                    setCurrentPage(0);
+                  }}
                 >
                   Senior KYB Officer
                 </Button>

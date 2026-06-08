@@ -164,6 +164,7 @@ const ExchangeTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [cookies] = useCookies([
     "token",
@@ -212,7 +213,7 @@ const ExchangeTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&status=PAYMENT_VERIFICATION_PENDING`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&search=${debounceValue}&page=${page}&pageSize=10&status=PAYMENT_VERIFICATION_PENDING`,
         config,
       );
 
@@ -399,24 +400,34 @@ const ExchangeTransactions = () => {
       setVerifying((prev) => ({ ...prev, [transactionId]: false }));
     }
   };
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchTransactions();
-  }, [transactionType, page]);
+  }, [transactionType, page, debounceValue]);
   // console.log("transitionData", transactions);
   // Filter transactions based on search
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -675,7 +686,7 @@ const ExchangeTransactions = () => {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
+                <Label htmlFor="search">Search Payment </Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -683,7 +694,10 @@ const ExchangeTransactions = () => {
                     placeholder="Search by ID, business, beneficiary, or reference..."
                     className="pl-9"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPage(0);
+                    }}
                     disabled={error !== null}
                   />
                 </div>
@@ -724,11 +738,11 @@ const ExchangeTransactions = () => {
               <div className="text-center py-12">
                 <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
-                  Unable to load transactions
+                  Unable to load payment history
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -736,15 +750,15 @@ const ExchangeTransactions = () => {
                     ? "No payment found"
                     : "No matching transactions"}
                 </h3>
-                <p className="text-muted-foreground">
+                {/* <p className="text-muted-foreground">
                   {searchTerm
                     ? "Try adjusting your search criteria"
                     : "No payment available in the system"}
-                </p>
+                </p> */}
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
+                {transactions?.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status.icon;
                   const isEligible = ELIGIBLE_VERIFICATION_STATUSES.includes(

@@ -43,6 +43,7 @@ type Discount = {
   description: string;
   type: "PERCENTAGE" | "FIXED_AMOUNT";
   discountValue: number;
+  status: string;
   expiryDate: string;
   startDate: string;
   createdAt: string;
@@ -66,9 +67,9 @@ const ExchangeDiscount = () => {
   const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | "ACTIVE" | "INACTIVE"
-  >("ALL");
+  const [debounceValue, setDebounceValue] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -91,11 +92,23 @@ const ExchangeDiscount = () => {
 
   const discountTypes = ["PERCENTAGE", "FIXED_AMOUNT"];
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchQuery);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchQuery]);
+
   const fetchDiscounts = async () => {
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("size", size.toString());
+      params.append("search", debounceValue);
+      params.append("status", statusFilter);
 
       const res = await axios.get(`${BASE_URL}/api/v1/discount/all`, {
         params,
@@ -116,12 +129,14 @@ const ExchangeDiscount = () => {
           error?.response?.data?.message || "Failed to fetch discounts",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchDiscounts();
-  }, [page]);
+  }, [page, debounceValue, statusFilter]);
 
   const openAddModal = () => {
     setForm({
@@ -235,33 +250,48 @@ const ExchangeDiscount = () => {
   };
 
   // Determine current status based on dates
-  const getStatus = (discount: Discount): "ACTIVE" | "INACTIVE" => {
-    const now = new Date();
-    const start = new Date(discount.startDate);
-    const expiry = new Date(discount.expiryDate);
+  // const getStatus = (discount: Discount): "ACTIVE" | "INACTIVE" => {
+  //   const now = new Date();
+  //   const start = new Date(discount.startDate);
+  //   const expiry = new Date(discount.expiryDate);
 
-    if (now >= start && now <= expiry) {
-      return "ACTIVE";
-    }
-    return "INACTIVE";
-  };
+  //   if (now >= start && now <= expiry) {
+  //     return "ACTIVE";
+  //   }
+  //   return "INACTIVE";
+  // };
 
   // Combined filtering: search + status
-  const filteredDiscounts = discounts
-    .filter(
-      (d) =>
-        d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (d.description || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        (d.discountCode || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-    )
-    .filter((d) => {
-      if (statusFilter === "ALL") return true;
-      return getStatus(d) === statusFilter;
-    });
+  // const filteredDiscounts = discounts
+  //   .filter(
+  //     (d) =>
+  //       d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       (d.description || "")
+  //         .toLowerCase()
+  //         .includes(searchQuery.toLowerCase()) ||
+  //       (d.discountCode || "")
+  //         .toLowerCase()
+  //         .includes(searchQuery.toLowerCase()),
+  //   )
+  //   .filter((d) => {
+  //     if (statusFilter === "ALL") return true;
+  //     return getStatus(d) === statusFilter;
+  //   });
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "bg-green-600 hover:bg-green-600 text-white";
+      case "INACTIVE":
+        return "bg-gray-500 hover:bg-gray-500 text-white";
+      case "EXPIRED":
+        return "bg-red-600 hover:bg-red-600 text-white";
+      case "PENDING":
+        return "bg-yellow-500 hover:bg-yellow-500 text-white";
+      default:
+        return "bg-gray-500 hover:bg-gray-500 text-white";
+    }
+  };
 
   return (
     <ExchangeLayout>
@@ -493,7 +523,10 @@ const ExchangeDiscount = () => {
                     placeholder="Name, code or description..."
                     className="pl-9"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
@@ -505,7 +538,10 @@ const ExchangeDiscount = () => {
                     variant={statusFilter === "ALL" ? "default" : "ghost"}
                     size="sm"
                     className="rounded-none border-r"
-                    onClick={() => setStatusFilter("ALL")}
+                    onClick={() => {
+                      setStatusFilter("");
+                      setPage(0);
+                    }}
                   >
                     All
                   </Button>
@@ -513,7 +549,10 @@ const ExchangeDiscount = () => {
                     variant={statusFilter === "ACTIVE" ? "default" : "ghost"}
                     size="sm"
                     className="rounded-none border-r"
-                    onClick={() => setStatusFilter("ACTIVE")}
+                    onClick={() => {
+                      setPage(0);
+                      setStatusFilter("ACTIVE");
+                    }}
                   >
                     Active
                   </Button>
@@ -521,7 +560,10 @@ const ExchangeDiscount = () => {
                     variant={statusFilter === "INACTIVE" ? "default" : "ghost"}
                     size="sm"
                     className="rounded-none"
-                    onClick={() => setStatusFilter("INACTIVE")}
+                    onClick={() => {
+                      setStatusFilter("INACTIVE");
+                      setPage(0);
+                    }}
                   >
                     Inactive
                   </Button>
@@ -533,7 +575,16 @@ const ExchangeDiscount = () => {
 
         {/* Discounts List */}
         <div className="space-y-5">
-          {filteredDiscounts.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">
+                  Loading Discount...
+                </p>
+              </div>
+            </div>
+          ) : discounts?.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center text-muted-foreground">
                 <Tag className="h-10 w-10 mx-auto mb-4 opacity-50" />
@@ -546,8 +597,8 @@ const ExchangeDiscount = () => {
               </CardContent>
             </Card>
           ) : (
-            filteredDiscounts.map((discount) => {
-              const status = getStatus(discount);
+            discounts?.map((discount) => {
+              // const status = getStatus(discount);
               return (
                 <Card
                   key={discount.id}
@@ -566,16 +617,12 @@ const ExchangeDiscount = () => {
                                 {discount.name}
                               </h3>
                               <Badge
-                                variant={
-                                  status === "ACTIVE" ? "default" : "secondary"
-                                }
-                                className={
-                                  status === "ACTIVE"
-                                    ? "bg-green-600 hover:bg-green-600 text-white"
-                                    : "bg-gray-500 hover:bg-gray-500 text-white"
-                                }
+                                variant="secondary"
+                                className={getStatusBadgeClass(
+                                  discount?.status,
+                                )}
                               >
-                                {status}
+                                {discount?.status}
                               </Badge>
                             </div>
 
@@ -666,11 +713,9 @@ const ExchangeDiscount = () => {
               <ChevronLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
-
             <div className="text-sm text-muted-foreground mx-2">
               Page {page + 1} of {totalPages}
             </div>
-
             <Button
               variant="outline"
               size="sm"

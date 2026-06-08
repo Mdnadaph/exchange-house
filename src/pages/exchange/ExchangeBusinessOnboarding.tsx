@@ -9,6 +9,7 @@ import {
   Users,
   TrendingUp,
   Plus,
+  Search,
 } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import BASE_URL from "@/config/config";
@@ -26,6 +27,8 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "react-day-picker";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import { Label } from "recharts";
+import { Input } from "@/components/ui/input";
 
 const ExchangeBusinessOnboarding = () => {
   const [cookies] = useCookies(["token"]);
@@ -35,6 +38,11 @@ const ExchangeBusinessOnboarding = () => {
   const { uuid } = useParams();
 
   const [businesses, setBusinesses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDebounceValue, setSearchDebounceValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
     pendingKYB: 0,
@@ -49,10 +57,17 @@ const ExchangeBusinessOnboarding = () => {
     totalElements: 0,
   });
 
-  const fetchBusinesses = async (page = 0, size = 10) => {
+  const fetchBusinesses = async (
+    page = 0,
+    size = 10,
+    search = "",
+    fromDate = "",
+    toDate = "",
+  ) => {
+    setLoading(true);
     try {
       const response = await axios.get(
-        `${BASE_URL}/api/v3/business?page=${page}&size=${size}`,
+        `${BASE_URL}/api/v3/business?page=${page}&size=${size}&search=${search}&fromDate=${fromDate}&toDate=${toDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,6 +111,8 @@ const ExchangeBusinessOnboarding = () => {
     } catch (error) {
       console.error("Error fetching businesses:", error);
       setBusinesses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,9 +145,28 @@ const ExchangeBusinessOnboarding = () => {
   };
 
   useEffect(() => {
-    fetchBusinesses(pagination.pageNumber, pagination.pageSize);
+    const debounce = setTimeout(() => {
+      setSearchDebounceValue(searchTerm);
+    }, 500);
+    return () => clearTimeout(debounce);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchBusinesses(
+      pagination.pageNumber,
+      pagination.pageSize,
+      searchDebounceValue,
+      fromDate,
+      toDate,
+    );
     fetchStats();
-  }, [pagination.pageNumber, pagination.pageSize]);
+  }, [
+    pagination.pageNumber,
+    pagination.pageSize,
+    searchDebounceValue,
+    fromDate,
+    toDate,
+  ]);
 
   const getKYBStatusBadge = (status) => {
     switch (status) {
@@ -275,6 +311,62 @@ const ExchangeBusinessOnboarding = () => {
         </div>
 
         {/* Recently Onboarded Businesses */}
+
+        <Card className="shadow-card">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="space-y-1">
+                <label className="text-base font-medium text-gray-800">
+                  Search OnBoard Business
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by business"
+                    className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      pagination.pageNumber = 0;
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-base font-medium text-gray-800">
+                  From Date
+                </label>
+                <input
+                  className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                  type="date"
+                  placeholder="From Date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e?.target?.value);
+                    pagination.pageNumber = 0;
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-base font-medium text-gray-800">
+                  To Date
+                </label>
+                <input
+                  className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                  type="date"
+                  placeholder="To Date"
+                  value={toDate}
+                  onChange={(e) => {
+                    setToDate(e?.target?.value);
+                    pagination.pageNumber = 0;
+                  }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -284,7 +376,11 @@ const ExchangeBusinessOnboarding = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {businesses.length > 0 ? (
+              {loading ? (
+                <p className="text-gray-600 font-normal text-base text-center pt-3">
+                  Loading...
+                </p>
+              ) : businesses.length > 0 ? (
                 businesses.map((business) => (
                   <Card
                     key={business.id}

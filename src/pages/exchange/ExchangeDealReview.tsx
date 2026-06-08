@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,14 @@ import BASE_URL from "@/config/config";
 import { formateDateTime } from "@/utils/formateDateTime";
 import { useToast } from "@/hooks/use-toast";
 import UserLayout from "@/components/layout/UserLayout";
+import axios from "axios";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 type NegotiationHistoryItem = {
   id: number;
   actionType: string;
@@ -44,15 +52,98 @@ const ExchangeDealReview = () => {
   const { toast } = useToast();
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
   const [expandedDeal, setExpandedDeal] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [rateDealsData, setRateDealsData] = useState(null);
   const [searchValue, setSearchValue] = useState<string>("");
   const [page, setPage] = useState<number>(0);
+  const [branchPage, setBranchPage] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [debounceValue, setDebounceValue] = useState("");
+  const [branchListLoading, setBranchListLoading] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [branchListData, setBranchListData] = useState([]);
+  const [branchId, setBranchId] = useState<string>("");
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const getBranchList = async () => {
+    // IMPORTANT
+    // if (!hasMore) return;
+
+    try {
+      setBranchListLoading(true);
+
+      const currentPage = branchPage;
+
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/branch/all-branches?page=${currentPage}&pageSize=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        const newData = res?.data?.data || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMore(false);
+        }
+
+        // Prevent duplicate data
+        setBranchListData((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.branchId === item.branchId),
+          );
+
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setBranchPage((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+      });
+    } finally {
+      setBranchListLoading(false);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !branchListLoading && hasMore) {
+      getBranchList();
+    }
+  };
+  useEffect(() => {
+    getBranchList();
+  }, []);
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchValue);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchValue]);
   const getRateDeals = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
+        `${BASE_URL}/api/v1/rate-deals?query=${debounceValue}&page=${page}&size=10&fromDate=${fromDate}&toDate=${toDate}&branchId=${branchId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -73,7 +164,7 @@ const ExchangeDealReview = () => {
   };
   useEffect(() => {
     getRateDeals();
-  }, [searchValue, page]);
+  }, [debounceValue, page, fromDate, toDate, branchId]);
   const exchangeAdminStats = rateDealsData?.exchangeAdminStats;
   const dealsData = rateDealsData?.rateDeals?.content;
   const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
@@ -192,7 +283,7 @@ const ExchangeDealReview = () => {
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
+            <p className="text-muted-foreground">Loading Rate Deals...</p>
           </div>
         </div>
       </ExchangeLayout>
@@ -279,20 +370,89 @@ const ExchangeDealReview = () => {
         {/* Search & Filter */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Deals</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by business name, ID, or currency..."
-                    className="pl-9"
-                    value={searchValue}
-                    onChange={(e: any) => setSearchValue(e.target.value)}
+            <div className="flex gap-4 flex-wrap justify-between">
+              <div className="flex gap-2 items-center flex-wrap">
+                <div className="">
+                  <Label htmlFor="search">Search Deals</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by business name, ID, or currency..."
+                      className="pl-9"
+                      value={searchValue}
+                      onChange={(e: any) => {
+                        setSearchValue(e.target.value);
+                        setPage(0);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="space-y-1 w-[200px]">
+                  <h2 className="text-base font-normal text-gray-700">
+                    Filter by branch
+                  </h2>
+                  <Select
+                    value={branchId}
+                    onValueChange={(val) => setBranchId(val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        ref={listRef}
+                        onScroll={handleScroll}
+                        className="max-h-60 overflow-y-auto"
+                      >
+                        {branchListData?.map((c, index) => (
+                          <SelectItem key={index} value={c?.branchId}>
+                            {c?.name}
+                          </SelectItem>
+                        ))}
+                        {/* OBSERVER TARGET */}
+                        {branchListLoading && (
+                          <div className="py-2 text-center text-sm text-gray-500">
+                            Loading...
+                          </div>
+                        )}
+                        {!hasMore && (
+                          <div className="py-2 text-center text-sm text-gray-400">
+                            No More Data
+                          </div>
+                        )}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
               <div className="flex gap-2 items-end">
                 <Button variant="outline">Pending</Button>
                 <Button variant="outline">All Branches</Button>
@@ -491,7 +651,7 @@ const ExchangeDealReview = () => {
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
                 Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} beneficiaries
+                {totalDealsRateDataList} rate deals
               </p>
               <div className="flex space-x-2">
                 <Button

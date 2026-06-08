@@ -105,7 +105,8 @@ const ExchangeKYBReview = () => {
   const [viewerData, setViewerData] = useState<DocumentViewerData | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   // Image preview state
   const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
@@ -125,6 +126,8 @@ const ExchangeKYBReview = () => {
     page = 0,
     search = searchTerm,
     status = filterStatus,
+    fromDate = "",
+    toDate = "",
   ) => {
     try {
       setLoading(true);
@@ -140,6 +143,8 @@ const ExchangeKYBReview = () => {
         size: pageSize.toString(),
       });
       if (search) params.append("query", search);
+      if (fromDate) params.append("fromDate", fromDate);
+      if (toDate) params.append("toDate", toDate);
 
       if (status) {
         const backendStatus = filterToBackendStatus[status];
@@ -224,8 +229,14 @@ const ExchangeKYBReview = () => {
     }
   };
   useEffect(() => {
-    fetchKYBApplications(currentPage, searchTerm, filterStatus);
-  }, [currentPage, filterStatus]);
+    fetchKYBApplications(
+      currentPage,
+      searchTerm,
+      filterStatus,
+      fromDate,
+      toDate,
+    );
+  }, [currentPage, filterStatus, fromDate, toDate]);
   useEffect(() => {
     setCurrentPage(0);
   }, [searchTerm]);
@@ -882,20 +893,49 @@ const ExchangeKYBReview = () => {
           {/* Search and Filters */}
           <Card className="shadow-card">
             <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="search">Search Applications</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search by business name, ID, contact person, or email..."
-                      className="pl-9"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+              <div className="flex flex-col sm:flex-row gap-2 justify-between flex-wrap">
+                <div className="flex gap-3 items-center ">
+                  <div className="">
+                    <Label htmlFor="search">Search Applications</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="search"
+                        placeholder="Search by business name, ID, contact person, or email..."
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="fromDate">From Date</Label>
+                    <input
+                      className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                      type="date"
+                      placeholder="From Date"
+                      value={fromDate}
+                      onChange={(e) => {
+                        setFromDate(e?.target?.value);
+                        setCurrentPage(0);
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="toDate">To Date</Label>
+                    <input
+                      className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                      type="date"
+                      placeholder="To Date"
+                      value={toDate}
+                      onChange={(e) => {
+                        setToDate(e?.target?.value);
+                        setCurrentPage(0);
+                      }}
                     />
                   </div>
                 </div>
+
                 <div className="flex gap-2 items-end">
                   {/* <Button
                     type="button"
@@ -957,8 +997,355 @@ const ExchangeKYBReview = () => {
           </Card>
 
           {/* KYB Applications */}
-          <div className="space-y-6">
-            {kybApplications.map((application) => {
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">
+                  Loading KYB applications...
+                </p>
+              </div>
+            </div>
+          ) : kybApplications?.length > 0 ? (
+            <div>
+              {kybApplications.map((application) => {
+                const status = getStatusBadge(application.status);
+                const StatusIcon = status.icon;
+                const allDocumentsApproved = checkAllDocumentsApproved(
+                  application.documents,
+                );
+                return (
+                  <Card key={application.uuid} className="shadow-card">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <Building className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-foreground">
+                              {application.businessName}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {application.id} • {application.businessType}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge
+                            variant={status.variant}
+                            className="flex items-center gap-1"
+                          >
+                            <StatusIcon className="h-3 w-3" />
+                            {status.label}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {application.priority.toUpperCase()} PRIORITY
+                          </Badge>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
+                              application.riskScore,
+                            )}`}
+                          >
+                            {application.riskScore.toUpperCase()} RISK
+                          </span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Business Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center text-muted-foreground text-sm">
+                            <User className="h-3 w-3 mr-1" />
+                            Business Admin:
+                          </div>
+                          <p className="font-medium">
+                            {application.contactPerson}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {application.email}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-muted-foreground text-sm">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            Location:
+                          </div>
+                          <p className="font-medium break-words">
+                            {application.address}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {application.phone}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-muted-foreground text-sm">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Submitted:
+                          </div>
+                          <p className="font-medium">
+                            {application.submittedDate}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Assigned: {application.assignedStaff}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground text-sm">
+                            Completeness:
+                          </span>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className="bg-primary h-2 rounded-full transition-all"
+                              style={{ width: `${application.completeness}%` }}
+                            />
+                          </div>
+                          <p className="text-xs font-medium">
+                            {application.completeness}% Complete
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Transaction Profile */}
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-3">
+                          Transaction Profile
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">
+                              Expected Volume:
+                            </span>
+                            <p className="font-medium">
+                              {application.transactionProfile.expectedVolume ||
+                                "Not specified"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Frequency:
+                            </span>
+                            <p className="font-medium">
+                              {application.transactionProfile
+                                .expectedFrequency || "Not specified"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Source of Funds:
+                            </span>
+                            <p className="font-medium">
+                              {application.transactionProfile.sourceOfFunds ||
+                                "Not specified"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Destinations:
+                            </span>
+                            <p className="font-medium">
+                              {application.transactionProfile.destinations
+                                .length > 0
+                                ? application.transactionProfile.destinations.join(
+                                    ", ",
+                                  )
+                                : "Not specified"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Documents Review */}
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-3">
+                          Documents Review
+                        </h4>
+                        {application.documents &&
+                        application.documents.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {application.documents.map(
+                              (doc: any, index: number) => {
+                                const docStatus = getDocumentStatusBadge(
+                                  doc.status,
+                                );
+                                return (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between p-3 border rounded-lg"
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <FileCheck className="h-4 w-4 text-muted-foreground" />
+                                      <div>
+                                        <p className="text-sm font-medium">
+                                          {doc.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {doc.documentName} • Uploaded:{" "}
+                                          {doc.uploadDate}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Badge
+                                        variant={docStatus.variant}
+                                        className="text-xs"
+                                      >
+                                        {docStatus.label}
+                                      </Badge>
+                                      {doc?.status == "pending" && (
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleViewDocument(doc, application)
+                                          }
+                                          disabled={!doc.viewUrl}
+                                          title="View Document"
+                                        >
+                                          <Eye className="h-3 w-3" />
+                                        </Button>
+                                      )}
+
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          doc.viewUrl &&
+                                          handleDownloadDocument(
+                                            doc.viewUrl,
+                                            doc.documentName,
+                                          )
+                                        }
+                                        disabled={!doc.viewUrl}
+                                        title="Download Document"
+                                      >
+                                        <Download className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 border rounded-lg">
+                            <FileCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">
+                              No documents uploaded yet
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Review Actions */}
+
+                      <div className="border-t pt-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <Label htmlFor={`comments-${application.uuid}`}>
+                              Review Comments
+                            </Label>
+                            <Textarea
+                              id={`comments-${application.uuid}`}
+                              placeholder="Add review comments, questions, or requirements..."
+                              rows={4}
+                              value={
+                                comments[application.uuid] ||
+                                application.originalData?.kybReviewComment ||
+                                ""
+                              }
+                              onChange={(e) =>
+                                setComments((prev) => ({
+                                  ...prev,
+                                  [application.uuid]: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          {!["approved", "rejected"].includes(
+                            application.status,
+                          ) && (
+                            <div className="space-y-4">
+                              <Label>Review Actions</Label>
+                              <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  className="w-full"
+                                  disabled={!allDocumentsApproved}
+                                  title={
+                                    !allDocumentsApproved
+                                      ? "All documents must be approved first"
+                                      : "Approve business application"
+                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleKybAction(
+                                      application.originalData.id,
+                                      "approve",
+                                      comments[application.uuid] ||
+                                        "Application approved",
+                                    );
+                                  }}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  className="w-full"
+                                  disabled={application.documents.length === 0} // <-- added
+                                  title={
+                                    application.documents.length === 0
+                                      ? "No documents uploaded"
+                                      : ""
+                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleKybAction(
+                                      application.originalData.id,
+                                      "reject",
+                                      comments[application.uuid] ||
+                                        "Application rejected",
+                                    );
+                                  }}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="shadow-card">
+              <CardContent className="py-12 text-center">
+                <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  No KYB Applications Found
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchTerm
+                    ? "No applications match your search criteria."
+                    : "No business verification applications to review at the moment."}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          {/* <div className="space-y-6">
+            {kybApplications?.map((application) => {
               const status = getStatusBadge(application.status);
               const StatusIcon = status.icon;
               const allDocumentsApproved = checkAllDocumentsApproved(
@@ -1004,7 +1391,7 @@ const ExchangeKYBReview = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Business Information */}
+                  
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4">
                       <div className="space-y-1">
                         <div className="flex items-center text-muted-foreground text-sm">
@@ -1058,7 +1445,7 @@ const ExchangeKYBReview = () => {
                       </div>
                     </div>
 
-                    {/* Transaction Profile */}
+                    
                     <div>
                       <h4 className="font-semibold text-foreground mb-3">
                         Transaction Profile
@@ -1107,7 +1494,7 @@ const ExchangeKYBReview = () => {
                       </div>
                     </div>
 
-                    {/* Documents Review */}
+                    
                     <div>
                       <h4 className="font-semibold text-foreground mb-3">
                         Documents Review
@@ -1191,7 +1578,7 @@ const ExchangeKYBReview = () => {
                       )}
                     </div>
 
-                    {/* Review Actions */}
+                  
 
                     <div className="border-t pt-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1304,7 +1691,7 @@ const ExchangeKYBReview = () => {
                 </CardContent>
               </Card>
             )}
-          </div>
+          </div> */}
 
           {/* Bottom Pagination */}
           {totalPages > 1 && (

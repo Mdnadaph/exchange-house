@@ -40,6 +40,8 @@ import {
   X,
   Check,
   Minus,
+  Loader2,
+  Search,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -108,6 +110,8 @@ const ExchangePayoutConfig = () => {
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [mechanismErrors, setMechanismErrors] = useState({});
   const [page, setPage] = useState<number>(0);
+  const [searchValue, setSearchValue] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
   const [errors, setErrors] = useState<any>({});
@@ -120,6 +124,8 @@ const ExchangePayoutConfig = () => {
   const [mechanismIdToNameMap, setMechanismIdToNameMap] = useState<
     Record<string, string>
   >({});
+  const [fetchingPayoutConfig, setFecthingPayoutConfig] =
+    useState<boolean>(false);
   const [supportedCurrencies, setSupportedCurrencies] = useState<
     Record<string, string[]>
   >({});
@@ -161,10 +167,20 @@ const ExchangePayoutConfig = () => {
     getCountriesData();
   }, []);
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchValue);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchValue]);
+
   const getPayOutConfig = async () => {
+    setFecthingPayoutConfig(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/payout/config?page=${page}&size=10`,
+        `${BASE_URL}/api/v1/payout/config?page=${page}&size=10&search=${debounceValue}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -191,12 +207,14 @@ const ExchangePayoutConfig = () => {
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setFecthingPayoutConfig(false);
     }
   };
 
   useEffect(() => {
     getPayOutConfig();
-  }, [page]);
+  }, [page, debounceValue]);
 
   const getMechanismList = async (countryId: number) => {
     try {
@@ -994,6 +1012,30 @@ const ExchangePayoutConfig = () => {
         </div>
 
         {/* Payout Destinations */}
+
+        <Card className="shadow-card">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Label htmlFor="search">Search Payout Config</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by ID, business, beneficiary, or reference..."
+                    className="pl-9"
+                    value={searchValue}
+                    onChange={(e) => {
+                      setSearchValue(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -1003,7 +1045,16 @@ const ExchangePayoutConfig = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-10">
-              {payoutData?.countries?.length > 0 ? (
+              {fetchingPayoutConfig ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">
+                      Loading Payout Config...
+                    </p>
+                  </div>
+                </div>
+              ) : payoutData?.countries?.length > 0 ? (
                 payoutData?.countries?.map((destination: any) => {
                   const status = getStatusBadge(destination?.status);
                   const StatusIcon = status.icon;
