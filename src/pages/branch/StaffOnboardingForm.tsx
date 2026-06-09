@@ -53,6 +53,7 @@ import {
 interface BusinessOnboardingFormProps {
   trigger?: React.ReactNode;
   refetch: (a?: number, b?: number) => void;
+  clearFilterData?: () => void;
 }
 
 import BASE_URL from "@/config/config";
@@ -65,6 +66,7 @@ import { cn } from "@/lib/utils";
 const StaffOnboardingForm = ({
   trigger,
   refetch,
+  clearFilterData,
 }: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
 
@@ -379,6 +381,7 @@ const StaffOnboardingForm = ({
         setIdDocuments([]);
         setSelectedCurrencies(["AED"]);
         refetch();
+        clearFilterData?.();
         setUboData([
           {
             uboType: "",

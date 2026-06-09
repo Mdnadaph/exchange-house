@@ -2468,7 +2468,7 @@ const ExchangeStaffManagement = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 item-center flex-wrap">
               <div className="flex-1">
                 <Label htmlFor="search">Search Staff</Label>
                 <div className="relative">
@@ -2484,7 +2484,7 @@ const ExchangeStaffManagement = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-6">
                 <Button
                   variant="outline"
                   onClick={() => {

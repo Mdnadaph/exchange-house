@@ -2200,7 +2200,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
     }
     return initialValues;
   };
-  console.log("businessTypes", businessTypes);
   const handleSubmit = async (values: KYBRuleFormValues) => {
     try {
       setIsSubmitting(true);

@@ -716,7 +716,10 @@ const ExchangeAdminComplianceReview = () => {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("ALL")}
+                  onClick={() => {
+                    setTransactionType("ALL");
+                    setPage(0);
+                  }}
                 >
                   All Status
                 </Button>
@@ -724,13 +727,19 @@ const ExchangeAdminComplianceReview = () => {
                 {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setTransactionType("SINGLE");
+                    setPage(0);
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setTransactionType("BULK");
+                    setPage(0);
+                  }}
                 >
                   Bulk
                 </Button>

@@ -29,12 +29,14 @@ interface DealRequestFormProps {
   trigger?: React.ReactNode;
   onSubmitSuccess?: () => void;
   refetch?: () => any;
+  clearFilterData?: () => void;
 }
 
 const BranchDealRequestForm = ({
   trigger,
   onSubmitSuccess,
   refetch,
+  clearFilterData,
 }: DealRequestFormProps) => {
   const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies.token;
@@ -201,7 +203,7 @@ const BranchDealRequestForm = ({
     const rateEntry = exchangeRates?.find(
       (r) => r?.name?.toLowerCase() === currency?.toLowerCase(),
     );
-    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(2) : "";
+    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(7) : "";
 
     setFormData({
       ...formData,
@@ -259,7 +261,7 @@ const BranchDealRequestForm = ({
       if (!res.ok || json.status !== true) {
         throw new Error(json.message || "Create failed");
       }
-
+      clearFilterData?.();
       setFormData({
         sendingAmount: "",
         payoutCountry: "",

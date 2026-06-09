@@ -556,7 +556,10 @@ const ExchangeKybMapping = () => {
                     placeholder="Search by business type or KYB type..."
                     className="pl-9"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(0);
+                    }}
                   />
                 </div>
               </div>

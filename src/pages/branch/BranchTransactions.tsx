@@ -191,6 +191,9 @@ const BranchTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebouncedValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [cookies] = useCookies([
     "token",
@@ -213,6 +216,22 @@ const BranchTransactions = () => {
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
 
+  const clearFilterData = () => {
+    setSearchTerm("");
+    setFromDate("");
+    setToDate("");
+    setPage(0);
+  };
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebouncedValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
+
   const fetchTransactions = async () => {
     try {
       setIsLoading(true);
@@ -231,7 +250,7 @@ const BranchTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&search=${debounceValue}&fromDate=${fromDate}&toDate=${toDate}`,
         config,
       );
 
@@ -388,20 +407,20 @@ const BranchTransactions = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page]);
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  }, [token, transactionType, page, debounceValue, fromDate, toDate]);
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -502,18 +521,18 @@ const BranchTransactions = () => {
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
-  if (isLoading) {
-    return (
-      <BranchLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </BranchLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <BranchLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </BranchLayout>
+  //   );
+  // }
 
   return (
     <BranchLayout>
@@ -632,43 +651,87 @@ const BranchTransactions = () => {
         <Card className="shadow-card">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by ID, beneficiary, or reference..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    disabled={error !== null}
+              <div className="flex-1 flex flex-wrap gap-2 items-center">
+                <div>
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, beneficiary, or reference..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                      disabled={error !== null}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1 mt-2">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("ALL")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("ALL");
+                  }}
                 >
                   All Status
                 </Button>
                 {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("COMPLETED")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("COMPLETED");
+                  }}
                 >
                   Completed
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("SINGLE");
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("BULK");
+                  }}
                 >
                   Bulk
                 </Button>
@@ -691,7 +754,16 @@ const BranchTransactions = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
+              </div>
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -707,7 +779,7 @@ const BranchTransactions = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
+                {transactions?.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status?.icon;
 

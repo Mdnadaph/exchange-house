@@ -938,7 +938,7 @@ const ExchangePayoutConfig = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {summaryData?.activeCountries}
+                {summaryData?.activeCountries || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("configurableDestinations") || "Configurable destinations"}
@@ -956,7 +956,7 @@ const ExchangePayoutConfig = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {/* {destinations.reduce((sum, d) => sum + d.partners, 0)} */}
-                {summaryData?.totalPartners}
+                {summaryData?.totalPartners || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("banksAndInstitutions") || "Banks & financial institutions"}
@@ -972,7 +972,7 @@ const ExchangePayoutConfig = () => {
               <Banknote className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{`${currencyCode} ${summaryData?.totalMonthlyVolumeUsd}`}</div>
+              <div className="text-2xl font-bold">{`${currencyCode} ${summaryData?.totalMonthlyVolumeUsd || 0}`}</div>
               <p className="text-xs text-muted-foreground">
                 +18% {t("fromLastMonth") || "from last month"}
               </p>
@@ -1002,7 +1002,7 @@ const ExchangePayoutConfig = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {summaryData?.maintenanceCountries}
+                {summaryData?.maintenanceCountries || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("allDestinations") || "All destinations"}

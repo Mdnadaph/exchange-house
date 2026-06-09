@@ -56,6 +56,8 @@ const UserDealRequests = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [page, setPage] = useState<number>(0);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const getRateDeals = async (options?: {
     page?: number;
@@ -378,9 +380,10 @@ const UserDealRequests = () => {
         <Card className="shadow-card">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Deals</Label>
-                {/* <div className="relative mt-1.5">
+              <div className="flex-1 flex gap-3 items-center">
+                <div>
+                  <Label htmlFor="search">Search Deals</Label>
+                  {/* <div className="relative mt-1.5">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search"
@@ -390,21 +393,52 @@ const UserDealRequests = () => {
                     onChange={(e) => setSearchValue(e.target.value)}
                   />
                 </div> */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by name, email, or role..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by name, email, or role..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="search">From Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="search">To Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
                 <Button
                   variant={statusFilter === "" ? "default" : "outline"}
-                  onClick={() => handleStatusFilter("")}
+                  onClick={() => {
+                    handleStatusFilter("");
+                    setPage(0);
+                  }}
                 >
                   All Status
                 </Button>
@@ -412,19 +446,28 @@ const UserDealRequests = () => {
                   variant={
                     statusFilter === "PENDING_REVIEW" ? "default" : "outline"
                   }
-                  onClick={() => handleStatusFilter("PENDING_REVIEW")}
+                  onClick={() => {
+                    handleStatusFilter("PENDING_REVIEW");
+                    setPage(0);
+                  }}
                 >
                   Pending
                 </Button>
                 <Button
                   variant={statusFilter === "APPROVED" ? "default" : "outline"}
-                  onClick={() => handleStatusFilter("APPROVED")}
+                  onClick={() => {
+                    handleStatusFilter("APPROVED");
+                    setPage(0);
+                  }}
                 >
                   Approved
                 </Button>
                 <Button
                   variant={statusFilter === "REJECTED" ? "default" : "outline"}
-                  onClick={() => handleStatusFilter("REJECTED")}
+                  onClick={() => {
+                    handleStatusFilter("REJECTED");
+                    setPage(0);
+                  }}
                 >
                   Rejected
                 </Button>

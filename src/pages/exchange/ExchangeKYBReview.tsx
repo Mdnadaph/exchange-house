@@ -904,7 +904,10 @@ const ExchangeKYBReview = () => {
                         placeholder="Search by business name, ID, contact person, or email..."
                         className="pl-9"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setCurrentPage(0);
+                        }}
                       />
                     </div>
                   </div>

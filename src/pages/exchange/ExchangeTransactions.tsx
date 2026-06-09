@@ -780,7 +780,10 @@ const ExchangeTransactions = () => {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("ALL")}
+                  onClick={() => {
+                    setTransactionType("ALL");
+                    setPage(0);
+                  }}
                 >
                   All Status
                 </Button>
@@ -788,13 +791,19 @@ const ExchangeTransactions = () => {
                 {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("SINGLE");
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setTransactionType("BULK");
+                    setPage(0);
+                  }}
                 >
                   Bulk
                 </Button>

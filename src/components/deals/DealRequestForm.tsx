@@ -165,7 +165,7 @@ const DealRequestForm = ({
     const rateEntry = exchangeRates?.find(
       (r) => r?.name?.toLowerCase() === currency?.toLowerCase(),
     );
-    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(2) : "";
+    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(7) : "";
 
     setFormData({
       ...formData,

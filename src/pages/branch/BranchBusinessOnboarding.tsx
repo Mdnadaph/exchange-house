@@ -1,7 +1,15 @@
 import BranchLayout from "@/components/layout/BranchLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, CheckCircle, Clock, Users, TrendingUp } from "lucide-react";
+import {
+  Building2,
+  CheckCircle,
+  Clock,
+  Users,
+  TrendingUp,
+  Search,
+  Loader2,
+} from "lucide-react";
 import StaffOnboardingForm from "./StaffOnboardingForm";
 
 import BASE_URL from "@/config/config";
@@ -18,6 +26,8 @@ import {
 } from "@/components/ui/pagination";
 import { useEffect, useState } from "react";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const BranchBusinessOnboarding = () => {
   const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
@@ -27,6 +37,7 @@ const BranchBusinessOnboarding = () => {
 
   const navigate = useNavigate();
   const { uuid } = useParams();
+  const [loading, setLoading] = useState<boolean>(false);
   const [businesses, setBusinesses] = useState([]);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
@@ -41,11 +52,30 @@ const BranchBusinessOnboarding = () => {
     totalPages: 1,
     totalElements: 0,
   });
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [searchTearm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
+  const clearFilterData = () => {
+    setFromDate("");
+    setToDate("");
+    setSearchTerm("");
+    setDebounceValue("");
+  };
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTearm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTearm]);
 
   const fetchBusinesses = async (page = 0, size = 10) => {
+    setLoading(true);
     try {
       const response = await axios.get(
-        `${BASE_URL}/api/v3/business?page=${page}&size=${size}`,
+        `${BASE_URL}/api/v3/business?page=${page}&size=${size}&search=${debounceValue}&fromDate=${fromDate}&toDate=${toDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -89,6 +119,8 @@ const BranchBusinessOnboarding = () => {
     } catch (error) {
       console.error("Error fetching businesses:", error);
       setBusinesses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,7 +150,13 @@ const BranchBusinessOnboarding = () => {
   useEffect(() => {
     fetchBusinesses(pagination.pageNumber, pagination.pageSize);
     fetchStats();
-  }, [pagination.pageNumber, pagination.pageSize]);
+  }, [
+    pagination.pageNumber,
+    pagination.pageSize,
+    debounceValue,
+    fromDate,
+    toDate,
+  ]);
 
   const getKYBStatusBadge = (status) => {
     switch (status) {
@@ -176,6 +214,7 @@ const BranchBusinessOnboarding = () => {
           </div>
           <PermissionGate permission="BTN_BRANCH_ONBOARD_BUSINESS">
             <StaffOnboardingForm
+              clearFilterData={clearFilterData}
               refetch={() =>
                 fetchBusinesses(pagination.pageNumber, pagination.pageSize)
               }
@@ -194,10 +233,10 @@ const BranchBusinessOnboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats.totalBusinesses}
+                {stats.totalBusinesses || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                +{stats.thisMonth} this month
+                +{stats.thisMonth || 0} this month
               </p>
             </CardContent>
           </Card>
@@ -210,7 +249,7 @@ const BranchBusinessOnboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats.pendingKYB}
+                {stats.pendingKYB || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting verification
@@ -226,7 +265,7 @@ const BranchBusinessOnboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats.verified}
+                {stats.verified || 0}
               </div>
               <p className="text-xs text-muted-foreground">Active accounts</p>
             </CardContent>
@@ -240,15 +279,66 @@ const BranchBusinessOnboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats.thisMonth}
+                {stats.thisMonth || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                {thisMonthChangeText}
+                {thisMonthChangeText || 0}
               </p>
             </CardContent>
           </Card>
         </div>
+        <Card className="shadow-card">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 flex flex-wrap gap-2 items-center">
+                <div>
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, beneficiary, or reference..."
+                      className="pl-9"
+                      value={searchTearm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        pagination.pageNumber = 0;
+                      }}
+                      // disabled={error !== null}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      pagination.pageNumber = 0;
+                    }}
+                  />
+                </div>
 
+                <div className="flex flex-col gap-1 mt-2">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      pagination.pageNumber = 0;
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {/* Recently Onboarded Businesses */}
         <Card className="shadow-card">
           <CardHeader>
@@ -259,7 +349,16 @@ const BranchBusinessOnboarding = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {businesses.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">
+                      Loading onBoard Business...
+                    </p>
+                  </div>
+                </div>
+              ) : businesses?.length > 0 ? (
                 businesses.map((business) => (
                   <Card
                     key={business.id}
