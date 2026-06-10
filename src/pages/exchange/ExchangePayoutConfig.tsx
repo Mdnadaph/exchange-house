@@ -1217,35 +1217,32 @@ const ExchangePayoutConfig = () => {
                 </p>
               )}
             </div>
-            {payoutData?.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Showing {payoutData.countries.length} of{" "}
-                  {payoutData.totalElements} beneficiaries
-                </p>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={
-                      (page + 1) * payoutData.pageSize >=
-                      payoutData.totalElements
-                    }
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {payoutData.countries.length} of{" "}
+                {payoutData.totalElements} beneficiaries
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    (page + 1) * payoutData.pageSize >= payoutData.totalElements
+                  }
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 

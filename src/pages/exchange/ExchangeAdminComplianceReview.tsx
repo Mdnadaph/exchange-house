@@ -1249,7 +1249,7 @@ const ExchangeAdminComplianceReview = () => {
             )}
 
             {/* Pagination */}
-            {totalTransactionData > 10 && (
+            {/* {totalTransactionData > 10 && (
               <div className="flex items-center justify-between mt-6 pt-6 border-t">
                 <p className="text-sm text-muted-foreground">
                   Showing {transactions?.length} of {totalTransactionData}{" "}
@@ -1274,7 +1274,32 @@ const ExchangeAdminComplianceReview = () => {
                   </Button>
                 </div>
               </div>
-            )}
+            )} */}
+
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {transactions?.length} of {totalTransactionData}{" "}
+                transactions
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={(page + 1) * 10 >= totalTransactionData}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

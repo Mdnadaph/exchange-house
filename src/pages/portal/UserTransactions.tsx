@@ -268,11 +268,9 @@ const UserTransactions = () => {
       };
 
       let url = `${BASE_URL}/api/v1/transactions?search=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10`;
-
       const response = await axios.get<ApiResponse>(url, config);
       const data = response.data;
       setTotalTransactionData(data?.data?.pagination?.totalItems);
-
       if (data?.data?.dashboard) {
         setDashboardData(data?.data?.dashboard);
       }
@@ -1291,7 +1289,7 @@ const UserTransactions = () => {
                   );
                 })}
 
-                {totalTransactionData > 10 && (
+                {/* {totalTransactionData > 10 && (
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
                       Showing {transactions?.length} of {totalTransactionData}{" "}
@@ -1316,7 +1314,31 @@ const UserTransactions = () => {
                       </Button>
                     </div>
                   </div>
-                )}
+                )} */}
+                <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {transactions?.length} of {totalTransactionData}{" "}
+                    transation
+                  </p>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page === 0}
+                      onClick={() => setPage(page - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={(page + 1) * 10 >= totalTransactionData}
+                      onClick={() => setPage(page + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>

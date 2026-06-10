@@ -407,7 +407,7 @@ const UserDealRequests = () => {
                     />
                   </div>
                 </div>
-                <div>
+                {/* <div>
                   <Label htmlFor="search">From Date</Label>
                   <input
                     type="date"
@@ -430,7 +430,7 @@ const UserDealRequests = () => {
                       setPage(0);
                     }}
                   />
-                </div>
+                </div> */}
               </div>
               <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
                 <Button
@@ -675,6 +675,34 @@ const UserDealRequests = () => {
               No Data Found
             </p>
           )}
+
+          {/* 
+          {totalDealsRateDataList > 10 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
+                {totalDealsRateDataList} deals
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={goToPrevPage}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
+                  onClick={goToNextPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )} */}
 
           {totalDealsRateDataList > 10 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t">

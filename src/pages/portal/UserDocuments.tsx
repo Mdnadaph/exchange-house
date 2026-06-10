@@ -53,7 +53,7 @@ const UserDocuments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         const data = response?.data?.data;
@@ -84,7 +84,8 @@ const UserDocuments = () => {
               }
 
               const fileName = docData.fileName || "";
-              const fileExtension = fileName.split(".").pop()?.toLowerCase() || "";
+              const fileExtension =
+                fileName.split(".").pop()?.toLowerCase() || "";
 
               const categoryMap: Record<string, string> = {
                 BUSINESS: "Compliance",
@@ -98,7 +99,8 @@ const UserDocuments = () => {
               if (doc.verified === false) status = "rejected";
 
               const formatFileSize = (bytes: number): string => {
-                if (bytes === 0 || bytes === undefined || bytes === null) return "0 Bytes";
+                if (bytes === 0 || bytes === undefined || bytes === null)
+                  return "0 Bytes";
                 const k = 1024;
                 const sizes = ["Bytes", "KB", "MB", "GB"];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -125,7 +127,10 @@ const UserDocuments = () => {
                 expiryDate: null,
                 fileType: fileExtension,
                 description: `${doc.name} for KYB compliance`,
-                rejectionReason: doc.verified === false ? doc.rejectionReason || "Verification failed" : null,
+                rejectionReason:
+                  doc.verified === false
+                    ? doc.rejectionReason || "Verification failed"
+                    : null,
                 documentNumber: docData.documentNumber,
                 fileUrl: docData.fileUrl,
                 rawFileSize: docData.fileSize,
@@ -151,12 +156,30 @@ const UserDocuments = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      approved: { variant: "default" as const, label: "Approved", icon: CheckCircle },
-      pending_review: { variant: "secondary" as const, label: "Pending Review", icon: Clock },
-      rejected: { variant: "destructive" as const, label: "Rejected", icon: AlertCircle },
-      expired: { variant: "destructive" as const, label: "Expired", icon: AlertCircle },
+      approved: {
+        variant: "default" as const,
+        label: "Approved",
+        icon: CheckCircle,
+      },
+      pending_review: {
+        variant: "secondary" as const,
+        label: "Pending Review",
+        icon: Clock,
+      },
+      rejected: {
+        variant: "destructive" as const,
+        label: "Rejected",
+        icon: AlertCircle,
+      },
+      expired: {
+        variant: "destructive" as const,
+        label: "Expired",
+        icon: AlertCircle,
+      },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.pending_review;
+    return (
+      statusMap[status as keyof typeof statusMap] || statusMap.pending_review
+    );
   };
 
   const getFileIcon = (fileType: string) => {
@@ -179,7 +202,9 @@ const UserDocuments = () => {
       Financial: "bg-purple-100 text-purple-800",
       Identity: "bg-orange-100 text-orange-800",
     };
-    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
+    return (
+      colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800"
+    );
   };
 
   const handleView = async (viewUrl: string) => {
@@ -228,9 +253,12 @@ const UserDocuments = () => {
   const filteredDocuments = documents.filter((doc) => {
     // Status filter
     if (activeFilter !== "All") {
-      if (activeFilter === "Pending" && doc.status !== "pending_review") return false;
-      if (activeFilter === "Approved" && doc.status !== "approved") return false;
-      if (activeFilter === "Rejected" && doc.status !== "rejected") return false;
+      if (activeFilter === "Pending" && doc.status !== "pending_review")
+        return false;
+      if (activeFilter === "Approved" && doc.status !== "approved")
+        return false;
+      if (activeFilter === "Rejected" && doc.status !== "rejected")
+        return false;
     }
 
     // Search term
@@ -304,7 +332,9 @@ const UserDocuments = () => {
               <p className="text-xs text-muted-foreground">
                 {documents.length > 0
                   ? `${Math.round(
-                      (documents.filter((d) => d.status === "approved").length / documents.length) * 100
+                      (documents.filter((d) => d.status === "approved").length /
+                        documents.length) *
+                        100,
                     )}% approval rate`
                   : "No documents"}
               </p>
@@ -335,9 +365,13 @@ const UserDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {apiData ? apiData.documents.filter((d: any) => d.required).length : "N/A"}
+                {apiData
+                  ? apiData.documents.filter((d: any) => d.required).length
+                  : "N/A"}
               </div>
-              <p className="text-xs text-muted-foreground">Total required for KYB</p>
+              <p className="text-xs text-muted-foreground">
+                Total required for KYB
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -395,7 +429,8 @@ const UserDocuments = () => {
             <CardTitle>Documents Library</CardTitle>
             {apiData && (
               <p className="text-sm text-muted-foreground">
-                KYB Type: {apiData.kybType} • Business Type: {apiData.businessType}
+                KYB Type: {apiData.kybType} • Business Type:{" "}
+                {apiData.businessType}
               </p>
             )}
           </CardHeader>
@@ -416,7 +451,10 @@ const UserDocuments = () => {
                   const FileIcon = getFileIcon(doc.fileType);
 
                   return (
-                    <Card key={doc.id} className="hover:shadow-md transition-smooth">
+                    <Card
+                      key={doc.id}
+                      className="hover:shadow-md transition-smooth"
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
                           <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
@@ -427,7 +465,9 @@ const UserDocuments = () => {
                             <div className="flex items-start justify-between">
                               <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                  <h4 className="font-semibold text-foreground">{doc.name}</h4>
+                                  <h4 className="font-semibold text-foreground">
+                                    {doc.name}
+                                  </h4>
                                   <Badge
                                     variant={status.variant}
                                     className="flex items-center gap-1"
@@ -437,13 +477,15 @@ const UserDocuments = () => {
                                   </Badge>
                                   <span
                                     className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                                      doc.category
+                                      doc.category,
                                     )}`}
                                   >
                                     {doc.category}
                                   </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{doc.description}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {doc.description}
+                                </p>
                               </div>
 
                               <div className="flex space-x-1 pl-8">
@@ -458,7 +500,9 @@ const UserDocuments = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleDownload(doc?.fileUrl, doc?.name)}
+                                  onClick={() =>
+                                    handleDownload(doc?.fileUrl, doc?.name)
+                                  }
                                 >
                                   <Download className="h-4 w-4 mr-1" />
                                   Download
@@ -468,17 +512,25 @@ const UserDocuments = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
                               <div>
-                                <span className="text-muted-foreground">Type:</span>
+                                <span className="text-muted-foreground">
+                                  Type:
+                                </span>
                                 <p className="font-medium">{doc.type}</p>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Size:</span>
+                                <span className="text-muted-foreground">
+                                  Size:
+                                </span>
                                 <p className="font-medium">{doc.size}</p>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Uploaded:</span>
+                                <span className="text-muted-foreground">
+                                  Uploaded:
+                                </span>
                                 <p className="font-medium">{doc.uploadDate}</p>
-                                <p className="text-xs text-muted-foreground">by {firstName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  by {firstName}
+                                </p>
                               </div>
                             </div>
 
@@ -486,7 +538,9 @@ const UserDocuments = () => {
                             {doc.rejectionReason && (
                               <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
                                 <p className="text-sm text-red-800">
-                                  <span className="font-medium">Rejection Reason:</span>{" "}
+                                  <span className="font-medium">
+                                    Rejection Reason:
+                                  </span>{" "}
                                   {doc.rejectionReason}
                                 </p>
                               </div>
@@ -503,7 +557,8 @@ const UserDocuments = () => {
             {/* Pagination (static for now) */}
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {filteredDocuments.length} of {documents.length} documents
+                Showing {filteredDocuments?.length} of {documents?.length}{" "}
+                documents
               </p>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" disabled>

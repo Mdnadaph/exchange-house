@@ -1815,7 +1815,7 @@ const StaffOnboardingForm = ({
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
-                Deal Validity Period (Days) *
+                Deal Validity Period (Hours) *
               </Label>
               <Input
                 id="dealValidityDays"
@@ -1835,7 +1835,8 @@ const StaffOnboardingForm = ({
                 placeholder="7"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Number of days a negotiated deal remains valid before expiration
+                Number of hours a negotiated deal remains valid before
+                expiration
               </p>
               {errors.dealValidityDays && (
                 <p className="text-sm text-red-500 mt-1">

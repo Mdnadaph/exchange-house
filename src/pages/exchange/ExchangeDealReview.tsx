@@ -647,6 +647,32 @@ const ExchangeDealReview = () => {
               No Data Found
             </p>
           )}
+          {/* {totalDealsRateDataList > 10 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
+                {totalDealsRateDataList} rate deals
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )} */}
           {totalDealsRateDataList > 10 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">

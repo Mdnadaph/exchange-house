@@ -820,7 +820,7 @@ const ExchangeAdminUser = () => {
                 </p>
               </div>
             ) : (
-              users.map((user) => {
+              users?.map((user) => {
                 const status = getStatusBadge(
                   user.active ? "active" : "inactive",
                 );
@@ -915,7 +915,7 @@ const ExchangeAdminUser = () => {
       </div>
 
       {/* Pagination */}
-      {!loading && users.length > 0 && totalPages > 1 && (
+      {/* {!loading && users.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-end mt-6">
           <div className="flex items-center space-x-2">
             <Button
@@ -960,7 +960,64 @@ const ExchangeAdminUser = () => {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
+
+      <div className="flex items-center justify-end mt-6">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+            disabled={currentPage === 0}
+          >
+            Previous
+          </Button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i;
+            } else if (currentPage < 3) {
+              pageNum = i;
+            } else if (currentPage > totalPages - 4) {
+              pageNum = totalPages - 5 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+            return (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(pageNum)}
+              >
+                {pageNum + 1}
+              </Button>
+            );
+          })}
+          {/* <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
+            }
+            disabled={currentPage === totalPages - 1}
+          >
+            Next
+          </Button> */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setCurrentPage((prev) =>
+                Math.min(prev + 1, totalPages ? totalPages - 1 : 0),
+              )
+            }
+            disabled={currentPage >= (totalPages || 1) - 1}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </ExchangeLayout>
   );
 };

@@ -650,9 +650,9 @@ const BranchTransactions = () => {
         {/* Search and Filters – unchanged */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="flex-1 flex flex-wrap gap-2 items-center">
-                <div>
+                <div className="flex-1">
                   <Label htmlFor="search">Search Transactions</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -697,7 +697,7 @@ const BranchTransactions = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
                   onClick={() => {

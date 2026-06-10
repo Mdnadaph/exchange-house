@@ -291,7 +291,7 @@ const BranchBusinessOnboarding = () => {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 flex flex-wrap gap-2 items-center">
-                <div>
+                <div className="flex-1">
                   <Label htmlFor="search">Search OnBoard Business</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

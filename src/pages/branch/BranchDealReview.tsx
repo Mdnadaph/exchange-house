@@ -301,7 +301,7 @@ const BranchDealReview = () => {
           <CardContent className="p-6">
             <div className="flex gap-4 flex-wrap items-end">
               <div className="flex-1 flex gap-2 items-center flex-wrap">
-                <div className="min-w-[280px]">
+                <div className="flex-1">
                   <Label htmlFor="search">Search Deals</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />

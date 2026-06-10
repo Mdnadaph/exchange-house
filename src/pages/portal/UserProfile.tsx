@@ -550,7 +550,7 @@ const UserProfile = () => {
       toast({
         title: "Update Failed",
         description:
-          error.response?.data?.message || "Failed to update business profile",
+          error?.response?.data?.message || "Failed to update business profile",
         variant: "destructive",
       });
     } finally {
@@ -772,6 +772,7 @@ const UserProfile = () => {
                   <Label className="text-muted-foreground">Company Name</Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.companyName}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -793,6 +794,7 @@ const UserProfile = () => {
                   </Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.tradeLicense}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -812,6 +814,7 @@ const UserProfile = () => {
                   <Label className="text-muted-foreground">Tax Number</Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.taxNumber}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -844,6 +847,7 @@ const UserProfile = () => {
                   </Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.businessPhone}
                       onChange={(e) =>
                         setBusinessProfile({

@@ -2538,7 +2538,7 @@ const ExchangeStaffManagement = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {branches.length === 0 ? (
+            {branches?.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-lg font-medium mb-2">No branches found</h3>
@@ -2547,7 +2547,7 @@ const ExchangeStaffManagement = () => {
                 </p>
               </div>
             ) : (
-              branches.map((branch) => {
+              branches?.map((branch) => {
                 const mapStatus = (apiStatus: string) => {
                   const statusMap: Record<string, string> = {
                     ACTIVE: "active",
@@ -2728,7 +2728,7 @@ const ExchangeStaffManagement = () => {
       </div>
 
       {/* Pagination */}
-      {!loading && branches.length > 0 && totalPages > 1 && (
+      {!loading && (
         <div className="flex items-center justify-end mt-6">
           <div className="flex items-center space-x-2">
             <Button

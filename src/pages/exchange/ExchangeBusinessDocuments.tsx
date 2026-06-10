@@ -575,6 +575,36 @@ const ExchangeBusinessDocuments = () => {
         </Card>
 
         {/* ================= PAGINATION ================= */}
+        {/* {totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+                />
+              </PaginationItem>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    isActive={i === currentPage}
+                    onClick={() => setCurrentPage(i)}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )} */}
         {totalPages > 1 && (
           <Pagination>
             <PaginationContent>

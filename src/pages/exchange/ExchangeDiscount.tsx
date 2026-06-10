@@ -702,7 +702,7 @@ const ExchangeDiscount = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {/* {totalPages > 1 && (
           <div className="flex items-center justify-center border-t pt-6">
             <Button
               variant="outline"
@@ -726,7 +726,31 @@ const ExchangeDiscount = () => {
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
-        )}
+        )} */}
+
+        <div className="flex items-center justify-center border-t pt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Previous
+          </Button>
+          <div className="text-sm text-muted-foreground mx-2">
+            Page {page + 1} of {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
       </div>
     </ExchangeLayout>
   );

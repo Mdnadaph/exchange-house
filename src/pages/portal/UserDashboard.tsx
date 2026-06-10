@@ -24,8 +24,9 @@ import { formateDate } from "@/utils/formateDateTime";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies.token;
+  const sourceCurrency = cookies?.currencyCode;
 
   // Mock KYB status - in real implementation this would come from backend
   const kybStatus = "pending_kyb" as
@@ -60,6 +61,7 @@ const UserDashboard = () => {
         const result = await response.json();
         if (result.status) {
           setDashboardData(result.data);
+          console.log("res", result?.data);
         } else {
           throw new Error(
             result.message || "Failed to retrieve dashboard data",
@@ -572,65 +574,86 @@ const UserDashboard = () => {
                 Monthly Summary
               </CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
+            <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Total Sent</span>
-                <span className="font-semibold">USD 45,230</span>
+                <span className="font-semibold">
+                  {sourceCurrency}{" "}
+                  {dashboardData?.monthlySummary?.totalSent || 0}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Transactions</span>
-                <span className="font-semibold">28</span>
+                <span className="font-semibold">
+                  {dashboardData?.monthlySummary?.transactionCount || 0}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Success Rate</span>
-                <span className="font-semibold text-success">96.4%</span>
+                <span className="font-semibold text-success">
+                  {dashboardData?.monthlySummary?.successRate || 0}%
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Avg. Amount</span>
-                <span className="font-semibold">USD 1,615</span>
+                <span className="font-semibold">
+                  {sourceCurrency} {dashboardData?.monthlyLimit?.avgAmount || 0}
+                </span>
               </div>
-            </CardContent> */}
-            <p className="text-center pb-5">No data found</p>
+            </CardContent>
+            {/* <p className="text-center pb-5">No data found</p> */}
           </Card>
 
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>Transaction Limits</CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Daily Limit</span>
-                  <span className="font-semibold">USD 50,000</span>
+                  <span className="font-semibold">
+                    {sourceCurrency}{" "}
+                    {dashboardData?.transactionLimits?.dailyLimit || 0}
+                  </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full"
-                    style={{ width: "30%" }}
+                    style={{
+                      width: `${dashboardData?.transactionLimits?.dailyUsedPercent || 0}%`,
+                    }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Used: USD 15,000 (30%)
+                  Used: {sourceCurrency}{" "}
+                  {dashboardData?.transactionLimits?.dailyUsed || 0} (
+                  {dashboardData?.transactionLimits?.dailyUsedPercent} %)
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Monthly Limit</span>
-                  <span className="font-semibold">USD 500,000</span>
+                  <span className="font-semibold">
+                    {sourceCurrency}{" "}
+                    {dashboardData?.transactionLimits?.monthlyLimit || 0}
+                  </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-accent h-2 rounded-full"
-                    style={{ width: "9%" }}
+                    style={{
+                      width: `${dashboardData?.transactionLimits?.monthlyUsedPercent || 0}%`,
+                    }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Used: USD 45,230 (9%)
+                  Used: USD {dashboardData?.transactionLimits?.monthlyUsed} (
+                  {dashboardData?.transactionLimits?.monthlyUsedPercent}%)
                 </p>
               </div>
-            </CardContent> */}
-            <p className="text-center pb-5">No data found</p>
+            </CardContent>
           </Card>
         </div>
       </div>

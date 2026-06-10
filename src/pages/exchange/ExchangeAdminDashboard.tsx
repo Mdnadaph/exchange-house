@@ -34,6 +34,18 @@ interface RecentKYBApplication {
   branchName: string;
 }
 
+interface PayoutMechanisms {
+  payoutMechanism: string;
+  count: number;
+}
+
+type SystemHealthStatus = "UP" | "DOWN" | "UNKNOWN";
+
+type SystemHealth = {
+  status?: string;
+  components?: Record<string, SystemHealthStatus>;
+};
+
 interface ApiResponse {
   status: boolean;
   message: string;
@@ -41,6 +53,8 @@ interface ApiResponse {
   data: {
     stats: Stats;
     recentKYBApplications: RecentKYBApplication[];
+    payoutMechanisms: PayoutMechanisms[];
+    systemHealth: SystemHealth;
   };
 }
 
@@ -48,7 +62,9 @@ const ExchangeAdminDashboard = () => {
   const [cookies] = useCookies(["token", "email", "fullName"]);
   const token = cookies.token;
   const { toast } = useToast();
-
+  const [payoutMechanisms, setPayoutMechanisms] = useState([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth>({});
+  console.log("systemHealth", systemHealth);
   const [statsData, setStatsData] = useState<any[]>([]);
   const [recentKYBApplications, setRecentKYBApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +80,6 @@ const ExchangeAdminDashboard = () => {
         setLoading(false);
         return;
       }
-
       try {
         const response = await fetch(`${BASE_URL}/api/v1/dashboard/exchange`, {
           method: "GET",
@@ -126,6 +141,8 @@ const ExchangeAdminDashboard = () => {
             assignedTo: "",
           }));
           setRecentKYBApplications(mappedRecent);
+          setPayoutMechanisms(data?.data?.payoutMechanisms);
+          setSystemHealth(data?.data?.systemHealth);
         }
       } catch (err) {
         setError("Failed to fetch dashboard data");
@@ -416,18 +433,61 @@ const ExchangeAdminDashboard = () => {
                 Payout Mechanisms
               </CardTitle>
             </CardHeader>
-            <p className="text-center pb-3 text-muted-foreground">
+            <div className="space-y-4 p-5">
+              {payoutMechanisms?.length > 0 ? (
+                payoutMechanisms?.map((m, index) => (
+                  <div
+                    className="flex items-center justify-between"
+                    key={index}
+                  >
+                    <span className="text-muted-foreground">
+                      {m?.payoutMechanism}
+                    </span>
+                    <span className="font-semibold text-lg">{m?.count}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center pb-3 text-muted-foreground">
+                  No Data Available
+                </p>
+              )}
+            </div>
+            {/* <p className="text-center pb-3 text-muted-foreground">
               No Data Available
-            </p>
+            </p> */}
           </Card>
 
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>System Health</CardTitle>
             </CardHeader>
-            <p className="text-center pb-3 text-muted-foreground">
-              No Data Available
-            </p>
+
+            <div className="space-y-4 p-5">
+              {/* System Status */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Overall Status</span>
+                <span className="font-semibold text-green-600">
+                  {systemHealth?.status}
+                </span>
+              </div>
+
+              {/* Components */}
+              {systemHealth?.components &&
+                Object.entries(systemHealth?.components).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-muted-foreground capitalize">
+                      {key}
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        value === "UP" ? "text-green-600" : "text-red-500"
+                      }`}
+                    >
+                      {value}
+                    </span>
+                  </div>
+                ))}
+            </div>
           </Card>
 
           <Card className="shadow-card">

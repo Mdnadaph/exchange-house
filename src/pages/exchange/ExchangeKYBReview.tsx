@@ -1697,7 +1697,7 @@ const ExchangeKYBReview = () => {
           </div> */}
 
           {/* Bottom Pagination */}
-          {totalPages > 1 && (
+          {/* {totalPages > 1 && (
             <div className="flex items-center justify-center mt-8">
               <div className="flex items-center space-x-2">
                 <Button
@@ -1751,7 +1751,60 @@ const ExchangeKYBReview = () => {
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
+          <div className="flex items-center justify-center mt-8">
+            <div className="flex items-center space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0 || loading}
+              >
+                Previous
+              </Button>
+
+              <div className="flex items-center space-x-1">
+                {generatePageNumbers().map((pageIndex, idx) => {
+                  if (pageIndex === -1 || pageIndex === -2) {
+                    return (
+                      <span key={`ellipsis-${idx}`} className="px-2">
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <Button
+                      type="button"
+                      key={pageIndex}
+                      variant={
+                        currentPage === pageIndex ? "default" : "outline"
+                      }
+                      size="sm"
+                      onClick={() => setCurrentPage(pageIndex)}
+                      disabled={loading}
+                      className="min-w-[40px]"
+                    >
+                      {pageIndex + 1}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+                }
+                disabled={currentPage === totalPages - 1 || loading}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
 
           {/* Document Viewer Dialog */}
           <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>

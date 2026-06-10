@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ApprovalRuleForm from "@/components/governance/ApprovalRuleForm";
+import { Label } from "@/components/ui/label";
 import {
   Shield,
   Settings,
@@ -21,6 +22,7 @@ import {
   Plus,
   XCircle,
   Power,
+  Search,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -40,12 +42,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const UserGovernance = () => {
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
   const { toast } = useToast();
-
+  const [searchValue, setSearchValue] = useState("");
+  const [debounceValue, setDebouncedValue] = useState("");
+  const [filterByApprovalTire, setFilterByApprovalTire] = useState("");
+  const tiers = [
+    { label: "All", value: "ALL" },
+    { label: "Tier 1", value: "TIER_1" },
+    { label: "Tier 2", value: "TIER_2" },
+    { label: "Tier 3", value: "TIER_3" },
+  ];
   const [dashboard, setDashboard] = useState({
     totalRules: 0,
     activeRules: 0,
@@ -66,14 +84,22 @@ const UserGovernance = () => {
 
   useEffect(() => {
     fetchData(currentPage);
-  }, [currentPage]);
+  }, [currentPage, debounceValue, filterByApprovalTire]);
   const refreshRules = () => {
     fetchData(currentPage);
   };
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebouncedValue(searchValue);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchValue]);
   const fetchData = async (page: number) => {
     try {
       const response = await fetch(
-        `${BASE_URL}/api/v1/business/governance-rules?page=${page}&size=10`,
+        `${BASE_URL}/api/v1/business/governance-rules?page=${page}&size=10&search=${debounceValue}&approvalTier=${filterByApprovalTire}`,
         {
           method: "GET",
           headers: {
@@ -164,9 +190,7 @@ const UserGovernance = () => {
           body: JSON.stringify({ status: newStatus }),
         },
       );
-
       const result = await response.json();
-
       if (result.status) {
         toast({
           title: "Success",
@@ -282,7 +306,7 @@ const UserGovernance = () => {
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboard.activeRules}</div>
+              <div className="text-2xl font-bold">{dashboard?.activeRules}</div>
               <p className="text-xs text-muted-foreground">
                 Currently enforced
               </p>
@@ -295,7 +319,7 @@ const UserGovernance = () => {
               <AlertCircle className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboard.draftRules}</div>
+              <div className="text-2xl font-bold">{dashboard?.draftRules}</div>
               <p className="text-xs text-muted-foreground">
                 Pending activation
               </p>
@@ -315,6 +339,53 @@ const UserGovernance = () => {
             </CardContent>
           </Card>
         </div>
+        <Card className="shadow-card">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Label htmlFor="search">Search Governance</Label>
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by name, account, bank, or country..."
+                      className="pl-9"
+                      value={searchValue}
+                      onChange={(e) => {
+                        setSearchValue(e.target.value);
+                        setCurrentPage(0);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
+                  <Label>Filter By Approval Tire</Label>
+                  <Select
+                    value={filterByApprovalTire}
+                    onValueChange={(value) => {
+                      setFilterByApprovalTire(value == "ALL" ? "" : value);
+                      setCurrentPage(0);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Tiers" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      {tiers.map((t, index) => (
+                        <SelectItem key={index} value={t?.value}>
+                          {t?.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Approval Rules List */}
         <Card>
@@ -483,53 +554,48 @@ const UserGovernance = () => {
                 </Card>
               ))}
             </div>
-
-            {pagination.totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href={currentPage > 0 ? "#" : undefined}
-                      onClick={(e) => {
-                        if (currentPage > 0) {
-                          e.preventDefault();
-                          setCurrentPage(currentPage - 1);
-                        }
-                      }}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: pagination.totalPages }).map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        href="#"
-                        isActive={currentPage === i}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(i);
-                        }}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href={
-                        currentPage < pagination.totalPages - 1
-                          ? "#"
-                          : undefined
+            <Pagination className="mt-6">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href={currentPage > 0 ? "#" : undefined}
+                    onClick={(e) => {
+                      if (currentPage > 0) {
+                        e.preventDefault();
+                        setCurrentPage(currentPage - 1);
                       }
+                    }}
+                  />
+                </PaginationItem>
+                {Array.from({ length: pagination.totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      href="#"
+                      isActive={currentPage === i}
                       onClick={(e) => {
-                        if (currentPage < pagination.totalPages - 1) {
-                          e.preventDefault();
-                          setCurrentPage(currentPage + 1);
-                        }
+                        e.preventDefault();
+                        setCurrentPage(i);
                       }}
-                    />
+                    >
+                      {i + 1}
+                    </PaginationLink>
                   </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href={
+                      currentPage < pagination.totalPages - 1 ? "#" : undefined
+                    }
+                    onClick={(e) => {
+                      if (currentPage < pagination.totalPages - 1) {
+                        e.preventDefault();
+                        setCurrentPage(currentPage + 1);
+                      }
+                    }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </CardContent>
         </Card>
       </div>

@@ -40,7 +40,7 @@ const UserManagement = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<any>();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();

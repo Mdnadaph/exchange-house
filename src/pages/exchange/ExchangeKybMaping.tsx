@@ -678,56 +678,54 @@ const ExchangeKybMapping = () => {
                 </div>
 
                 {/* ── Pagination ── */}
-                {totalPages > 1 && (
-                  <div className="mt-6">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
+                <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }}
+                          className={
+                            currentPage === 0
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                      {getPageNumbers().map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
                             href="#"
+                            isActive={page === currentPage}
                             onClick={(e) => {
                               e.preventDefault();
-                              handlePageChange(currentPage - 1);
+                              handlePageChange(page);
                             }}
-                            className={
-                              currentPage === 0
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
+                          >
+                            {page + 1}
+                          </PaginationLink>
                         </PaginationItem>
-                        {getPageNumbers().map((page) => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              href="#"
-                              isActive={page === currentPage}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(page);
-                              }}
-                            >
-                              {page + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handlePageChange(currentPage + 1);
-                            }}
-                            className={
-                              currentPage >= totalPages - 1
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }}
+                          className={
+                            currentPage >= totalPages - 1
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
               </>
             )}
           </CardContent>

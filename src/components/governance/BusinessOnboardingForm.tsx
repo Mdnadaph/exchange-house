@@ -807,7 +807,7 @@ const BusinessOnboardingForm = ({
     }
 
     if (!formData.dealValidityDays) {
-      newErrors.dealValidityDays = "Deal validity days is required";
+      newErrors.dealValidityDays = "Deal validity hours is required";
     } else if (Number(formData.dealValidityDays) <= 0) {
       newErrors.dealValidityDays = "Deal validity must be greater than 0";
     }
@@ -2128,7 +2128,7 @@ const BusinessOnboardingForm = ({
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
-                Deal Validity Period (Days){" "}
+                Deal Validity Period (Hours){" "}
                 <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -2159,7 +2159,8 @@ const BusinessOnboardingForm = ({
                 </p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Number of days a negotiated deal remains valid before expiration
+                Number of hours a negotiated deal remains valid before
+                expiration
               </p>
             </div>
           </div>
