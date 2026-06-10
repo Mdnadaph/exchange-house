@@ -29,6 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Document {
   id: string;
@@ -80,8 +88,8 @@ const BranchBusinessDocuments = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const itemsPerPage = 10;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [businessLoading, setBusinessLoading] = useState<boolean>(false);
@@ -90,6 +98,13 @@ const BranchBusinessDocuments = () => {
   const listRef = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [pagination, setPagination] = useState({
+    pageNumber: 0,
+    pageSize: 10,
+    totalPages: 1,
+    totalElements: 0,
+  });
+
   useEffect(() => {
     const debounce = setTimeout(() => {
       setDebouncedValue(searchQuery);
@@ -102,69 +117,82 @@ const BranchBusinessDocuments = () => {
     const fetchDocuments = async () => {
       setLoading(true);
       setError(null);
-      let allDocuments: any[] = [];
 
-      let page = 0;
-      const size = 10;
       let fetchedDashboard: Dashboard | null = null;
-      while (true) {
-        try {
-          const response = await axios.get(
-            `${BASE_URL}/api/v3/staff/kyb/documents?page=${page}&size=${size}&businessId=${businessId}&search=${debouncedValue}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-          const res = response.data;
-          if (!res.status) throw new Error(res.message || "Failed to fetch");
-          allDocuments = [...allDocuments, ...res.data.documents];
-          if (!fetchedDashboard) {
-            fetchedDashboard = res.data.dashboard;
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/api/v3/staff/kyb/documents?page=${pagination.pageNumber}&size=${pagination.pageSize}&businessId=${businessId}&search=${debouncedValue}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        const res = response.data;
+        if (!res.status) throw new Error(res.message || "Failed to fetch");
+        if (!fetchedDashboard) {
+          fetchedDashboard = res.data.dashboard;
+        }
+        const mappedDocuments: Document[] = res?.data?.documents?.map(
+          (apiDoc: any) => ({
+            id: apiDoc.documentId.toString(),
+            businessId: apiDoc.businessId.toString(),
+            businessName: apiDoc.businessName,
+            name: apiDoc.documentName,
+            rejectionReason: apiDoc?.rejectionReason,
+            type: apiDoc.documentType,
+            uploadDate: apiDoc.uploadedAt,
+            size: formatBytes(apiDoc.fileSize),
+            status: apiDoc.status.toLowerCase().replace(/\s+/g, "_"),
+            viewUrl: apiDoc.viewUrl,
+          }),
+        );
+        setDocuments(mappedDocuments);
+        if (fetchedDashboard) {
+          setDashboard(fetchedDashboard);
+        }
+        setPagination((prev) => ({
+          ...prev,
+          pageNumber: res?.currentPage,
+          totalPages: res.totalPages,
+          totalElements: res.totalElements,
+        }));
+
+        const businessMap = new Map<string, Business>();
+        mappedDocuments?.forEach((doc) => {
+          if (!businessMap.has(doc.businessId)) {
+            businessMap.set(doc.businessId, {
+              id: doc.businessId,
+              name: doc.businessName,
+            });
           }
-          if (page + 1 >= res.totalPages) break;
-          page++;
-        } catch (err) {
-          setError("Failed to fetch documents");
-          setLoading(false);
-          return;
-        }
+        });
+        setBranchBusinesses(Array.from(businessMap.values()));
+      } catch (err) {
+        // setError("Failed to fetch documents");
+        toast({
+          title: "Error",
+          description: err?.response?.data?.message,
+          variant: "destructive",
+        });
+        return;
+      } finally {
+        setLoading(false);
       }
-      const mappedDocuments: Document[] = allDocuments.map((apiDoc: any) => ({
-        id: apiDoc.documentId.toString(),
-        businessId: apiDoc.businessId.toString(),
-        businessName: apiDoc.businessName,
-        name: apiDoc.documentName,
-        rejectionReason: apiDoc?.rejectionReason,
-        type: apiDoc.documentType,
-        uploadDate: apiDoc.uploadedAt,
-        size: formatBytes(apiDoc.fileSize),
-        status: apiDoc.status.toLowerCase().replace(/\s+/g, "_"),
-        viewUrl: apiDoc.viewUrl,
-      }));
-      setDocuments(mappedDocuments);
-      if (fetchedDashboard) {
-        setDashboard(fetchedDashboard);
-      }
+
       // Extract unique businesses
-      const businessMap = new Map<string, Business>();
-      mappedDocuments.forEach((doc) => {
-        if (!businessMap.has(doc.businessId)) {
-          businessMap.set(doc.businessId, {
-            id: doc.businessId,
-            name: doc.businessName,
-          });
-        }
-      });
-      setBranchBusinesses(Array.from(businessMap.values()));
-      setLoading(false);
     };
 
     fetchDocuments();
-  }, [token, businessId, selectedStatus, debouncedValue]);
+  }, [
+    token,
+    businessId,
+    selectedStatus,
+    debouncedValue,
+    pagination?.pageNumber,
+  ]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedBusiness, selectedStatus]);
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [searchQuery, selectedBusiness, selectedStatus]);
 
   // const filteredDocuments = documents.filter((doc) => {
   //   const searchLower = searchQuery.toLowerCase();
@@ -182,10 +210,6 @@ const BranchBusinessDocuments = () => {
   //   return true;
   // });
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentDocuments = documents?.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(documents?.length / itemsPerPage);
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "verified":
@@ -252,10 +276,6 @@ const BranchBusinessDocuments = () => {
   //   return <div>Loading...</div>;
   // }
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
   const getBusinessAdminList = async () => {
     // IMPORTANT
     if (businessLoading || !hasMore) return;
@@ -317,6 +337,21 @@ const BranchBusinessDocuments = () => {
     getBusinessAdminList();
   }, []);
 
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < pagination?.totalPages) {
+      setPagination((prev) => ({ ...prev, pageNumber: newPage }));
+    }
+  };
+
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageNumber: 0,
+    }));
+  }, [businessId, debouncedValue, selectedStatus]);
+  if (error) {
+    return <div>{error}</div>;
+  }
   return (
     <BranchLayout>
       <div className="space-y-8">
@@ -462,7 +497,6 @@ const BranchBusinessDocuments = () => {
                   value={businessId}
                   onValueChange={(val) => {
                     setBusinessId(val == "all" ? "" : val);
-                    setCurrentPage(0);
                   }}
                 >
                   <SelectTrigger>
@@ -515,7 +549,6 @@ const BranchBusinessDocuments = () => {
                   value={selectedStatus}
                   onValueChange={(val) => {
                     setSelectedStatus(val);
-                    setCurrentPage(0);
                   }}
                 >
                   <SelectTrigger>
@@ -558,7 +591,7 @@ const BranchBusinessDocuments = () => {
                   </div>
                 </div>
               ) : (
-                currentDocuments?.map((doc) => (
+                documents?.map((doc) => (
                   <Card
                     key={doc.id}
                     className="hover:shadow-md transition-smooth"
@@ -627,30 +660,55 @@ const BranchBusinessDocuments = () => {
               )}
             </div>
 
-            {documents?.length > 0 && (
-              <div className="flex justify-center items-center mt-6 gap-4">
-                <Button
-                  variant="outline"
-                  disabled={currentPage === 1}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  disabled={currentPage === totalPages}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                >
-                  Next
-                </Button>
-              </div>
+            {pagination.totalPages > 1 && (
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber - 1);
+                      }}
+                      className={
+                        pagination.pageNumber === 0
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+
+                  {[...Array(pagination.totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        href="#"
+                        isActive={pagination.pageNumber === index}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(index);
+                        }}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber + 1);
+                      }}
+                      className={
+                        pagination.pageNumber === pagination.totalPages - 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
 
             {documents?.length === 0 && (
