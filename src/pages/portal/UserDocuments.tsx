@@ -39,8 +39,17 @@ const UserDocuments = () => {
 
   // ── Search & Filter States ──
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounce, setDebounce] = useState("");
   const [activeFilter, setActiveFilter] = useState("All"); // All | Pending | Approved | Rejected
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
   // Fetch KYB context data
   useEffect(() => {
     const fetchKYBContext = async () => {
@@ -327,7 +336,7 @@ const UserDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {documents.filter((d) => d.status === "approved").length}
+                {documents?.filter((d) => d.status === "approved").length}
               </div>
               <p className="text-xs text-muted-foreground">
                 {documents.length > 0
@@ -379,7 +388,7 @@ const UserDocuments = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="flex-1">
                 <Label htmlFor="search">Search Documents</Label>
                 <div className="relative">
@@ -393,7 +402,7 @@ const UserDocuments = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap mt-5">
                 <Button
                   variant={activeFilter === "All" ? "default" : "outline"}
                   onClick={() => setActiveFilter("All")}

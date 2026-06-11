@@ -23,9 +23,9 @@ import { useState, useEffect } from "react";
 
 const BussinessUserDashboard = () => {
   const navigate = useNavigate();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies.token;
-
+  const sourceCurrency = cookies?.currencyCode;
   // Mock KYB status - in real implementation this would come from backend
   const kybStatus = "pending_kyb" as
     | "verified"
@@ -76,35 +76,35 @@ const BussinessUserDashboard = () => {
 
   const stats = dashboardData
     ? [
-      {
-        title: "Total Transactions",
-        value: dashboardData.stats.totalTransactions.toString(),
-        change: "",
-        icon: CreditCard,
-        color: "text-green-600",
-      },
-      {
-        title: "Approved Transactions",
-        value: dashboardData.stats.approvedTransactions.toString(),
-        change: "",
-        icon: CheckCircle,
-        color: "text-blue-600",
-      },
-      {
-        title: "Rejected Transactions",
-        value: dashboardData.stats.rejectedTransactions.toString(),
-        change: "",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-      {
-        title: "Pending Transactions",
-        value: dashboardData.stats.pendingTransactions.toString(),
-        change: "",
-        icon: Clock,
-        color: "text-orange-600",
-      },
-    ]
+        {
+          title: "Total Transactions",
+          value: dashboardData.stats.totalTransactions.toString(),
+          change: "",
+          icon: CreditCard,
+          color: "text-green-600",
+        },
+        {
+          title: "Approved Transactions",
+          value: dashboardData.stats.approvedTransactions.toString(),
+          change: "",
+          icon: CheckCircle,
+          color: "text-blue-600",
+        },
+        {
+          title: "Rejected Transactions",
+          value: dashboardData.stats.rejectedTransactions.toString(),
+          change: "",
+          icon: XCircle,
+          color: "text-red-600",
+        },
+        {
+          title: "Pending Transactions",
+          value: dashboardData.stats.pendingTransactions.toString(),
+          change: "",
+          icon: Clock,
+          color: "text-orange-600",
+        },
+      ]
     : [];
 
   const recentActivities = dashboardData ? dashboardData.recentActivities : [];
@@ -235,7 +235,9 @@ const BussinessUserDashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Business User Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Business User Dashboard
+            </h1>
             <p className="text-muted-foreground">
               Welcome back! Here's your transaction overview
             </p>
@@ -405,14 +407,87 @@ const BussinessUserDashboard = () => {
                 Monthly Summary
               </CardTitle>
             </CardHeader>
-            <p className="text-center pb-5">No data found</p>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Sent</span>
+                <span className="font-semibold">
+                  {sourceCurrency}{" "}
+                  {dashboardData?.monthlySummary?.totalSent || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Transactions</span>
+                <span className="font-semibold">
+                  {dashboardData?.monthlySummary?.transactionCount || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Success Rate</span>
+                <span className="font-semibold text-success">
+                  {dashboardData?.monthlySummary?.successRate || 0}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Avg. Amount</span>
+                <span className="font-semibold">
+                  {sourceCurrency} {dashboardData?.monthlyLimit?.avgAmount || 0}
+                </span>
+              </div>
+            </CardContent>
+            {/* <p className="text-center pb-5">No data found</p> */}
           </Card>
 
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>Transaction Limits</CardTitle>
             </CardHeader>
-            <p className="text-center pb-5">No data found</p>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Daily Limit</span>
+                  <span className="font-semibold">
+                    {sourceCurrency}{" "}
+                    {dashboardData?.transactionLimits?.dailyLimit || 0}
+                  </span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full"
+                    style={{
+                      width: `${dashboardData?.transactionLimits?.dailyUsedPercent || 0}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Used: {sourceCurrency}{" "}
+                  {dashboardData?.transactionLimits?.dailyUsed || 0} (
+                  {dashboardData?.transactionLimits?.dailyUsedPercent} %)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Monthly Limit</span>
+                  <span className="font-semibold">
+                    {sourceCurrency}{" "}
+                    {dashboardData?.transactionLimits?.monthlyLimit || 0}
+                  </span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-accent h-2 rounded-full"
+                    style={{
+                      width: `${dashboardData?.transactionLimits?.monthlyUsedPercent || 0}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Used: USD {dashboardData?.transactionLimits?.monthlyUsed} (
+                  {dashboardData?.transactionLimits?.monthlyUsedPercent}%)
+                </p>
+              </div>
+            </CardContent>
+            {/* <p className="text-center pb-5">No data found</p> */}
           </Card>
         </div>
       </div>

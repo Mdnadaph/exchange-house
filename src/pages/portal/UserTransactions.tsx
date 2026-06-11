@@ -248,6 +248,8 @@ const UserTransactions = () => {
   const lastName = cookies.lastName;
   const operatorName = firstName + lastName;
   const currencyCode = cookies.currencyCode;
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const { toast } = useToast();
 
   const fetchTransactions = async () => {
@@ -267,7 +269,7 @@ const UserTransactions = () => {
         timeout: 10000,
       };
 
-      let url = `${BASE_URL}/api/v1/transactions?search=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10`;
+      let url = `${BASE_URL}/api/v1/transactions?search=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10&fromDate=${fromDate}&toDate=${toDate}`;
       const response = await axios.get<ApiResponse>(url, config);
       const data = response.data;
       setTotalTransactionData(data?.data?.pagination?.totalItems);
@@ -422,7 +424,7 @@ const UserTransactions = () => {
   }, [searchTerm]);
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page, debouncedSearch]);
+  }, [token, transactionType, page, debouncedSearch, fromDate, toDate]);
   //const getStatusBadge = (status: string) => {
   //  const statusMap = {
   //    COMPLETED: {
@@ -708,24 +710,55 @@ const UserTransactions = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search by ID, beneficiary, or reference..."
-                      className="pl-9"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      disabled={error !== null}
-                    />
+            <div className="flex flex-col sm:flex-row gap-4 items-center flex-wrap">
+              <div className="flex-1 flex gap-2 items-center flex-wrap">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="search"
+                        placeholder="Search by ID, beneficiary, or reference..."
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setPage(0);
+                        }}
+                        disabled={error !== null}
+                      />
+                    </div>
                   </div>
                 </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("ALL")}

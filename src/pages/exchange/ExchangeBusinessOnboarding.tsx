@@ -527,55 +527,53 @@ const ExchangeBusinessOnboarding = () => {
               </Pagination>
             )} */}
 
-            {pagination.totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
+            <Pagination className="mt-6">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(pagination.pageNumber - 1);
+                    }}
+                    className={
+                      pagination.pageNumber === 0
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                {[...Array(pagination.totalPages)].map((_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
+                        handlePageChange(index);
                       }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
+                      isActive={pagination.pageNumber === index}
+                      className="cursor-pointer"
+                    >
+                      {index + 1}
+                    </PaginationLink>
                   </PaginationItem>
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                        isActive={pagination.pageNumber === index}
-                        className="cursor-pointer"
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(pagination.pageNumber + 1);
+                    }}
+                    className={
+                      pagination.pageNumber === pagination.totalPages - 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </CardContent>
         </Card>
       </div>

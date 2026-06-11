@@ -520,11 +520,11 @@ const BranchBusinessDocuments = () => {
                           Loading...
                         </div>
                       )}
-                      {!hasMore && (
+                      {/* {!hasMore && (
                         <div className="py-2 text-center text-sm text-gray-400">
                           No More Data
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </SelectContent>
                 </Select>
@@ -660,7 +660,56 @@ const BranchBusinessDocuments = () => {
               )}
             </div>
 
-            {pagination.totalPages > 1 && (
+            <Pagination className="mt-6">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(pagination.pageNumber - 1);
+                    }}
+                    className={
+                      pagination.pageNumber === 0
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                {[...Array(pagination.totalPages)].map((_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
+                      href="#"
+                      isActive={pagination.pageNumber === index}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(index);
+                      }}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(pagination.pageNumber + 1);
+                    }}
+                    className={
+                      pagination.pageNumber === pagination.totalPages - 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+            {/* {pagination.totalPages > 1 && (
               <Pagination className="mt-6">
                 <PaginationContent>
                   <PaginationItem>
@@ -709,7 +758,7 @@ const BranchBusinessDocuments = () => {
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
-            )}
+            )} */}
 
             {documents?.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">

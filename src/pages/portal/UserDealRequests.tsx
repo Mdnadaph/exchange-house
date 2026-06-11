@@ -44,6 +44,7 @@ const UserDealRequests = () => {
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   // const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
@@ -67,7 +68,7 @@ const UserDealRequests = () => {
   }) => {
     const {
       page: targetPage = page,
-      search = searchValue,
+      search = debounceValue,
       status = statusFilter,
       reset = false,
     } = options || {};
@@ -84,6 +85,8 @@ const UserDealRequests = () => {
       if (status) params.append("status", status);
       params.append("page", effectivePage.toString());
       params.append("size", "10");
+      params.append("fromDate", fromDate);
+      params.append("toDate", toDate);
 
       const res = await fetch(
         `${BASE_URL}/api/v1/rate-deals?${params.toString()}`,
@@ -105,10 +108,17 @@ const UserDealRequests = () => {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
   useEffect(() => {
     getRateDeals();
-  }, []);
+  }, [debounceValue, statusFilter, fromDate, toDate]);
 
   // Search debounce effect
   useEffect(() => {
@@ -284,18 +294,18 @@ const UserDealRequests = () => {
     return count >= 2;
   };
 
-  if (loading) {
-    return (
-      <UserLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </UserLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <UserLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </UserLayout>
+  //   );
+  // }
 
   return (
     <UserLayout>
@@ -379,9 +389,9 @@ const UserDealRequests = () => {
         {/* Search and Filter */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-wrap">
               <div className="flex-1 flex gap-3 items-center">
-                <div>
+                <div className="flex-1">
                   <Label htmlFor="search">Search Deals</Label>
                   {/* <div className="relative mt-1.5">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -407,9 +417,10 @@ const UserDealRequests = () => {
                     />
                   </div>
                 </div>
-                {/* <div>
+                <div className="flex flex-col gap-1 mt-1">
                   <Label htmlFor="search">From Date</Label>
                   <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
                     type="date"
                     placeholder="Select Date"
                     value={fromDate}
@@ -419,9 +430,10 @@ const UserDealRequests = () => {
                     }}
                   />
                 </div>
-                <div>
+                <div className="flex gap-1 flex-col">
                   <Label htmlFor="search">To Date</Label>
                   <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
                     type="date"
                     placeholder="Select Date"
                     value={toDate}
@@ -430,7 +442,7 @@ const UserDealRequests = () => {
                       setPage(0);
                     }}
                   />
-                </div> */}
+                </div>
               </div>
               <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
                 <Button
@@ -478,7 +490,14 @@ const UserDealRequests = () => {
 
         {/* Deals List */}
         <div className="space-y-4">
-          {rateDealsData?.rateDeals?.content?.length > 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center">
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading transactions...</p>
+              </div>
+            </div>
+          ) : rateDealsData?.rateDeals?.content?.length > 0 ? (
             rateDealsData?.rateDeals?.content.map((deal: any) => (
               <Card
                 key={deal?.id}
@@ -703,33 +722,30 @@ const UserDealRequests = () => {
               </div>
             </div>
           )} */}
-
-          {totalDealsRateDataList > 10 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} deals
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={goToPrevPage}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
-                  onClick={goToNextPage}
-                >
-                  Next
-                </Button>
-              </div>
+          <div className="flex items-center justify-between mt-6 pt-6 border-t">
+            <p className="text-sm text-muted-foreground">
+              Showing {rateDealsData?.rateDeals?.content.length} of{" "}
+              {totalDealsRateDataList} deals
+            </p>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={goToPrevPage}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={(page + 1) * 10 >= totalDealsRateDataList}
+                onClick={goToNextPage}
+              >
+                Next
+              </Button>
             </div>
-          )}
+          </div>
         </div>
       </div>
 

@@ -192,6 +192,7 @@ const BusinessUserTransaction = () => {
   const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
   const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounce, setDebounce] = useState("");
   const [reviewActionData, setReviewActionData] = useState<any>({});
   const [cookies] = useCookies([
     "token",
@@ -214,6 +215,8 @@ const BusinessUserTransaction = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [page, setPage] = useState<number>(0);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
@@ -223,6 +226,15 @@ const BusinessUserTransaction = () => {
   const operatorName = firstName + lastName;
   const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
 
   const fetchTransactions = async () => {
     try {
@@ -242,12 +254,10 @@ const BusinessUserTransaction = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&search=${debounce}&fromDate=${fromDate}&toDate=${toDate}`,
         config,
       );
-
       const data = response?.data;
-
       if (data.status && data?.data) {
         // Save dashboard stats from API
         setDashboardStats(data.data?.dashboard);
@@ -387,21 +397,21 @@ const BusinessUserTransaction = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page]);
+  }, [token, transactionType, page, debounce, fromDate, toDate]);
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   console.log("transactionData", transactions);
 
@@ -554,18 +564,18 @@ const BusinessUserTransaction = () => {
     }));
   };
 
-  if (isLoading) {
-    return (
-      <BusinessUserLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </BusinessUserLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <BusinessUserLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </BusinessUserLayout>
+  //   );
+  // }
 
   return (
     <BusinessUserLayout>
@@ -611,7 +621,7 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboardStats.totalTransactions}
+                {dashboardStats.totalTransactions || 0}
               </div>
               {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
@@ -626,7 +636,7 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {dashboardStats.completedTransactions}
+                {dashboardStats.completedTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {dashboardStats.totalTransactions > 0
@@ -645,7 +655,7 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-500">
-                {dashboardStats.pendingTransactions}
+                {dashboardStats.pendingTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting approval</p>
             </CardContent>
@@ -674,29 +684,60 @@ const BusinessUserTransaction = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by ID, beneficiary, or reference..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    disabled={error !== null}
+            <div className="flex flex-col sm:flex-row gap-4 item-center flex-wrap">
+              <div className="flex-1 flex gap-2 items-center ">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, beneficiary, or reference..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                      // disabled={error !== null}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("ALL")}
                 >
                   All Status
                 </Button>
-                <Button variant="outline">This Month</Button>
+                {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("COMPLETED")}
@@ -734,7 +775,16 @@ const BusinessUserTransaction = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
+              </div>
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -742,16 +792,16 @@ const BusinessUserTransaction = () => {
                     ? "No transactions found"
                     : "No matching transactions"}
                 </h3>
-                <p className="text-muted-foreground">
+                {/* <p className="text-muted-foreground">
                   {searchTerm
                     ? "Try adjusting your search criteria"
                     : "No transactions available in the system"}
-                </p>
+                </p> */}
               </div>
             ) : (
               <div>
                 <div className="space-y-4">
-                  {filteredTransactions.map((transaction) => {
+                  {transactions?.map((transaction) => {
                     const status = getStatusBadge(transaction?.status);
                     const StatusIcon = status.icon;
 
@@ -1256,8 +1306,7 @@ const BusinessUserTransaction = () => {
                     );
                   })}
                 </div>
-
-                {totalTransactionsData > 10 && (
+                {/* {totalTransactionsData > 10 && (
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <p className="text-sm text-muted-foreground">
                       Showing {transactions?.length} of {totalTransactionsData}{" "}
@@ -1282,7 +1331,32 @@ const BusinessUserTransaction = () => {
                       </Button>
                     </div>
                   </div>
-                )}
+                )} */}
+
+                <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {transactions?.length} of {totalTransactionsData}{" "}
+                    transactions
+                  </p>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page === 0}
+                      onClick={() => setPage(page - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={(page + 1) * 10 >= totalTransactionsData}
+                      onClick={() => setPage(page + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>

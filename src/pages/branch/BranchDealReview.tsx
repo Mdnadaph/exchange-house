@@ -616,7 +616,7 @@ const BranchDealReview = () => {
             </p>
           )}
 
-          {totalElements > 0 && (
+          {/* {totalElements > 0 && (
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
                 Showing {content.length} of {totalElements} deals
@@ -640,7 +640,31 @@ const BranchDealReview = () => {
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
+
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t">
+            <p className="text-sm text-muted-foreground">
+              Showing {content.length} of {totalElements} deals
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page * 10 + content.length >= totalElements}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
 
           {content.length === 0 && !loading && (
             <div className="text-center py-16 text-muted-foreground">

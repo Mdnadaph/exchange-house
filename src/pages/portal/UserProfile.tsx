@@ -989,67 +989,108 @@ const UserProfile = () => {
           <CardContent className="space-y-4">
             {businessProfile?.ubos?.map((uboItem: any) => (
               <div className="w-full" key={uboItem?.uuid}>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                  <div className="flex gap-3 item-center">
-                    <p className="text-muted-foreground">UBO Type</p>
-                    <p className="font-medium">
-                      {uboItem?.uboType?.charAt(0)?.toUpperCase()}
-                      {uboItem?.uboType?.slice(1)?.toLowerCase()}
-                    </p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start ">
+                      <p className="text-muted-foreground shrink-0">
+                        UBO Type:
+                      </p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.uboType?.charAt(0)?.toUpperCase()}
+                        {uboItem?.uboType?.slice(1)?.toLowerCase()}
+                      </p>
+                    </CardContent>
+                  </Card>
+
                   {uboItem?.uboType == "INDIVIDUAL" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Full Name</p>
-                      <p className="font-medium">{uboItem?.fullName}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Full Name
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.fullName}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                   {uboItem?.uboType == "INDIVIDUAL" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Email</p>
-                      <p className="font-medium">{uboItem?.email}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">Email:</p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.email}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
-                  <div className="flex gap-3 item-center">
-                    <p className="text-muted-foreground">
-                      OwnerShip Percentage
-                    </p>
-                    <p className="font-medium">
-                      {uboItem?.ownershipPercentage}%
-                    </p>
-                  </div>
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start">
+                      <p className="text-muted-foreground shrink-0">
+                        OwnerShip Percentage:
+                      </p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.ownershipPercentage}
+                      </p>
+                    </CardContent>
+                  </Card>
                   {uboItem?.uboType == "INDIVIDUAL" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Contact Number</p>
-                      <p className="font-medium">{uboItem?.contactNumber}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Contact Number:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.contactNumber}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                   {uboItem?.uboType == "ORGANIZATION" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">
-                        Organization Name:
-                      </p>
-                      <p className="font-medium">{uboItem?.organizationName}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Organization Name:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.organizationName}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
-                  <div className="flex gap-3 item-center">
-                    <p className="text-muted-foreground">Date Of Birth</p>
-                    <p className="font-medium">{uboItem?.dateOfBirth}</p>
-                  </div>
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start">
+                      <p className="text-muted-foreground shrink-0">
+                        Date Of Birth:
+                      </p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.dateOfBirth}
+                      </p>
+                    </CardContent>
+                  </Card>
                   {uboItem?.uboType == "ORGANIZATION" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">
-                        Registration Number:
-                      </p>
-                      <p className="font-medium">
-                        {uboItem?.registrationNumber}
-                      </p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Registration Number:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.registrationNumber}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                   {uboItem?.uboType == "ORGANIZATION" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Phone Number:</p>
-                      <p className="font-medium">{uboItem?.phoneNumber}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Phone Number:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.phoneNumber}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               </div>

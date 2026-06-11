@@ -738,7 +738,7 @@ const ExchangeBranchManagement = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 flex-wrap items-center">
               <div className="flex-1">
                 <Label htmlFor="search">Search Branches</Label>
                 <div className="relative">
@@ -758,7 +758,7 @@ const ExchangeBranchManagement = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 {/*<Button
                   variant={filterStatus === "all" ? "default" : "outline"}
                   onClick={() => setFilterStatus("all")}
@@ -1011,58 +1011,57 @@ const ExchangeBranchManagement = () => {
                       )} */}
                         </div>
                       </div>
-                      <Pagination className="mt-6">
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(pagination.pageNumber - 1);
-                              }}
-                              className={
-                                pagination.pageNumber === 0
-                                  ? "pointer-events-none opacity-50"
-                                  : "cursor-pointer"
-                              }
-                            />
-                          </PaginationItem>
-                          {[...Array(pagination.totalPages)].map((_, index) => (
-                            <PaginationItem key={index}>
-                              <PaginationLink
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handlePageChange(index);
-                                }}
-                                isActive={pagination.pageNumber === index}
-                                className="cursor-pointer"
-                              >
-                                {index + 1}
-                              </PaginationLink>
-                            </PaginationItem>
-                          ))}
-                          <PaginationItem>
-                            <PaginationNext
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(pagination.pageNumber + 1);
-                              }}
-                              className={
-                                pagination.pageNumber ===
-                                pagination.totalPages - 1
-                                  ? "pointer-events-none opacity-50"
-                                  : "cursor-pointer"
-                              }
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
                     </CardContent>
                   </Card>
                 );
               })}
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber - 1);
+                      }}
+                      className={
+                        pagination.pageNumber === 0
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                  {[...Array(pagination.totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(index);
+                        }}
+                        isActive={pagination.pageNumber === index}
+                        className="cursor-pointer"
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber + 1);
+                      }}
+                      className={
+                        pagination.pageNumber === pagination.totalPages - 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           ) : (
             <Card className="shadow-card">

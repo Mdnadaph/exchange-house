@@ -82,7 +82,17 @@ const BranchDashboard = () => {
 
   const myKYBQueue = dashboardData ? dashboardData.kybQueues : [];
   const recentActivities = dashboardData ? dashboardData?.recentActivities : [];
+  const thisWeeksPerformance = dashboardData
+    ? dashboardData?.thisWeeksPerformance
+    : {};
+  const monthlyTarget = dashboardData ? dashboardData?.monthlyTarget : {};
+  const kybReviews = monthlyTarget?.kybReviews || 0;
+  const totalApprovedKybs = monthlyTarget?.totalApprovedKybs || 0;
 
+  const percentage =
+    totalApprovedKybs > 0
+      ? ((kybReviews / totalApprovedKybs) * 100).toFixed(0)
+      : 0;
   // const recentActivities = [
   //   {
   //     type: "kyb_approved",
@@ -400,53 +410,84 @@ const BranchDashboard = () => {
             <CardHeader>
               <CardTitle>This Week's Performance</CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Applications Reviewed</span>
+            <CardContent className="space-y-4">
+              {/* <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">
+                  Applications Reviewed
+                </span>
                 <span className="font-semibold">12</span>
-              </div>
+              </div> */}
               <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Approved KYBs</span>
+                <span className="font-semibold">
+                  {thisWeeksPerformance?.approvedKybs || 0}
+                </span>
+              </div>
+              {/* <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Avg Review Time</span>
                 <span className="font-semibold">2.3 hours</span>
+              </div> */}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Reviewed KYBs</span>
+                <span className="font-semibold">
+                  {thisWeeksPerformance?.reviewedKybs || 0}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Approval Rate</span>
-                <span className="font-semibold text-success">92%</span>
+                <span className="font-semibold text-success">
+                  {thisWeeksPerformance?.approvalRate || 0}%
+                </span>
               </div>
-              <div className="flex justify-between items-center">
+              {/* <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Quality Score</span>
                 <span className="font-semibold">A+</span>
-              </div>
-            </CardContent> */}
-            <p className="text-center pb-3">No Data Available</p>
+              </div> */}
+            </CardContent>
+            {/* <p className="text-center pb-3">No Data Available</p> */}
           </Card>
 
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>Monthly Target Progress</CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">KYB Reviews</span>
-                  <span className="font-semibold">38/40</span>
+                  <span className="font-semibold">
+                    {monthlyTarget?.kybReviews || 0}/
+                    {monthlyTarget?.totalApprovedKybs || 0}
+                  </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: "95%" }} />
+                  <div
+                    className="bg-primary h-2 rounded-full"
+                    style={{ width: `${percentage}%` }}
+                  />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Quality Score Target</span>
-                  <span className="font-semibold">95.2%/90%</span>
+                  <span className="text-muted-foreground">
+                    Quality Score Target
+                  </span>
+                  <span className="font-semibold">
+                    {monthlyTarget?.qualityScoreTarget || 0}%
+                  </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-success h-2 rounded-full" style={{ width: "100%" }} />
+                  <div
+                    className="bg-success h-2 rounded-full"
+                    style={{
+                      width: `${monthlyTarget?.qualityScoreTarget || 0}%`,
+                    }}
+                  />
                 </div>
               </div>
-            </CardContent> */}
-            <p className="text-center pb-3">No Data Available</p>
+            </CardContent>
+            {/* <p className="text-center pb-3">No Data Available</p> */}
           </Card>
 
           <Card className="shadow-card">
@@ -456,7 +497,9 @@ const BranchDashboard = () => {
             {/* <CardContent className="space-y-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-success">#2</div>
-                <p className="text-sm text-muted-foreground">Branch Performance Ranking</p>
+                <p className="text-sm text-muted-foreground">
+                  Branch Performance Ranking
+                </p>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -465,7 +508,9 @@ const BranchDashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">2nd Place:</span>
-                  <span className="font-medium text-success">Dubai Mall (You)</span>
+                  <span className="font-medium text-success">
+                    Dubai Mall (You)
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">3rd Place:</span>

@@ -569,18 +569,18 @@ const ExchangeAdminComplianceReview = () => {
 
   const statistics = calculateStatistics();
 
-  if (isLoading) {
-    return (
-      <ExchangeLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </ExchangeLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <ExchangeLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </ExchangeLayout>
+  //   );
+  // }
 
   return (
     <ExchangeLayout>
@@ -761,6 +761,15 @@ const ExchangeAdminComplianceReview = () => {
                   Unable to load transactions
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
+              </div>
+            ) : isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
               </div>
             ) : transactions?.length === 0 ? (
               <div className="text-center py-12">

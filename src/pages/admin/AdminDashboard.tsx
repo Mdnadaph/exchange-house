@@ -369,7 +369,49 @@ const AdminDashboard = () => {
               </TableBody>
             </Table>
 
-            {!loadingAdmins && totalPages > 1 && (
+            {/* {!loadingAdmins && totalPages > 1 && (
+              <Pagination className="mt-4">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 0) {
+                          setCurrentPage(currentPage - 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        href="#"
+                        isActive={index === currentPage}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(index);
+                        }}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages - 1) {
+                          setCurrentPage(currentPage + 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )} */}
+            {!loadingAdmins && (
               <Pagination className="mt-4">
                 <PaginationContent>
                   <PaginationItem>

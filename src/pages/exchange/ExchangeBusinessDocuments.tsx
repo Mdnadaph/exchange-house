@@ -457,11 +457,11 @@ const ExchangeBusinessDocuments = () => {
                           Loading...
                         </div>
                       )}
-                      {!hasMore && (
+                      {/* {!hasMore && (
                         <div className="py-2 text-center text-sm text-gray-400">
                           No More Data
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </SelectContent>
                 </Select>
@@ -605,36 +605,34 @@ const ExchangeBusinessDocuments = () => {
             </PaginationContent>
           </Pagination>
         )} */}
-        {totalPages > 1 && (
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
-                />
-              </PaginationItem>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+              />
+            </PaginationItem>
 
-              {[...Array(totalPages)].map((_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    isActive={i === currentPage}
-                    onClick={() => setCurrentPage(i)}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
-                  }
-                />
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={i === currentPage}
+                  onClick={() => setCurrentPage(i)}
+                >
+                  {i + 1}
+                </PaginationLink>
               </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
 
         {/* ================= PREVIEW MODAL ================= */}
         <Dialog open={previewOpen} onOpenChange={handleClosePreview}>

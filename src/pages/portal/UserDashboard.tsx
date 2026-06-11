@@ -21,6 +21,7 @@ import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { formateDate } from "@/utils/formateDateTime";
+import dayjs from "dayjs";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -111,29 +112,30 @@ const UserDashboard = () => {
     : [];
 
   const recentTransactions = dashboardData
-    ? dashboardData.recentTransactions
+    ? dashboardData?.recentTransactions
     : [];
+  const pendingActions = dashboardData ? dashboardData?.pendingActions : [];
 
-  const pendingActions = [
-    {
-      type: "approval_required",
-      message: "Transaction TXN-2024-002 requires your approval",
-      priority: "high",
-      time: "2 hours ago",
-    },
-    {
-      type: "document_needed",
-      message: "Upload invoice for TXN-2024-005",
-      priority: "medium",
-      time: "4 hours ago",
-    },
-    {
-      type: "beneficiary_expiring",
-      message: "Beneficiary verification expires in 3 days",
-      priority: "low",
-      time: "1 day ago",
-    },
-  ];
+  // const pendingActions = [
+  //   {
+  //     type: "approval_required",
+  //     message: "Transaction TXN-2024-002 requires your approval",
+  //     priority: "high",
+  //     time: "2 hours ago",
+  //   },
+  //   {
+  //     type: "document_needed",
+  //     message: "Upload invoice for TXN-2024-005",
+  //     priority: "medium",
+  //     time: "4 hours ago",
+  //   },
+  //   {
+  //     type: "beneficiary_expiring",
+  //     message: "Beneficiary verification expires in 3 days",
+  //     priority: "low",
+  //     time: "1 day ago",
+  //   },
+  // ];
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<
@@ -477,13 +479,45 @@ const UserDashboard = () => {
 
           {/* Pending Actions */}
           <div>
-            <Card className="shadow-card">
+            <Card className="shadow-card pb-3">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-warning" />
                   Pending Actions
                 </CardTitle>
               </CardHeader>
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
+                {pendingActions?.map((action, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex   items-start justify-between ">
+                      <p className="text-sm font-medium text-foreground leading-tight">
+                        {action?.message}
+                      </p>
+                      <Badge
+                        variant={
+                          action.priority === "high"
+                            ? "destructive"
+                            : action.priority === "medium"
+                              ? "secondary"
+                              : "secondary"
+                        }
+                        className="text-xs"
+                      >
+                        {action?.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {dayjs(action.timestamp)?.fromNow()}
+                    </p>
+                    {/* {index < pendingActions.length - 1 && (
+                      <div className="border-b" />
+                    )} */}
+                  </div>
+                ))}
+                {/* <Button variant="outline" className="w-full mt-4">
+                  View All Actions
+                </Button> */}
+              </CardContent>
               {/* <CardContent className="space-y-4">
                 {pendingActions.map((action, index) => (
                   <div key={index} className="space-y-2">
@@ -516,7 +550,7 @@ const UserDashboard = () => {
                   View All Actions
                 </Button>
               </CardContent> */}
-              <p className="text-center pb-3">No data available</p>
+              {/* <p className="text-center pb-3">No data available</p> */}
             </Card>
           </div>
         </div>

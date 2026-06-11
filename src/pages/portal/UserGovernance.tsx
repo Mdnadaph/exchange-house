@@ -23,6 +23,9 @@ import {
   XCircle,
   Power,
   Search,
+  Loader2,
+  FileText,
+  FileTextIcon,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -58,6 +61,7 @@ const UserGovernance = () => {
   const [searchValue, setSearchValue] = useState("");
   const [debounceValue, setDebouncedValue] = useState("");
   const [filterByApprovalTire, setFilterByApprovalTire] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
   const tiers = [
     { label: "All", value: "ALL" },
     { label: "Tier 1", value: "TIER_1" },
@@ -97,6 +101,7 @@ const UserGovernance = () => {
     };
   }, [searchValue]);
   const fetchData = async (page: number) => {
+    setLoading(true);
     try {
       const response = await fetch(
         `${BASE_URL}/api/v1/business/governance-rules?page=${page}&size=10&search=${debounceValue}&approvalTier=${filterByApprovalTire}`,
@@ -170,6 +175,8 @@ const UserGovernance = () => {
         description: "Failed to fetch governance rules",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -400,159 +407,190 @@ const UserGovernance = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {rules.map((rule) => (
-                <Card key={rule.id} className="border-l-4 border-l-primary">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold">{rule.name}</h3>
-                          {getStatusBadge(rule.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {rule.description}
-                        </p>
-                      </div>
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">
+                      Loading Governance rule...
+                    </p>
+                  </div>
+                </div>
+              ) : rules?.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileTextIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    {rules?.length === 0
+                      ? "No Governance rule found"
+                      : "No matching governance rule"}
+                  </h3>
+                </div>
+              ) : (
+                <>
+                  {rules?.map((rule) => (
+                    <Card key={rule.id} className="border-l-4 border-l-primary">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-lg font-semibold">
+                                {rule.name}
+                              </h3>
+                              {getStatusBadge(rule.status)}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {rule.description}
+                            </p>
+                          </div>
 
-                      <div className="flex items-center gap-2">
-                        {/* Status Dropdown Button */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className={`min-w-[110px] ${getStatusColor(rule.status)}`}
-                              disabled={loadingStatusChange === rule.id}
-                            >
-                              {loadingStatusChange === rule.id ? (
-                                "Updating..."
-                              ) : (
-                                <>
-                                  <Power className="h-4 w-4 mr-1" />
-                                  {rule.status}
-                                </>
-                              )}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                changeRuleStatus(rule.id, "ACTIVE")
-                              }
-                              className="text-green-700"
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              ACTIVE
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => changeRuleStatus(rule.id, "DRAFT")}
-                              className="text-yellow-700"
-                            >
-                              <AlertCircle className="h-4 w-4 mr-2" />
-                              DRAFT
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                changeRuleStatus(rule.id, "DISABLED")
-                              }
-                              className="text-red-700"
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              DISABLED
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          <div className="flex items-center gap-2">
+                            {/* Status Dropdown Button */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className={`min-w-[110px] ${getStatusColor(rule.status)}`}
+                                  disabled={loadingStatusChange === rule.id}
+                                >
+                                  {loadingStatusChange === rule.id ? (
+                                    "Updating..."
+                                  ) : (
+                                    <>
+                                      <Power className="h-4 w-4 mr-1" />
+                                      {rule.status}
+                                    </>
+                                  )}
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    changeRuleStatus(rule.id, "ACTIVE")
+                                  }
+                                  className="text-green-700"
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  ACTIVE
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    changeRuleStatus(rule.id, "DRAFT")
+                                  }
+                                  className="text-yellow-700"
+                                >
+                                  <AlertCircle className="h-4 w-4 mr-2" />
+                                  DRAFT
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    changeRuleStatus(rule.id, "DISABLED")
+                                  }
+                                  className="text-red-700"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  DISABLED
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
 
-                        <ApprovalRuleForm
-                          editRule={rule}
-                          onSuccess={refreshRules} // <-- add this line
-                          trigger={
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                          }
-                        />
-                        {/*<Button variant="outline" size="sm">
+                            <ApprovalRuleForm
+                              editRule={rule}
+                              onSuccess={refreshRules} // <-- add this line
+                              trigger={
+                                <Button variant="outline" size="sm">
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                              }
+                            />
+                            {/*<Button variant="outline" size="sm">
                           <Trash2 className="h-4 w-4" />
                         </Button>*/}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Currency & Amount</p>
-                        <p className="text-sm text-muted-foreground">
-                          {rule.currency} {rule.minAmount.toLocaleString()} -{" "}
-                          {rule.maxAmount
-                            ? rule.maxAmount.toLocaleString()
-                            : "Unlimited"}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Department</p>
-                        <p className="text-sm text-muted-foreground">
-                          {rule.department}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Transaction Types</p>
-                        <div className="flex flex-wrap gap-1">
-                          {rule.transactionTypes.map((type: string) => (
-                            <Badge
-                              key={type}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {type}
-                            </Badge>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Approval Tiers ({rule.tiers.length})
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {rule.tiers.map((tier: any) => (
-                          <div
-                            key={tier.level}
-                            className="p-3 bg-muted/50 rounded-lg"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge variant="outline" className="text-xs">
-                                Tier {tier.level}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {tier.approvers} approver
-                                {tier.approvers > 1 ? "s" : ""} required
-                              </span>
-                            </div>
-                            <p className="text-sm mb-1">
-                              Threshold: {rule.currency}{" "}
-                              {tier.threshold.toLocaleString()}+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">
+                              Currency & Amount
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {rule.currency} {rule.minAmount.toLocaleString()}{" "}
+                              -{" "}
+                              {rule.maxAmount
+                                ? rule.maxAmount.toLocaleString()
+                                : "Unlimited"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Department</p>
+                            <p className="text-sm text-muted-foreground">
+                              {rule.department}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">
+                              Transaction Types
                             </p>
                             <div className="flex flex-wrap gap-1">
-                              {tier.roles.map((role: string) => (
+                              {rule.transactionTypes.map((type: string) => (
                                 <Badge
-                                  key={role}
-                                  variant="outline"
+                                  key={type}
+                                  variant="secondary"
                                   className="text-xs"
                                 >
-                                  {role}
+                                  {type}
                                 </Badge>
                               ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Approval Tiers ({rule.tiers.length})
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {rule.tiers.map((tier: any) => (
+                              <div
+                                key={tier.level}
+                                className="p-3 bg-muted/50 rounded-lg"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    Tier {tier.level}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {tier.approvers} approver
+                                    {tier.approvers > 1 ? "s" : ""} required
+                                  </span>
+                                </div>
+                                <p className="text-sm mb-1">
+                                  Threshold: {rule.currency}{" "}
+                                  {tier.threshold.toLocaleString()}+
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                  {tier.roles.map((role: string) => (
+                                    <Badge
+                                      key={role}
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {role}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
+              )}
             </div>
             <Pagination className="mt-6">
               <PaginationContent>

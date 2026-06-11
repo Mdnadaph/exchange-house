@@ -1474,6 +1474,14 @@ const UserBeneficiaries = () => {
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
   const [beneficiaryId, setBeneficiaryId] = useState<null | number>(null);
+  const [debounceValue, setDebounceValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [searchGroupInput, setSearchGroupInput] = useState("");
+  const [searchGroupDebounce, setSearchDebounceGroup] = useState("");
+  const [groupFromDate, setGroupFromDate] = useState("");
+  const [groupToDate, setGroupToDate] = useState("");
+  const [groupLoading, setGroupLoading] = useState<boolean>(false);
 
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
@@ -1495,12 +1503,31 @@ const UserBeneficiaries = () => {
   const { t, language } = useLanguage();
 
   // Fetch beneficiaries from API
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setSearchDebounceGroup(searchGroupInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchGroupInput]);
+
   const fetchBeneficiaries = async () => {
     try {
       setLoading(true);
-      let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}`;
-      if (appliedSearch) {
-        url += `&search=${encodeURIComponent(appliedSearch)}`;
+      let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}&fromDate=${fromDate}&toDate=${toDate}`;
+      if (debounceValue) {
+        url += `&search=${encodeURIComponent(debounceValue)}`;
       }
 
       let approvalStatus = "";
@@ -1625,8 +1652,9 @@ const UserBeneficiaries = () => {
 
   // Fetch groups from API
   const fetchGroups = async () => {
+    setGroupLoading(true);
     try {
-      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
+      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}&search=${searchGroupDebounce}&fromDate=${groupFromDate}&toDate=${groupToDate}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -1662,20 +1690,22 @@ const UserBeneficiaries = () => {
         description: err?.message,
         variant: "destructive",
       });
+    } finally {
+      setGroupLoading(false);
     }
   };
 
   useEffect(() => {
     fetchBeneficiaries();
-  }, [token, beneficiariesPage, appliedSearch, filterStatus]);
+  }, [token, beneficiariesPage, debounceValue, filterStatus, fromDate, toDate]);
   useEffect(() => {
     fetchGroups();
-  }, [token, groupsPage]);
+  }, [token, groupsPage, searchGroupDebounce, groupFromDate, groupToDate]);
 
-  const handleSearch = () => {
-    setAppliedSearch(searchInput);
-    setBeneficiariesPage(0);
-  };
+  // const handleSearch = () => {
+  //   setAppliedSearch(searchInput);
+  //   setBeneficiariesPage(0);
+  // };
 
   const filteredBeneficiaries = beneficiaries;
 
@@ -1790,20 +1820,20 @@ const UserBeneficiaries = () => {
   }, [payOutConfigData?.data?.countries]);
 
   // Loading state
-  if (loading) {
-    return (
-      <UserLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">
-              Loading beneficiaries...
-            </p>
-          </div>
-        </div>
-      </UserLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <UserLayout>
+  //       <div className="flex items-center justify-center h-screen">
+  //         <div className="text-center">
+  //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+  //           <p className="mt-4 text-muted-foreground">
+  //             Loading beneficiaries...
+  //           </p>
+  //         </div>
+  //       </div>
+  //     </UserLayout>
+  //   );
+  // }
 
   // Error state
   if (error) {
@@ -1869,11 +1899,8 @@ const UserBeneficiaries = () => {
                       const status = getAvailabePayoutDestinationStatusBadge(
                         destination?.status,
                       );
-
                       const StatusIcon = status.icon;
-
                       const isActive = payOutId === destination?.id;
-
                       return (
                         <div
                           key={destination?.id}
@@ -1897,7 +1924,6 @@ const UserBeneficiaries = () => {
                                 {destination?.countryCode}
                               </span>
                             </div>
-
                             <div>
                               <p className="font-medium text-foreground">
                                 {destination?.countryName}
@@ -2136,7 +2162,15 @@ const UserBeneficiaries = () => {
           {/* Tabs for Beneficiaries and Groups */}
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "beneficiaries" | "groups")}
+            onValueChange={(v) => {
+              setGroupFromDate("");
+              setGroupToDate("");
+              setSearchGroupInput("");
+              setFromDate("");
+              setSearchInput("");
+              setToDate("");
+              setActiveTab(v as "beneficiaries" | "groups");
+            }}
           >
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger
@@ -2153,6 +2187,68 @@ const UserBeneficiaries = () => {
             </TabsList>
             <TabsContent value="groups" className="mt-6">
               {/* Groups Section */}
+              <Card className="shadow-card  mb-3">
+                <CardHeader className="p-6">
+                  <div className="flex flex-col sm:flex-row gap-4 my-2 px-5">
+                    <div className="flex-1">
+                      <Label htmlFor="search">Search Beneficiaries Group</Label>
+                      <div className="relative flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="search"
+                            placeholder="Search by name, account, bank, or country..."
+                            className="pl-9"
+                            value={searchGroupInput}
+                            onChange={(e) => {
+                              setSearchGroupInput(e.target.value);
+                              setGroupsPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleSearch()
+                            // }
+                          />
+                        </div>
+                        {/* <Button
+                          onClick={handleSearch}
+                          className="mt-auto"
+                          disabled={!searchInput.trim()}
+                        >
+                          Search
+                        </Button> */}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="fromDate">From Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="From Date"
+                          value={groupFromDate}
+                          onChange={(e) => {
+                            setGroupFromDate(e?.target?.value);
+                            setGroupsPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="toDate">To Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="To Date"
+                          value={groupToDate}
+                          onChange={(e) => {
+                            setGroupToDate(e?.target?.value);
+                            setGroupsPage(0);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
               <Card className="shadow-card">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -2163,8 +2259,18 @@ const UserBeneficiaries = () => {
                     <BeneficiaryGroupForm onGroupCreated={handleGroupCreated} />
                   </div>
                 </CardHeader>
+
                 <CardContent>
-                  {groupsWithBeneficiaryData.length === 0 ? (
+                  {groupLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading beneficiaries group...
+                        </p>
+                      </div>
+                    </div>
+                  ) : groupsWithBeneficiaryData?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Layers className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No groups created yet</p>
@@ -2281,22 +2387,52 @@ const UserBeneficiaries = () => {
                             placeholder="Search by name, account, bank, or country..."
                             className="pl-9"
                             value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleSearch()
-                            }
+                            onChange={(e) => {
+                              setSearchInput(e.target.value);
+                              setPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleSearch()
+                            // }
                           />
                         </div>
-                        <Button
+                        {/* <Button
                           onClick={handleSearch}
                           className="mt-auto"
                           disabled={!searchInput.trim()}
                         >
                           Search
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
-                    <div className="flex gap-2"></div>
+                    <div className="flex gap-2">
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="fromDate">From Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="From Date"
+                          value={fromDate}
+                          onChange={(e) => {
+                            setFromDate(e?.target?.value);
+                            setPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="toDate">To Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="To Date"
+                          value={toDate}
+                          onChange={(e) => {
+                            setToDate(e?.target?.value);
+                            setPage(0);
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -2306,7 +2442,16 @@ const UserBeneficiaries = () => {
                   <CardTitle>Registered Beneficiaries</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {filteredBeneficiaries.length === 0 ? (
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading beneficiaries...
+                        </p>
+                      </div>
+                    </div>
+                  ) : filteredBeneficiaries.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No beneficiaries found</p>

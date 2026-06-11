@@ -48,6 +48,14 @@ import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
 import { usePermission } from "@/hooks/usePermission";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // --- Types ---
 interface FeeRule {
@@ -103,6 +111,12 @@ const ExchangeFeeManagement = () => {
   // Edit Mode States
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | number | null>(null);
+  const [pagination, setPagination] = useState({
+    pageNumber: 0,
+    pageSize: 10,
+    totalPages: 1,
+    totalElements: 0,
+  });
 
   const [newFeeRule, setNewFeeRule] = useState({
     transactionType: "SINGLE",
@@ -266,6 +280,8 @@ const ExchangeFeeManagement = () => {
       const params: any = {};
       if (selectedCountry !== "all") params.country = selectedCountry;
       if (selectedType !== "all") params.transactionType = selectedType;
+      params.page = pagination.pageNumber;
+      params.pageSize = pagination.pageSize;
 
       const res = await axios.get(`${BASE_URL}/api/v3/fees`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -274,6 +290,12 @@ const ExchangeFeeManagement = () => {
 
       const fetchedData = res.data?.data?.rules || res.data?.data || [];
       setRules(fetchedData);
+      setPagination((prev) => ({
+        ...prev,
+        pageNumber: res?.data?.data?.pagination?.page,
+        totalPages: res?.data?.data?.pagination?.totalPages,
+        totalElements: res?.data?.data?.pagination?.totalItems,
+      }));
     } catch (error) {
       toast({
         variant: "destructive",
@@ -327,6 +349,7 @@ const ExchangeFeeManagement = () => {
   useEffect(() => {
     getCountriesData();
   }, []);
+
   const handleSaveRule = async () => {
     if (!validateForm()) {
       toast({
@@ -552,13 +575,19 @@ const ExchangeFeeManagement = () => {
     setIsFormDialogOpen(true);
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < pagination?.totalPages) {
+      setPagination((prev) => ({ ...prev, pageNumber: newPage }));
+    }
+  };
+
   const handleCloseFormDialog = () => {
     setIsFormDialogOpen(false);
   };
 
   useEffect(() => {
     fetchFeeRules();
-  }, [selectedCountry, selectedType]);
+  }, [selectedCountry, selectedType, pagination?.pageNumber]);
 
   // --- UI Helpers ---
   const activeRules = rules.filter((rule) => rule.status === "ACTIVE");
@@ -1180,7 +1209,13 @@ const ExchangeFeeManagement = () => {
                 <Label>Filter by Country</Label>
                 <Select
                   value={selectedCountry}
-                  onValueChange={setSelectedCountry}
+                  onValueChange={(value) => {
+                    setSelectedCountry(value);
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageNumber: 0,
+                    }));
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1197,7 +1232,16 @@ const ExchangeFeeManagement = () => {
               </div>
               <div className="w-full sm:w-48">
                 <Label>Filter by Transaction Type</Label>
-                <Select value={selectedType} onValueChange={setSelectedType}>
+                <Select
+                  value={selectedType}
+                  onValueChange={(value) => {
+                    setSelectedType(value);
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageNumber: 0,
+                    }));
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -1545,6 +1589,55 @@ const ExchangeFeeManagement = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Pagination className="mt-6">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(pagination.pageNumber - 1);
+                }}
+                className={
+                  pagination.pageNumber === 0
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {[...Array(pagination.totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  isActive={pagination.pageNumber === index}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(index);
+                  }}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(pagination.pageNumber + 1);
+                }}
+                className={
+                  pagination.pageNumber === pagination.totalPages - 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
 
         {/* --- Delete Confirmation Dialog --- */}
         <Dialog

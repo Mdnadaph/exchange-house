@@ -648,11 +648,11 @@ export default function AdminReports() {
                       Loading...
                     </div>
                   )}
-                  {!hasMore && (
+                  {/* {!hasMore && (
                     <div className="py-2 text-center text-sm text-gray-400">
                       No More Data
                     </div>
-                  )}
+                  )} */}
                 </div>
               </SelectContent>
             </Select>

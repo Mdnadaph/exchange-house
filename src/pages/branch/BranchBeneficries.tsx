@@ -220,6 +220,26 @@ export default function BranchBeneficries() {
   const [groupBeneficiaryLoading, setGroupBeneficiaryLoading] =
     useState<boolean>(false);
   const [payoutConfigLoading, setPayoutConfigLoading] = useState(false);
+  const [debounce, setDebounce] = useState("");
+  const [groupDebounce, setGroupDebounce] = useState("");
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setGroupDebounce(groupSearchInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [groupSearchInput]);
 
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
@@ -246,7 +266,7 @@ export default function BranchBeneficries() {
       setLoading(true);
       let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}&fromDate=${fromDate}&toDate=${toDate}&businessId=${businessId}`;
       if (appliedSearch) {
-        url += `&search=${encodeURIComponent(appliedSearch)}`;
+        url += `&search=${encodeURIComponent(debounce)}`;
       }
 
       let approvalStatus = "";
@@ -377,7 +397,7 @@ export default function BranchBeneficries() {
   const fetchGroups = async () => {
     setGroupBeneficiaryLoading(true);
     try {
-      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}&search=${groupAppliedSearch}&businessId=${groupForBusinessId}&fromDate=${groupForFromDate}&toDate=${groupForToDate}`;
+      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}&search=${groupDebounce}&businessId=${groupForBusinessId}&fromDate=${groupForFromDate}&toDate=${groupForToDate}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -423,7 +443,7 @@ export default function BranchBeneficries() {
   }, [
     token,
     beneficiariesPage,
-    appliedSearch,
+    debounce,
     filterStatus,
     fromDate,
     toDate,
@@ -434,21 +454,21 @@ export default function BranchBeneficries() {
   }, [
     token,
     groupsPage,
-    groupAppliedSearch,
+    groupDebounce,
     groupForBusinessId,
     groupForFromDate,
     groupForToDate,
   ]);
 
-  const handleSearch = () => {
-    setAppliedSearch(searchInput);
-    setBeneficiariesPage(0);
-  };
+  // const handleSearch = () => {
+  //   setAppliedSearch(searchInput);
+  //   setBeneficiariesPage(0);
+  // };
 
-  const handleGroupSearch = () => {
-    setGroupAppliedSearch(groupSearchInput);
-    setGroupsPage(0);
-  };
+  // const handleGroupSearch = () => {
+  //   setGroupAppliedSearch(groupSearchInput);
+  //   setGroupsPage(0);
+  // };
 
   const filteredBeneficiaries = beneficiaries;
 
@@ -990,7 +1010,7 @@ export default function BranchBeneficries() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="groups" className="mt-6">
-              <Card className="shadow-card">
+              <Card className="shadow-card mb-3">
                 <CardContent className="p-6">
                   <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
                     <div className="flex-1">
@@ -1003,21 +1023,22 @@ export default function BranchBeneficries() {
                             placeholder="Search by name, account, bank, or country..."
                             className="pl-9"
                             value={groupSearchInput}
-                            onChange={(e) =>
-                              setGroupSearchInput(e.target.value)
-                            }
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleGroupSearch()
-                            }
+                            onChange={(e) => {
+                              setGroupSearchInput(e.target.value);
+                              setGroupsPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleGroupSearch()
+                            // }
                           />
                         </div>
-                        <Button
+                        {/* <Button
                           onClick={handleGroupSearch}
                           className="mt-auto"
                           disabled={!groupSearchInput.trim()}
                         >
                           Search
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -1076,11 +1097,11 @@ export default function BranchBeneficries() {
                                   Loading...
                                 </div>
                               )}
-                              {!hasMore && (
+                              {/* {!hasMore && (
                                 <div className="py-2 text-center text-sm text-gray-400">
                                   No More Data
                                 </div>
-                              )}
+                              )} */}
                             </div>
                           </SelectContent>
                         </Select>
@@ -1231,19 +1252,22 @@ export default function BranchBeneficries() {
                             placeholder="Search by name, account, bank, or country..."
                             className="pl-9"
                             value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleSearch()
-                            }
+                            onChange={(e) => {
+                              setSearchInput(e.target.value);
+                              setBeneficiariesPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleSearch()
+                            // }
                           />
                         </div>
-                        <Button
+                        {/* <Button
                           onClick={handleSearch}
                           className="mt-auto"
                           disabled={!searchInput.trim()}
                         >
                           Search
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -1302,11 +1326,11 @@ export default function BranchBeneficries() {
                                   Loading...
                                 </div>
                               )}
-                              {!hasMore && (
+                              {/* {!hasMore && (
                                 <div className="py-2 text-center text-sm text-gray-400">
                                   No More Data
                                 </div>
-                              )}
+                              )} */}
                             </div>
                           </SelectContent>
                         </Select>
@@ -1330,14 +1354,14 @@ export default function BranchBeneficries() {
                         </p>
                       </div>
                     </div>
-                  ) : filteredBeneficiaries.length === 0 ? (
+                  ) : filteredBeneficiaries?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No beneficiaries found</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {filteredBeneficiaries.map((beneficiary: any) => {
+                      {filteredBeneficiaries?.map((beneficiary: any) => {
                         const status = getStatusBadge(beneficiary.status);
                         const verification = getVerificationBadge(
                           beneficiary.verificationStatus,

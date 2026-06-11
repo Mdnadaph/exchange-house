@@ -308,19 +308,23 @@ const UserManagement = () => {
 
                           {/* User Details Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                               <div className="flex items-center text-muted-foreground">
-                                <Mail className="h-3 w-3 mr-1" />
+                                <Mail className="h-3 w-3 mr-1 shrink-0" />
                                 Email:
                               </div>
-                              <p className="font-medium">{user.email}</p>
+                              <p className="font-medium break-all">
+                                {user.email}
+                              </p>
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                               <div className="flex items-center text-muted-foreground">
-                                <Shield className="h-3 w-3 mr-1" />
+                                <Shield className="h-3 w-3 mr-1 shrink-0" />
                                 Department:
                               </div>
-                              <p className="font-medium">{user.department}</p>
+                              <p className="font-medium break-words">
+                                {user.department}
+                              </p>
                             </div>
                             <div className="space-y-1">
                               <span className="text-muted-foreground">

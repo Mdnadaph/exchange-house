@@ -277,18 +277,18 @@ const ExchangeDealReview = () => {
     return count >= 2;
   };
 
-  if (loading) {
-    return (
-      <ExchangeLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading Rate Deals...</p>
-          </div>
-        </div>
-      </ExchangeLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <ExchangeLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading Rate Deals...</p>
+  //         </div>
+  //       </div>
+  //     </ExchangeLayout>
+  //   );
+  // }
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -442,11 +442,11 @@ const ExchangeDealReview = () => {
                             Loading...
                           </div>
                         )}
-                        {!hasMore && (
+                        {/* {!hasMore && (
                           <div className="py-2 text-center text-sm text-gray-400">
                             No More Data
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </SelectContent>
                   </Select>
@@ -464,7 +464,14 @@ const ExchangeDealReview = () => {
 
         {/* Deals List */}
         <div className="space-y-4">
-          {dealsData?.length > 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading Rate Deals...</p>
+              </div>
+            </div>
+          ) : dealsData?.length > 0 ? (
             dealsData?.map((deal: any) => {
               return (
                 <Card key={deal?.id} className="shadow-card">
@@ -673,32 +680,31 @@ const ExchangeDealReview = () => {
               </div>
             </div>
           )} */}
-          {totalDealsRateDataList > 10 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} rate deals
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
+
+          <div className="flex items-center justify-between mt-6 pt-6 border-t">
+            <p className="text-sm text-muted-foreground">
+              Showing {rateDealsData?.rateDeals?.content.length} of{" "}
+              {totalDealsRateDataList} rate deals
+            </p>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={(page + 1) * 10 >= totalDealsRateDataList}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </ExchangeLayout>
