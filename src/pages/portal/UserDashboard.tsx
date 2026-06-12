@@ -593,7 +593,7 @@ const UserDashboard = () => {
                 onClick={() => navigate("/portal/deals")}
               >
                 <FileText className="h-6 w-6 mb-2" />
-                <span className="text-sm">Add Rete Deals</span>
+                <span className="text-sm">Add Rate Deals</span>
               </Button>
             </div>
           </CardContent>

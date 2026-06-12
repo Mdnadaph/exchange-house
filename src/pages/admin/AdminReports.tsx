@@ -626,7 +626,9 @@ export default function AdminReports() {
             </h2>
             <Select
               value={exchangeAdminId}
-              onValueChange={(val) => setExchnageAdminId(val)}
+              onValueChange={(val) =>
+                setExchnageAdminId(val == "all" ? "" : val)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select Exchnage Admin" />
@@ -637,6 +639,9 @@ export default function AdminReports() {
                   onScroll={handleScroll}
                   className="max-h-60 overflow-y-auto"
                 >
+                  {exchangeAdminData?.length > 0 && (
+                    <SelectItem value="all">All</SelectItem>
+                  )}
                   {exchangeAdminData?.map((c, index) => (
                     <SelectItem key={index} value={c?.id}>
                       {c?.fullName}

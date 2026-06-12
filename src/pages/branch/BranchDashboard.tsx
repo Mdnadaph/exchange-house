@@ -53,31 +53,31 @@ const BranchDashboard = () => {
     {
       title: "Assigned KYB Applications",
       value: dashboardData ? dashboardData.stats.assignedKybApplications : "0",
-      change: "3 high priority",
+      // change: "3 high priority",
       icon: FileCheck,
       color: "text-blue-600",
     },
     {
       title: "Completed This Week",
       value: dashboardData ? dashboardData.stats.completedThisWeek : "0",
-      change: "+5 from last week",
+      // change: "+5 from last week",
       icon: CheckCircle,
       color: "text-green-600",
     },
     {
       title: "Pending Review",
       value: dashboardData ? dashboardData.stats.pendingReview : "0",
-      change: "2 due today",
+      // change: "2 due today",
       icon: Clock,
       color: "text-orange-600",
     },
-    {
-      title: "Efficiency Score",
-      value: "95%",
-      change: "+3% this month",
-      icon: TrendingUp,
-      color: "text-purple-600",
-    },
+    // {
+    //   title: "Efficiency Score",
+    //   value: "95%",
+    //   change: "+3% this month",
+    //   icon: TrendingUp,
+    //   color: "text-purple-600",
+    // },
   ];
 
   const myKYBQueue = dashboardData ? dashboardData.kybQueues : [];
@@ -243,7 +243,7 @@ const BranchDashboard = () => {
                   <div className="text-2xl font-bold text-foreground">
                     {stat.value}
                   </div>
-                  <p className="text-xs text-muted-foreground">{stat.change}</p>
+                  {/* <p className="text-xs text-muted-foreground">{stat.change}</p> */}
                 </CardContent>
               </Card>
             );
@@ -275,7 +275,7 @@ const BranchDashboard = () => {
                     Loading...
                   </p>
                 ) : myKYBQueue?.length > 0 ? (
-                  <div className="w-full">
+                  <div className="w-full space-y-2">
                     {myKYBQueue?.map((application) => {
                       const status = getStatusBadge(application.kybStatus);
                       return (
@@ -322,9 +322,9 @@ const BranchDashboard = () => {
                                 </div>
                               </div>
                               <div className="flex space-x-2 ml-4">
-                                <Button variant="outline" size="sm">
+                                {/* <Button variant="outline" size="sm">
                                   Continue
-                                </Button>
+                                </Button> */}
                                 {application.kybStatus ===
                                   "READY_FOR_REVIEW" && (
                                   <Button variant="business" size="sm">

@@ -416,7 +416,7 @@ const BranchBusinessOnboarding = () => {
                                     Country of Trade:
                                   </span>
                                   <span className="ml-2 font-medium">
-                                    {business.country}
+                                    {business?.country?.join(", ")}
                                   </span>
                                 </div>
 

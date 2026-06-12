@@ -508,6 +508,9 @@ const BranchBusinessDocuments = () => {
                       onScroll={handleScroll}
                       className="max-h-60 overflow-y-auto"
                     >
+                      {businessAdminList?.length > 0 && (
+                        <SelectItem value="all">All</SelectItem>
+                      )}
                       <SelectItem value="all">All</SelectItem>
                       {businessAdminList?.map((c, index) => (
                         <SelectItem key={index} value={c?.id}>

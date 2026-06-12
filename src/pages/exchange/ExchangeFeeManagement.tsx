@@ -1195,30 +1195,20 @@ const ExchangeFeeManagement = () => {
             );
           })}
         </div>
-
-        {/* --- Main Configuration Table --- */}
-        <Card className="shadow-sm border-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Fee Rules Configuration
-            </CardTitle>
-
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <div className="w-full sm:w-48">
-                <Label>Filter by Country</Label>
+        <Card className="shadow-card mb-3">
+          <CardContent className="pt-4">
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="w-full md:w-[300px]">
+                <Label className="mb-1 block">Filter by Country</Label>
                 <Select
                   value={selectedCountry}
                   onValueChange={(value) => {
                     setSelectedCountry(value);
-                    setPagination((prev) => ({
-                      ...prev,
-                      pageNumber: 0,
-                    }));
+                    setPagination((prev) => ({ ...prev, pageNumber: 0 }));
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="All Countries" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Countries</SelectItem>
@@ -1230,20 +1220,18 @@ const ExchangeFeeManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-full sm:w-48">
-                <Label>Filter by Transaction Type</Label>
+
+              <div className="w-full md:w-[300px]">
+                <Label className="mb-1 block">Filter by Transaction Type</Label>
                 <Select
                   value={selectedType}
                   onValueChange={(value) => {
                     setSelectedType(value);
-                    setPagination((prev) => ({
-                      ...prev,
-                      pageNumber: 0,
-                    }));
+                    setPagination((prev) => ({ ...prev, pageNumber: 0 }));
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
@@ -1256,6 +1244,16 @@ const ExchangeFeeManagement = () => {
                 </Select>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* --- Main Configuration Table --- */}
+        <Card className="shadow-sm border-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Fee Rules Configuration
+            </CardTitle>
           </CardHeader>
 
           <CardContent className="p-0">
@@ -1424,7 +1422,14 @@ const ExchangeFeeManagement = () => {
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={8} className="h-32 text-center">
-                        <Loader2 className="h-8 w-8 animate-spin mb-2 mx-auto" />
+                        <div className="flex items-center justify-center">
+                          <div className="flex flex-col items-center space-y-4">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <p className="text-muted-foreground">
+                              Loading fee management...
+                            </p>
+                          </div>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : activeRules?.length === 0 ? (

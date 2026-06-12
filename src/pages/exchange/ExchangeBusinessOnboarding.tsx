@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Plus,
   Search,
+  Loader2,
+  FileText,
 } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import BASE_URL from "@/config/config";
@@ -315,7 +317,7 @@ const ExchangeBusinessOnboarding = () => {
         <Card className="shadow-card">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1 flex-1">
                 <label className="text-base font-medium text-gray-800">
                   Search OnBoard Business
                 </label>
@@ -377,9 +379,14 @@ const ExchangeBusinessOnboarding = () => {
           <CardContent>
             <div className="space-y-4">
               {loading ? (
-                <p className="text-gray-600 font-normal text-base text-center pt-3">
-                  Loading...
-                </p>
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">
+                      Load Business Onboarding...
+                    </p>
+                  </div>
+                </div>
               ) : businesses.length > 0 ? (
                 businesses.map((business) => (
                   <Card
@@ -471,8 +478,11 @@ const ExchangeBusinessOnboarding = () => {
                   </Card>
                 ))
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No businesses found.
+                <div className="text-center py-12">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    No Business Onboarding found...
+                  </h3>
                 </div>
               )}
             </div>

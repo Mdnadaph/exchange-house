@@ -64,7 +64,7 @@ const ExchangeBusinessDocuments = () => {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("All");
 
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -78,10 +78,19 @@ const ExchangeBusinessDocuments = () => {
   // ✅ CHANGED: track loading per document ID instead of a single boolean
   const [loadingDocId, setLoadingDocId] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [debounce, setDebounce] = useState("");
   const [previewFileType, setPreviewFileType] = useState<
     "image" | "pdf" | "other"
   >("other");
   const [previewFileName, setPreviewFileName] = useState("");
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchQuery);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchQuery]);
   const getBusinessAdminList = async () => {
     // IMPORTANT
     if (businessLoading || !hasMore) return;
@@ -227,7 +236,7 @@ const ExchangeBusinessDocuments = () => {
       setLoading(true);
 
       const res = await axios.get(
-        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}&businessId=${businessId}&documentStatus=${selectedStatus}`,
+        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}&businessId=${businessId}&documentStatus=${selectedStatus}&search=${debounce}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -255,7 +264,7 @@ const ExchangeBusinessDocuments = () => {
 
   useEffect(() => {
     fetchDocuments(currentPage);
-  }, [currentPage, businessId, selectedStatus]);
+  }, [currentPage, businessId, selectedStatus, debounce]);
   useEffect(() => {
     getBusinessAdminList();
   }, []);
@@ -338,7 +347,7 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboard.totalDocuments}
+                {dashboard?.totalDocuments || 0}
               </div>
             </CardContent>
           </Card>
@@ -350,7 +359,7 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {dashboard.verifiedDocuments}
+                {dashboard.verifiedDocuments || 0}
               </div>
             </CardContent>
           </Card>
@@ -362,7 +371,7 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {dashboard.pendingDocuments}
+                {dashboard.pendingDocuments || 0}
               </div>
             </CardContent>
           </Card>
@@ -374,7 +383,7 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboard.activeBusinesses}
+                {dashboard.activeBusinesses || 0}
               </div>
             </CardContent>
           </Card>
@@ -382,8 +391,8 @@ const ExchangeBusinessDocuments = () => {
 
         {/* ================= FILTERS ================= */}
         <Card>
-          <CardContent className="p-6 flex justify-between flex-wrap">
-            <div className="">
+          <CardContent className="p-6 flex justify-between flex-wrap gap-3">
+            <div className="flex-1">
               <Label>Search Documents</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -391,7 +400,10 @@ const ExchangeBusinessDocuments = () => {
                   className="pl-9"
                   placeholder="Search by name, business, type, branch..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(0);
+                  }}
                 />
               </div>
             </div>
@@ -433,7 +445,7 @@ const ExchangeBusinessDocuments = () => {
                 <Select
                   value={businessId}
                   onValueChange={(val) => {
-                    setBusinessId(val);
+                    setBusinessId(val == "all" ? "" : val);
                     setCurrentPage(0);
                   }}
                 >
@@ -446,6 +458,9 @@ const ExchangeBusinessDocuments = () => {
                       onScroll={handleScroll}
                       className="max-h-60 overflow-y-auto"
                     >
+                      {businessAdminList?.length > 0 && (
+                        <SelectItem value="all">All</SelectItem>
+                      )}
                       {businessAdminList?.map((c, index) => (
                         <SelectItem key={index} value={c?.id}>
                           {c?.companyName}
@@ -542,7 +557,7 @@ const ExchangeBusinessDocuments = () => {
                           Download
                         </Button>
 
-                        {doc.status === "Pending Review" && (
+                        {/* {doc.status === "Pending Review" && (
                           <>
                             <Button variant="default" size="sm">
                               <CheckCircle className="h-4 w-4 mr-1" />
@@ -553,7 +568,7 @@ const ExchangeBusinessDocuments = () => {
                               Reject
                             </Button>
                           </>
-                        )}
+                        )} */}
                       </div>
                     </CardContent>
                   </Card>

@@ -631,7 +631,7 @@ const ExchangeAdminComplianceReview = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {/* {statistics.totalTransactions} */}
-                {transitionDashboardData?.dashboard?.totalTransactions}
+                {transitionDashboardData?.dashboard?.totalTransactions || 0}
               </div>
               {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
@@ -646,7 +646,7 @@ const ExchangeAdminComplianceReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {transitionDashboardData?.dashboard?.completedTransactions}
+                {transitionDashboardData?.dashboard?.completedTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {transitionDashboardData?.dashboard?.totalTransactions > 0
@@ -665,7 +665,7 @@ const ExchangeAdminComplianceReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {transitionDashboardData?.dashboard?.pendingTransactions}
+                {transitionDashboardData?.dashboard?.pendingTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting processing
@@ -685,7 +685,7 @@ const ExchangeAdminComplianceReview = () => {
                 {currencyCode}{" "}
                 {transitionDashboardData?.dashboard?.totalAmount?.toLocaleString(
                   "en-US",
-                )}
+                ) || 0}
               </div>
               <p className="text-xs text-muted-foreground">This year</p>
             </CardContent>

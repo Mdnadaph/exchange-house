@@ -973,9 +973,9 @@ const ExchangePayoutConfig = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{`${currencyCode} ${summaryData?.totalMonthlyVolumeUsd || 0}`}</div>
-              <p className="text-xs text-muted-foreground">
+              {/* <p className="text-xs text-muted-foreground">
                 +18% {t("fromLastMonth") || "from last month"}
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 

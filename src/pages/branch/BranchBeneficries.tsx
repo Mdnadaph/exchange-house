@@ -1073,7 +1073,7 @@ export default function BranchBeneficries() {
                         <Select
                           value={groupForBusinessId}
                           onValueChange={(val) => {
-                            setGroupForBusinessId(val);
+                            setGroupForBusinessId(val == "all" ? "" : val);
                             setGroupsPage(0);
                           }}
                         >
@@ -1086,6 +1086,9 @@ export default function BranchBeneficries() {
                               onScroll={handleScroll}
                               className="max-h-60 overflow-y-auto"
                             >
+                              {businessAdminList?.length > 0 && (
+                                <SelectItem value="all">All</SelectItem>
+                              )}
                               {businessAdminList?.map((c, index) => (
                                 <SelectItem key={index} value={c?.id}>
                                   {c?.companyName}
@@ -1302,7 +1305,7 @@ export default function BranchBeneficries() {
                         <Select
                           value={businessId}
                           onValueChange={(val) => {
-                            setBusinessId(val);
+                            setBusinessId(val == "all" ? "" : val);
                             setBeneficiariesPage(0);
                           }}
                         >
@@ -1315,6 +1318,9 @@ export default function BranchBeneficries() {
                               onScroll={handleScroll}
                               className="max-h-60 overflow-y-auto"
                             >
+                              {businessAdminList?.length > 0 && (
+                                <SelectItem value="all">All</SelectItem>
+                              )}
                               {businessAdminList?.map((c, index) => (
                                 <SelectItem key={index} value={c?.id}>
                                   {c?.companyName}

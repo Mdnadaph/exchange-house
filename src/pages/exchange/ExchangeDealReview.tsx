@@ -289,6 +289,12 @@ const ExchangeDealReview = () => {
   //     </ExchangeLayout>
   //   );
   // }
+  const approvalRate = exchangeAdminStats?.totalRequests
+    ? (
+        (exchangeAdminStats?.approved / exchangeAdminStats?.totalRequests) *
+        100
+      ).toFixed(2)
+    : 0;
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -305,7 +311,7 @@ const ExchangeDealReview = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -315,7 +321,7 @@ const ExchangeDealReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">
-                {exchangeAdminStats?.pendingReview}
+                {exchangeAdminStats?.pendingReview || 0}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting decision</p>
             </CardContent>
@@ -330,7 +336,7 @@ const ExchangeDealReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {exchangeAdminStats?.totalRequests}
+                {exchangeAdminStats?.totalRequests || 0}
               </div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
@@ -345,9 +351,25 @@ const ExchangeDealReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {exchangeAdminStats?.approved}
+                {exchangeAdminStats?.approved || 0}
               </div>
-              <p className="text-xs text-muted-foreground">75% approval rate</p>
+              <p className="text-xs text-muted-foreground">
+                {approvalRate}% approval rate
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Rejected
+              </CardTitle>
+              <CheckCircle className="h-5 w-5 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {exchangeAdminStats?.rejected || 0}
+              </div>
             </CardContent>
           </Card>
 
@@ -372,7 +394,7 @@ const ExchangeDealReview = () => {
           <CardContent className="p-6">
             <div className="flex gap-4 flex-wrap justify-between">
               <div className="flex gap-2 items-center flex-wrap">
-                <div className="">
+                <div className="flex-1">
                   <Label htmlFor="search">Search Deals</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -420,7 +442,10 @@ const ExchangeDealReview = () => {
                   </h2>
                   <Select
                     value={branchId}
-                    onValueChange={(val) => setBranchId(val)}
+                    onValueChange={(val) => {
+                      setBranchId(val == "all" ? "" : val);
+                      setPage(0);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select Branch" />
@@ -431,6 +456,9 @@ const ExchangeDealReview = () => {
                         onScroll={handleScroll}
                         className="max-h-60 overflow-y-auto"
                       >
+                        {branchListData?.length > 0 && (
+                          <SelectItem value="all">All</SelectItem>
+                        )}
                         {branchListData?.map((c, index) => (
                           <SelectItem key={index} value={c?.branchId}>
                             {c?.name}

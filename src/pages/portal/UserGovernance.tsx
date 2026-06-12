@@ -369,7 +369,7 @@ const UserGovernance = () => {
               </div>
               <div className="flex gap-2">
                 <div className="flex flex-col gap-2">
-                  <Label>Filter By Approval Tire</Label>
+                  <Label>Filter By Approval Tier</Label>
                   <Select
                     value={filterByApprovalTire}
                     onValueChange={(value) => {

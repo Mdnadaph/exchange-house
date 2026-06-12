@@ -136,6 +136,12 @@ const ExchangeKybMapping = () => {
   const [showCreateKYB, setShowCreateKYB] = useState(false);
   const [showCreateMapping, setShowCreateMapping] = useState(false);
   const [showEditMapping, setShowEditMapping] = useState(false); // ← NEW
+  const [editableBusinessTypeId, setEditableBusinessTypeId] = useState<
+    number | null
+  >(null);
+  const [editableKYBTypesId, setEditableKYBTypesId] = useState<number | null>(
+    null,
+  );
 
   // ── Form: Business Type ──────────────────────────────────────────────────────
   const [btForm, setBtForm] = useState({ code: "", name: "", active: true });
@@ -233,6 +239,16 @@ const ExchangeKybMapping = () => {
     }
   }, [token]);
 
+  const businessTypeList = businessTypes?.map((item, index) => ({
+    sn: index + 1,
+    ...item,
+  }));
+
+  const KYBTypeList = kybTypes?.map((item, index) => ({
+    sn: index + 1,
+    ...item,
+  }));
+
   // Re-fetch when page or debounced search changes
   useEffect(() => {
     if (token) fetchMappings(currentPage, debouncedSearch);
@@ -294,6 +310,16 @@ const ExchangeKybMapping = () => {
     }
   };
 
+  const handleEditOpenBusinessType = (m) => {
+    setEditableBusinessTypeId(m?.id);
+    setBtForm({ code: m?.code, name: m?.name, active: true });
+    setShowCreateBT(true);
+  };
+  const handleEditOpenKYBType = (m) => {
+    setEditableKYBTypesId(m?.id);
+    setKybForm({ code: m?.code, name: m?.name, active: true });
+    setShowCreateKYB(true);
+  };
   // ── Submit: Create KYB Type ──────────────────────────────────────────────────
   const handleCreateKYB = async () => {
     if (!kybForm.code.trim() || !kybForm.name.trim()) {
@@ -605,7 +631,7 @@ const ExchangeKybMapping = () => {
                         <th className="pb-3 pr-4 font-medium">Description</th>
                         <th className="pb-3 pr-4 font-medium">Status</th>
                         {/*<th className="pb-3 pr-4 font-medium">Default</th>*/}
-                        <th className="pb-3 font-medium">Actions</th>
+                        <th className="pb-3 pr-4 font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -645,6 +671,7 @@ const ExchangeKybMapping = () => {
                               {m.active ? "Active" : "Inactive"}
                             </Badge>
                           </td>
+
                           {/*<td className="py-3 pr-4">
                             {m.default ? (
                               <Badge
@@ -730,15 +757,118 @@ const ExchangeKybMapping = () => {
             )}
           </CardContent>
         </Card>
+        <div className="grid grid-cols-1  md:grid-cols-2 gap-8">
+          <Card className="shadow-card p-4">
+            <CardHeader>
+              <CardTitle>Business Type</CardTitle>
+            </CardHeader>
+            {businessTypeList?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-muted-foreground text-left">
+                      <th className="pb-3 pr-4 font-medium">SN</th>
+                      <th className="pb-3 pr-4 font-medium">Name</th>
+                      <th className="pb-3 pr-4 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {businessTypeList?.map((m) => (
+                      <tr
+                        key={m.id}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="py-3 pr-4 font-medium">{m?.sn}</td>
+                        <td className="py-3 pr-4 font-medium">{m?.name}</td>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          // onClick={() => handleOpenEdit(m)}
+                          onClick={() => handleEditOpenBusinessType(m)}
+                          // title="Edit mapping"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center pb-3 text-muted-foreground">
+                No Business Type Available
+              </p>
+            )}
+          </Card>
+          <Card className="shadow-card p-4">
+            <CardHeader>
+              <CardTitle>KYB Type</CardTitle>
+            </CardHeader>
+
+            {KYBTypeList?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-muted-foreground text-left">
+                      <th className="pb-3 pr-4 font-medium">SN</th>
+                      <th className="pb-3 pr-4 font-medium">Name</th>
+                      <th className="pb-3 pr-4 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {KYBTypeList?.map((m) => (
+                      <tr
+                        key={m.id}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="py-3 pr-4 font-medium">{m?.sn}</td>
+                        <td className="py-3 pr-4 font-medium">{m?.name}</td>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          // onClick={() => handleOpenEdit(m)}
+                          onClick={() => handleEditOpenKYBType(m)}
+                          // title="Edit mapping"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center pb-3 text-muted-foreground">
+                No KYB Type Available
+              </p>
+            )}
+          </Card>
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create Business Type
       ══════════════════════════════════════════════════════════ */}
-      <Dialog open={showCreateBT} onOpenChange={setShowCreateBT}>
+      <Dialog
+        open={showCreateBT}
+        onOpenChange={(open) => {
+          setShowCreateBT(open);
+          if (!open) {
+            setShowCreateBT(false);
+            setEditableBusinessTypeId(null);
+            setBtForm({ code: "", name: "", active: true });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create Business Type</DialogTitle>
+            <DialogTitle>
+              {editableBusinessTypeId
+                ? "Update Business Type"
+                : "Create Business Type"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -775,11 +905,29 @@ const ExchangeKybMapping = () => {
             </div>*/}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateBT(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateBT(false);
+                setEditableBusinessTypeId(null);
+                setBtForm({ code: "", name: "", active: true });
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreateBT} disabled={btLoading}>
-              {btLoading ? "Creating…" : "Create"}
+            <Button
+              onClick={() => {
+                editableBusinessTypeId ? <div></div> : handleCreateBT();
+              }}
+              disabled={btLoading}
+            >
+              {btLoading
+                ? editableBusinessTypeId
+                  ? "Updating"
+                  : "Creating..."
+                : editableBusinessTypeId
+                  ? "Upate"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -788,10 +936,22 @@ const ExchangeKybMapping = () => {
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create KYB Type
       ══════════════════════════════════════════════════════════ */}
-      <Dialog open={showCreateKYB} onOpenChange={setShowCreateKYB}>
+      <Dialog
+        open={showCreateKYB}
+        onOpenChange={(open) => {
+          setShowCreateKYB(open);
+          if (!open) {
+            setShowCreateKYB(false);
+            setEditableKYBTypesId(null);
+            setKybForm({ code: "", name: "", active: true });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create KYB Type</DialogTitle>
+            <DialogTitle>
+              {editableKYBTypesId ? "Update KYB Type" : "Create KYB Type"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -832,11 +992,24 @@ const ExchangeKybMapping = () => {
             </div>*/}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateKYB(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateKYB(false);
+                setEditableKYBTypesId(null);
+                setKybForm({ code: "", name: "", active: true });
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleCreateKYB} disabled={kybLoading}>
-              {kybLoading ? "Creating…" : "Create"}
+              {kybLoading
+                ? editableKYBTypesId
+                  ? "Updating..."
+                  : "Creating…"
+                : editableKYBTypesId
+                  ? "Update"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -950,6 +1123,7 @@ const ExchangeKybMapping = () => {
               />
             </div>*/}
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"

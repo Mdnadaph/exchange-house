@@ -49,7 +49,9 @@ import {
   ChevronsUpDown,
   Currency,
   Edit,
+  FileText,
   Globe,
+  Loader2,
   MapPin,
   Plus,
   Search,
@@ -356,24 +358,40 @@ export default function ExchangePayoutMechanism() {
           </PermissionGate>
         </div>
       </div>
-      <div className="relative w-64 my-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by country or currency…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      <Card className="shadow-card my-4">
+        <CardContent className="p-6 space-y-2">
+          <Label htmlFor="search" className="mb-1 block">
+            Search Currency or Country
+          </Label>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by country or currency…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="space-y-3">
         {loading ? (
-          <p className="text-xl text-gray-500 font-medium text-center">
-            Loading...
-          </p>
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">
+                Loading payout mechanisms...
+              </p>
+            </div>
+          </div>
         ) : allPayoutMechanism?.length == 0 ? (
-          <p className="text-center text-gray-500 font-medium ">
-            No Data Found
-          </p>
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              No Payout Mechanism found
+            </h3>
+          </div>
         ) : (
           <div className="space-y-5">
             {allPayoutMechanism?.map((payout) => (

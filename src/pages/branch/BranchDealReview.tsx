@@ -234,7 +234,7 @@ const BranchDealReview = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -275,6 +275,21 @@ const BranchDealReview = () => {
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
                 {stats.approved ?? 0}
+              </div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Rejected
+              </CardTitle>
+              <XCircle className="h-5 w-5 text-destructive" />{" "}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-destructive">
+                {stats.rejected ?? 0}
               </div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
@@ -405,7 +420,7 @@ const BranchDealReview = () => {
             </div>
           ) : content?.length > 0 ? (
             <div>
-              {content.map((deal: any) => (
+              {content?.map((deal: any) => (
                 <Card key={deal.id} className="shadow-card">
                   <CardContent className="p-6">
                     <div className="space-y-4">
