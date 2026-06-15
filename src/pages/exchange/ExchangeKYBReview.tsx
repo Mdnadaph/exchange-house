@@ -1020,7 +1020,7 @@ const ExchangeKYBReview = () => {
                 return (
                   <Card key={application.uuid} className="shadow-card">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                             <Building className="h-6 w-6 text-primary" />
@@ -1034,7 +1034,7 @@ const ExchangeKYBReview = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 ">
                           <Badge
                             variant={status.variant}
                             className="flex items-center gap-1"

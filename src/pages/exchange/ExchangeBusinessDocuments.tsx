@@ -339,7 +339,7 @@ const ExchangeBusinessDocuments = () => {
         </div>
 
         {/* ================= DASHBOARD ================= */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row justify-between pb-2">
               <CardTitle className="text-sm">Total Documents</CardTitle>
@@ -526,7 +526,7 @@ const ExchangeBusinessDocuments = () => {
                               <Calendar className="inline h-3 w-3 mr-1" />
                               {doc.uploadedAt}
                             </span>
-                            <span>{(doc.fileSize / 1024).toFixed(1)} KB</span>
+                            <span>{(doc.fileSize / 1024)?.toFixed(1)} KB</span>
                             <Badge variant="outline">{doc.branchName}</Badge>
                           </div>
                         </div>

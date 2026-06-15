@@ -340,7 +340,7 @@ export default function ExchangePayoutMechanism() {
   return (
     <ExchangeLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Payout Mechanism

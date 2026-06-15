@@ -1817,7 +1817,7 @@ const ExchangeStaffManagement = () => {
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Staff Management
@@ -2179,7 +2179,7 @@ const ExchangeStaffManagement = () => {
                     </p>
                   )}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>
                     <Label>
                       Select Branch <span className="text-red-500">*</span>
@@ -2484,7 +2484,7 @@ const ExchangeStaffManagement = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2 mt-6">
+              <div className="flex gap-2 mt-6 flex-wrap">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -2609,7 +2609,7 @@ const ExchangeStaffManagement = () => {
                                 className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
                               >
                                 <CardContent className="p-6">
-                                  <div className="flex items-start justify-between">
+                                  <div className="flex items-start justify-between flex-wrap gap-2">
                                     <div className="space-y-4 flex-1">
                                       <div className="flex items-center space-x-4">
                                         <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">

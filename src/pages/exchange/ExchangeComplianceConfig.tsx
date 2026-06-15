@@ -556,14 +556,14 @@ const ExchangeComplianceConfig = () => {
     const found = payoutCountryData.find(
       (c: any) => c?.countryCode === countryCode || c?.isoCode === countryCode,
     );
-    return found ? found.id : "";
+    return found ? found?.id : "";
   };
 
   return (
     <ExchangeLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Compliance Configuration
@@ -605,7 +605,7 @@ const ExchangeComplianceConfig = () => {
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>
                         Transaction Type
@@ -659,7 +659,7 @@ const ExchangeComplianceConfig = () => {
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>
                         Payout Country <span className="text-red-500">*</span>
@@ -726,7 +726,7 @@ const ExchangeComplianceConfig = () => {
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>
                         Action <span className="text-destructive">*</span>
@@ -829,14 +829,14 @@ const ExchangeComplianceConfig = () => {
 
         {/* Regulatory Thresholds */}
         <Card className="shadow-card">
-          <div className="flex p-6">
+          <div className="flex p-6  flex-wrap gap-3">
             <div className="flex-1">
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-primary" />
                 Transaction Monitoring Thresholds
               </CardTitle>
             </div>
-            <div className="flex gap-2 items-end">
+            <div className="flex gap-2 items-end flex-wrap">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
                 onClick={() => setFilter("all")}
@@ -993,7 +993,7 @@ const ExchangeComplianceConfig = () => {
                     }
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Transaction Type</Label>
                     <Select
@@ -1029,7 +1029,7 @@ const ExchangeComplianceConfig = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Payout Country</Label>
                     <Select
@@ -1080,7 +1080,7 @@ const ExchangeComplianceConfig = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Action</Label>
                     <Select
@@ -1162,7 +1162,7 @@ const ExchangeComplianceConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   Screening Settings
@@ -1359,7 +1359,7 @@ const ExchangeComplianceConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   High Risk Countries
@@ -1594,7 +1594,7 @@ const ExchangeComplianceConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   CBUAE Reporting
@@ -1749,7 +1749,7 @@ const ExchangeComplianceConfig = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3">
+        <div className="flex justify-end gap-3 flex-wrap">
           <Button variant="outline">Test Configuration</Button>
           <Button variant="outline">Reset to Defaults</Button>
           <Button

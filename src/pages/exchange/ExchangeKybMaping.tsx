@@ -104,7 +104,18 @@ const ExchangeKybMapping = () => {
   const [kybTypes, setKybTypes] = useState<KybType[]>([]);
   const [loadingMappings, setLoadingMappings] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
-
+  const [businessTypePagination, setBusinessTypePagination] = useState({
+    pageSize: 0,
+    totalElements: 0,
+    totalPages: 0,
+    currentPage: 0,
+  });
+  const [KYBTypePagination, setKYBTypePagination] = useState({
+    pageSize: 0,
+    totalElements: 0,
+    totalPages: 0,
+    currentPage: 0,
+  });
   // ── Stats from API ───────────────────────────────────────────────────────────
   const [stats, setStats] = useState({
     totalMappings: 0,
@@ -210,15 +221,33 @@ const ExchangeKybMapping = () => {
     setLoadingDropdowns(true);
     try {
       const [btRes, kybRes] = await Promise.all([
-        axios.get(`${BASE_URL}/api/v3/admin/kyb/master/business-types`, {
-          headers: getHeaders(),
-        }),
-        axios.get(`${BASE_URL}/api/v3/admin/kyb/master/kyb-types`, {
-          headers: getHeaders(),
-        }),
+        axios.get(
+          `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${businessTypePagination?.currentPage}&pageSize=${businessTypePagination?.pageSize}`,
+          {
+            headers: getHeaders(),
+          },
+        ),
+        axios.get(
+          `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${KYBTypePagination?.currentPage}&pageSize=${KYBTypePagination?.pageSize}`,
+          {
+            headers: getHeaders(),
+          },
+        ),
       ]);
       setBusinessTypes(btRes.data?.data ?? []);
+      setBusinessTypePagination({
+        pageSize: btRes?.data?.pageSize,
+        totalPages: btRes?.data?.totalPage,
+        currentPage: btRes?.data?.currentPage,
+        totalElements: btRes?.data?.totalElement,
+      });
       setKybTypes(kybRes.data?.data ?? []);
+      setKYBTypePagination({
+        pageSize: kybRes?.data?.pageSize,
+        totalPages: kybRes?.data?.totalPage,
+        currentPage: kybRes?.data?.currentPage,
+        totalElements: kybRes?.data?.totalElement,
+      });
     } catch (err: any) {
       toast({
         title: "Error",
@@ -237,7 +266,11 @@ const ExchangeKybMapping = () => {
       fetchMappings(0, "");
       fetchDropdowns();
     }
-  }, [token]);
+  }, [
+    token,
+    businessTypePagination?.currentPage,
+    KYBTypePagination?.currentPage,
+  ]);
 
   const businessTypeList = businessTypes?.map((item, index) => ({
     sn: index + 1,
@@ -319,6 +352,119 @@ const ExchangeKybMapping = () => {
     setEditableKYBTypesId(m?.id);
     setKybForm({ code: m?.code, name: m?.name, active: true });
     setShowCreateKYB(true);
+  };
+
+  const handleEditBusinessType = async () => {
+    if (!btForm.code.trim() || !btForm.name.trim()) {
+      toast({
+        title: "Validation",
+        description: "Code and Name are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setBtLoading(true);
+    const payload = {
+      name: btForm?.name,
+      code: btForm?.code,
+    };
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types/${editableBusinessTypeId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            res?.data?.message || "Update Business Type Successfully",
+        });
+        setBtForm({ name: "", code: "", active: true });
+        setEditableBusinessTypeId(null);
+        setShowCreateBT(false);
+        fetchDropdowns();
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating Business type",
+        variant: "destructive",
+      });
+    } finally {
+      setBtLoading(false);
+    }
+  };
+
+  const handleEditKYBType = async () => {
+    if (!kybForm.code.trim() || !kybForm.name.trim()) {
+      toast({
+        title: "Validation",
+        description: "Code and Name are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setKybLoading(true);
+    const payload = {
+      name: kybForm?.name,
+      code: kybForm?.code,
+    };
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types/${editableKYBTypesId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setEditableKYBTypesId(null);
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Update KYB Type Successfully",
+        });
+        setKybForm({
+          code: "",
+          name: "",
+          active: true,
+        });
+        setShowCreateKYB(false);
+        fetchDropdowns();
+      } else {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message ||
+            "Something went wrong while updating KYB Types",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating KYB Type",
+        variant: "destructive",
+      });
+    } finally {
+      setKybLoading(false);
+    }
   };
   // ── Submit: Create KYB Type ──────────────────────────────────────────────────
   const handleCreateKYB = async () => {
@@ -466,12 +612,21 @@ const ExchangeKybMapping = () => {
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
-
+  const handleBusinessTypePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < businessTypePagination.totalPages) {
+      setBusinessTypePagination((prev) => ({ ...prev, currentPage: newPage }));
+    }
+  };
+  const handleKYBTypePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < businessTypePagination.totalPages) {
+      setBusinessTypePagination((prev) => ({ ...prev, currentPage: newPage }));
+    }
+  };
   return (
     <ExchangeLayout>
       <div className="space-y-8">
         {/* ── Header ── */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               KYB Mapping Management
@@ -480,7 +635,7 @@ const ExchangeKybMapping = () => {
               Manage business type to KYB type mappings
             </p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex gap-2 flex-wrap">
             <PermissionGate permission="BTN_CREATE_BUSINESS_TYPE">
               <Button
                 variant="outline"
@@ -508,7 +663,7 @@ const ExchangeKybMapping = () => {
         </div>
 
         {/* ── Stats ── */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -570,8 +725,8 @@ const ExchangeKybMapping = () => {
         {/* ── Search & Refresh ── */}
         <Card className="shadow-card">
           <CardContent className="p-4">
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
+            <div className="flex gap-3 items-end flex-wrap">
+              <div className="md:flex-1">
                 <Label htmlFor="search" className="mb-1 block">
                   Search Mappings
                 </Label>
@@ -757,44 +912,102 @@ const ExchangeKybMapping = () => {
             )}
           </CardContent>
         </Card>
-        <div className="grid grid-cols-1  md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1  lg:grid-cols-2 gap-8">
           <Card className="shadow-card p-4">
             <CardHeader>
               <CardTitle>Business Type</CardTitle>
             </CardHeader>
             {businessTypeList?.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground text-left">
-                      <th className="pb-3 pr-4 font-medium">SN</th>
-                      <th className="pb-3 pr-4 font-medium">Name</th>
-                      <th className="pb-3 pr-4 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {businessTypeList?.map((m) => (
-                      <tr
-                        key={m.id}
-                        className="hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="py-3 pr-4 font-medium">{m?.sn}</td>
-                        <td className="py-3 pr-4 font-medium">{m?.name}</td>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          // onClick={() => handleOpenEdit(m)}
-                          onClick={() => handleEditOpenBusinessType(m)}
-                          // title="Edit mapping"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground text-left">
+                        <th className="pb-3 pr-4 font-medium">SN</th>
+                        <th className="pb-3 pr-4 font-medium">Name</th>
+                        <th className="pb-3 pr-4 font-medium">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y">
+                      {businessTypeList?.map((m) => (
+                        <tr
+                          key={m.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 pr-4 font-medium">{m?.sn}</td>
+                          <td className="py-3 pr-4 font-medium">{m?.name}</td>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            // onClick={() => handleOpenEdit(m)}
+                            onClick={() => handleEditOpenBusinessType(m)}
+                            // title="Edit mapping"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleBusinessTypePageChange(
+                            businessTypePagination.currentPage - 1,
+                          );
+                        }}
+                        className={
+                          businessTypePagination.currentPage === 0
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                    {[...Array(businessTypePagination.totalPages)].map(
+                      (_, index) => (
+                        <PaginationItem key={index}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleBusinessTypePageChange(index);
+                            }}
+                            isActive={
+                              businessTypePagination.currentPage === index
+                            }
+                            className="cursor-pointer"
+                          >
+                            {index + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleBusinessTypePageChange(
+                            businessTypePagination.currentPage + 1,
+                          );
+                        }}
+                        className={
+                          businessTypePagination.currentPage ===
+                          businessTypePagination.totalPages - 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </>
             ) : (
               <p className="text-center pb-3 text-muted-foreground">
                 No Business Type Available
@@ -805,40 +1018,95 @@ const ExchangeKybMapping = () => {
             <CardHeader>
               <CardTitle>KYB Type</CardTitle>
             </CardHeader>
-
             {KYBTypeList?.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground text-left">
-                      <th className="pb-3 pr-4 font-medium">SN</th>
-                      <th className="pb-3 pr-4 font-medium">Name</th>
-                      <th className="pb-3 pr-4 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {KYBTypeList?.map((m) => (
-                      <tr
-                        key={m.id}
-                        className="hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="py-3 pr-4 font-medium">{m?.sn}</td>
-                        <td className="py-3 pr-4 font-medium">{m?.name}</td>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          // onClick={() => handleOpenEdit(m)}
-                          onClick={() => handleEditOpenKYBType(m)}
-                          // title="Edit mapping"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground text-left">
+                        <th className="pb-3 pr-4 font-medium">SN</th>
+                        <th className="pb-3 pr-4 font-medium">Name</th>
+                        <th className="pb-3 pr-4 font-medium">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y">
+                      {KYBTypeList?.map((m) => (
+                        <tr
+                          key={m.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 pr-4 font-medium">{m?.sn}</td>
+                          <td className="py-3 pr-4 font-medium">{m?.name}</td>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            // onClick={() => handleOpenEdit(m)}
+                            onClick={() => handleEditOpenKYBType(m)}
+                            // title="Edit mapping"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleKYBTypePageChange(
+                            KYBTypePagination.currentPage - 1,
+                          );
+                        }}
+                        className={
+                          KYBTypePagination.currentPage === 0
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                    {[...Array(KYBTypePagination.totalPages)].map(
+                      (_, index) => (
+                        <PaginationItem key={index}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleKYBTypePageChange(index);
+                            }}
+                            isActive={KYBTypePagination.currentPage === index}
+                            className="cursor-pointer"
+                          >
+                            {index + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleKYBTypePageChange(
+                            KYBTypePagination.currentPage + 1,
+                          );
+                        }}
+                        className={
+                          KYBTypePagination.currentPage ===
+                          KYBTypePagination.totalPages - 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </>
             ) : (
               <p className="text-center pb-3 text-muted-foreground">
                 No KYB Type Available
@@ -917,7 +1185,9 @@ const ExchangeKybMapping = () => {
             </Button>
             <Button
               onClick={() => {
-                editableBusinessTypeId ? <div></div> : handleCreateBT();
+                editableBusinessTypeId
+                  ? handleEditBusinessType()
+                  : handleCreateBT();
               }}
               disabled={btLoading}
             >
@@ -1002,7 +1272,12 @@ const ExchangeKybMapping = () => {
             >
               Cancel
             </Button>
-            <Button onClick={handleCreateKYB} disabled={kybLoading}>
+            <Button
+              onClick={() =>
+                editableKYBTypesId ? handleEditKYBType() : handleCreateKYB()
+              }
+              disabled={kybLoading}
+            >
               {kybLoading
                 ? editableKYBTypesId
                   ? "Updating..."

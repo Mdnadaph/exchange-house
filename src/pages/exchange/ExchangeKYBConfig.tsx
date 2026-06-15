@@ -158,7 +158,7 @@ const ExchangeKYBConfig = () => {
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               KYB Rules Configuration

@@ -215,7 +215,7 @@ const ExchangeBusinessOnboarding = () => {
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Business Onboarding
@@ -316,7 +316,7 @@ const ExchangeBusinessOnboarding = () => {
 
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               <div className="space-y-1 flex-1">
                 <label className="text-base font-medium text-gray-800">
                   Search OnBoard Business

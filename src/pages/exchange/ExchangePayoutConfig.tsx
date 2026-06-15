@@ -919,7 +919,7 @@ const ExchangePayoutConfig = () => {
                 }}
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">
+                <span className="inline">
                   {t("addDestination") || "Add Destination"}
                 </span>
               </Button>
@@ -928,7 +928,7 @@ const ExchangePayoutConfig = () => {
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2  md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -1269,7 +1269,7 @@ const ExchangePayoutConfig = () => {
             </DialogHeader>
 
             <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("country") || "Country"} *</Label>
                   <Select
@@ -1410,7 +1410,7 @@ const ExchangePayoutConfig = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("partnerCount") || "Partner Count"}</Label>
                   <Input
