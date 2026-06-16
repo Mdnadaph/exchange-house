@@ -121,7 +121,7 @@ const BranchBusinessDocuments = () => {
       let fetchedDashboard: Dashboard | null = null;
       try {
         const response = await axios.get(
-          `${BASE_URL}/api/v3/staff/kyb/documents?page=${pagination.pageNumber}&size=${pagination.pageSize}&businessId=${businessId}&search=${debouncedValue}`,
+          `${BASE_URL}/api/v3/staff/kyb/documents?page=${pagination.pageNumber}&size=${pagination.pageSize}&businessId=${businessId}&search=${debouncedValue}&status=${selectedStatus}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -275,7 +275,7 @@ const BranchBusinessDocuments = () => {
   // if (loading) {
   //   return <div>Loading...</div>;
   // }
-
+  console.log("selected Status", selectedStatus);
   const getBusinessAdminList = async () => {
     // IMPORTANT
     if (businessLoading || !hasMore) return;
@@ -511,7 +511,6 @@ const BranchBusinessDocuments = () => {
                       {businessAdminList?.length > 0 && (
                         <SelectItem value="all">All</SelectItem>
                       )}
-                      <SelectItem value="all">All</SelectItem>
                       {businessAdminList?.map((c, index) => (
                         <SelectItem key={index} value={c?.id}>
                           {c?.companyName}
@@ -662,55 +661,62 @@ const BranchBusinessDocuments = () => {
                 ))
               )}
             </div>
-
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(pagination.pageNumber - 1);
-                    }}
-                    className={
-                      pagination.pageNumber === 0
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-
-                {[...Array(pagination.totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
+            {documents?.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No documents found matching your filters.</p>
+              </div>
+            )}
+            {documents?.length > 0 && (
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
                       href="#"
-                      isActive={pagination.pageNumber === index}
                       onClick={(e) => {
                         e.preventDefault();
-                        handlePageChange(index);
+                        handlePageChange(pagination.pageNumber - 1);
                       }}
-                    >
-                      {index + 1}
-                    </PaginationLink>
+                      className={
+                        pagination.pageNumber === 0
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
-                ))}
 
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(pagination.pageNumber + 1);
-                    }}
-                    className={
-                      pagination.pageNumber === pagination.totalPages - 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                  {[...Array(pagination.totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        href="#"
+                        isActive={pagination.pageNumber === index}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(index);
+                        }}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pagination.pageNumber + 1);
+                      }}
+                      className={
+                        pagination.pageNumber === pagination.totalPages - 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
 
             {/* {pagination.totalPages > 1 && (
               <Pagination className="mt-6">
@@ -762,13 +768,6 @@ const BranchBusinessDocuments = () => {
                 </PaginationContent>
               </Pagination>
             )} */}
-
-            {documents?.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>No documents found matching your filters.</p>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

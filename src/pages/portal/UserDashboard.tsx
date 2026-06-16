@@ -354,7 +354,7 @@ const UserDashboard = () => {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">
@@ -443,7 +443,7 @@ const UserDashboard = () => {
                           className="flex items-center justify-between p-4 rounded-lg bg-muted/50 "
                         >
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-medium text-foreground">
                                 {transaction?.companyName}
                               </p>
@@ -489,7 +489,7 @@ const UserDashboard = () => {
               <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
                 {pendingActions?.map((action, index) => (
                   <div key={index} className="space-y-2">
-                    <div className="flex   items-start justify-between ">
+                    <div className="flex   items-start justify-between flex-wrap gap-1">
                       <p className="text-sm font-medium text-foreground leading-tight">
                         {action?.message}
                       </p>
@@ -600,7 +600,7 @@ const UserDashboard = () => {
         </Card>
 
         {/* Transaction Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

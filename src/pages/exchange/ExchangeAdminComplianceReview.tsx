@@ -620,7 +620,7 @@ const ExchangeAdminComplianceReview = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -695,8 +695,8 @@ const ExchangeAdminComplianceReview = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 items-center flex-wrap">
+              <div className="w-full md:flex-1">
                 <Label htmlFor="search">Search Transactions</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -713,7 +713,7 @@ const ExchangeAdminComplianceReview = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5 flex-wrap">
                 <Button
                   variant="outline"
                   onClick={() => {

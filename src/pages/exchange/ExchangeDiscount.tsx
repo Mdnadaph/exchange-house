@@ -297,7 +297,7 @@ const ExchangeDiscount = () => {
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Discount Management
@@ -460,7 +460,7 @@ const ExchangeDiscount = () => {
 
         {/* Stats Overview */}
         {stats && (
-          <div className="grid grid-flow-col auto-cols-fr gap-4 md:gap-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -513,8 +513,8 @@ const ExchangeDiscount = () => {
         {/* Search + Status Filter */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-              <div className="flex-1">
+            <div className="flex gap-4 flex-wrap">
+              <div className="w-full md:flex-1">
                 <Label htmlFor="search">Search Discounts</Label>
                 <div className="relative mt-1.5">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -531,7 +531,7 @@ const ExchangeDiscount = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="space-y-1">
                 <Label className="text-sm whitespace-nowrap">Status:</Label>
                 <div className="flex border rounded-md overflow-hidden shadow-sm">
                   <Button
@@ -605,14 +605,14 @@ const ExchangeDiscount = () => {
                   className="hover:shadow-md transition-shadow"
                 >
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-6">
+                    <div className="flex items-start justify-between gap-6 flex-wrap">
                       <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                           <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                             <Tag className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
+                            <div className="flex items-center gap-3 mb-1 flex-wrap">
                               <h3 className="text-lg font-semibold">
                                 {discount.name}
                               </h3>
@@ -664,12 +664,10 @@ const ExchangeDiscount = () => {
                                 : discount.limit}
                             </span>
                           </div>
-
                           <div className="flex items-center gap-1.5">
                             <Calendar className="h-4 w-4" />
                             <span>Starts: {discount.startDate || "—"}</span>
                           </div>
-
                           <div className="flex items-center gap-1.5">
                             <Calendar className="h-4 w-4" />
                             <span>Expires: {discount.expiryDate}</span>

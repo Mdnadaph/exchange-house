@@ -351,20 +351,20 @@ export default function BranchSingleTransaction({
     }
   };
 
-  const getFeeManagement = async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/v3/fees`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (json?.status !== true || !json.data) {
-        throw new Error("Unexpected response format");
-      }
-      setFeeManagementData(json?.data?.rules);
-    } catch (error) {
-      console.error("Error", error);
-    }
-  };
+  // const getFeeManagement = async () => {
+  //   try {
+  //     const res = await fetch(`${BASE_URL}/api/v3/fees`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     const json = await res.json();
+  //     if (json?.status !== true || !json.data) {
+  //       throw new Error("Unexpected response format");
+  //     }
+  //     setFeeManagementData(json?.data?.rules);
+  //   } catch (error) {
+  //     console.error("Error", error);
+  //   }
+  // };
 
   const handleTransationSummary = async () => {
     setLoading(true);
@@ -459,7 +459,7 @@ export default function BranchSingleTransaction({
 
   useEffect(() => {
     getCurrency();
-    getFeeManagement();
+    // getFeeManagement();
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,21 @@ const ExchangeKybMapping = () => {
   const [mappings, setMappings] = useState<MappingItem[]>([]);
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [kybTypes, setKybTypes] = useState<KybType[]>([]);
+  const [businessTypesDropDownData, setBusinessTypeDropDownData] = useState<
+    BusinessType[]
+  >([]);
+  const [kybTypesDropDownData, setKybTypesDropDownData] = useState<KybType[]>(
+    [],
+  );
+  const [businessTypesDropdownLoading, setBusinessTypesDropdownLoading] =
+    useState<boolean>(false);
+  const [kybTypesDropDownLoading, setkybTypesDropDownLoading] =
+    useState<boolean>(false);
+  const [hasMoreBusinessType, setHasMoreBusinessType] = useState<boolean>(true);
+  const [hasMoreKybTypes, setHasMoreKybTypes] = useState<boolean>(true);
+  const [businessTypePage, setBusinessTypePage] = useState<number>(0);
+  const [kybTypePage, setKybTypePage] = useState<number>(0);
+
   const [loadingMappings, setLoadingMappings] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [businessTypePagination, setBusinessTypePagination] = useState({
@@ -116,6 +131,9 @@ const ExchangeKybMapping = () => {
     totalPages: 0,
     currentPage: 0,
   });
+  const businessTyeListRef = useRef<HTMLDivElement | null>(null);
+  const kybTypeListRef = useRef<HTMLDivElement | null>(null);
+
   // ── Stats from API ───────────────────────────────────────────────────────────
   const [stats, setStats] = useState({
     totalMappings: 0,
@@ -215,8 +233,183 @@ const ExchangeKybMapping = () => {
     }
   };
 
+  const fetchBusinessTypeDropDown = async () => {
+    if (businessTypesDropdownLoading || !hasMoreBusinessType) return;
+    try {
+      setBusinessTypesDropdownLoading(true);
+      const currentPage = businessTypePage;
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${currentPage}&pageSize=10`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        const newData = res?.data?.data || [];
+        // No more data
+        if (newData.length < 10) {
+          setHasMoreBusinessType(false);
+        }
+
+        // Prevent duplicate data
+        setBusinessTypeDropDownData((prev) => {
+          const merged = [...prev, ...newData];
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setBusinessTypePage((prev) => prev + 1);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.responsive?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setBusinessTypesDropdownLoading(false);
+    }
+  };
+
+  const handleBusinessTypeScroll = () => {
+    if (!businessTyeListRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } =
+      businessTyeListRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !businessTypesDropdownLoading && hasMoreBusinessType) {
+      fetchBusinessTypeDropDown();
+    }
+  };
+
+  const fetchKybTypeDropDown = async () => {
+    if (kybTypesDropDownLoading || !hasMoreKybTypes) return;
+    try {
+      setkybTypesDropDownLoading(true);
+      const currentPage = kybTypePage;
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${currentPage}&pageSize=10`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        const newData = res?.data?.data || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMoreKybTypes(false);
+        }
+
+        // Prevent duplicate data
+        setKybTypesDropDownData((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setKybTypePage((prev) => prev + 1);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setkybTypesDropDownLoading(false);
+    }
+  };
+
+  const handleKybTypesScroll = () => {
+    if (!kybTypeListRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = kybTypeListRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !kybTypesDropDownLoading && hasMoreKybTypes) {
+      fetchKybTypeDropDown();
+    }
+  };
+
+  //   const getExchangeAdminList = async () => {
+  //     // IMPORTANT
+  //     if (exchangeAdminLoading || !hasMore) return;
+
+  //     try {
+  //       setExchangeAdminLoading(true);
+
+  //       const currentPage = page;
+
+  //       const res = await axios.get(
+  //         `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&pageSize=10`,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         },
+  //       );
+
+  //       if (res?.data?.status) {
+  //         const newData = res?.data?.data?.exchangeAdminResponse || [];
+
+  //         // No more data
+  //         if (newData.length < 10) {
+  //           setHasMore(false);
+  //         }
+
+  //         // Prevent duplicate data
+  //         setExchangeAdminData((prev) => {
+  //           const merged = [...prev, ...newData];
+
+  //           const uniqueData = merged.filter(
+  //             (item, index, self) =>
+  //               index === self.findIndex((x) => x.id === item.id),
+  //           );
+
+  //           return uniqueData;
+  //         });
+
+  //         // NEXT PAGE
+  //         setPage((prev) => prev + 1);
+  //       }
+  //     } catch (error: any) {
+  //       toast({
+  //         variant: "destructive",
+  //         title: "Error",
+  //         description: error?.response?.data?.message || "Something went wrong",
+  //       });
+  //     } finally {
+  //       setExchangeAdminLoading(false);
+  //     }
+  //   };
+
+  //    const handleScroll = () => {
+  //   if (!listRef.current) return;
+
+  //   const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+  //   const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+  //   if (isBottom && !exchangeAdminLoading && hasMore) {
+  //     getExchangeAdminList();
+  //   }
+  // };
+
   // ── Fetch: Dropdowns ─────────────────────────────────────────────────────────
-  const fetchDropdowns = async () => {
+  const fetchTypeData = async () => {
     if (!token) return;
     setLoadingDropdowns(true);
     try {
@@ -264,7 +457,7 @@ const ExchangeKybMapping = () => {
   useEffect(() => {
     if (token) {
       fetchMappings(0, "");
-      fetchDropdowns();
+      fetchTypeData();
     }
   }, [
     token,
@@ -330,7 +523,7 @@ const ExchangeKybMapping = () => {
       });
       setBtForm({ code: "", name: "", active: true });
       setShowCreateBT(false);
-      fetchDropdowns();
+      fetchTypeData();
     } catch (err: any) {
       toast({
         title: "Error",
@@ -348,6 +541,7 @@ const ExchangeKybMapping = () => {
     setBtForm({ code: m?.code, name: m?.name, active: true });
     setShowCreateBT(true);
   };
+
   const handleEditOpenKYBType = (m) => {
     setEditableKYBTypesId(m?.id);
     setKybForm({ code: m?.code, name: m?.name, active: true });
@@ -387,7 +581,7 @@ const ExchangeKybMapping = () => {
         setBtForm({ name: "", code: "", active: true });
         setEditableBusinessTypeId(null);
         setShowCreateBT(false);
-        fetchDropdowns();
+        fetchTypeData();
       } else {
         toast({
           title: "Error",
@@ -444,7 +638,7 @@ const ExchangeKybMapping = () => {
           active: true,
         });
         setShowCreateKYB(false);
-        fetchDropdowns();
+        fetchTypeData();
       } else {
         toast({
           title: "Error",
@@ -493,7 +687,7 @@ const ExchangeKybMapping = () => {
       });
       setKybForm({ code: "", name: "", active: true });
       setShowCreateKYB(false);
-      fetchDropdowns();
+      fetchTypeData();
     } catch (err: any) {
       toast({
         title: "Error",
@@ -607,9 +801,15 @@ const ExchangeKybMapping = () => {
 
   // ── Open mapping dialog ──────────────────────────────────────────────────────
   const handleOpenMappingDialog = () => {
-    fetchDropdowns();
+    // fetchTypeData();
     setShowCreateMapping(true);
   };
+
+  useEffect(() => {
+    if (!showCreateMapping) return;
+    fetchBusinessTypeDropDown();
+    fetchKybTypeDropDown();
+  }, [showCreateMapping]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   const handleBusinessTypePageChange = (newPage) => {
@@ -617,6 +817,7 @@ const ExchangeKybMapping = () => {
       setBusinessTypePagination((prev) => ({ ...prev, currentPage: newPage }));
     }
   };
+
   const handleKYBTypePageChange = (newPage) => {
     if (newPage >= 0 && newPage < businessTypePagination.totalPages) {
       setBusinessTypePagination((prev) => ({ ...prev, currentPage: newPage }));
@@ -1312,13 +1513,37 @@ const ExchangeKybMapping = () => {
               >
                 <SelectTrigger>
                   <SelectValue
-                    placeholder={
-                      loadingDropdowns ? "Loading…" : "Select business type"
-                    }
+                    // placeholder={
+                    //   loadingDropdowns ? "Loading…" : "Select business type"
+                    // }
+                    placeholder="Select business type"
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {businessTypes.length === 0 && !loadingDropdowns ? (
+                  <div
+                    ref={businessTyeListRef}
+                    onScroll={handleBusinessTypeScroll}
+                    className="max-h-60 overflow-y-auto"
+                  >
+                    {businessTypesDropDownData?.map((c, index) => (
+                      <SelectItem key={index} value={String(c?.id)}>
+                        {c?.name}
+                      </SelectItem>
+                    ))}
+                    {/* OBSERVER TARGET */}
+                    {businessTypesDropdownLoading && (
+                      <div className="py-2 text-center text-sm text-gray-500">
+                        Loading...
+                      </div>
+                    )}
+                    {/* {!hasMore && (
+                                                <div className="py-2 text-center text-sm text-gray-400">
+                                                  No More Data
+                                                </div>
+                                              )} */}
+                  </div>
+
+                  {/* {businessTypes.length === 0 && !loadingDropdowns ? (
                     <SelectItem value="__none__" disabled>
                       No business types found
                     </SelectItem>
@@ -1328,7 +1553,7 @@ const ExchangeKybMapping = () => {
                         {bt.name}
                       </SelectItem>
                     ))
-                  )}
+                  )} */}
                 </SelectContent>
               </Select>
             </div>
@@ -1351,7 +1576,29 @@ const ExchangeKybMapping = () => {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {kybTypes.length === 0 && !loadingDropdowns ? (
+                  <div
+                    ref={kybTypeListRef}
+                    onScroll={handleKybTypesScroll}
+                    className="max-h-60 overflow-y-auto"
+                  >
+                    {kybTypesDropDownData?.map((c, index) => (
+                      <SelectItem key={index} value={String(c?.id)}>
+                        {c?.name}
+                      </SelectItem>
+                    ))}
+                    {/* OBSERVER TARGET */}
+                    {businessTypesDropdownLoading && (
+                      <div className="py-2 text-center text-sm text-gray-500">
+                        Loading...
+                      </div>
+                    )}
+                    {/* {!hasMore && (
+                                                <div className="py-2 text-center text-sm text-gray-400">
+                                                  No More Data
+                                                </div>
+                                              )} */}
+                  </div>
+                  {/* {kybTypes.length === 0 && !loadingDropdowns ? (
                     <SelectItem value="__none__" disabled>
                       No KYB types found
                     </SelectItem>
@@ -1361,7 +1608,7 @@ const ExchangeKybMapping = () => {
                         {kt.name}
                       </SelectItem>
                     ))
-                  )}
+                  )} */}
                 </SelectContent>
               </Select>
             </div>

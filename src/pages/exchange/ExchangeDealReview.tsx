@@ -394,7 +394,7 @@ const ExchangeDealReview = () => {
           <CardContent className="p-6">
             <div className="flex gap-4 flex-wrap justify-between">
               <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex-1">
+                <div className="w-full md:flex-1">
                   <Label htmlFor="search">Search Deals</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -481,7 +481,7 @@ const ExchangeDealReview = () => {
                 </div>
               </div>
 
-              <div className="flex gap-2 items-end">
+              <div className="flex gap-2 items-end flex-wrap">
                 <Button variant="outline">Pending</Button>
                 <Button variant="outline">All Branches</Button>
                 <Button variant="outline">This Week</Button>
@@ -506,9 +506,9 @@ const ExchangeDealReview = () => {
                   <CardContent className="p-6">
                     <div className="space-y-4">
                       {/* Deal Header */}
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between flex-wrap">
                         <div className="space-y-2">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <Building2 className="h-4 w-4 text-primary" />
                             <h3 className="font-semibold">
                               {deal?.companyName}
@@ -517,7 +517,7 @@ const ExchangeDealReview = () => {
                               ({deal?.id})
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium">
                               {deal?.dealCode}
                             </span>
@@ -541,7 +541,7 @@ const ExchangeDealReview = () => {
                       </div>
 
                       {/* Deal Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
                         <div className="space-y-1">
                           <span className="text-muted-foreground">
                             Requested Rate:
@@ -621,7 +621,7 @@ const ExchangeDealReview = () => {
                       )}
 
                       {/* Actions */}
-                      <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="flex items-center justify-between pt-2 border-t flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"

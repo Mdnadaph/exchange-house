@@ -1220,7 +1220,7 @@ const ExchangePayoutConfig = () => {
             <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
                 Showing {payoutData.countries.length} of{" "}
-                {payoutData.totalElements} beneficiaries
+                {payoutData.totalElements} payout destination
               </p>
               <div className="flex space-x-2">
                 <Button

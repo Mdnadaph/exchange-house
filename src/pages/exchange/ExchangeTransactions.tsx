@@ -730,9 +730,9 @@ const ExchangeTransactions = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 justify-between flex-wrap">
-              <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between flex-wrap item-center">
+              <div className="flex-1 flex gap-2 items-center flex-wrap">
+                <div className="w-full md:flex-1">
                   <Label htmlFor="search">Search Transactions</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -776,8 +776,7 @@ const ExchangeTransactions = () => {
                   />
                 </div>
               </div>
-
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -863,7 +862,7 @@ const ExchangeTransactions = () => {
                       <CardContent className="p-6">
                         <div className="space-y-4">
                           {/* Transaction Header */}
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between flex-wrap">
                             <div className="space-y-2">
                               {transaction.businessName && (
                                 <div className="flex items-center gap-3">
@@ -878,7 +877,7 @@ const ExchangeTransactions = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction?.singleBeneficiary?.type ==
                                   "INDIVIDUAL"

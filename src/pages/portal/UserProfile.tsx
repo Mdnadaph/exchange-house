@@ -544,7 +544,14 @@ const UserProfile = () => {
           description: "Your business profile has been updated successfully.",
         });
       } else {
-        throw new Error(response.data?.message || "Update failed");
+        // throw new Error(response.data?.message || "Update failed");
+        toast({
+          title: "Error",
+          description:
+            response?.data?.message ||
+            "Something went wrong while updating profile",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       toast({
@@ -690,7 +697,7 @@ const UserProfile = () => {
   return (
     <UserLayout>
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Business Profile
@@ -706,7 +713,13 @@ const UserProfile = () => {
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditing(false);
+                  setProfileImage(null);
+                }}
+              >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>

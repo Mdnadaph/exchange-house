@@ -1857,7 +1857,7 @@ const UserBeneficiaries = () => {
       {view === "list" && (
         <div className="space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 Beneficiaries
@@ -1866,7 +1866,7 @@ const UserBeneficiaries = () => {
                 Manage your payment recipients, groups, and verification status
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <BeneficiaryGroupForm
                 onGroupCreated={handleGroupCreated}
                 trigger={
@@ -2060,7 +2060,7 @@ const UserBeneficiaries = () => {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <Card className="shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -2189,7 +2189,7 @@ const UserBeneficiaries = () => {
               {/* Groups Section */}
               <Card className="shadow-card  mb-3">
                 <CardHeader className="p-6">
-                  <div className="flex flex-col sm:flex-row gap-4 my-2 px-5">
+                  <div className="flex flex-wrap gap-4 my-2 px-5">
                     <div className="flex-1">
                       <Label htmlFor="search">Search Beneficiaries Group</Label>
                       <div className="relative flex gap-2">
@@ -2218,7 +2218,7 @@ const UserBeneficiaries = () => {
                         </Button> */}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <div className="flex flex-col gap-1 mt-1">
                         <Label htmlFor="fromDate">From Date</Label>
                         <input
@@ -2251,8 +2251,8 @@ const UserBeneficiaries = () => {
               </Card>
               <Card className="shadow-card">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="flex items-center gap-2 ">
                       <Layers className="h-5 w-5" />
                       Beneficiary Groups
                     </CardTitle>
@@ -2287,9 +2287,9 @@ const UserBeneficiaries = () => {
                           className="border-l-4 border-l-primary"
                         >
                           <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-3 mb-2 flex-wrap">
                                   <h3 className="font-semibold text-lg">
                                     {group.name}
                                   </h3>
@@ -2376,8 +2376,8 @@ const UserBeneficiaries = () => {
               {/* Search and Filters */}
               <Card className="shadow-card">
                 <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
+                  <div className="flex flex-wrap gap-4">
+                    <div className="w-full md:flex-1">
                       <Label htmlFor="search">Search Beneficiaries</Label>
                       <div className="relative flex gap-2">
                         <div className="relative flex-1">
@@ -2405,7 +2405,7 @@ const UserBeneficiaries = () => {
                         </Button> */}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <div className="flex flex-col gap-1 mt-1">
                         <Label htmlFor="fromDate">From Date</Label>
                         <input
@@ -2470,10 +2470,10 @@ const UserBeneficiaries = () => {
                             className="border-l-4 border-l-primary hover:shadow-md transition-smooth"
                           >
                             <CardContent className="p-6">
-                              <div className="flex items-start justify-between">
+                              <div className="flex items-start justify-between flex-wrap gap-2">
                                 <div className="space-y-4 flex-1">
                                   {/* Beneficiary Header */}
-                                  <div className="flex items-center space-x-4">
+                                  <div className="flex items-center gap-4 flex-wrap">
                                     <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                                       {beneficiary.type === "business" ? (
                                         <Building className="h-6 w-6 text-muted-foreground" />
@@ -2482,7 +2482,7 @@ const UserBeneficiaries = () => {
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-1">
+                                      <div className="flex items-center gap-3 mb-1 flex-wrap">
                                         <h3 className="font-semibold text-foreground">
                                           {beneficiary.name}
                                         </h3>
@@ -2505,7 +2505,7 @@ const UserBeneficiaries = () => {
                                   </div>
 
                                   {/* ── NEW: Country / Email / Contact / Relationship ── */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 text-sm">
                                     <div className="flex items-center gap-2">
                                       <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <div>
