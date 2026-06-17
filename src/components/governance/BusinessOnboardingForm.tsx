@@ -946,6 +946,10 @@ const BusinessOnboardingForm = ({
     setUboData(updated);
   };
 
+  const mappedBusinessType = businessTypeData?.filter(
+    (b) => b?.mapped === true,
+  );
+
   const renderStep1 = () => (
     <div className="space-y-6">
       <Card>
@@ -1054,7 +1058,7 @@ const BusinessOnboardingForm = ({
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {businessTypeData.map((type) => (
+                  {mappedBusinessType?.map((type) => (
                     <SelectItem key={type?.id} value={type?.id}>
                       {type?.name}
                     </SelectItem>

@@ -1339,6 +1339,7 @@ interface BusinessTypeOption {
   code: string;
   name: string;
   id: number;
+  mapped: boolean;
 }
 
 interface DocumentTypeOption {
@@ -2319,6 +2320,8 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
     }).format(value);
   };
 
+  const onlyMappedKYBTypes = businessTypes?.filter((b) => b?.mapped === true);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
@@ -2418,7 +2421,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
                   errors={errors}
                   touched={touched}
                   setFieldValue={setFieldValue}
-                  businessTypes={businessTypes}
+                  businessTypes={onlyMappedKYBTypes}
                 />
               ) : (
                 <Step2

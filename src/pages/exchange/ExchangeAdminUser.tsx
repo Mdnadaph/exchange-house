@@ -412,10 +412,10 @@ const ExchangeAdminUser = () => {
     });
   };
   return (
-    <ExchangeLayout>
+    <>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        {/* <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Exchange User Management
@@ -431,6 +431,18 @@ const ExchangeAdminUser = () => {
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" /> Add Exchange User
+              </Button>
+            </PermissionGate>
+          </div>
+        </div> */}
+        <div className="flex justify-end">
+          <div className="flex space-x-3">
+            <PermissionGate permission="BTN_CREATE_EXCHANGE_USER">
+              <Button
+                variant="business"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Exchange Member
               </Button>
             </PermissionGate>
           </div>
@@ -913,7 +925,6 @@ const ExchangeAdminUser = () => {
           </div>
         )}
       </div>
-
       {/* Pagination */}
       {/* {!loading && users.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-end mt-6">
@@ -1018,7 +1029,7 @@ const ExchangeAdminUser = () => {
           </Button>
         </div>
       </div>
-    </ExchangeLayout>
+    </>
   );
 };
 

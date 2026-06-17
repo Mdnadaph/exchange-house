@@ -194,17 +194,17 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
           code: "NAV_KYB_REVIEW",
         },
         {
-          name: "Staff Management",
-          href: "/exchange/staff",
+          name: "Member",
+          href: "/exchange/member",
           icon: Users,
           code: "NAV_STAFF_MANAGEMENT",
         },
-        {
-          name: "Exchange Members",
-          href: "/exchange/user",
-          icon: Users,
-          code: "NAV_EXCHANGE_ADMIN_USER",
-        },
+        // {
+        //   name: "Exchange Members",
+        //   href: "/exchange/user",
+        //   icon: Users,
+        //   code: "NAV_EXCHANGE_ADMIN_USER",
+        // },
       ],
     },
 

@@ -106,6 +106,7 @@ const ExchangeKYBReview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   const [cookies] = useCookies(["token", "email"]);
   const [isUploadDocumentModal, setIsUploadDocumentModal] =
     useState<boolean>(false);
@@ -139,8 +140,8 @@ const ExchangeKYBReview = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    fetchKYBApplications(currentPage, searchTerm, filterStatus);
-  }, [currentPage, filterStatus]);
+    fetchKYBApplications(currentPage, debounceValue, filterStatus);
+  }, [currentPage, filterStatus, debounceValue]);
   // Clean up blob URLs when component unmounts or when viewer closes
   useEffect(() => {
     return () => {
@@ -153,9 +154,18 @@ const ExchangeKYBReview = () => {
     };
   }, [imageBlobUrl, pdfBlobUrl]);
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
+
   const fetchKYBApplications = async (
     page = 0,
-    search = searchTerm,
+    search = debounceValue,
     status = filterStatus,
   ) => {
     try {
@@ -1060,12 +1070,15 @@ const ExchangeKYBReview = () => {
                       placeholder="Search by business name, ID, contact person, or email..."
                       className="pl-9"
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        setCurrentPage(0);
+                        setSearchTerm(e.target.value);
+                      }}
                     />
                   </div>
                 </div>
                 <div className="flex gap-2 items-end">
-                  <Button
+                  {/* <Button
                     type="button"
                     onClick={() => {
                       setCurrentPage(0);
@@ -1074,7 +1087,7 @@ const ExchangeKYBReview = () => {
                     disabled={!searchTerm.trim()}
                   >
                     Search
-                  </Button>
+                  </Button> */}
                   <Button
                     type="button"
                     variant={filterStatus === null ? "default" : "outline"}

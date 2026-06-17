@@ -104,6 +104,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import ExchangeReports from "./pages/exchange/ExchangeReports";
 import UserReports from "./pages/portal/UserReports";
 import BranchBeneficries from "./pages/branch/BranchBeneficries";
+import ExchangeAdminMember from "./pages/exchange/ExchangeAdminMember";
 
 const queryClient = new QueryClient();
 
@@ -374,8 +375,9 @@ function App() {
                       path="branches/Details/:uuid"
                       element={<BranchDetails />}
                     />
-                    <Route path="staff" element={<ExchangeStaffManagement />} />
-                    <Route path="user" element={<ExchangeAdminUser />} />
+                    {/* <Route path="staff" element={<ExchangeStaffManagement />} /> */}
+                    <Route path="member" element={<ExchangeAdminMember />} />
+                    {/* <Route path="user" element={<ExchangeAdminUser />} /> */}
                     <Route
                       path="country-currency"
                       element={<ExchangeCountryCurrency />}

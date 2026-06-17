@@ -45,9 +45,12 @@ import {
   RefreshCw,
   Layers,
   Pencil,
+  Delete,
+  Trash2,
 } from "lucide-react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -171,7 +174,14 @@ const ExchangeKybMapping = () => {
   const [editableKYBTypesId, setEditableKYBTypesId] = useState<number | null>(
     null,
   );
-
+  const [
+    showDeleteBusinessTypeConfirmation,
+    setShowDeleteBusinessTypeConfirmation,
+  ] = useState<boolean>(false);
+  const [showDeleteKYBTypeConfirmation, setShowDeleteKYBTypeConfirmation] =
+    useState<boolean>(false);
+  const [businessTypeName, setBusinessTypeName] = useState("");
+  const [kybTypeName, setKybTypeName] = useState("");
   // ── Form: Business Type ──────────────────────────────────────────────────────
   const [btForm, setBtForm] = useState({ code: "", name: "", active: true });
   const [btLoading, setBtLoading] = useState(false);
@@ -893,7 +903,7 @@ const ExchangeKybMapping = () => {
               <p className="text-xs text-muted-foreground">Across all pages</p>
             </CardContent>
           </Card>
-          <Card className="shadow-card">
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 High Risk
@@ -906,8 +916,8 @@ const ExchangeKybMapping = () => {
               </div>
               <p className="text-xs text-muted-foreground">Elevated scrutiny</p>
             </CardContent>
-          </Card>
-          <Card className="shadow-card">
+          </Card> */}
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Default Fallback
@@ -920,7 +930,7 @@ const ExchangeKybMapping = () => {
               </div>
               <p className="text-xs text-muted-foreground">Fallback rules</p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* ── Search & Refresh ── */}
@@ -1137,16 +1147,31 @@ const ExchangeKybMapping = () => {
                         >
                           <td className="py-3 pr-4 font-medium">{m?.sn}</td>
                           <td className="py-3 pr-4 font-medium">{m?.name}</td>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            // onClick={() => handleOpenEdit(m)}
-                            onClick={() => handleEditOpenBusinessType(m)}
-                            // title="Edit mapping"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          <td className="flex gap-3 items-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              // onClick={() => handleOpenEdit(m)}
+                              onClick={() => handleEditOpenBusinessType(m)}
+                              title="Edit Business Type"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                setShowDeleteBusinessTypeConfirmation(true);
+                                setEditableBusinessTypeId(m?.id);
+                                setBusinessTypeName(m?.name);
+                              }}
+                              title="Delete BusinessType"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1238,16 +1263,32 @@ const ExchangeKybMapping = () => {
                         >
                           <td className="py-3 pr-4 font-medium">{m?.sn}</td>
                           <td className="py-3 pr-4 font-medium">{m?.name}</td>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            // onClick={() => handleOpenEdit(m)}
-                            onClick={() => handleEditOpenKYBType(m)}
-                            // title="Edit mapping"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-3 items-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              // onClick={() => handleOpenEdit(m)}
+                              onClick={() => handleEditOpenKYBType(m)}
+                              title="Edit KYB Type"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                setEditableKYBTypesId(m?.id);
+                                setShowDeleteKYBTypeConfirmation(true);
+                                setKybTypeName(m?.name);
+                              }}
+                              title="Delete KYB Type"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </tr>
                       ))}
                     </tbody>
@@ -1316,6 +1357,27 @@ const ExchangeKybMapping = () => {
           </Card>
         </div>
       </div>
+
+      {/* Confirm Delete business Type modal*/}
+      <ConfirmationDialog
+        open={showDeleteBusinessTypeConfirmation}
+        onOpenChange={setShowDeleteBusinessTypeConfirmation}
+        onConfirm={() => {}}
+        title="Delete Business Type"
+        description={`Are you sure you want to delete "${businessTypeName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+      />
+
+      <ConfirmationDialog
+        open={showDeleteKYBTypeConfirmation}
+        onOpenChange={setShowDeleteKYBTypeConfirmation}
+        onConfirm={() => {}}
+        title="Delete KYB Type"
+        description={`Are you sure you want to delete "${kybTypeName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+      />
 
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create Business Type

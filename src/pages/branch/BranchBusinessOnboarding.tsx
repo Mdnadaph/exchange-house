@@ -160,7 +160,13 @@ const BranchBusinessOnboarding = () => {
 
   const getKYBStatusBadge = (status) => {
     switch (status) {
-      case "VERIFIED":
+      case "NOT_STARTED":
+        return (
+          <Badge variant="secondary">
+            <Clock className="h-3 w-3 mr-1" />
+            Not Started
+          </Badge>
+        );
       case "APPROVED":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
@@ -359,7 +365,7 @@ const BranchBusinessOnboarding = () => {
                   </div>
                 </div>
               ) : businesses?.length > 0 ? (
-                businesses.map((business) => (
+                businesses?.map((business) => (
                   <Card
                     key={business.id}
                     className="hover:shadow-md transition-smooth"

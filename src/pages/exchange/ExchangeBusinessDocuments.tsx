@@ -46,6 +46,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const ExchangeBusinessDocuments = () => {
   const { toast } = useToast();
@@ -69,6 +71,7 @@ const ExchangeBusinessDocuments = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [businessLoading, setBusinessLoading] = useState<boolean>(false);
   const [businessAdminList, setBusinessAdminList] = useState([]);
@@ -249,6 +252,7 @@ const ExchangeBusinessDocuments = () => {
         setDashboard(res.data.data.dashboard || {});
         setTotalPages(res.data.totalPages || 0);
         setCurrentPage(res.data.currentPage || 0);
+        setTotalElements(res?.data?.totalElements || 0);
       }
     } catch (error: any) {
       toast({
@@ -488,7 +492,16 @@ const ExchangeBusinessDocuments = () => {
         {/* ================= DOCUMENT LIST ================= */}
         <Card>
           <CardHeader>
-            <CardTitle>Documents ({documents.length})</CardTitle>
+            <div className="flex justify-between gap-2 flex-wrap">
+              <CardTitle>Documents ({documents.length})</CardTitle>
+              <PaginationSummary
+                currentPage={currentPage}
+                pageSize={10}
+                itemCount={documents?.length || 0}
+                itemLabel="documents"
+                totalElements={totalElements}
+              />
+            </div>
           </CardHeader>
 
           <CardContent className="space-y-3">
@@ -620,7 +633,12 @@ const ExchangeBusinessDocuments = () => {
             </PaginationContent>
           </Pagination>
         )} */}
-        <Pagination>
+        <PaginationControl
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+        {/* <Pagination>
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
@@ -647,7 +665,7 @@ const ExchangeBusinessDocuments = () => {
               />
             </PaginationItem>
           </PaginationContent>
-        </Pagination>
+        </Pagination> */}
 
         {/* ================= PREVIEW MODAL ================= */}
         <Dialog open={previewOpen} onOpenChange={handleClosePreview}>

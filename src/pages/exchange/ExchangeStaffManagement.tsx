@@ -1814,10 +1814,10 @@ const ExchangeStaffManagement = () => {
   }, [isEditStaffModalOpen, individualStaffData]);
 
   return (
-    <ExchangeLayout>
+    <>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        {/* <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Staff Management
@@ -1837,8 +1837,20 @@ const ExchangeStaffManagement = () => {
               </Button>
             </PermissionGate>
           </div>
+        </div> */}
+        <div className="flex  justify-end">
+          <div className="flex space-x-3">
+            <PermissionGate permission="BTN_CREATE_STAFF">
+              <Button
+                variant="business"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Staff Member
+              </Button>
+            </PermissionGate>
+          </div>
         </div>
-
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
@@ -1935,7 +1947,10 @@ const ExchangeStaffManagement = () => {
                   <Input
                     value={staffForm.fullName}
                     onChange={(e) => {
-                      setStaffForm({ ...staffForm, fullName: e.target.value });
+                      setStaffForm({
+                        ...staffForm,
+                        fullName: e.target.value,
+                      });
                       clearStaffError("fullName");
                     }}
                     placeholder="full name"
@@ -2148,7 +2163,10 @@ const ExchangeStaffManagement = () => {
                   <Input
                     value={staffForm.fullName}
                     onChange={(e) => {
-                      setStaffForm({ ...staffForm, fullName: e.target.value });
+                      setStaffForm({
+                        ...staffForm,
+                        fullName: e.target.value,
+                      });
                       clearStaffError("fullName");
                     }}
                     placeholder="full name"
@@ -2726,7 +2744,6 @@ const ExchangeStaffManagement = () => {
           </div>
         )}
       </div>
-
       {/* Pagination */}
       {!loading && (
         <div className="flex items-center justify-end mt-6">
@@ -2770,7 +2787,7 @@ const ExchangeStaffManagement = () => {
           </div>
         </div>
       )}
-    </ExchangeLayout>
+    </>
   );
 };
 

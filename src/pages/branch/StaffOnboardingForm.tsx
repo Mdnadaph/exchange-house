@@ -179,7 +179,7 @@ const StaffOnboardingForm = ({
           },
         },
       );
-      setBusinessTypeData(res?.data?.data);
+      setBusinessTypeData(res?.data?.data || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -217,7 +217,9 @@ const StaffOnboardingForm = ({
     fetchCountries();
     getBusinessType();
   }, []);
-
+  const mappedOnyBusinessType = businessTypeData?.filter(
+    (b) => b?.mapped === true,
+  );
   useEffect(() => {
     if (open) {
       setErrors({});
@@ -858,7 +860,7 @@ const StaffOnboardingForm = ({
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {businessTypeData.map((type) => (
+                  {mappedOnyBusinessType?.map((type) => (
                     <SelectItem key={type?.id} value={type?.id}>
                       {type?.name}
                     </SelectItem>

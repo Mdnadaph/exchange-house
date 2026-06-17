@@ -72,6 +72,8 @@ const ExchangeAdminDashboard = () => {
   const [exchangeSetupConfigurationList, setExchangeSetupConfigurationList] =
     useState([]);
   const navigate = useNavigate();
+  const unCompletedExchangeSetupConfigurationList =
+    exchangeSetupConfigurationList?.filter((item) => item?.completed === false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -159,10 +161,23 @@ const ExchangeAdminDashboard = () => {
       pending_review: {
         variant: "secondary" as const,
         label: "Pending Review",
+        className: "bg-gray-200 border-gray-200 text-xs",
       },
-      under_review: { variant: "destructive" as const, label: "Under Review" },
-      approved: { variant: "default" as const, label: "Approved" },
-      rejected: { variant: "destructive" as const, label: "Rejected" },
+      under_review: {
+        variant: "destructive" as const,
+        label: "Under Review",
+        className: "text-xs",
+      },
+      approved: {
+        variant: "default" as const,
+        label: "Approved",
+        className: "text-xs",
+      },
+      rejected: {
+        variant: "destructive" as const,
+        label: "Rejected",
+        className: "text-xs",
+      },
     };
     return (
       statusMap[status as keyof typeof statusMap] || statusMap.pending_review
@@ -281,79 +296,86 @@ const ExchangeAdminDashboard = () => {
               {" "}
               {exchangeSetupConfigurationList?.length === 0 ? (
                 <p className="text-center text-muted-foreground py-6">
+                  No exchange setup configuration data available.
+                </p>
+              ) : unCompletedExchangeSetupConfigurationList?.length === 0 ? (
+                <p className="text-center text-muted-foreground py-6">
                   {" "}
-                  No Exchange Setup Configuration Data.{" "}
+                  All exchange setup configurations have been completed.{" "}
                 </p>
               ) : (
                 <div className="space-y-3">
                   {" "}
-                  {exchangeSetupConfigurationList?.map((item: any) => {
-                    const isCompleted = item?.completed;
-                    const isAvailable = item?.available;
-                    return (
-                      <div
-                        key={item?.step}
-                        className={`rounded-xl border p-3 shadow-sm transition-all                  ${isCompleted ? "border-green-500 bg-green-50" : isAvailable ? "border-primary bg-background" : "border-gray-200 bg-gray-100 opacity-80"}                `}
-                      >
-                        {" "}
-                        {/* Top Section */}{" "}
-                        <div className="flex items-center justify-between">
+                  {unCompletedExchangeSetupConfigurationList?.map(
+                    (item: any) => {
+                      const isCompleted = item?.completed;
+                      const isAvailable = item?.available;
+                      return (
+                        <div
+                          key={item?.step}
+                          className={`rounded-xl border p-3 shadow-sm transition-all                  ${isCompleted ? "border-green-500 bg-green-50" : isAvailable ? "border-primary bg-background" : "border-gray-200 bg-gray-100 opacity-80"}                `}
+                        >
                           {" "}
-                          <div>
+                          {/* Top Section */}{" "}
+                          <div className="flex items-center justify-between">
+                            {" "}
+                            <div>
+                              {" "}
+                              <p className="text-xs text-muted-foreground">
+                                {" "}
+                                Step {item?.step}{" "}
+                              </p>{" "}
+                              <h2 className="text-sm font-semibold mt-1">
+                                {" "}
+                                {item?.title}{" "}
+                              </h2>{" "}
+                            </div>{" "}
+                            {isCompleted ? (
+                              <CheckCircle className="text-green-600 w-5 h-5" />
+                            ) : !isAvailable ? (
+                              <Lock className="text-gray-400 w-4 h-4" />
+                            ) : null}{" "}
+                          </div>{" "}
+                          {/* Count */}{" "}
+                          <div className="mt-2">
                             {" "}
                             <p className="text-xs text-muted-foreground">
                               {" "}
-                              Step {item?.step}{" "}
+                              Configured Items{" "}
                             </p>{" "}
-                            <h2 className="text-sm font-semibold mt-1">
+                            <h3 className="text-lg font-bold">
                               {" "}
-                              {item?.title}{" "}
-                            </h2>{" "}
+                              {item?.count}{" "}
+                            </h3>{" "}
                           </div>{" "}
-                          {isCompleted ? (
-                            <CheckCircle className="text-green-600 w-5 h-5" />
-                          ) : !isAvailable ? (
-                            <Lock className="text-gray-400 w-4 h-4" />
-                          ) : null}{" "}
-                        </div>{" "}
-                        {/* Count */}{" "}
-                        <div className="mt-2">
-                          {" "}
-                          <p className="text-xs text-muted-foreground">
+                          {/* Action */}{" "}
+                          <div className="mt-3">
                             {" "}
-                            Configured Items{" "}
-                          </p>{" "}
-                          <h3 className="text-lg font-bold">
-                            {" "}
-                            {item?.count}{" "}
-                          </h3>{" "}
-                        </div>{" "}
-                        {/* Action */}{" "}
-                        <div className="mt-3">
-                          {" "}
-                          {isCompleted ? (
-                            <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
-                              {" "}
-                              <CheckCircle className="w-4 h-4" /> Completed{" "}
-                            </div>
-                          ) : isAvailable ? (
-                            <button
-                              onClick={() => navigate(item?.path)}
-                              className="w-full bg-primary text-white rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-1 hover:opacity-90 transition-all"
-                            >
-                              {" "}
-                              Setup <ArrowRight className="w-4 h-4" />{" "}
-                            </button>
-                          ) : (
-                            <div className="text-xs text-gray-500">
-                              {" "}
-                              Complete previous step first{" "}
-                            </div>
-                          )}{" "}
-                        </div>{" "}
-                      </div>
-                    );
-                  })}{" "}
+                            {isCompleted ? (
+                              <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                                {" "}
+                                <CheckCircle className="w-4 h-4" />{" "}
+                                Completed{" "}
+                              </div>
+                            ) : isAvailable ? (
+                              <button
+                                onClick={() => navigate(item?.path)}
+                                className="w-full bg-primary text-white rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-1 hover:opacity-90 transition-all"
+                              >
+                                {" "}
+                                Setup <ArrowRight className="w-4 h-4" />{" "}
+                              </button>
+                            ) : (
+                              <div className="text-xs text-gray-500">
+                                {" "}
+                                Complete previous step first{" "}
+                              </div>
+                            )}{" "}
+                          </div>{" "}
+                        </div>
+                      );
+                    },
+                  )}{" "}
                 </div>
               )}{" "}
             </CardContent>{" "}
@@ -395,7 +417,10 @@ const ExchangeAdminDashboard = () => {
                             <p className="font-medium text-foreground">
                               {application.businessName}
                             </p>
-                            <Badge variant={status.variant} className="text-xs">
+                            <Badge
+                              variant={status.variant}
+                              className={status?.className}
+                            >
                               {status.label}
                             </Badge>
                           </div>
