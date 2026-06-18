@@ -56,6 +56,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const ExchangeBranchManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -85,7 +87,7 @@ const ExchangeBranchManagement = () => {
   const [pagination, setPagination] = useState({
     pageNumber: 0,
     pageSize: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalElements: 0,
   });
 
@@ -186,7 +188,7 @@ const ExchangeBranchManagement = () => {
       setPagination({
         pageNumber: res?.data?.currentPage || 0,
         pageSize: res?.data?.pageSize || 10,
-        totalPages: res?.data?.totalPages || 1,
+        totalPages: res?.data?.totalPages || 0,
         totalElements: res?.data?.totalElements || 0,
       });
 
@@ -815,6 +817,15 @@ const ExchangeBranchManagement = () => {
             </div>
           ) : branches?.length > 0 ? (
             <div>
+              <div className="flex justify-end mb-1">
+                <PaginationSummary
+                  totalElements={pagination?.totalElements}
+                  pageSize={pagination?.pageSize}
+                  currentPage={pagination?.pageNumber}
+                  itemCount={branches?.length}
+                  itemLabel="branch"
+                />
+              </div>
               {branches?.map((branch) => {
                 const status = getStatusBadge(branch.status);
                 const StatusIcon = status.icon;
@@ -1015,53 +1026,17 @@ const ExchangeBranchManagement = () => {
                   </Card>
                 );
               })}
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
-                      }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                        isActive={pagination.pageNumber === index}
-                        className="cursor-pointer"
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <PaginationControl
+                className="mt-6"
+                currentPage={pagination?.pageNumber}
+                totalPages={pagination?.totalPages}
+                onPageChange={(page) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageNumber: page,
+                  }))
+                }
+              />
             </div>
           ) : (
             <Card className="shadow-card">

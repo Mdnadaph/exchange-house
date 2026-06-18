@@ -1216,6 +1216,8 @@ import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import { Loader2 } from "lucide-react";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 
@@ -1230,6 +1232,7 @@ const ExchangeStaffManagement = () => {
   const [branches, setBranches] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [pageSize] = useState(4);
   const token = cookies.token;
@@ -1371,6 +1374,7 @@ const ExchangeStaffManagement = () => {
       setBranches(res?.data?.data?.content || []);
       setTotalPages(res?.data?.data?.totalPages || 0);
       setCurrentPage(res?.data?.data?.page || 0);
+      setTotalElements(res?.data?.data?.totalElements || 0);
       setDashboardStats({
         totalBranches: res?.data?.data?.dashboardStats?.totalBranches || 0,
         activeBranches: res?.data?.data?.dashboardStats?.activeBranches || 0,
@@ -2565,227 +2569,207 @@ const ExchangeStaffManagement = () => {
                 </p>
               </div>
             ) : (
-              branches?.map((branch) => {
-                const mapStatus = (apiStatus: string) => {
-                  const statusMap: Record<string, string> = {
-                    ACTIVE: "active",
-                    INACTIVE: "inactive",
-                    PENDING: "training",
-                  };
-                  return statusMap[apiStatus] || "inactive";
-                };
-                const getRoleLabel = (roleName: string) => {
-                  const roleMap: Record<string, string> = {
-                    ROLE_BRANCH_MANAGER: "Branch Manager",
-                    ROLE_SENIOR_KYB_OFFICER: "Senior KYB Officer",
-                    ROLE_KYB_OFFICER: "KYB Officer",
-                  };
-                  return roleMap[roleName] || roleName;
-                };
+              <div>
+                <div className="flex justify-end mb-2">
+                  <PaginationSummary
+                    totalElements={totalElements}
+                    pageSize={pageSize}
+                    currentPage={currentPage}
+                    itemCount={branches?.length}
+                    itemLabel="staff member"
+                  />
+                </div>
 
-                return (
-                  <Card
-                    key={branch.branchId || branch.uuid}
-                    className="shadow-card"
-                  >
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <MapPin className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-semibold text-foreground">
-                              {branch.name}
-                            </h3>
-                            <div className="flex gap-2 text-sm text-muted-foreground">
-                              <span>{branch.location}</span>
-                              <span>•</span>
-                              <span>{branch.emirate}</span>
+                <div>
+                  {branches?.map((branch) => {
+                    const mapStatus = (apiStatus: string) => {
+                      const statusMap: Record<string, string> = {
+                        ACTIVE: "active",
+                        INACTIVE: "inactive",
+                        PENDING: "training",
+                      };
+                      return statusMap[apiStatus] || "inactive";
+                    };
+                    const getRoleLabel = (roleName: string) => {
+                      const roleMap: Record<string, string> = {
+                        ROLE_BRANCH_MANAGER: "Branch Manager",
+                        ROLE_SENIOR_KYB_OFFICER: "Senior KYB Officer",
+                        ROLE_KYB_OFFICER: "KYB Officer",
+                      };
+                      return roleMap[roleName] || roleName;
+                    };
+
+                    return (
+                      <Card
+                        key={branch.branchId || branch.uuid}
+                        className="shadow-card"
+                      >
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <MapPin className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-semibold text-foreground">
+                                  {branch.name}
+                                </h3>
+                                <div className="flex gap-2 text-sm text-muted-foreground">
+                                  <span>{branch.location}</span>
+                                  <span>•</span>
+                                  <span>{branch.emirate}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {branch.address}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {branch.address}
-                            </p>
+                            <Badge variant="outline" className="text-sm">
+                              {branch.staff?.length || 0} Staff Members
+                            </Badge>
                           </div>
-                        </div>
-                        <Badge variant="outline" className="text-sm">
-                          {branch.staff?.length || 0} Staff Members
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {branch.staff && branch.staff.length > 0 && (
-                        <div className="space-y-4">
-                          {branch.staff.map((staff: any) => {
-                            const status = getStatusBadge(
-                              mapStatus(staff.status),
-                            );
-                            const StatusIcon = status.icon;
-                            return (
-                              <Card
-                                key={staff.uuid}
-                                className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
-                              >
-                                <CardContent className="p-6">
-                                  <div className="flex items-start justify-between flex-wrap gap-2">
-                                    <div className="space-y-4 flex-1">
-                                      <div className="flex items-center space-x-4">
-                                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                                          <span className="text-primary-foreground font-semibold">
-                                            {staff.fullName
-                                              ?.split(" ")
-                                              .map((n: string) => n[0])
-                                              .join("")}
-                                          </span>
+                        </CardHeader>
+                        <CardContent>
+                          {branch.staff && branch.staff.length > 0 && (
+                            <div className="space-y-4">
+                              {branch.staff.map((staff: any) => {
+                                const status = getStatusBadge(
+                                  mapStatus(staff.status),
+                                );
+                                const StatusIcon = status.icon;
+                                return (
+                                  <Card
+                                    key={staff.uuid}
+                                    className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
+                                  >
+                                    <CardContent className="p-6">
+                                      <div className="flex items-start justify-between flex-wrap gap-2">
+                                        <div className="space-y-4 flex-1">
+                                          <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                              <span className="text-primary-foreground font-semibold">
+                                                {staff.fullName
+                                                  ?.split(" ")
+                                                  .map((n: string) => n[0])
+                                                  .join("")}
+                                              </span>
+                                            </div>
+                                            <div className="flex-1">
+                                              <div className="flex items-center gap-3 mb-1">
+                                                <h4 className="font-semibold text-foreground">
+                                                  {staff.fullName}
+                                                </h4>
+                                                <Badge
+                                                  variant={status.variant}
+                                                  className="flex items-center gap-1"
+                                                >
+                                                  <StatusIcon className="h-3 w-3" />{" "}
+                                                  {status.label}
+                                                </Badge>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <span
+                                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(getRoleLabel(staff.roleName))}`}
+                                                >
+                                                  {getRoleLabel(staff.roleName)}
+                                                </span>
+                                                <span className="text-sm text-muted-foreground">
+                                                  ID: {staff.uuid?.slice(0, 8)}
+                                                  ...
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                                            <div className="space-y-1">
+                                              <div className="flex items-center text-muted-foreground">
+                                                <Mail className="h-3 w-3 mr-1" />{" "}
+                                                Contact:
+                                              </div>
+                                              <p className="font-medium">
+                                                {staff.email}
+                                              </p>
+                                              <p className="text-xs">
+                                                {staff.contactNumber}
+                                              </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                              <div className="flex items-center text-muted-foreground">
+                                                <Shield className="h-3 w-3 mr-1" />{" "}
+                                                Status:
+                                              </div>
+                                              <p className="font-medium">
+                                                {staff.active
+                                                  ? "Active"
+                                                  : "Inactive"}
+                                              </p>
+                                              <p className="text-xs">
+                                                {staff.status}
+                                              </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                              <div className="flex items-center text-muted-foreground">
+                                                <Phone className="h-3 w-3 mr-1" />{" "}
+                                                Branch:
+                                              </div>
+                                              <p className="font-medium">
+                                                {branch.name}
+                                              </p>
+                                              <p className="text-xs">
+                                                {branch.emirate}
+                                              </p>
+                                            </div>
+                                          </div>
                                         </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-3 mb-1">
-                                            <h4 className="font-semibold text-foreground">
-                                              {staff.fullName}
-                                            </h4>
-                                            <Badge
-                                              variant={status.variant}
-                                              className="flex items-center gap-1"
-                                            >
-                                              <StatusIcon className="h-3 w-3" />{" "}
-                                              {status.label}
-                                            </Badge>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <span
-                                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(getRoleLabel(staff.roleName))}`}
-                                            >
-                                              {getRoleLabel(staff.roleName)}
-                                            </span>
-                                            <span className="text-sm text-muted-foreground">
-                                              ID: {staff.uuid?.slice(0, 8)}...
-                                            </span>
-                                          </div>
+                                        <div className="flex flex-col space-y-2 ml-4">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setIsEditStaffModalOpen(true);
+                                              setEditableStaffData(branch);
+                                              setStaffUUID(staff?.uuid);
+                                            }}
+                                          >
+                                            <Edit className="h-4 w-4 mr-1" />{" "}
+                                            Edit Details
+                                          </Button>
+                                          {/* Read-only permissions button with tree view */}
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              openViewPermissionsModal(staff)
+                                            }
+                                          >
+                                            <Shield className="h-4 w-4 mr-1" />{" "}
+                                            View Permissions
+                                          </Button>
                                         </div>
                                       </div>
-                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
-                                        <div className="space-y-1">
-                                          <div className="flex items-center text-muted-foreground">
-                                            <Mail className="h-3 w-3 mr-1" />{" "}
-                                            Contact:
-                                          </div>
-                                          <p className="font-medium">
-                                            {staff.email}
-                                          </p>
-                                          <p className="text-xs">
-                                            {staff.contactNumber}
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <div className="flex items-center text-muted-foreground">
-                                            <Shield className="h-3 w-3 mr-1" />{" "}
-                                            Status:
-                                          </div>
-                                          <p className="font-medium">
-                                            {staff.active
-                                              ? "Active"
-                                              : "Inactive"}
-                                          </p>
-                                          <p className="text-xs">
-                                            {staff.status}
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <div className="flex items-center text-muted-foreground">
-                                            <Phone className="h-3 w-3 mr-1" />{" "}
-                                            Branch:
-                                          </div>
-                                          <p className="font-medium">
-                                            {branch.name}
-                                          </p>
-                                          <p className="text-xs">
-                                            {branch.emirate}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col space-y-2 ml-4">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          setIsEditStaffModalOpen(true);
-                                          setEditableStaffData(branch);
-                                          setStaffUUID(staff?.uuid);
-                                        }}
-                                      >
-                                        <Edit className="h-4 w-4 mr-1" /> Edit
-                                        Details
-                                      </Button>
-                                      {/* Read-only permissions button with tree view */}
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          openViewPermissionsModal(staff)
-                                        }
-                                      >
-                                        <Shield className="h-4 w-4 mr-1" /> View
-                                        Permissions
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
       {/* Pagination */}
       {!loading && (
-        <div className="flex items-center justify-end mt-6">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-              disabled={currentPage === 0}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) pageNum = i;
-              else if (currentPage < 3) pageNum = i;
-              else if (currentPage > totalPages - 4)
-                pageNum = totalPages - 5 + i;
-              else pageNum = currentPage - 2 + i;
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum + 1}
-                </Button>
-              );
-            })}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-              }
-              disabled={currentPage === totalPages - 1}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <PaginationControl
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
       )}
     </>
   );

@@ -35,6 +35,8 @@ import {
 } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 type Discount = {
   id: number;
@@ -76,7 +78,8 @@ const ExchangeDiscount = () => {
 
   const [page, setPage] = useState(0);
   const [size] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -121,7 +124,9 @@ const ExchangeDiscount = () => {
 
       setDiscounts(content);
       setStats(fetchedStats);
-      setTotalPages(apiData.totalPages || 1);
+      setTotalPages(apiData.totalPages || 0);
+      setTotalElements(apiData?.totalElements || 0);
+      setPage(apiData?.pageable?.pageNumber || 0);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -597,158 +602,123 @@ const ExchangeDiscount = () => {
               </CardContent>
             </Card>
           ) : (
-            discounts?.map((discount) => {
-              // const status = getStatus(discount);
-              return (
-                <Card
-                  key={discount.id}
-                  className="hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-6 flex-wrap">
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Tag className="h-6 w-6 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1 flex-wrap">
-                              <h3 className="text-lg font-semibold">
-                                {discount.name}
-                              </h3>
-                              <Badge
-                                variant="secondary"
-                                className={getStatusBadgeClass(
-                                  discount?.status,
-                                )}
-                              >
-                                {discount?.status}
-                              </Badge>
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <PaginationSummary
+                  totalElements={totalElements}
+                  pageSize={size}
+                  currentPage={page}
+                  itemCount={discounts?.length}
+                  itemLabel="discount"
+                />
+              </div>
+              {discounts?.map((discount) => {
+                // const status = getStatus(discount);
+                return (
+                  <Card
+                    key={discount.id}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-6 flex-wrap">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Tag className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-1 flex-wrap">
+                                <h3 className="text-lg font-semibold">
+                                  {discount.name}
+                                </h3>
+                                <Badge
+                                  variant="secondary"
+                                  className={getStatusBadgeClass(
+                                    discount?.status,
+                                  )}
+                                >
+                                  {discount?.status}
+                                </Badge>
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                                <div>
+                                  Type:
+                                  <span className="font-mono ml-1">
+                                    {discount.type.replace(/_/g, " ")}
+                                  </span>
+                                </div>
+                                <div>
+                                  Code:
+                                  <span className="font-mono ml-1">
+                                    {discount.discountCode || "—"}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                              <div>
-                                Type:
-                                <span className="font-mono ml-1">
-                                  {discount.type.replace(/_/g, " ")}
-                                </span>
-                              </div>
-                              <div>
-                                Code:
-                                <span className="font-mono ml-1">
-                                  {discount.discountCode || "—"}
-                                </span>
-                              </div>
+                            <div className="text-base font-medium text-foreground">
+                              {getTypeLabel(
+                                discount.type,
+                                discount.discountValue,
+                              )}
                             </div>
                           </div>
 
-                          <div className="text-base font-medium text-foreground">
-                            {getTypeLabel(
-                              discount.type,
-                              discount.discountValue,
+                          <div className="text-sm bg-muted/40 rounded-md p-3">
+                            {discount.description || "No description provided."}
+                          </div>
+
+                          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                              <Tag className="h-4 w-4" />
+                              <span>
+                                Limit:{" "}
+                                {discount.limit === 0
+                                  ? "Unlimited"
+                                  : discount.limit}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-4 w-4" />
+                              <span>Starts: {discount.startDate || "—"}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-4 w-4" />
+                              <span>Expires: {discount.expiryDate}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="h-4 w-4" />
+                              <span>
+                                Created:{" "}
+                                {new Date(
+                                  discount.createdAt,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {discount.usageCount !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <Tag className="h-4 w-4" />
+                                <span>Used: {discount.usageCount}</span>
+                              </div>
                             )}
                           </div>
                         </div>
-
-                        <div className="text-sm bg-muted/40 rounded-md p-3">
-                          {discount.description || "No description provided."}
-                        </div>
-
-                        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1.5">
-                            <Tag className="h-4 w-4" />
-                            <span>
-                              Limit:{" "}
-                              {discount.limit === 0
-                                ? "Unlimited"
-                                : discount.limit}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-4 w-4" />
-                            <span>Starts: {discount.startDate || "—"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-4 w-4" />
-                            <span>Expires: {discount.expiryDate}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="h-4 w-4" />
-                            <span>
-                              Created:{" "}
-                              {new Date(
-                                discount.createdAt,
-                              ).toLocaleDateString()}
-                            </span>
-                          </div>
-
-                          {discount.usageCount !== undefined && (
-                            <div className="flex items-center gap-1.5">
-                              <Tag className="h-4 w-4" />
-                              <span>Used: {discount.usageCount}</span>
-                            </div>
-                          )}
-                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           )}
         </div>
-
-        {/* Pagination */}
-        {/* {totalPages > 1 && (
-          <div className="flex items-center justify-center border-t pt-6">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-            <div className="text-sm text-muted-foreground mx-2">
-              Page {page + 1} of {totalPages}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        )} */}
-
-        <div className="flex items-center justify-center border-t pt-6">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
-          <div className="text-sm text-muted-foreground mx-2">
-            Page {page + 1} of {totalPages}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
+        <PaginationControl
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={(page) => setPage(page)}
+        />
       </div>
     </ExchangeLayout>
   );

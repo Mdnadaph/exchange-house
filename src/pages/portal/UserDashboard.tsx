@@ -22,20 +22,24 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { formateDate } from "@/utils/formateDateTime";
 import dayjs from "dayjs";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
 
 const UserDashboard = () => {
+  const { toast } = useToast();
+  const [kybStatus, setKybStatus] = useState("");
   const navigate = useNavigate();
-  const [cookies] = useCookies(["token", "currencyCode"]);
+  const [cookies] = useCookies(["token", "currencyCode", "businessId"]);
   const token = cookies.token;
   const sourceCurrency = cookies?.currencyCode;
-
+  const id = cookies.businessId;
   // Mock KYB status - in real implementation this would come from backend
-  const kybStatus = "pending_kyb" as
-    | "verified"
-    | "pending_review"
-    | "pending_kyb"
-    | "rejected";
-  const kybSubmitted = false;
+  // const kybStatus = "pending_kyb" as
+  //   | "verified"
+  //   | "pending_review"
+  //   | "pending_kyb"
+  //   | "rejected";
+  // const kybSubmitted = false;
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +82,35 @@ const UserDashboard = () => {
     fetchDashboardData();
   }, [token]);
 
+  const fetchBusinessProfile = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v3/business/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response?.data?.data;
+      setKybStatus(data?.kybStatus);
+      if (!data) {
+        toast({
+          title: "Error",
+          description: "No data received from server",
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load business profile",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinessProfile();
+  }, [id]);
   const stats = dashboardData
     ? [
         {
@@ -235,6 +268,11 @@ const UserDashboard = () => {
         label: "Compliance Review",
         icon: AlertCircle,
       },
+      CANCELLED_WITH_REFUND: {
+        variant: "outline",
+        label: "Cancelled With Refund",
+        icon: AlertCircle,
+      },
     };
 
     return (
@@ -284,7 +322,7 @@ const UserDashboard = () => {
           </Card>
         )}
 
-        {kybStatus === "pending_review" && (
+        {/* {kybStatus === "pending_review" && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -297,6 +335,31 @@ const UserDashboard = () => {
                     Your KYB application is under review. This typically takes
                     1-2 business days.
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )} */}
+        {(kybStatus === "NOT_STARTED" || kybStatus === "PENDING") && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900">
+                    KYB Verification Required
+                  </h3>
+                  <p className="text-sm text-orange-800 mt-1">
+                    Complete your KYB verification to unlock all platform
+                    features and start making transactions.
+                  </p>
+                  <Button
+                    className="mt-3 bg-blue-900 hover:bg-blue-950 text-white"
+                    onClick={() => navigate(`/portal/profile/${id}`)}
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Complete Verification Now
+                  </Button>
                 </div>
               </div>
             </CardContent>

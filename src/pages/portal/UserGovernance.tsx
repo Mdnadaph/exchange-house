@@ -53,6 +53,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const UserGovernance = () => {
   const [cookies] = useCookies(["token"]);
@@ -78,7 +80,7 @@ const UserGovernance = () => {
   const [pagination, setPagination] = useState({
     page: 0,
     size: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalItems: 0,
   });
   const [currentPage, setCurrentPage] = useState(0);
@@ -404,6 +406,15 @@ const UserGovernance = () => {
             <CardDescription>
               Manage your business approval workflows and governance rules
             </CardDescription>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={pagination?.totalItems}
+                pageSize={pagination?.size}
+                currentPage={currentPage}
+                itemCount={rules?.length}
+                itemLabel="governance"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -592,48 +603,12 @@ const UserGovernance = () => {
                 </>
               )}
             </div>
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href={currentPage > 0 ? "#" : undefined}
-                    onClick={(e) => {
-                      if (currentPage > 0) {
-                        e.preventDefault();
-                        setCurrentPage(currentPage - 1);
-                      }
-                    }}
-                  />
-                </PaginationItem>
-                {Array.from({ length: pagination.totalPages }).map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink
-                      href="#"
-                      isActive={currentPage === i}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(i);
-                      }}
-                    >
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href={
-                      currentPage < pagination.totalPages - 1 ? "#" : undefined
-                    }
-                    onClick={(e) => {
-                      if (currentPage < pagination.totalPages - 1) {
-                        e.preventDefault();
-                        setCurrentPage(currentPage + 1);
-                      }
-                    }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PaginationControl
+              className="mt-6"
+              currentPage={currentPage}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </CardContent>
         </Card>
       </div>

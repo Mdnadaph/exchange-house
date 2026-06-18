@@ -17,7 +17,6 @@ export default function PaginationControl({
 }: PaginationControlsProps) {
   const getPageNumbers = (): (number | string)[] => {
     const pages: (number | string)[] = [];
-
     if (totalPages <= maxVisiblePages) {
       for (let i = 0; i < totalPages; i++) pages.push(i);
       return pages;
@@ -43,7 +42,7 @@ export default function PaginationControl({
       onPageChange(newPage);
     }
   };
-  if (totalPages <= 1) return null;
+  if (totalPages <= 0) return null;
   return (
     <div
       className={`flex flex-col sm:flex-row items-center justify-center pt-6 border-t border-gray-200 gap-4 ${className}`}

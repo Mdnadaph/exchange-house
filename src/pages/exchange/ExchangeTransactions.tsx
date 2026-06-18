@@ -35,6 +35,8 @@ import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import ApproveRejectTransactionModal from "@/components/transactions/ApproveRejectTransactionModal";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface TransactionDocument {
   id: number;
@@ -96,6 +98,8 @@ interface ApiResponse {
     transactions: ApiTransaction[];
     pagination: {
       totalItems: number;
+      totalPages: number;
+      page: number;
     };
   };
 }
@@ -249,6 +253,9 @@ const ExchangeTransactions = () => {
     "currencyCode",
   ]);
   const [page, setPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const pageSize = 10;
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [transitionDashboardData, setTransationDashboardData] = useState(null);
 
@@ -296,6 +303,9 @@ const ExchangeTransactions = () => {
       const data = response?.data;
       setTransationDashboardData(data?.data);
       setTotalTransactionData(data?.data?.pagination?.totalItems);
+      setTotalElements(data?.data?.pagination?.totalItems || 0);
+      setTotalPages(data?.data?.pagination?.totalPages || 0);
+      setPage(data?.data?.pagination?.page);
       if (data.status && data.data) {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
@@ -815,6 +825,15 @@ const ExchangeTransactions = () => {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="transaction"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -1413,59 +1432,12 @@ const ExchangeTransactions = () => {
                 })}
               </div>
             )}
-
-            {/* Pagination */}
-            {/* {totalTransactionData > 10 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Showing {transactions?.length} of {totalTransactionData}{" "}
-                  transactions
-                </p>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={(page + 1) * 10 >= totalTransactionData}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )} */}
-
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {transactions?.length} of {totalTransactionData}{" "}
-                transactions
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={(page + 1) * 10 >= totalTransactionData}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            <PaginationControl
+              className="mt-6"
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(page) => setPage(page)}
+            />
           </CardContent>
         </Card>
       </div>

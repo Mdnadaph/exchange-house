@@ -56,6 +56,8 @@ import {
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { previousDay } from "date-fns";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 type ComplianceFormData = {
   highRiskCountries: string[];
@@ -99,7 +101,8 @@ const ExchangeComplianceConfig = () => {
   const [editForm, setEditForm] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [createErrors, setCreateErrors] = useState<{ [key: string]: string }>(
     {},
@@ -222,8 +225,9 @@ const ExchangeComplianceConfig = () => {
       });
       const data = await res.json();
       setRules(data.data || []);
-      setTotalPages(data.totalPages || 1);
+      setTotalPages(data.totalPages || 0);
       setCurrentPage(data.currentPage || 0);
+      setTotalElements(data?.totalElements || 0);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -831,148 +835,160 @@ const ExchangeComplianceConfig = () => {
         <Card className="shadow-card">
           <div className="flex p-6  flex-wrap gap-3">
             <div className="flex-1">
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                Transaction Monitoring Thresholds
+              <CardTitle className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                  Transaction Monitoring Thresholds
+                </div>
               </CardTitle>
             </div>
             <div className="flex gap-2 items-end flex-wrap">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
-                onClick={() => setFilter("all")}
+                onClick={() => {
+                  setCurrentPage(0);
+                  setFilter("all");
+                }}
               >
                 All Compliance
               </Button>
               <Button
                 variant={filter === "active" ? "default" : "outline"}
-                onClick={() => setFilter("active")}
+                onClick={() => {
+                  setCurrentPage(0);
+                  setFilter("active");
+                }}
               >
                 Active Compliance
               </Button>
               <Button
                 variant={filter === "inactive" ? "default" : "outline"}
-                onClick={() => setFilter("inactive")}
+                onClick={() => {
+                  setFilter("inactive");
+                  setCurrentPage(0);
+                }}
               >
                 Inactive Compliance
               </Button>
             </div>
           </div>
           <CardContent className="space-y-6">
-            {rules.map((rule) => {
-              const categoryBadge = getCategoryBadge(rule.category);
-              const ruleName = rule.name || "Unnamed Rule";
-              const ruleStatus = rule.active ? "active" : "inactive";
-              const countryName =
-                countryMap[rule.payoutCountry] || rule.payoutCountry;
-              return (
-                <Card key={rule.id} className="border-l-4 border-l-primary">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <AlertTriangle className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-foreground">
-                            {ruleName}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            Threshold: {rule.thresholdAmount.toLocaleString()}{" "}
-                            {rule.currency || "N/A"} for {rule.transactionType}{" "}
-                            to {countryName}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={categoryBadge.variant}>
-                          {categoryBadge.label}
-                        </Badge>
-                        <Badge variant={rule.active ? "default" : "secondary"}>
-                          {ruleStatus}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 rounded-lg p-4">
-                      <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">
-                          Action:
-                        </div>
-                        <p className="font-medium capitalize">
-                          {(rule.action || "N/A").replace(/_/g, " ")}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">
-                          Frequency:
-                        </div>
-                        <p className="font-medium capitalize">
-                          {rule.frequency || "N/A"}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">
-                          Currency:
-                        </div>
-                        <p className="font-medium">{rule.currency || "N/A"}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-end space-x-2 mt-4">
-                      <PermissionGate permission="BTN_EDIT_COMPLIANCE_RULE">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const payoutId = getPayoutCountryId(
-                              rule.payoutCountry,
-                            );
-                            setEditForm({
-                              ...rule,
-                              payoutCountry: payoutId,
-                            });
-                            setIsEditOpen(true);
-                          }}
-                        >
-                          Edit
-                        </Button>
-                      </PermissionGate>
-                      <Switch
-                        checked={rule.active}
-                        onCheckedChange={(checked) =>
-                          handleToggleActive(rule.id, checked)
-                        }
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-            <div className="flex justify-center items-center space-x-4 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const prev = currentPage - 1;
-                  setCurrentPage(prev);
-                  fetchRules(prev, filter);
-                }}
-                disabled={currentPage === 0}
-              >
-                Previous
-              </Button>
-              <span className="text-muted-foreground">
-                Page {currentPage + 1} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const next = currentPage + 1;
-                  setCurrentPage(next);
-                  fetchRules(next, filter);
-                }}
-                disabled={currentPage + 1 >= totalPages}
-              >
-                Next
-              </Button>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                itemCount={rules?.length}
+                itemLabel="rules"
+              />
             </div>
+            {rules?.length > 0 ? (
+              <div>
+                {rules?.map((rule) => {
+                  const categoryBadge = getCategoryBadge(rule.category);
+                  const ruleName = rule.name || "Unnamed Rule";
+                  const ruleStatus = rule.active ? "active" : "inactive";
+                  const countryName =
+                    countryMap[rule.payoutCountry] || rule.payoutCountry;
+                  return (
+                    <Card key={rule.id} className="border-l-4 border-l-primary">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <AlertTriangle className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-semibold text-foreground">
+                                {ruleName}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                Threshold:{" "}
+                                {rule.thresholdAmount.toLocaleString()}{" "}
+                                {rule.currency || "N/A"} for{" "}
+                                {rule.transactionType} to {countryName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={categoryBadge.variant}>
+                              {categoryBadge.label}
+                            </Badge>
+                            <Badge
+                              variant={rule.active ? "default" : "secondary"}
+                            >
+                              {ruleStatus}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 rounded-lg p-4">
+                          <div className="space-y-1">
+                            <div className="text-muted-foreground text-sm">
+                              Action:
+                            </div>
+                            <p className="font-medium capitalize">
+                              {(rule.action || "N/A").replace(/_/g, " ")}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-muted-foreground text-sm">
+                              Frequency:
+                            </div>
+                            <p className="font-medium capitalize">
+                              {rule.frequency || "N/A"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-muted-foreground text-sm">
+                              Currency:
+                            </div>
+                            <p className="font-medium">
+                              {rule.currency || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 mt-4">
+                          <PermissionGate permission="BTN_EDIT_COMPLIANCE_RULE">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const payoutId = getPayoutCountryId(
+                                  rule.payoutCountry,
+                                );
+                                setEditForm({
+                                  ...rule,
+                                  payoutCountry: payoutId,
+                                });
+                                setIsEditOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          </PermissionGate>
+                          <Switch
+                            checked={rule.active}
+                            onCheckedChange={(checked) =>
+                              handleToggleActive(rule.id, checked)
+                            }
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            ) : (
+              <p className="text-center py-4 text-gray-400 text-base font-normal">
+                No Compilance rule
+              </p>
+            )}
           </CardContent>
         </Card>
 

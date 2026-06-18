@@ -51,6 +51,8 @@ import {
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -123,15 +125,15 @@ const ExchangeKybMapping = () => {
   const [loadingMappings, setLoadingMappings] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [businessTypePagination, setBusinessTypePagination] = useState({
-    pageSize: 0,
+    pageSize: 10,
     totalElements: 0,
-    totalPages: 0,
+    totalPages: 1,
     currentPage: 0,
   });
   const [KYBTypePagination, setKYBTypePagination] = useState({
-    pageSize: 0,
+    pageSize: 10,
     totalElements: 0,
-    totalPages: 0,
+    totalPages: 1,
     currentPage: 0,
   });
   const businessTyeListRef = useRef<HTMLDivElement | null>(null);
@@ -160,9 +162,9 @@ const ExchangeKybMapping = () => {
   // ── Pagination state (Spring 0-indexed) ─────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-
+  console.log("totoalPage", totalPages);
   // ── Dialog visibility ────────────────────────────────────────────────────────
   const [showCreateBT, setShowCreateBT] = useState(false);
   const [showCreateKYB, setShowCreateKYB] = useState(false);
@@ -226,8 +228,9 @@ const ExchangeKybMapping = () => {
       const responseData = res.data?.data;
       const pageData = responseData?.mappings ?? responseData;
       setMappings(pageData?.content ?? []);
-      setTotalPages(pageData?.totalPages ?? 1);
+      setTotalPages(pageData?.totalPages ?? 0);
       setTotalElements(pageData?.totalElements ?? 0);
+      setCurrentPage(pageData?.pageable?.pageNumber);
       if (responseData?.stats) {
         setStats(responseData.stats);
       }
@@ -438,18 +441,19 @@ const ExchangeKybMapping = () => {
         ),
       ]);
       setBusinessTypes(btRes.data?.data ?? []);
+      console.log("btPage", btRes?.data?.totalPages);
       setBusinessTypePagination({
-        pageSize: btRes?.data?.pageSize,
-        totalPages: btRes?.data?.totalPage,
-        currentPage: btRes?.data?.currentPage,
-        totalElements: btRes?.data?.totalElement,
+        pageSize: btRes?.data?.pageSize || 10,
+        totalPages: btRes?.data?.totalPages ?? 0,
+        currentPage: btRes?.data?.currentPage || 0,
+        totalElements: btRes?.data?.totalElements || 0,
       });
       setKybTypes(kybRes.data?.data ?? []);
       setKYBTypePagination({
-        pageSize: kybRes?.data?.pageSize,
-        totalPages: kybRes?.data?.totalPage,
-        currentPage: kybRes?.data?.currentPage,
-        totalElements: kybRes?.data?.totalElement,
+        pageSize: kybRes?.data?.pageSize || 10,
+        totalPages: kybRes?.data?.totalPages ?? 0,
+        currentPage: kybRes?.data?.currentPage || 0,
+        totalElements: kybRes?.data?.totalElements || 0,
       });
     } catch (err: any) {
       toast({
@@ -971,8 +975,17 @@ const ExchangeKybMapping = () => {
 
         {/* ── Mappings Table ── */}
         <Card className="shadow-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>KYB Type Mappings List</CardTitle>
+          <CardHeader className="">
+            <div className="flex justify-between gap-2 flex-wrap items-center">
+              <CardTitle>KYB Type Mappings List</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={10}
+                currentPage={currentPage}
+                itemCount={mappings?.length}
+                itemLabel="KYB Type Mapping"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {loadingMappings ? (
@@ -1071,7 +1084,7 @@ const ExchangeKybMapping = () => {
                 </div>
 
                 {/* ── Pagination ── */}
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
@@ -1118,7 +1131,12 @@ const ExchangeKybMapping = () => {
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
-                </div>
+                </div> */}
+                <PaginationControl
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
               </>
             )}
           </CardContent>
@@ -1126,7 +1144,16 @@ const ExchangeKybMapping = () => {
         <div className="grid grid-cols-1  lg:grid-cols-2 gap-8">
           <Card className="shadow-card p-4">
             <CardHeader>
-              <CardTitle>Business Type</CardTitle>
+              <div className="flex justify-between gap-2 flex-wrap">
+                <CardTitle>Business Type</CardTitle>
+                <PaginationSummary
+                  totalElements={businessTypePagination?.totalElements}
+                  pageSize={businessTypePagination?.pageSize}
+                  currentPage={businessTypePagination?.currentPage}
+                  itemCount={businessTypeList?.length || 0}
+                  itemLabel="business type"
+                />
+              </div>
             </CardHeader>
             {businessTypeList?.length > 0 ? (
               <>
@@ -1148,7 +1175,7 @@ const ExchangeKybMapping = () => {
                           <td className="py-3 pr-4 font-medium">{m?.sn}</td>
                           <td className="py-3 pr-4 font-medium">{m?.name}</td>
                           <td className="flex gap-3 items-center">
-                            <Button
+                            {/* <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0"
@@ -1157,7 +1184,7 @@ const ExchangeKybMapping = () => {
                               title="Edit Business Type"
                             >
                               <Pencil className="h-4 w-4" />
-                            </Button>
+                            </Button> */}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1177,62 +1204,18 @@ const ExchangeKybMapping = () => {
                     </tbody>
                   </table>
                 </div>
-                <Pagination className="mt-6">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleBusinessTypePageChange(
-                            businessTypePagination.currentPage - 1,
-                          );
-                        }}
-                        className={
-                          businessTypePagination.currentPage === 0
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {[...Array(businessTypePagination.totalPages)].map(
-                      (_, index) => (
-                        <PaginationItem key={index}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleBusinessTypePageChange(index);
-                            }}
-                            isActive={
-                              businessTypePagination.currentPage === index
-                            }
-                            className="cursor-pointer"
-                          >
-                            {index + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ),
-                    )}
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleBusinessTypePageChange(
-                            businessTypePagination.currentPage + 1,
-                          );
-                        }}
-                        className={
-                          businessTypePagination.currentPage ===
-                          businessTypePagination.totalPages - 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="mt-5">
+                  <PaginationControl
+                    currentPage={businessTypePagination?.currentPage}
+                    totalPages={businessTypePagination?.totalPages}
+                    onPageChange={(page) =>
+                      setBusinessTypePagination((prev) => ({
+                        ...prev,
+                        currentPage: page,
+                      }))
+                    }
+                  />
+                </div>
               </>
             ) : (
               <p className="text-center pb-3 text-muted-foreground">
@@ -1242,7 +1225,16 @@ const ExchangeKybMapping = () => {
           </Card>
           <Card className="shadow-card p-4">
             <CardHeader>
-              <CardTitle>KYB Type</CardTitle>
+              <div className="flex gap-2 items-center justify-between flex-wrap">
+                <CardTitle>KYB Type</CardTitle>
+                <PaginationSummary
+                  totalElements={KYBTypePagination?.totalElements}
+                  pageSize={KYBTypePagination?.pageSize}
+                  currentPage={KYBTypePagination?.currentPage}
+                  itemCount={KYBTypeList?.length || 0}
+                  itemLabel="KYB Type"
+                />
+              </div>
             </CardHeader>
             {KYBTypeList?.length > 0 ? (
               <>
@@ -1264,7 +1256,7 @@ const ExchangeKybMapping = () => {
                           <td className="py-3 pr-4 font-medium">{m?.sn}</td>
                           <td className="py-3 pr-4 font-medium">{m?.name}</td>
                           <div className="flex gap-3 items-center">
-                            <Button
+                            {/* <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0"
@@ -1273,7 +1265,7 @@ const ExchangeKybMapping = () => {
                               title="Edit KYB Type"
                             >
                               <Pencil className="h-4 w-4" />
-                            </Button>
+                            </Button> */}
 
                             <Button
                               variant="ghost"
@@ -1294,60 +1286,18 @@ const ExchangeKybMapping = () => {
                     </tbody>
                   </table>
                 </div>
-                <Pagination className="mt-6">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleKYBTypePageChange(
-                            KYBTypePagination.currentPage - 1,
-                          );
-                        }}
-                        className={
-                          KYBTypePagination.currentPage === 0
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {[...Array(KYBTypePagination.totalPages)].map(
-                      (_, index) => (
-                        <PaginationItem key={index}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleKYBTypePageChange(index);
-                            }}
-                            isActive={KYBTypePagination.currentPage === index}
-                            className="cursor-pointer"
-                          >
-                            {index + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ),
-                    )}
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleKYBTypePageChange(
-                            KYBTypePagination.currentPage + 1,
-                          );
-                        }}
-                        className={
-                          KYBTypePagination.currentPage ===
-                          KYBTypePagination.totalPages - 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="mt-6">
+                  <PaginationControl
+                    currentPage={KYBTypePagination?.currentPage}
+                    totalPages={KYBTypePagination?.totalPages}
+                    onPageChange={(page) =>
+                      setKYBTypePagination((prev) => ({
+                        ...prev,
+                        currentPage: page,
+                      }))
+                    }
+                  />
+                </div>
               </>
             ) : (
               <p className="text-center pb-3 text-muted-foreground">

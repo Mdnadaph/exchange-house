@@ -56,6 +56,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // --- Types ---
 interface FeeRule {
@@ -114,7 +116,7 @@ const ExchangeFeeManagement = () => {
   const [pagination, setPagination] = useState({
     pageNumber: 0,
     pageSize: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalElements: 0,
   });
 
@@ -1250,9 +1252,18 @@ const ExchangeFeeManagement = () => {
         {/* --- Main Configuration Table --- */}
         <Card className="shadow-sm border-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Fee Rules Configuration
+            <CardTitle className="flex items-center gap-2 justify-between flex-wrap">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Fee Rules Configuration
+              </div>
+              <PaginationSummary
+                totalElements={pagination?.totalElements}
+                pageSize={pagination?.pageSize}
+                currentPage={pagination?.pageNumber}
+                itemCount={activeRules?.length}
+                itemLabel="fee"
+              />
             </CardTitle>
           </CardHeader>
 
@@ -1595,7 +1606,7 @@ const ExchangeFeeManagement = () => {
           </CardContent>
         </Card>
 
-        <Pagination className="mt-6">
+        {/* <Pagination className="mt-6">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
@@ -1642,7 +1653,18 @@ const ExchangeFeeManagement = () => {
               />
             </PaginationItem>
           </PaginationContent>
-        </Pagination>
+        </Pagination> */}
+        <PaginationControl
+          className="mt-6"
+          currentPage={pagination?.pageNumber}
+          totalPages={pagination?.totalPages}
+          onPageChange={(page) =>
+            setPagination((prev) => ({
+              ...prev,
+              pageNumber: page,
+            }))
+          }
+        />
 
         {/* --- Delete Confirmation Dialog --- */}
         <Dialog

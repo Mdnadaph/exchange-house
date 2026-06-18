@@ -46,6 +46,8 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Loader2 } from "lucide-react";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 const ExchangeAdminUser = () => {
   const [cookies] = useCookies(["token", "email"]);
@@ -54,7 +56,7 @@ const ExchangeAdminUser = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(4);
+  const [pageSize] = useState(10);
   const token = cookies.token;
   const email = cookies.email;
 
@@ -182,7 +184,6 @@ const ExchangeAdminUser = () => {
         },
       );
       const treeData = res.data?.data || [];
-      console.log("res", res);
       const { filtered: treeDataFiltered, dashboardId } =
         filterOutDashboard(treeData);
       setPermissionTree(treeDataFiltered);
@@ -311,6 +312,9 @@ const ExchangeAdminUser = () => {
         params: { page, size: pageSize },
       });
       setUsers(res?.data?.data?.content || []);
+      setTotalElements(res?.data?.data?.totalElements || 0);
+      setTotalPages(res?.data?.data?.totalPages || 0);
+      setCurrentPage(res?.data?.data?.pageable?.pageNumber || 0);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -832,95 +836,110 @@ const ExchangeAdminUser = () => {
                 </p>
               </div>
             ) : (
-              users?.map((user) => {
-                const status = getStatusBadge(
-                  user.active ? "active" : "inactive",
-                );
-                const StatusIcon = status.icon;
-                return (
-                  <Card
-                    key={user.uuid || user.id}
-                    className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between flex-wrap gap-2">
-                        <div className="space-y-4 flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                              <span className="text-primary-foreground font-semibold">
-                                {user.fullName
-                                  ?.split(" ")
-                                  .map((n: string) => n[0])
-                                  .join("")}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-1">
-                                <h2 className="font-semibold text-foreground text-2xl">
-                                  {user.fullName}
-                                </h2>
-                                <Badge
-                                  variant={status.variant}
-                                  className="flex items-center gap-1"
-                                >
-                                  <StatusIcon className="h-3 w-3" />{" "}
-                                  {status.label}
-                                </Badge>
+              <div>
+                <div className="mb-3 flex justify-end">
+                  <PaginationSummary
+                    totalElements={totalElements}
+                    pageSize={pageSize}
+                    currentPage={currentPage}
+                    itemCount={users?.length}
+                    itemLabel="exchange member"
+                  />
+                </div>
+                <div className="space-y-2">
+                  {users?.map((user) => {
+                    const status = getStatusBadge(
+                      user.active ? "active" : "inactive",
+                    );
+                    const StatusIcon = status.icon;
+                    return (
+                      <Card
+                        key={user.uuid || user.id}
+                        className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between flex-wrap gap-2">
+                            <div className="space-y-4 flex-1">
+                              <div className="flex items-center space-x-4">
+                                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                  <span className="text-primary-foreground font-semibold">
+                                    {user.fullName
+                                      ?.split(" ")
+                                      .map((n: string) => n[0])
+                                      .join("")}
+                                  </span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <h2 className="font-semibold text-foreground text-2xl">
+                                      {user.fullName}
+                                    </h2>
+                                    <Badge
+                                      variant={status.variant}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <StatusIcon className="h-3 w-3" />{" "}
+                                      {status.label}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-muted-foreground">
+                                    <Mail className="h-3 w-3 mr-1" /> Email:
+                                  </div>
+                                  <p className="font-medium">{user.email}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-muted-foreground">
+                                    <Phone className="h-3 w-3 mr-1" /> Phone:
+                                  </div>
+                                  <p className="font-medium">
+                                    {user.phoneNumber}
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-muted-foreground">
+                                    <MapPin className="h-3 w-3 mr-1" /> Address:
+                                  </div>
+                                  <p className="font-medium">{user.address}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <Mail className="h-3 w-3 mr-1" /> Email:
-                              </div>
-                              <p className="font-medium">{user.email}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <Phone className="h-3 w-3 mr-1" /> Phone:
-                              </div>
-                              <p className="font-medium">{user.phoneNumber}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <MapPin className="h-3 w-3 mr-1" /> Address:
-                              </div>
-                              <p className="font-medium">{user.address}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col space-y-2 ml-4">
-                          {/* <Button variant="outline" size="sm">
+                            <div className="flex flex-col space-y-2 ml-4">
+                              {/* <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-1" /> Edit Details
                           </Button> */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              setSelectedUserForPermissions(user);
-                              setLoadingPermissions(true);
-                              await Promise.all([
-                                fetchAllPermissions(),
-                                // fetchUserPermissions(user.uuid),
-                              ]);
-                              setLoadingPermissions(false);
-                              setIsPermissionModalOpen(true);
-                              setAssignedPermissionIds(
-                                user?.permissions?.map((id: number) =>
-                                  String(id),
-                                ),
-                              );
-                            }}
-                          >
-                            <Shield className="h-4 w-4 mr-1" /> Permissions
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  setSelectedUserForPermissions(user);
+                                  setLoadingPermissions(true);
+                                  await Promise.all([
+                                    fetchAllPermissions(),
+                                    // fetchUserPermissions(user.uuid),
+                                  ]);
+                                  setLoadingPermissions(false);
+                                  setIsPermissionModalOpen(true);
+                                  setAssignedPermissionIds(
+                                    user?.permissions?.map((id: number) =>
+                                      String(id),
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Shield className="h-4 w-4 mr-1" /> Permissions
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -972,63 +991,12 @@ const ExchangeAdminUser = () => {
           </div>
         </div>
       )} */}
-
-      <div className="flex items-center justify-end mt-6">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-            disabled={currentPage === 0}
-          >
-            Previous
-          </Button>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i;
-            } else if (currentPage < 3) {
-              pageNum = i;
-            } else if (currentPage > totalPages - 4) {
-              pageNum = totalPages - 5 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-              >
-                {pageNum + 1}
-              </Button>
-            );
-          })}
-          {/* <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-            }
-            disabled={currentPage === totalPages - 1}
-          >
-            Next
-          </Button> */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setCurrentPage((prev) =>
-                Math.min(prev + 1, totalPages ? totalPages - 1 : 0),
-              )
-            }
-            disabled={currentPage >= (totalPages || 1) - 1}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      <PaginationControl
+        className="mt-6"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
     </>
   );
 };

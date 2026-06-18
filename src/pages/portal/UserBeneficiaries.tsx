@@ -1320,6 +1320,8 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -1462,12 +1464,12 @@ const UserBeneficiaries = () => {
 
   const [beneficiariesPage, setBeneficiariesPage] = useState(0);
   const [beneficiariesSize] = useState(10);
-  const [beneficiariesTotalPages, setBeneficiariesTotalPages] = useState(1);
+  const [beneficiariesTotalPages, setBeneficiariesTotalPages] = useState(0);
   const [beneficiariesTotalItems, setBeneficiariesTotalItems] = useState(0);
 
   const [groupsPage, setGroupsPage] = useState(0);
   const [groupsSize] = useState(10);
-  const [groupsTotalPages, setGroupsTotalPages] = useState(1);
+  const [groupsTotalPages, setGroupsTotalPages] = useState(0);
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
   const [payOutConfigData, setPayOutConfigData] = useState(null);
   const [payOutId, setPayOutId] = useState<null | number>(null);
@@ -1611,8 +1613,9 @@ const UserBeneficiaries = () => {
         averageTransaction: item.avgAmount ? String(item.avgAmount) : "0",
       }));
       setBeneficiaries(mappedData);
-      setBeneficiariesTotalPages(json.data.pagination.totalPages);
-      setBeneficiariesTotalItems(json.data.pagination.totalItems);
+      setBeneficiariesTotalPages(json.data.pagination.totalPages || 0);
+      setBeneficiariesTotalItems(json.data.pagination.totalItems || 0);
+      setBeneficiariesPage(json?.data?.pagination?.page || 0);
     } catch (err: any) {
       setError(err.message || "Failed to fetch beneficiaries");
       toast({
@@ -1682,8 +1685,9 @@ const UserBeneficiaries = () => {
       }));
 
       setBeneficiaryGroups(mappedGroups);
-      setGroupsTotalPages(json.data.pagination.totalPages);
-      setGroupsTotalItems(json.data.pagination.totalItems);
+      setGroupsTotalPages(json.data.pagination.totalPages || 0);
+      setGroupsTotalItems(json.data.pagination.totalItems || 0);
+      setGroupsPage(json?.pagination?.page || 0);
     } catch (err: any) {
       toast({
         title: "Error",
@@ -2258,6 +2262,15 @@ const UserBeneficiaries = () => {
                     </CardTitle>
                     <BeneficiaryGroupForm onGroupCreated={handleGroupCreated} />
                   </div>
+                  <div className="flex justify-end">
+                    <PaginationSummary
+                      totalElements={groupsTotalItems}
+                      pageSize={groupsSize}
+                      currentPage={groupsPage}
+                      itemCount={groupsWithBeneficiaryData?.length}
+                      itemLabel="group beneficiaries"
+                    />
+                  </div>
                 </CardHeader>
 
                 <CardContent>
@@ -2344,31 +2357,11 @@ const UserBeneficiaries = () => {
                       ))}
                     </div>
                   )}
-                  {/* Pagination for groups */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {beneficiaryGroups?.length} of {groupsTotalItems}{" "}
-                      groups
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage === 0}
-                        onClick={() => setGroupsPage(groupsPage - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage >= groupsTotalPages - 1}
-                        onClick={() => setGroupsPage(groupsPage + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginationControl
+                    currentPage={groupsPage}
+                    totalPages={groupsTotalPages}
+                    onPageChange={(page) => setGroupsPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -2439,7 +2432,16 @@ const UserBeneficiaries = () => {
               {/* Beneficiaries List */}
               <Card className="shadow-card">
                 <CardHeader>
-                  <CardTitle>Registered Beneficiaries</CardTitle>
+                  <div className="flex justify-between items-center gap-2 flex-wrap">
+                    <CardTitle>Registered Beneficiaries</CardTitle>
+                    <PaginationSummary
+                      totalElements={beneficiariesTotalItems}
+                      pageSize={beneficiariesSize}
+                      currentPage={beneficiariesPage}
+                      itemCount={filteredBeneficiaries?.length}
+                      itemLabel="beneficaries"
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -2779,36 +2781,12 @@ const UserBeneficiaries = () => {
                     </div>
                   )}
                   {/* Pagination */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {filteredBeneficiaries.length} of{" "}
-                      {beneficiariesTotalItems} beneficiaries
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={beneficiariesPage === 0}
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage - 1)
-                        }
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={
-                          beneficiariesPage >= beneficiariesTotalPages - 1
-                        }
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage + 1)
-                        }
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginationControl
+                    className="mt-6"
+                    currentPage={beneficiariesPage}
+                    totalPages={beneficiariesTotalPages}
+                    onPageChange={(page) => setBeneficiariesPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

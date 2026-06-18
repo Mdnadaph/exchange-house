@@ -31,6 +31,8 @@ import { Button } from "react-day-picker";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import { Label } from "recharts";
 import { Input } from "@/components/ui/input";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const ExchangeBusinessOnboarding = () => {
   const [cookies] = useCookies(["token"]);
@@ -55,7 +57,7 @@ const ExchangeBusinessOnboarding = () => {
   const [pagination, setPagination] = useState({
     pageNumber: 0,
     pageSize: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalElements: 0,
   });
 
@@ -96,7 +98,7 @@ const ExchangeBusinessOnboarding = () => {
       setPagination({
         pageNumber: apiData?.businesses?.pagination?.page || 0,
         pageSize: apiData?.businesses?.pagination?.size || 10,
-        totalPages: apiData?.businesses?.pagination?.totalPages || 1,
+        totalPages: apiData?.businesses?.pagination?.totalPages || 0,
         totalElements: apiData?.businesses?.pagination?.totalItems || 0,
       });
 
@@ -371,9 +373,18 @@ const ExchangeBusinessOnboarding = () => {
 
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Recently Onboarded Businesses
+            <CardTitle className="flex items-center gap-2 justify-between flex-wrap">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Recently Onboarded Businesses
+              </div>
+              <PaginationSummary
+                totalElements={pagination?.totalElements}
+                pageSize={pagination?.pageSize}
+                currentPage={pagination?.pageNumber}
+                itemCount={businesses?.length}
+                itemLabel="Onboard business"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -487,103 +498,16 @@ const ExchangeBusinessOnboarding = () => {
               )}
             </div>
 
-            {/* {pagination.totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
-                      }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                        isActive={pagination.pageNumber === index}
-                        className="cursor-pointer"
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )} */}
-
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(pagination.pageNumber - 1);
-                    }}
-                    className={
-                      pagination.pageNumber === 0
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-                {[...Array(pagination.totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(index);
-                      }}
-                      isActive={pagination.pageNumber === index}
-                      className="cursor-pointer"
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(pagination.pageNumber + 1);
-                    }}
-                    className={
-                      pagination.pageNumber === pagination.totalPages - 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PaginationControl
+              currentPage={pagination?.pageNumber}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) =>
+                setPagination((prev) => ({
+                  ...prev,
+                  pageNumber: page,
+                }))
+              }
+            />
           </CardContent>
         </Card>
       </div>

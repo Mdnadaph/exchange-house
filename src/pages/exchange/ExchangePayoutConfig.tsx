@@ -61,6 +61,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface PayoutDestination {
   id: string;
@@ -1038,9 +1040,18 @@ const ExchangePayoutConfig = () => {
 
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              {t("payoutDestinations") || "Payout Destinations"}
+            <CardTitle className="flex gap-2 items-center justify-between flex-wrap">
+              <div className="flex gap-2 items-center">
+                <Globe className="h-5 w-5 text-primary" />
+                {t("payoutDestinations") || "Payout Destinations"}
+              </div>
+              <PaginationSummary
+                totalElements={payoutData?.totalElements}
+                pageSize={payoutData?.pageSize || 10}
+                currentPage={page}
+                itemCount={payoutData?.countries?.length}
+                itemLabel="payout config"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1161,7 +1172,6 @@ const ExchangePayoutConfig = () => {
                                         ))}
                                       </div>
                                     </div>
-
                                     <div className="grid grid-cols-1 gap-2 text-sm">
                                       <div className="text-muted-foreground">
                                         {"List fields"}:{" "}
@@ -1217,7 +1227,7 @@ const ExchangePayoutConfig = () => {
                 </p>
               )}
             </div>
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+            {/* <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
                 Showing {payoutData.countries.length} of{" "}
                 {payoutData.totalElements} payout destination
@@ -1242,7 +1252,13 @@ const ExchangePayoutConfig = () => {
                   Next
                 </Button>
               </div>
-            </div>
+            </div> */}
+            <PaginationControl
+              className="mt-6"
+              currentPage={page}
+              totalPages={payoutData?.totalPages}
+              onPageChange={(page) => setPage(page)}
+            />
           </CardContent>
         </Card>
 
