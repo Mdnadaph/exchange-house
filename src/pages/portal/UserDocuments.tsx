@@ -469,7 +469,6 @@ const UserDocuments = () => {
                           <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
                             <FileIcon className="h-6 w-6 text-muted-foreground" />
                           </div>
-
                           <div className="flex-1 space-y-3">
                             <div className="flex items-start justify-between">
                               <div className="space-y-1">
@@ -564,7 +563,7 @@ const UserDocuments = () => {
             </div>
 
             {/* Pagination (static for now) */}
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+            {/* <div className="flex items-center justify-between mt-6 pt-6 border-t">
               <p className="text-sm text-muted-foreground">
                 Showing {filteredDocuments?.length} of {documents?.length}{" "}
                 documents
@@ -577,7 +576,7 @@ const UserDocuments = () => {
                   Next
                 </Button>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>

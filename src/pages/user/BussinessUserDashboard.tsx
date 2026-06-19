@@ -15,6 +15,7 @@ import {
   DollarSign,
   ShieldCheck,
   XCircle,
+  Wallet,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -130,19 +131,111 @@ const BussinessUserDashboard = () => {
     },
   ];
 
+  // const getStatusBadge = (status: string) => {
+  //   const statusMap = {
+  //     APPROVED: { variant: "default" as const, label: "Approved" },
+  //     PENDING: { variant: "secondary" as const, label: "Pending" },
+  //     REJECTED: { variant: "destructive" as const, label: "Rejected" },
+  //     PROCESSING: { variant: "outline" as const, label: "Processing" },
+  //     COMPLETED: { variant: "default" as const, label: "Completed" },
+  //   };
+  //   return (
+  //     statusMap[status as keyof typeof statusMap] || {
+  //       variant: "secondary" as const,
+  //       label: status,
+  //     }
+  //   );
+  // };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      APPROVED: { variant: "default" as const, label: "Approved" },
-      PENDING: { variant: "secondary" as const, label: "Pending" },
-      REJECTED: { variant: "destructive" as const, label: "Rejected" },
-      PROCESSING: { variant: "outline" as const, label: "Processing" },
-    };
-    return (
-      statusMap[status as keyof typeof statusMap] || {
+      COMPLETED: {
+        variant: "default" as const,
+        label: "Completed",
+        icon: CheckCircle,
+      },
+      PENDING_APPROVAL: {
         variant: "secondary" as const,
-        label: status,
-      }
-    );
+        label: "Pending Approval",
+        icon: Clock,
+      },
+      PAYMENT_PENDING: {
+        variant: "destructive" as const,
+        label: "Pending Payment",
+        icon: Wallet,
+      },
+      APPROVED: {
+        variant: "secondary" as const,
+        label: "Approved",
+        icon: Clock,
+      },
+      PROCESSING: {
+        variant: "destructive" as const,
+        label: "Proof of Payment Sent",
+        icon: Clock,
+      },
+      FAILED: {
+        variant: "destructive" as const,
+        label: "Failed",
+        icon: AlertCircle,
+      },
+      REJECTED: {
+        variant: "outline" as const,
+        label: "Rejected",
+        icon: AlertCircle,
+      },
+      COMPLIANCE_REVIEW: {
+        variant: "outline" as const,
+        label: "Compliance Review",
+        icon: AlertCircle,
+      },
+      INTERNAL_REVIEW_PENDING: {
+        variant: "outline" as const,
+        label: "Internal Review Pending",
+        icon: AlertCircle,
+      },
+      PAYMENT_VERIFICATION_PENDING: {
+        variant: "outline" as const,
+        label: "Payment Verification Pending",
+        icon: AlertCircle,
+      },
+      PROOF_OF_PAYMENT_PENDING: {
+        variant: "outline" as const,
+        label: "Proof Of Payment Pending",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_PENDING: {
+        variant: "outline" as const,
+        label: "Rate Deal Pending",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_APPROVED: {
+        variant: "outline" as const,
+        label: "Rate Deal Approved",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_REJECTED: {
+        variant: "outline" as const,
+        label: "Rate Deal Rejected",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_COUNTER_PROPOSAL: {
+        variant: "outline" as const,
+        label: "Rate Deal Counter Proposal",
+        icon: AlertCircle,
+      },
+      RATE_DEAL_EXPIRED: {
+        variant: "outline" as const,
+        label: "Rate Deal Expired",
+        icon: AlertCircle,
+      },
+      DRAFT: {
+        variant: "outline" as const,
+        label: "Draft",
+        icon: AlertCircle,
+      },
+    };
+    return statusMap[status as keyof typeof statusMap] || statusMap.PROCESSING;
   };
 
   if (loading) {
@@ -291,7 +384,11 @@ const BussinessUserDashboard = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Recent Activities</CardTitle>
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/user/transactions")}
+                  >
                     View All
                     <ArrowUpRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -355,7 +452,7 @@ const BussinessUserDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="shadow-card">
+        {/* <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
@@ -396,7 +493,7 @@ const BussinessUserDashboard = () => {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Transaction Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

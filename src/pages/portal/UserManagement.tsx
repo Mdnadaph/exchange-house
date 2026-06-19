@@ -26,6 +26,8 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import UserEditForm from "@/components/governance/UserEdit";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const UserManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -60,6 +62,7 @@ const UserManagement = () => {
         setDashboard(json.data.dashboard);
         setUsers(json.data.users);
         setPagination(json.data.pagination);
+        setCurrentPage(json?.data?.pagination?.page || 0);
       }
     } catch (error) {
       toast({
@@ -238,7 +241,10 @@ const UserManagement = () => {
                     placeholder="Search by name, email, or role..."
                     className="pl-9"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(0);
+                    }}
                   />
                 </div>
               </div>
@@ -253,8 +259,17 @@ const UserManagement = () => {
 
         {/* Users Table */}
         <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Business Users</CardTitle>
+          <CardHeader className="w-full">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <CardTitle>Business Users</CardTitle>
+              <PaginationSummary
+                totalElements={pagination?.totalItems}
+                pageSize={pagination?.size}
+                currentPage={currentPage}
+                itemCount={users?.length}
+                itemLabel="business user"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -422,29 +437,13 @@ const UserManagement = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {users.length} of {pagination.totalItems} users
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === 0}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage >= pagination.totalPages - 1}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+
+            <PaginationControl
+            className="mt-6"
+              currentPage={currentPage}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </CardContent>
         </Card>
       </div>

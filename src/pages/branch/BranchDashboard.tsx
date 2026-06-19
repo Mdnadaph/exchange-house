@@ -119,11 +119,21 @@ const BranchDashboard = () => {
       APPROVED: {
         variant: "default" as const,
         label: "Approved",
-        color: "text-green-600",
+        color: "text-white",
       },
       in_progress: {
         variant: "secondary" as const,
         label: "In Progress",
+        color: "text-blue-600",
+      },
+      PENDING: {
+        variant: "secondary" as const,
+        label: "Pending",
+        color: "text-blue-600",
+      },
+      NOT_STARTED: {
+        variant: "secondary" as const,
+        label: "Not Started",
         color: "text-blue-600",
       },
       pending_documents: {
@@ -292,7 +302,7 @@ const BranchDashboard = () => {
                                   </h4>
                                   <Badge
                                     variant={status.variant}
-                                    className="text-xs"
+                                    className={`text-xs`}
                                   >
                                     {status.label}
                                   </Badge>
@@ -357,7 +367,7 @@ const BranchDashboard = () => {
                     Loading
                   </p>
                 ) : recentActivities?.length > 0 ? (
-                  <div>
+                  <div className="space-y-2">
                     {recentActivities.map((activity, index) => (
                       <div
                         key={index}
@@ -372,6 +382,9 @@ const BranchDashboard = () => {
                           )}
                           {activity.kybStatus === "REJECTED" && (
                             <AlertCircle className="h-5 w-5 text-primary" />
+                          )}
+                          {activity.kybStatus === "PENDING" && (
+                            <Clock className="h-5 w-5 text-primary" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">

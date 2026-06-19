@@ -37,6 +37,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface Document {
   id: string;
@@ -101,7 +103,7 @@ const BranchBusinessDocuments = () => {
   const [pagination, setPagination] = useState({
     pageNumber: 0,
     pageSize: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalElements: 0,
   });
 
@@ -275,7 +277,7 @@ const BranchBusinessDocuments = () => {
   // if (loading) {
   //   return <div>Loading...</div>;
   // }
-  console.log("selected Status", selectedStatus);
+
   const getBusinessAdminList = async () => {
     // IMPORTANT
     if (businessLoading || !hasMore) return;
@@ -471,7 +473,13 @@ const BranchBusinessDocuments = () => {
                     placeholder="Search by document name, type, or business..."
                     className="pl-9"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPagination((prev) => ({
+                        ...prev,
+                        pageNumber: 0,
+                      }));
+                    }}
                   />
                 </div>
               </div>
@@ -497,6 +505,10 @@ const BranchBusinessDocuments = () => {
                   value={businessId}
                   onValueChange={(val) => {
                     setBusinessId(val == "all" ? "" : val);
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageNumber: 0,
+                    }));
                   }}
                 >
                   <SelectTrigger>
@@ -551,6 +563,10 @@ const BranchBusinessDocuments = () => {
                   value={selectedStatus}
                   onValueChange={(val) => {
                     setSelectedStatus(val);
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageNumber: 0,
+                    }));
                   }}
                 >
                   <SelectTrigger>
@@ -576,10 +592,19 @@ const BranchBusinessDocuments = () => {
         {/* Documents List */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Documents ({documents?.length})
-            </CardTitle>
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Documents ({documents?.length})
+              </CardTitle>
+              <PaginationSummary
+                totalElements={pagination?.totalElements}
+                pageSize={pagination?.pageSize}
+                currentPage={pagination?.pageNumber}
+                itemCount={documents?.length}
+                itemLabel="documents"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -667,107 +692,16 @@ const BranchBusinessDocuments = () => {
                 <p>No documents found matching your filters.</p>
               </div>
             )}
-            {documents?.length > 0 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
-                      }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        isActive={pagination.pageNumber === index}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-
-            {/* {pagination.totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
-                      }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        isActive={pagination.pageNumber === index}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )} */}
+            <PaginationControl
+              currentPage={pagination?.pageNumber}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) =>
+                setPagination((prev) => ({
+                  ...prev,
+                  pageNumber: page,
+                }))
+              }
+            />
           </CardContent>
         </Card>
       </div>

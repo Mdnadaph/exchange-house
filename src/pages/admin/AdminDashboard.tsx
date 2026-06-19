@@ -45,6 +45,8 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
 import { useLanguage } from "@/contexts/LanguageContext";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -59,7 +61,7 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalElements, setTotalElements] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [recentActivities, setRecentActivities] = useState([]);
   const { t, isRTL } = useLanguage();
   /* =========================
@@ -293,6 +295,15 @@ const AdminDashboard = () => {
               <FileText className="h-5 w-5" />
               Exchange Admins
             </CardTitle>
+            <div className="flex justify-end my-1">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                itemCount={paginatedAdmins?.length}
+                itemLabel="exchange admin"
+              />
+            </div>
           </CardHeader>
 
           <CardContent>
@@ -348,21 +359,6 @@ const AdminDashboard = () => {
                           {status.label}
                         </Badge>
                       </TableCell>
-
-                      {/* <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell> */}
                     </TableRow>
                   );
                 })}
@@ -411,7 +407,7 @@ const AdminDashboard = () => {
                 </PaginationContent>
               </Pagination>
             )} */}
-            {!loadingAdmins && (
+            {/* {!loadingAdmins && (
               <Pagination className="mt-4">
                 <PaginationContent>
                   <PaginationItem>
@@ -452,7 +448,13 @@ const AdminDashboard = () => {
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
-            )}
+            )} */}
+            <PaginationControl
+              className="nt-4"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </CardContent>
         </Card>
 
@@ -486,7 +488,7 @@ const AdminDashboard = () => {
                     ))}
                   </div>
                 ) : recentActivities?.length > 0 ? (
-                  <div>
+                  <div className="space-y-1">
                     {recentActivities.map((a, i) => (
                       <div
                         key={i}

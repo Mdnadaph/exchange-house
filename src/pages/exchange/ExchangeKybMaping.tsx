@@ -422,56 +422,122 @@ const ExchangeKybMapping = () => {
   // };
 
   // ── Fetch: Dropdowns ─────────────────────────────────────────────────────────
-  const fetchTypeData = async () => {
-    if (!token) return;
-    setLoadingDropdowns(true);
+
+  const fetchBusinessType = async () => {
     try {
-      const [btRes, kybRes] = await Promise.all([
-        axios.get(
-          `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${businessTypePagination?.currentPage}&pageSize=${businessTypePagination?.pageSize}`,
-          {
-            headers: getHeaders(),
-          },
-        ),
-        axios.get(
-          `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${KYBTypePagination?.currentPage}&pageSize=${KYBTypePagination?.pageSize}`,
-          {
-            headers: getHeaders(),
-          },
-        ),
-      ]);
-      setBusinessTypes(btRes.data?.data ?? []);
-      console.log("btPage", btRes?.data?.totalPages);
-      setBusinessTypePagination({
-        pageSize: btRes?.data?.pageSize || 10,
-        totalPages: btRes?.data?.totalPages ?? 0,
-        currentPage: btRes?.data?.currentPage || 0,
-        totalElements: btRes?.data?.totalElements || 0,
-      });
-      setKybTypes(kybRes.data?.data ?? []);
-      setKYBTypePagination({
-        pageSize: kybRes?.data?.pageSize || 10,
-        totalPages: kybRes?.data?.totalPages ?? 0,
-        currentPage: kybRes?.data?.currentPage || 0,
-        totalElements: kybRes?.data?.totalElements || 0,
-      });
-    } catch (err: any) {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${businessTypePagination?.currentPage}&pageSize=${businessTypePagination?.pageSize}`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        setBusinessTypes(res?.data?.data ?? []);
+        setBusinessTypePagination({
+          pageSize: res?.data?.pageSize || 10,
+          totalPages: res?.data?.totalPages ?? 0,
+          currentPage: res?.data?.currentPage || 0,
+          totalElements: res?.data?.totalElements || 0,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message ?? "Failed to load .",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
       toast({
         title: "Error",
-        description:
-          err?.response?.data?.message ?? "Failed to load dropdown data.",
+        description: err?.response?.data?.message ?? "Failed to load .",
         variant: "destructive",
       });
-    } finally {
-      setLoadingDropdowns(false);
     }
   };
+
+  const fetchKYBTypes = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${KYBTypePagination?.currentPage}&pageSize=${KYBTypePagination?.pageSize}`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        setKybTypes(res?.data?.data ?? []);
+        setKYBTypePagination({
+          pageSize: res?.data?.pageSize || 10,
+          totalPages: res?.data?.totalPages ?? 0,
+          currentPage: res?.data?.currentPage || 0,
+          totalElements: res?.data?.totalElements || 0,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message ?? "Failed to load .",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message ?? "Failed to load .",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // const fetchTypeData = async () => {
+  //   if (!token) return;
+  //   setLoadingDropdowns(true);
+  //   try {
+  //     const [btRes, kybRes] = await Promise.all([
+  //       axios.get(
+  //         `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${businessTypePagination?.currentPage}&pageSize=${businessTypePagination?.pageSize}`,
+  //         {
+  //           headers: getHeaders(),
+  //         },
+  //       ),
+  //       axios.get(
+  //         `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${KYBTypePagination?.currentPage}&pageSize=${KYBTypePagination?.pageSize}`,
+  //         {
+  //           headers: getHeaders(),
+  //         },
+  //       ),
+  //     ]);
+  //     setBusinessTypes(btRes.data?.data ?? []);
+  //     console.log("btPage", btRes?.data?.totalPages);
+  //     setBusinessTypePagination({
+  //       pageSize: btRes?.data?.pageSize || 10,
+  //       totalPages: btRes?.data?.totalPages ?? 0,
+  //       currentPage: btRes?.data?.currentPage || 0,
+  //       totalElements: btRes?.data?.totalElements || 0,
+  //     });
+  //     setKybTypes(kybRes.data?.data ?? []);
+  //     setKYBTypePagination({
+  //       pageSize: kybRes?.data?.pageSize || 10,
+  //       totalPages: kybRes?.data?.totalPages ?? 0,
+  //       currentPage: kybRes?.data?.currentPage || 0,
+  //       totalElements: kybRes?.data?.totalElements || 0,
+  //     });
+  //   } catch (err: any) {
+  //     toast({
+  //       title: "Error",
+  //       description:
+  //         err?.response?.data?.message ?? "Failed to load dropdown data.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoadingDropdowns(false);
+  //   }
+  // };
 
   // ── Effects ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (token) {
       fetchMappings(0, "");
-      fetchTypeData();
+      fetchBusinessType();
+      fetchKYBTypes();
     }
   }, [
     token,
@@ -537,7 +603,7 @@ const ExchangeKybMapping = () => {
       });
       setBtForm({ code: "", name: "", active: true });
       setShowCreateBT(false);
-      fetchTypeData();
+      fetchBusinessType();
     } catch (err: any) {
       toast({
         title: "Error",
@@ -595,7 +661,7 @@ const ExchangeKybMapping = () => {
         setBtForm({ name: "", code: "", active: true });
         setEditableBusinessTypeId(null);
         setShowCreateBT(false);
-        fetchTypeData();
+        fetchBusinessType();
       } else {
         toast({
           title: "Error",
@@ -652,7 +718,7 @@ const ExchangeKybMapping = () => {
           active: true,
         });
         setShowCreateKYB(false);
-        fetchTypeData();
+        fetchKYBTypes();
       } else {
         toast({
           title: "Error",
@@ -701,7 +767,7 @@ const ExchangeKybMapping = () => {
       });
       setKybForm({ code: "", name: "", active: true });
       setShowCreateKYB(false);
-      fetchTypeData();
+      fetchKYBTypes();
     } catch (err: any) {
       toast({
         title: "Error",
@@ -825,18 +891,90 @@ const ExchangeKybMapping = () => {
     fetchKybTypeDropDown();
   }, [showCreateMapping]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  const handleBusinessTypePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < businessTypePagination.totalPages) {
-      setBusinessTypePagination((prev) => ({ ...prev, currentPage: newPage }));
+  const handleConfirmDeleteBusinessType = async () => {
+    setBtLoading(true);
+    try {
+      const res = await axios.delete(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types/${editableBusinessTypeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            res?.data?.message || "Update Business Type Successfully",
+        });
+        setBtForm({ name: "", code: "", active: true });
+        setEditableBusinessTypeId(null);
+        setShowDeleteBusinessTypeConfirmation(false);
+        setBusinessTypeName("");
+        fetchBusinessType();
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating Business type",
+        variant: "destructive",
+      });
+    } finally {
+      setBtLoading(false);
     }
   };
 
-  const handleKYBTypePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < businessTypePagination.totalPages) {
-      setBusinessTypePagination((prev) => ({ ...prev, currentPage: newPage }));
+  const handleConfirmDeleteKYBType = async () => {
+    setKybLoading(true);
+    try {
+      const res = await axios.delete(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types/${editableKYBTypesId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setEditableKYBTypesId(null);
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Update KYB Type Successfully",
+        });
+        setKybTypeName("");
+        setShowDeleteKYBTypeConfirmation(false);
+        fetchKYBTypes();
+      } else {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message ||
+            "Something went wrong while updating KYB Types",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating KYB Type",
+        variant: "destructive",
+      });
+    } finally {
+      setKybLoading(false);
     }
   };
+
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -1185,19 +1323,21 @@ const ExchangeKybMapping = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button> */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => {
-                                setShowDeleteBusinessTypeConfirmation(true);
-                                setEditableBusinessTypeId(m?.id);
-                                setBusinessTypeName(m?.name);
-                              }}
-                              title="Delete BusinessType"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <PermissionGate permission="BTN_DELETE_BUSINESS_TYPE">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  setShowDeleteBusinessTypeConfirmation(true);
+                                  setEditableBusinessTypeId(m?.id);
+                                  setBusinessTypeName(m?.name);
+                                }}
+                                title="Delete BusinessType"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
                           </td>
                         </tr>
                       ))}
@@ -1266,20 +1406,21 @@ const ExchangeKybMapping = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button> */}
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => {
-                                setEditableKYBTypesId(m?.id);
-                                setShowDeleteKYBTypeConfirmation(true);
-                                setKybTypeName(m?.name);
-                              }}
-                              title="Delete KYB Type"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <PermissionGate permission="BTN_DELETE_KYB_TYPE">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  setEditableKYBTypesId(m?.id);
+                                  setShowDeleteKYBTypeConfirmation(true);
+                                  setKybTypeName(m?.name);
+                                }}
+                                title="Delete KYB Type"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
                           </div>
                         </tr>
                       ))}
@@ -1310,9 +1451,10 @@ const ExchangeKybMapping = () => {
 
       {/* Confirm Delete business Type modal*/}
       <ConfirmationDialog
+        isConfirming={btLoading}
         open={showDeleteBusinessTypeConfirmation}
         onOpenChange={setShowDeleteBusinessTypeConfirmation}
-        onConfirm={() => {}}
+        onConfirm={() => handleConfirmDeleteBusinessType()}
         title="Delete Business Type"
         description={`Are you sure you want to delete "${businessTypeName}"? This action cannot be undone.`}
         confirmText="Delete"
@@ -1320,9 +1462,10 @@ const ExchangeKybMapping = () => {
       />
 
       <ConfirmationDialog
+        isConfirming={kybLoading}
         open={showDeleteKYBTypeConfirmation}
         onOpenChange={setShowDeleteKYBTypeConfirmation}
-        onConfirm={() => {}}
+        onConfirm={() => handleConfirmDeleteKYBType()}
         title="Delete KYB Type"
         description={`Are you sure you want to delete "${kybTypeName}"? This action cannot be undone.`}
         confirmText="Delete"
@@ -1345,11 +1488,7 @@ const ExchangeKybMapping = () => {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editableBusinessTypeId
-                ? "Update Business Type"
-                : "Create Business Type"}
-            </DialogTitle>
+            <DialogTitle>Create Business Type</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -1398,19 +1537,11 @@ const ExchangeKybMapping = () => {
             </Button>
             <Button
               onClick={() => {
-                editableBusinessTypeId
-                  ? handleEditBusinessType()
-                  : handleCreateBT();
+                handleCreateBT();
               }}
               disabled={btLoading}
             >
-              {btLoading
-                ? editableBusinessTypeId
-                  ? "Updating"
-                  : "Creating..."
-                : editableBusinessTypeId
-                  ? "Upate"
-                  : "Create"}
+              {btLoading ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1432,9 +1563,7 @@ const ExchangeKybMapping = () => {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editableKYBTypesId ? "Update KYB Type" : "Create KYB Type"}
-            </DialogTitle>
+            <DialogTitle>Create KYB Type</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -1485,19 +1614,8 @@ const ExchangeKybMapping = () => {
             >
               Cancel
             </Button>
-            <Button
-              onClick={() =>
-                editableKYBTypesId ? handleEditKYBType() : handleCreateKYB()
-              }
-              disabled={kybLoading}
-            >
-              {kybLoading
-                ? editableKYBTypesId
-                  ? "Updating..."
-                  : "Creating…"
-                : editableKYBTypesId
-                  ? "Update"
-                  : "Create"}
+            <Button onClick={() => handleCreateKYB()} disabled={kybLoading}>
+              {kybLoading ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>

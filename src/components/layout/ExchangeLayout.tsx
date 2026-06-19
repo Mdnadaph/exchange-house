@@ -197,7 +197,7 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
           name: "Member",
           href: "/exchange/member",
           icon: Users,
-          code: "NAV_STAFF_MANAGEMENT",
+          code: "NAV_MEMBERS",
         },
         // {
         //   name: "Exchange Members",

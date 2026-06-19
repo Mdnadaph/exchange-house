@@ -28,6 +28,8 @@ import { formateDateTime } from "@/utils/formateDateTime";
 import BranchDealRequestForm from "@/components/deals/BranchDealRequestForm";
 import DealCounterResponseForm from "@/components/deals/DealCounterResponseForm";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 type NegotiationHistoryItem = {
   id: number;
   actionType: string;
@@ -62,11 +64,14 @@ const BranchDealReview = () => {
   const token = cookies?.token;
   const currencyCode = cookies?.currencyCode;
   const [page, setPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
   const [searchValue, setSearchValue] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const pageSize = 10;
 
   // Debounce search input — API called only after 500ms pause
   const debouncedSearch = useDebounce(searchValue, 500);
@@ -98,6 +103,10 @@ const BranchDealReview = () => {
       }
 
       setRateDealsData(json.data);
+      console.log("rateDeals", json?.data);
+      setTotalElements(json?.data?.rateDeals?.totalElements || 0);
+      setTotalPages(json?.data?.rateDeals?.totalPages || 0);
+      setPage(json?.data?.rateDeals?.pageable?.pageNumber || 0);
     } catch (error: any) {
       const msg = error.message || "Failed to load rate deals";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -184,7 +193,6 @@ const BranchDealReview = () => {
 
   const stats = rateDealsData?.branchStats || {};
   const content = rateDealsData?.rateDeals?.content || [];
-  const totalElements = rateDealsData?.rateDeals?.totalElements || 0;
   const hasMultipleCounterProposals = (
     negotiationHistory?: NegotiationHistoryItem[],
   ): boolean => {
@@ -419,7 +427,17 @@ const BranchDealReview = () => {
               </div>
             </div>
           ) : content?.length > 0 ? (
-            <div>
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <PaginationSummary
+                  totalElements={totalElements}
+                  pageSize={pageSize}
+                  currentPage={page}
+                  itemCount={content?.length}
+                  itemLabel="rate deals"
+                />
+              </div>
+
               {content?.map((deal: any) => (
                 <Card key={deal.id} className="shadow-card">
                   <CardContent className="p-6">
@@ -630,56 +648,12 @@ const BranchDealReview = () => {
               No Rate Deals Found.
             </p>
           )}
-
-          {/* {totalElements > 0 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {content.length} of {totalElements} deals
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 10 + content.length >= totalElements}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )} */}
-
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t">
-            <p className="text-sm text-muted-foreground">
-              Showing {content.length} of {totalElements} deals
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page * 10 + content.length >= totalElements}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <PaginationControl
+            className="mt-6"
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(page) => setPage(page)}
+          />
 
           {content.length === 0 && !loading && (
             <div className="text-center py-16 text-muted-foreground">

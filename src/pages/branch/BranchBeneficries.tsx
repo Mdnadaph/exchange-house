@@ -50,6 +50,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -351,8 +353,9 @@ export default function BranchBeneficries() {
         averageTransaction: item.avgAmount ? String(item.avgAmount) : "0",
       }));
       setBeneficiaries(mappedData);
-      setBeneficiariesTotalPages(json.data.pagination.totalPages);
-      setBeneficiariesTotalItems(json.data.pagination.totalItems);
+      setBeneficiariesTotalPages(json.data.pagination.totalPages || 0);
+      setBeneficiariesTotalItems(json.data.pagination.totalItems || 0);
+      setBeneficiariesPage(json?.data?.pagination?.page || 0);
     } catch (err: any) {
       setError(err.message || "Failed to fetch beneficiaries");
       toast({
@@ -425,8 +428,9 @@ export default function BranchBeneficries() {
       }));
 
       setBeneficiaryGroups(mappedGroups);
-      setGroupsTotalPages(json.data.pagination.totalPages);
-      setGroupsTotalItems(json.data.pagination.totalItems);
+      setGroupsTotalPages(json.data.pagination.totalPages || 0);
+      setGroupsTotalItems(json.data.pagination.totalItems || 0);
+      setGroupsPage(json?.data.pagination?.page || 0);
     } catch (err: any) {
       toast({
         title: "Error",
@@ -1127,6 +1131,15 @@ export default function BranchBeneficries() {
                       />
                     </PermissionGate>
                   </div>
+                  <div className="flex justify-end mt-2">
+                    <PaginationSummary
+                      totalElements={groupsTotalItems}
+                      pageSize={groupsSize}
+                      currentPage={groupsPage}
+                      itemCount={groupsWithBeneficiaryData.length}
+                      itemLabel="group beneficiaries"
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {groupBeneficiaryLoading ? (
@@ -1213,30 +1226,12 @@ export default function BranchBeneficries() {
                     </div>
                   )}
                   {/* Pagination for groups */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {beneficiaryGroups?.length} of {groupsTotalItems}{" "}
-                      groups
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage === 0}
-                        onClick={() => setGroupsPage(groupsPage - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage >= groupsTotalPages - 1}
-                        onClick={() => setGroupsPage(groupsPage + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+
+                  <PaginationControl
+                    currentPage={groupsPage}
+                    totalPages={groupsTotalPages}
+                    onPageChange={(page) => setGroupsPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1348,7 +1343,16 @@ export default function BranchBeneficries() {
               {/* Beneficiaries List */}
               <Card className="shadow-card">
                 <CardHeader>
-                  <CardTitle>Registered Beneficiaries</CardTitle>
+                  <div className="flex gap-2 justify-between items-center flex-wrap">
+                    <CardTitle>Registered Beneficiaries</CardTitle>
+                    <PaginationSummary
+                      totalElements={beneficiariesTotalItems}
+                      pageSize={beneficiariesSize}
+                      currentPage={beneficiariesPage}
+                      itemCount={filteredBeneficiaries?.length}
+                      itemLabel="Beneficiaries"
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -1696,36 +1700,12 @@ export default function BranchBeneficries() {
                     </div>
                   )}
                   {/* Pagination */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {filteredBeneficiaries.length} of{" "}
-                      {beneficiariesTotalItems} beneficiaries
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={beneficiariesPage === 0}
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage - 1)
-                        }
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={
-                          beneficiariesPage >= beneficiariesTotalPages - 1
-                        }
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage + 1)
-                        }
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginationControl
+                    className="mt-6"
+                    currentPage={beneficiariesPage}
+                    totalPages={beneficiariesTotalPages}
+                    onPageChange={(page) => setBeneficiariesPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

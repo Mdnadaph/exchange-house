@@ -38,6 +38,8 @@ import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import BranchSingleTransaction from "@/components/transactions/BranchSingleTransaction";
 import BranchBulkTransactionForm from "@/components/transactions/BranchBulkTransactionForm";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface TransactionDocument {
   id: number;
@@ -204,6 +206,8 @@ const BranchTransactions = () => {
     "currencyCode",
   ]);
   const [page, setPage] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const token = cookies.token;
   const fullname = cookies.fullName;
@@ -215,7 +219,7 @@ const BranchTransactions = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
-
+  const pageSize = 10;
   const clearFilterData = () => {
     setSearchTerm("");
     setFromDate("");
@@ -262,7 +266,9 @@ const BranchTransactions = () => {
 
         // Save pagination total
         setTotalTransactionData(data?.data?.pagination?.totalItems);
-
+        setTotalElements(data?.data?.pagination?.totalItems || 0);
+        setTotalPages(data?.data?.pagination?.totalPages || 0);
+        setPage(data?.data?.pagination?.page || 0);
         // Transform transactions (unchanged)
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => {
@@ -743,7 +749,16 @@ const BranchTransactions = () => {
         {/* Transactions List – completely unchanged */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <div className="flex justify-between items-center gap-2 flex-wrap">
+              <CardTitle>Transaction History</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="transaction"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -1221,58 +1236,12 @@ const BranchTransactions = () => {
                     </Card>
                   );
                 })}
-
-                {/* {totalTransactionData > 10 && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionData}{" "}
-                      beneficiaries
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 10 >= totalTransactionData}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )} */}
-
-                <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {transactions?.length} of {totalTransactionData}{" "}
-                    beneficiaries
-                  </p>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 0}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={(page + 1) * 10 >= totalTransactionData}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setPage(page)}
+                />
               </div>
             )}
           </CardContent>

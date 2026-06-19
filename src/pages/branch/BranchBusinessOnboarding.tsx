@@ -28,6 +28,8 @@ import { useEffect, useState } from "react";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const BranchBusinessOnboarding = () => {
   const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
@@ -49,7 +51,7 @@ const BranchBusinessOnboarding = () => {
   const [pagination, setPagination] = useState({
     pageNumber: 0,
     pageSize: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalElements: 0,
   });
   const [fromDate, setFromDate] = useState("");
@@ -102,7 +104,7 @@ const BranchBusinessOnboarding = () => {
       setPagination({
         pageNumber: apiData?.businesses?.pagination?.page || 0,
         pageSize: apiData?.businesses?.pagination?.size || 10,
-        totalPages: apiData?.businesses?.pagination?.totalPages || 1,
+        totalPages: apiData?.businesses?.pagination?.totalPages || 0,
         totalElements: apiData?.businesses?.pagination?.totalItems || 0,
       });
 
@@ -193,12 +195,6 @@ const BranchBusinessOnboarding = () => {
   //     <Badge variant="secondary">Pending</Badge>
   //   );
   // };
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < pagination.totalPages) {
-      setPagination((prev) => ({ ...prev, pageNumber: newPage }));
-    }
-  };
 
   const thisMonthChange = stats.thisMonth - (stats.lastMonth || 0);
   const thisMonthChangeText = `${
@@ -352,6 +348,15 @@ const BranchBusinessOnboarding = () => {
               <Users className="h-5 w-5 text-primary" />
               Recently Onboarded by This Branch
             </CardTitle>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={pagination?.totalElements}
+                pageSize={pagination?.pageSize}
+                currentPage={pagination?.pageNumber}
+                itemCount={businesses?.length}
+                itemLabel="onboard business"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -457,103 +462,16 @@ const BranchBusinessOnboarding = () => {
               )}
             </div>
 
-            {/* {pagination.totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
-                      }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                        isActive={pagination.pageNumber === index}
-                        className="cursor-pointer"
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )} */}
-
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(pagination.pageNumber - 1);
-                    }}
-                    className={
-                      pagination.pageNumber === 0
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-                {[...Array(pagination.totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(index);
-                      }}
-                      isActive={pagination.pageNumber === index}
-                      className="cursor-pointer"
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(pagination.pageNumber + 1);
-                    }}
-                    className={
-                      pagination.pageNumber === pagination.totalPages - 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PaginationControl
+              currentPage={pagination?.pageNumber}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) =>
+                setPagination((prev) => ({
+                  ...prev,
+                  pageNumber: page,
+                }))
+              }
+            />
           </CardContent>
         </Card>
       </div>

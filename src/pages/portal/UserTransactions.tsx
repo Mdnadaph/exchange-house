@@ -41,6 +41,9 @@ import ComplianceStatus from "@/components/transactions/ComplianceStatus";
 import ProofOfPaymentUploadInBusinessAdmin from "@/components/transactions/ProofOfPaymentUploadInBusinessAdmin";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
+import { Pagination } from "@/components/ui/pagination";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -100,7 +103,7 @@ interface ApiResponse {
       amountPeriod: string | null;
     };
     transactions: ApiTransaction[];
-    pagination: { totalItems: number };
+    pagination: { totalItems: number; totalPages: number; page: number };
   };
 }
 
@@ -232,6 +235,9 @@ const UserTransactions = () => {
   ]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [page, setPage] = useState<number>(0);
+  const pageSize = 10;
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [expandedDealTxId, setExpandedDealTxId] = useState<string | null>(null);
   //document upload state
@@ -273,6 +279,9 @@ const UserTransactions = () => {
       const response = await axios.get<ApiResponse>(url, config);
       const data = response.data;
       setTotalTransactionData(data?.data?.pagination?.totalItems);
+      setTotalElements(data?.data?.pagination?.totalItems || 0);
+      setTotalPages(data?.data?.pagination?.totalPages || 0);
+      setPage(data?.data?.pagination?.page);
       if (data?.data?.dashboard) {
         setDashboardData(data?.data?.dashboard);
       }
@@ -375,7 +384,6 @@ const UserTransactions = () => {
               rateDeal: apiTx.rateDeal,
             };
           });
-
         setTransactions(transformedTransactions);
       } else {
         throw new Error(data.message || "Failed to fetch transactions");
@@ -800,7 +808,16 @@ const UserTransactions = () => {
         {/* Transactions List */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle>Transaction History</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="transactions"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -1321,57 +1338,12 @@ const UserTransactions = () => {
                     </Card>
                   );
                 })}
-
-                {/* {totalTransactionData > 10 && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionData}{" "}
-                      transation
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 10 >= totalTransactionData}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )} */}
-                <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {transactions?.length} of {totalTransactionData}{" "}
-                    transation
-                  </p>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 0}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={(page + 1) * 10 >= totalTransactionData}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setPage(page)}
+                />
               </div>
             )}
           </CardContent>

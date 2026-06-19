@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import React, { useState } from "react";
 import ExchangeAdminUser from "./ExchangeAdminUser";
 import ExchangeStaffManagement from "./ExchangeStaffManagement";
+import { PermissionGate } from "@/contexts/PermissionGate";
 
 export default function ExchangeAdminMember() {
   const [activeTab, setActiveTab] = useState<"staffMember" | "exchangeMember">(
@@ -28,18 +29,22 @@ export default function ExchangeAdminMember() {
             }}
           >
             <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger
-                value="staffMember"
-                className="flex items-center gap-2"
-              >
-                Staff Memeber
-              </TabsTrigger>
-              <TabsTrigger
-                value="exchangeMember"
-                className="flex items-center gap-2"
-              >
-                Exchange Memeber
-              </TabsTrigger>
+              <PermissionGate permission="BTN_VIEW_STAFF">
+                <TabsTrigger
+                  value="staffMember"
+                  className="flex items-center gap-2"
+                >
+                  Staff Memeber
+                </TabsTrigger>
+              </PermissionGate>
+              <PermissionGate permission="BTN_VIEW_EXCHANGE_USER">
+                <TabsTrigger
+                  value="exchangeMember"
+                  className="flex items-center gap-2"
+                >
+                  Exchange Memeber
+                </TabsTrigger>
+              </PermissionGate>
             </TabsList>
             <TabsContent value="staffMember" className="mt-6">
               <ExchangeStaffManagement />
