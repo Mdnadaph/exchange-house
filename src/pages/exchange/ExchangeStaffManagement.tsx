@@ -2576,7 +2576,7 @@ const ExchangeStaffManagement = () => {
                     pageSize={pageSize}
                     currentPage={currentPage}
                     itemCount={branches?.length}
-                    itemLabel="staff member"
+                    itemLabel="Staff Member"
                   />
                 </div>
 

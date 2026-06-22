@@ -80,8 +80,9 @@ type ComplianceFormData = {
 
 const ExchangeComplianceConfig = () => {
   const { toast } = useToast();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
+  const sourceCurrencyCode = cookies?.currencyCode;
   const [rules, setRules] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [countryMap, setCountryMap] = useState<{ [key: string]: string }>({});
@@ -879,11 +880,11 @@ const ExchangeComplianceConfig = () => {
                 pageSize={pageSize}
                 currentPage={currentPage}
                 itemCount={rules?.length}
-                itemLabel="rules"
+                itemLabel="Compliance Rules"
               />
             </div>
             {rules?.length > 0 ? (
-              <div>
+              <div className="space-y-4">
                 {rules?.map((rule) => {
                   const categoryBadge = getCategoryBadge(rule.category);
                   const ruleName = rule.name || "Unnamed Rule";
@@ -1618,7 +1619,7 @@ const ExchangeComplianceConfig = () => {
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="large-transaction">
-                      Large Transaction Threshold (AED)
+                      {` Large Transaction Threshold (${sourceCurrencyCode})`}
                     </Label>
                     <Input
                       id="large-transaction"

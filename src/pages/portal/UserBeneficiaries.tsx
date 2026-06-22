@@ -2268,7 +2268,7 @@ const UserBeneficiaries = () => {
                       pageSize={groupsSize}
                       currentPage={groupsPage}
                       itemCount={groupsWithBeneficiaryData?.length}
-                      itemLabel="group beneficiaries"
+                      itemLabel="Group Beneficiaries"
                     />
                   </div>
                 </CardHeader>
@@ -2439,7 +2439,7 @@ const UserBeneficiaries = () => {
                       pageSize={beneficiariesSize}
                       currentPage={beneficiariesPage}
                       itemCount={filteredBeneficiaries?.length}
-                      itemLabel="beneficaries"
+                      itemLabel="Beneficaries"
                     />
                   </div>
                 </CardHeader>

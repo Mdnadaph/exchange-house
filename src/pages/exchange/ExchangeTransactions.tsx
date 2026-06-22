@@ -831,7 +831,7 @@ const ExchangeTransactions = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={transactions?.length}
-                itemLabel="transaction"
+                itemLabel="Transactions"
               />
             </div>
           </CardHeader>

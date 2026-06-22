@@ -206,6 +206,10 @@ export default function BranchBeneficries() {
   const [payOutConfigData, setPayOutConfigData] = useState(null);
   const [payOutId, setPayOutId] = useState<null | number>(null);
   const [page, setPage] = useState(0);
+  const [totalElementsOfPayoutConfig, setTotalElementsOfPayoutConfig] =
+    useState<number>(0);
+  const [totalPageOfPayoutConfig, setTotalPageOfPayoutConfig] =
+    useState<number>(0);
   const [open, setOpen] = useState(false);
   const [beneficiaryId, setBeneficiaryId] = useState<null | number>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -384,6 +388,10 @@ export default function BranchBeneficries() {
         throw new Error("Unexpected response format");
       }
       setPayOutConfigData(json);
+      console.log("payoutConfig", json);
+      setPage(json?.currentPage || 0);
+      setTotalElementsOfPayoutConfig(json?.totalElements || 0);
+      setTotalPageOfPayoutConfig(json?.totalPages || 0);
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -689,7 +697,7 @@ export default function BranchBeneficries() {
       {view === "list" && (
         <div className="space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 Beneficiaries
@@ -698,7 +706,7 @@ export default function BranchBeneficries() {
                 Manage your payment recipients, groups, and verification status
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_GROUP">
                 <BranchBeneficiaryGroupForm
                   onGroupCreated={handleGroupCreated}
@@ -727,6 +735,15 @@ export default function BranchBeneficries() {
                   <Globe className="h-5 w-5 text-primary" />
                   Available Payout Destinations
                 </CardTitle>
+                <div className="flex justify-end">
+                  <PaginationSummary
+                    totalElements={totalElementsOfPayoutConfig}
+                    currentPage={page}
+                    pageSize={10}
+                    itemCount={payOutConfigData?.data?.countries?.length}
+                    itemLabel="Country"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
@@ -798,38 +815,12 @@ export default function BranchBeneficries() {
                       No Data Found
                     </p>
                   )}
-
                   {/* PAGINATION */}
-                  {totalPayOutConfigDataList > 10 && (
-                    <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                      <p className="text-sm text-muted-foreground">
-                        Showing {payOutConfigData?.data?.countries?.length} of{" "}
-                        {totalPayOutConfigDataList} beneficiaries
-                      </p>
-
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === 0}
-                          onClick={() => setPage((prev) => prev - 1)}
-                        >
-                          Previous
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={
-                            (page + 1) * 10 >= totalPayOutConfigDataList
-                          }
-                          onClick={() => setPage((prev) => prev + 1)}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <PaginationControl
+                    currentPage={page}
+                    totalPages={totalPageOfPayoutConfig}
+                    onPageChange={(page) => setPage(page)}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -852,7 +843,6 @@ export default function BranchBeneficries() {
                           className="flex  gap-3 p-4 rounded-lg border bg-accent-muted/20"
                         >
                           <Banknote className="h-8 w-8 text-primary" />
-
                           <div>
                             <p className="font-semibold text-foreground">
                               {key}
@@ -883,7 +873,7 @@ export default function BranchBeneficries() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
             <Card className="shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -1383,10 +1373,10 @@ export default function BranchBeneficries() {
                             className="border-l-4 border-l-primary hover:shadow-md transition-smooth"
                           >
                             <CardContent className="p-6">
-                              <div className="flex items-start justify-between">
+                              <div className="flex items-start justify-between flex-wrap gap-2">
                                 <div className="space-y-4 flex-1">
                                   {/* Beneficiary Header */}
-                                  <div className="flex items-center space-x-4">
+                                  <div className="flex items-center ap-4 flex-wrap">
                                     <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                                       {beneficiary.type === "business" ? (
                                         <Building className="h-6 w-6 text-muted-foreground" />
@@ -1395,7 +1385,7 @@ export default function BranchBeneficries() {
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-1">
+                                      <div className="flex items-center gap-3 mb-1 flex-wrap">
                                         <h3 className="font-semibold text-foreground">
                                           {beneficiary.name}
                                         </h3>
@@ -1437,7 +1427,7 @@ export default function BranchBeneficries() {
                                         <p className="text-xs text-muted-foreground">
                                           Email
                                         </p>
-                                        <p className="font-medium">
+                                        <p className="font-medium break-all">
                                           {beneficiary.email || "N/A"}
                                         </p>
                                       </div>

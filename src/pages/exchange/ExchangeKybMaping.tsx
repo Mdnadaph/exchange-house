@@ -1289,7 +1289,7 @@ const ExchangeKybMapping = () => {
                   pageSize={businessTypePagination?.pageSize}
                   currentPage={businessTypePagination?.currentPage}
                   itemCount={businessTypeList?.length || 0}
-                  itemLabel="business type"
+                  itemLabel="Business Type"
                 />
               </div>
             </CardHeader>

@@ -273,7 +273,7 @@ const UserGovernance = () => {
     <UserLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold">Governance Rules</h1>
             <p className="text-muted-foreground mt-2">
@@ -293,7 +293,7 @@ const UserGovernance = () => {
         </div>
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Rules</CardTitle>
@@ -350,7 +350,7 @@ const UserGovernance = () => {
         </div>
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <Label htmlFor="search">Search Governance</Label>
                 <div className="relative flex gap-2">
@@ -412,7 +412,7 @@ const UserGovernance = () => {
                 pageSize={pagination?.size}
                 currentPage={currentPage}
                 itemCount={rules?.length}
-                itemLabel="governance"
+                itemLabel="Governance"
               />
             </div>
           </CardHeader>
@@ -441,7 +441,7 @@ const UserGovernance = () => {
                   {rules?.map((rule) => (
                     <Card key={rule.id} className="border-l-4 border-l-primary">
                       <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                           <div className="space-y-2">
                             <div className="flex items-center gap-3">
                               <h3 className="text-lg font-semibold">

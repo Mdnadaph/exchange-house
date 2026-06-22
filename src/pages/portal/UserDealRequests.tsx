@@ -186,9 +186,9 @@ const UserDealRequests = () => {
             Rejected
           </Badge>
         );
-      case "expired":
+      case "EXPIRED":
         return (
-          <Badge variant="outline">
+          <Badge variant="destructive">
             <Clock className="h-3 w-3 mr-1" />
             Expired
           </Badge>
@@ -319,7 +319,7 @@ const UserDealRequests = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Exchange Rate Deals
@@ -410,10 +410,10 @@ const UserDealRequests = () => {
         </div>
 
         {/* Search and Filter */}
-        <Card className="shadow-card">
+        <Card className="shadow-card ">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-wrap">
-              <div className="flex-1 flex gap-3 items-center">
+            <div className="flex  gap-4 flex-wrap items-center">
+              <div className="flex-1 flex flex-col md:flex-row gap-3 md:items-center  ">
                 <div className="flex-1">
                   <Label htmlFor="search">Search Deals</Label>
                   {/* <div className="relative mt-1.5">
@@ -521,7 +521,7 @@ const UserDealRequests = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={rateDealsData?.rateDeals?.content?.length}
-                itemLabel="rate deal"
+                itemLabel="Rate Deal"
               />
             </div>
           </CardHeader>
@@ -544,9 +544,9 @@ const UserDealRequests = () => {
                   <CardContent className="p-6">
                     <div className="space-y-4">
                       {/* Deal Header */}
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between flex-wrap gap-2">
                         <div className="space-y-2">
-                          <div className="flex items-center gap-3">
+                          <div className="flex md:items-center gap-3 flex-wrap">
                             <h3 className="font-semibold text-lg">
                               {deal?.dealCode}
                             </h3>
@@ -570,7 +570,7 @@ const UserDealRequests = () => {
                       </div>
 
                       {/* Deal Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
                         <div className="space-y-1">
                           <span className="text-muted-foreground flex items-center gap-1">
                             <DollarSign className="h-3 w-3" />

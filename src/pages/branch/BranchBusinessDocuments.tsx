@@ -390,7 +390,7 @@ const BranchBusinessDocuments = () => {
         </Card> */}
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -463,7 +463,7 @@ const BranchBusinessDocuments = () => {
         {/* Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1">
                 <Label htmlFor="search">Search Documents</Label>
                 <div className="relative">
@@ -499,7 +499,7 @@ const BranchBusinessDocuments = () => {
                   ))}
                 </select>
               </div> */}
-              <div className="w-[250px]">
+              <div className="flex-1">
                 <label>Filter By Business</label>
                 <Select
                   value={businessId}
@@ -557,7 +557,7 @@ const BranchBusinessDocuments = () => {
                   <option value="rejected">Rejected</option>
                 </select>
               </div> */}
-              <div className="w-[250px]">
+              <div className="flex-1">
                 <label>Filter by Status</label>
                 <Select
                   value={selectedStatus}
@@ -602,7 +602,7 @@ const BranchBusinessDocuments = () => {
                 pageSize={pagination?.pageSize}
                 currentPage={pagination?.pageNumber}
                 itemCount={documents?.length}
-                itemLabel="documents"
+                itemLabel="Documents"
               />
             </div>
           </CardHeader>
@@ -624,11 +624,11 @@ const BranchBusinessDocuments = () => {
                     className="hover:shadow-md transition-smooth"
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex md:items-center gap-3 flex-1 flex-wrap ">
                           <FileText className="h-8 w-8 text-primary" />
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <h4 className="font-semibold text-foreground">
                                 {doc.name}
                               </h4>

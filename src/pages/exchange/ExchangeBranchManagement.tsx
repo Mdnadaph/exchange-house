@@ -823,7 +823,7 @@ const ExchangeBranchManagement = () => {
                   pageSize={pagination?.pageSize}
                   currentPage={pagination?.pageNumber}
                   itemCount={branches?.length}
-                  itemLabel="branch"
+                  itemLabel="Branchs"
                 />
               </div>
               {branches?.map((branch) => {

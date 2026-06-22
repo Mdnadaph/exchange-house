@@ -34,7 +34,7 @@ export default function ExchangeAdminMember() {
                   value="staffMember"
                   className="flex items-center gap-2"
                 >
-                  Staff Memeber
+                  Staff Member
                 </TabsTrigger>
               </PermissionGate>
               <PermissionGate permission="BTN_VIEW_EXCHANGE_USER">
@@ -42,7 +42,7 @@ export default function ExchangeAdminMember() {
                   value="exchangeMember"
                   className="flex items-center gap-2"
                 >
-                  Exchange Memeber
+                  Exchange Member
                 </TabsTrigger>
               </PermissionGate>
             </TabsList>

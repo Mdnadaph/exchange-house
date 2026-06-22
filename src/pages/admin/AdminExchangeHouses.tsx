@@ -1100,7 +1100,7 @@ const AdminExchangeHouses = () => {
                     pageSize={pageSize}
                     currentPage={currentPage}
                     itemCount={exchangeAdmins?.length}
-                    itemLabel="exchange admin"
+                    itemLabel="Exchange Admin"
                   />
                 </div>
                 {exchangeAdmins?.map((admin) => {

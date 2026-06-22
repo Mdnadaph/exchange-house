@@ -103,7 +103,6 @@ const BranchDealReview = () => {
       }
 
       setRateDealsData(json.data);
-      console.log("rateDeals", json?.data);
       setTotalElements(json?.data?.rateDeals?.totalElements || 0);
       setTotalPages(json?.data?.rateDeals?.totalPages || 0);
       setPage(json?.data?.rateDeals?.pageable?.pageNumber || 0);
@@ -434,7 +433,7 @@ const BranchDealReview = () => {
                   pageSize={pageSize}
                   currentPage={page}
                   itemCount={content?.length}
-                  itemLabel="rate deals"
+                  itemLabel="Rate Deals"
                 />
               </div>
 
@@ -442,7 +441,7 @@ const BranchDealReview = () => {
                 <Card key={deal.id} className="shadow-card">
                   <CardContent className="p-6">
                     <div className="space-y-4">
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-3 flex-wrap">
                             <Building2 className="h-4 w-4 text-primary" />

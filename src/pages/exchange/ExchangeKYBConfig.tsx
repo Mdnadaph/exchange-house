@@ -187,7 +187,7 @@ const ExchangeKYBConfig = () => {
                 <div className="text-sm text-muted-foreground">
                   Showing {Math.min(currentPage * pageSize + 1, totalElements)}{" "}
                   - {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
-                  {totalElements} rules
+                  {totalElements} KYB Rules
                 </div>
               )}
             </div>

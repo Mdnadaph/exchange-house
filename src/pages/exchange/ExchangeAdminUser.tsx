@@ -843,7 +843,7 @@ const ExchangeAdminUser = () => {
                     pageSize={pageSize}
                     currentPage={currentPage}
                     itemCount={users?.length}
-                    itemLabel="exchange member"
+                    itemLabel="Exchange Member"
                   />
                 </div>
                 <div className="space-y-2">

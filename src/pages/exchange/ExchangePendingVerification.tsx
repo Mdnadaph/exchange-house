@@ -757,7 +757,7 @@ const ExchangeTransactions = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={transactions?.length}
-                itemLabel="pending payment"
+                itemLabel="Pending Payment"
               />
             </div>
           </CardHeader>

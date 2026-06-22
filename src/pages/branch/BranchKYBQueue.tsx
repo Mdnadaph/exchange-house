@@ -1062,7 +1062,7 @@ const ExchangeKYBReview = () => {
           {/* Search and Filters */}
           <Card className="shadow-card">
             <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                   <Label htmlFor="search">Search Applications</Label>
                   <div className="relative">
@@ -1079,7 +1079,7 @@ const ExchangeKYBReview = () => {
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 items-end">
+                <div className="flex gap-2 items-end flex-wrap">
                   {/* <Button
                     type="button"
                     onClick={() => {
@@ -1173,7 +1173,7 @@ const ExchangeKYBReview = () => {
                   return (
                     <Card key={application.uuid} className="shadow-card">
                       <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                               <Building className="h-6 w-6 text-primary" />
@@ -1187,7 +1187,7 @@ const ExchangeKYBReview = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge
                               variant={status.variant}
                               className="flex items-center gap-1"
@@ -1228,7 +1228,9 @@ const ExchangeKYBReview = () => {
                               <MapPin className="h-3 w-3 mr-1" />
                               Location:
                             </div>
-                            <p className="font-medium">{application.address}</p>
+                            <p className="font-medium break-all">
+                              {application.address}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {application.phone}
                             </p>
@@ -1445,7 +1447,7 @@ const ExchangeKYBReview = () => {
                             ) && (
                               <div className="space-y-4">
                                 <Label>Review Actions</Label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid  grid-cols-1 sm:grid-cols-2 gap-3">
                                   <PermissionGate permission="BTN_BRANCH_APPROVE_OR_REJECT_KYB_DOCUMENT">
                                     <Button
                                       type="button"

@@ -768,7 +768,7 @@ const ExchangeAdminComplianceReview = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={transactions?.length}
-                itemLabel="compliance review"
+                itemLabel="Compliance Review"
               />
             </div>
           </CardHeader>

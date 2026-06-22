@@ -407,7 +407,7 @@ export default function ExchangePayoutMechanism() {
                   pageSize={pageSize}
                   currentPage={currentPage}
                   itemCount={allPayoutMechanism?.length}
-                  itemLabel="payout mechanism"
+                  itemLabel="Payout Mechanism"
                 />
               </div>
             </CardTitle>

@@ -625,7 +625,7 @@ const UserTransactions = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
             <p className="text-muted-foreground">
@@ -654,7 +654,7 @@ const UserTransactions = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -815,7 +815,7 @@ const UserTransactions = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={transactions?.length}
-                itemLabel="transactions"
+                itemLabel="Transactions"
               />
             </div>
           </CardHeader>
@@ -860,7 +860,7 @@ const UserTransactions = () => {
                       <CardContent className="p-6">
                         <div className="space-y-4">
                           {/* Transaction Header */}
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
                             <div className="space-y-2">
                               {transaction?.businessName && (
                                 <div className="flex items-center gap-3">
@@ -875,7 +875,7 @@ const UserTransactions = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction?.singleBeneficiary?.type ==
                                   "INDIVIDUAL"
@@ -1017,7 +1017,6 @@ const UserTransactions = () => {
                                     {transaction?.baseProcessingFee}
                                   </p>
                                 )}
-
                                 {transaction.feeResponsibility && (
                                   <p className="text-xs text-muted-foreground">
                                     Paid by: {transaction.feeResponsibility}
@@ -1134,8 +1133,8 @@ const UserTransactions = () => {
                           </div>
 
                           {/* Actions */}
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex space-x-2">
+                          <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
+                            <div className="flex gap-2 items-center flex-wrap">
                               {/* ── View Details → opens modal ── */}
                               <Button
                                 variant="outline"

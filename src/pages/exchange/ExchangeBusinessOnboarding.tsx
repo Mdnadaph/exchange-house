@@ -383,7 +383,7 @@ const ExchangeBusinessOnboarding = () => {
                 pageSize={pagination?.pageSize}
                 currentPage={pagination?.pageNumber}
                 itemCount={businesses?.length}
-                itemLabel="Onboard business"
+                itemLabel="Onboard Business"
               />
             </CardTitle>
           </CardHeader>

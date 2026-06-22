@@ -609,7 +609,7 @@ const ExchangeDiscount = () => {
                   pageSize={size}
                   currentPage={page}
                   itemCount={discounts?.length}
-                  itemLabel="discount"
+                  itemLabel="Discounts"
                 />
               </div>
               {discounts?.map((discount) => {

@@ -1262,7 +1262,7 @@ const ExchangeFeeManagement = () => {
                 pageSize={pagination?.pageSize}
                 currentPage={pagination?.pageNumber}
                 itemCount={activeRules?.length}
-                itemLabel="fee"
+                itemLabel="Fee"
               />
             </CardTitle>
           </CardHeader>

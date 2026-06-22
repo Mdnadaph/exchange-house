@@ -353,6 +353,7 @@ const ExchangeBusinessDocuments = () => {
               <div className="text-2xl font-bold">
                 {dashboard?.totalDocuments || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">{`From ${dashboard?.activeBusinesses || 0} businesses`}</p>
             </CardContent>
           </Card>
 
@@ -365,9 +366,11 @@ const ExchangeBusinessDocuments = () => {
               <div className="text-2xl font-bold text-green-600">
                 {dashboard.verifiedDocuments || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">
+                Approved documents
+              </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row justify-between pb-2">
               <CardTitle className="text-sm">Pending Review</CardTitle>
@@ -377,6 +380,9 @@ const ExchangeBusinessDocuments = () => {
               <div className="text-2xl font-bold text-yellow-600">
                 {dashboard.pendingDocuments || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">
+                Awaiting verification
+              </p>
             </CardContent>
           </Card>
 
@@ -389,6 +395,9 @@ const ExchangeBusinessDocuments = () => {
               <div className="text-2xl font-bold">
                 {dashboard.activeBusinesses || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">
+                Active businesses
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -498,7 +507,7 @@ const ExchangeBusinessDocuments = () => {
                 currentPage={currentPage}
                 pageSize={10}
                 itemCount={documents?.length || 0}
-                itemLabel="documents"
+                itemLabel="Documents"
                 totalElements={totalElements}
               />
             </div>

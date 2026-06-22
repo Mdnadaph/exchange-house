@@ -515,7 +515,7 @@ const ExchangeDealReview = () => {
                   pageSize={pageSize}
                   currentPage={page}
                   itemCount={dealsData?.length}
-                  itemLabel="rate deals"
+                  itemLabel="Rate Deals"
                 />
               </div>
               {dealsData?.map((deal: any) => {

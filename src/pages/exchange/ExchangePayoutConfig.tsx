@@ -1050,7 +1050,7 @@ const ExchangePayoutConfig = () => {
                 pageSize={payoutData?.pageSize || 10}
                 currentPage={page}
                 itemCount={payoutData?.countries?.length}
-                itemLabel="payout config"
+                itemLabel="Payout Config"
               />
             </CardTitle>
           </CardHeader>

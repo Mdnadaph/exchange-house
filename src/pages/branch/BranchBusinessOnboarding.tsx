@@ -205,7 +205,7 @@ const BranchBusinessOnboarding = () => {
     <BranchLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Business Onboarding
@@ -323,7 +323,6 @@ const BranchBusinessOnboarding = () => {
                     }}
                   />
                 </div>
-
                 <div className="flex flex-col gap-1 mt-2">
                   <Label htmlFor="toDate">To Date</Label>
                   <input
@@ -354,7 +353,7 @@ const BranchBusinessOnboarding = () => {
                 pageSize={pagination?.pageSize}
                 currentPage={pagination?.pageNumber}
                 itemCount={businesses?.length}
-                itemLabel="onboard business"
+                itemLabel="Onboard Business"
               />
             </div>
           </CardHeader>
@@ -389,7 +388,7 @@ const BranchBusinessOnboarding = () => {
                               {/* {getStatusBadge(business.status)} */}
                               {getKYBStatusBadge(business.status)}
                             </div>
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                               <div>
                                 <div>
                                   <span className="text-muted-foreground">

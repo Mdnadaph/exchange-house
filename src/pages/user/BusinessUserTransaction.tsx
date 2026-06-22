@@ -777,7 +777,7 @@ const BusinessUserTransaction = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={transactions?.length}
-                itemLabel="transaction"
+                itemLabel="Transaction"
               />
             </div>
           </CardHeader>

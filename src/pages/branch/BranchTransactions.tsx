@@ -544,7 +544,7 @@ const BranchTransactions = () => {
     <BranchLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Branch Transactions
@@ -559,7 +559,7 @@ const BranchTransactions = () => {
               Export Branch Data
             </Button>
           </div> */}
-          <div className="flex gap-5">
+          <div className="flex gap-5 flex-wrap">
             <PermissionGate permission="BTN_BRANCH_CREATE_BULK_TRANSACTION">
               <BranchBulkTransactionForm refetch={fetchTransactions} />
             </PermissionGate>
@@ -583,7 +583,7 @@ const BranchTransactions = () => {
         )}
 
         {/* Statistics Cards – now using API dashboard data */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -656,7 +656,7 @@ const BranchTransactions = () => {
         {/* Search and Filters – unchanged */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
               <div className="flex-1 flex flex-wrap gap-2 items-center">
                 <div className="flex-1">
                   <Label htmlFor="search">Search Transactions</Label>
@@ -703,7 +703,7 @@ const BranchTransactions = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2 mt-5">
+              <div className="flex gap-2 mt-5 flex-wrap">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -756,7 +756,7 @@ const BranchTransactions = () => {
                 pageSize={pageSize}
                 currentPage={page}
                 itemCount={transactions?.length}
-                itemLabel="transaction"
+                itemLabel="Transaction"
               />
             </div>
           </CardHeader>
@@ -805,7 +805,7 @@ const BranchTransactions = () => {
                     >
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
                             <div className="space-y-2">
                               {transaction.businessName && (
                                 <div className="flex items-center gap-3">
@@ -820,7 +820,7 @@ const BranchTransactions = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction?.singleBeneficiary?.type ==
                                   "INDIVIDUAL"
@@ -1078,8 +1078,8 @@ const BranchTransactions = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex space-x-2">
+                          <div className="flex items-center justify-between pt-2 ">
+                            <div className="flex gap-2 flex-wrap">
                               <PermissionGate permission="BTN_BRANCH_TRANSACTION_VIEW">
                                 <Button
                                   variant="outline"

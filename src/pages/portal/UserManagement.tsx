@@ -143,7 +143,7 @@ const UserManagement = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               User Management & Governance
@@ -160,7 +160,7 @@ const UserManagement = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg::grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -267,7 +267,7 @@ const UserManagement = () => {
                 pageSize={pagination?.size}
                 currentPage={currentPage}
                 itemCount={users?.length}
-                itemLabel="business user"
+                itemLabel="Business User"
               />
             </div>
           </CardHeader>
@@ -283,7 +283,7 @@ const UserManagement = () => {
                     className="hover:shadow-md transition-smooth"
                   >
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between flex-wrap gap-2">
                         <div className="space-y-4 flex-1">
                           {/* User Header */}
                           <div className="flex items-center space-x-4">
@@ -439,7 +439,7 @@ const UserManagement = () => {
             {/* Pagination */}
 
             <PaginationControl
-            className="mt-6"
+              className="mt-6"
               currentPage={currentPage}
               totalPages={pagination?.totalPages}
               onPageChange={(page) => setCurrentPage(page)}
