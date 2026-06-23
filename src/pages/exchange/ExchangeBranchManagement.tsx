@@ -999,7 +999,7 @@ const ExchangeBranchManagement = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate("/exchange/staff")}
+                            onClick={() => navigate("/exchange/member")}
                           >
                             <Users className="h-4 w-4 mr-1" />
                             Manage Staff
