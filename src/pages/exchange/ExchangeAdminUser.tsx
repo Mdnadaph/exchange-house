@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogOverlay,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import {
@@ -454,7 +455,7 @@ const ExchangeAdminUser = () => {
         {/* <h1 className="text-3xl font-bold">Exchange Admin User Lists</h1> */}
 
         {/* ---------- Permission Edit Modal (for existing users) ---------- */}
-        <Dialog
+        {/* <Dialog
           open={isPermissionModalOpen}
           onOpenChange={(open) => {
             if (!open) {
@@ -485,7 +486,6 @@ const ExchangeAdminUser = () => {
                   ) : (
                     permissionTree?.map((perm) => (
                       <div key={perm.id} className="space-y-2">
-                        {/* Parent */}
                         <div className="flex items-start space-x-3">
                           <input
                             type="checkbox"
@@ -503,8 +503,6 @@ const ExchangeAdminUser = () => {
                             {perm.name}
                           </Label>
                         </div>
-
-                        {/* Children */}
                         {perm.children && perm.children.length > 0 && (
                           <div className="ml-6 space-y-2">
                             {perm.children.map((child: any) => (
@@ -554,7 +552,6 @@ const ExchangeAdminUser = () => {
                   if (!selectedUserForPermissions) return;
                   let permissionIds = assignedPermissionIds.map(Number);
 
-                  // Always include dashboard
                   if (
                     dashboardPermissionId &&
                     !permissionIds.includes(Number(dashboardPermissionId))
@@ -591,6 +588,182 @@ const ExchangeAdminUser = () => {
                 }}
               >
                 Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog> */}
+        <Dialog
+          open={isPermissionModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsPermissionModalOpen(false);
+              setSelectedUserForPermissions(null);
+              setAssignedPermissionIds([]);
+              setAllPermissions([]);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-xl p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="text-xl font-bold">
+                Manage Permissions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {selectedUserForPermissions?.fullName}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 pt-4 pb-2">
+              {loadingPermissions ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Live count */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Permissions
+                    </span>
+                    <Badge variant="secondary" className="font-normal">
+                      {assignedPermissionIds.length} selected
+                    </Badge>
+                  </div>
+
+                  {/* Tree list */}
+                  <div className="max-h-96 overflow-y-auto rounded-lg border bg-muted/30 p-3">
+                    {permissionTree?.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-10 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          No permissions available
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {permissionTree?.map((perm) => (
+                          <div key={perm.id} className="flex flex-col">
+                            {/* Parent */}
+                            <div className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-muted/60 transition-colors">
+                              <input
+                                type="checkbox"
+                                id={`perm-${perm.id}`}
+                                checked={assignedPermissionIds.includes(
+                                  String(perm.id),
+                                )}
+                                onChange={() => handleToggle(perm)}
+                                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                              />
+                              <Label
+                                htmlFor={`perm-${perm.id}`}
+                                className="text-sm font-semibold cursor-pointer select-none"
+                              >
+                                {perm.name}
+                              </Label>
+                              {perm.children?.length > 0 && (
+                                <span className="text-[11px] text-muted-foreground ml-auto pr-1">
+                                  {perm.children.length}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Children */}
+                            {perm.children && perm.children.length > 0 && (
+                              <div className="ml-5 pl-2 border-l border-border/60 flex flex-col gap-0.5 mt-0.5">
+                                {perm.children.map((child: any) => (
+                                  <div
+                                    key={child.id}
+                                    className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-muted/60 transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      id={`perm-${child.id}`}
+                                      checked={assignedPermissionIds.includes(
+                                        String(child.id),
+                                      )}
+                                      onChange={() =>
+                                        handleToggle({ id: child.id })
+                                      }
+                                      className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                                    />
+                                    <Label
+                                      htmlFor={`perm-${child.id}`}
+                                      className="text-sm font-normal text-foreground/80 cursor-pointer select-none"
+                                    >
+                                      {child.name}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="px-6 py-4 mt-2 border-t bg-muted/20">
+              <Button
+                variant="outline"
+                onClick={() => setIsPermissionModalOpen(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="business"
+                disabled={loading}
+                onClick={async () => {
+                  setLoading(true);
+                  if (!selectedUserForPermissions) return;
+                  let permissionIds = assignedPermissionIds.map(Number);
+
+                  // Always include dashboard
+                  if (
+                    dashboardPermissionId &&
+                    !permissionIds.includes(Number(dashboardPermissionId))
+                  ) {
+                    permissionIds.push(Number(dashboardPermissionId));
+                  }
+                  try {
+                    const res = await axios.put(
+                      `${BASE_URL}/api/v1/exchange-users/${selectedUserForPermissions.uuid}/permissions`,
+                      { permissionIds },
+                      { headers: { Authorization: `Bearer ${token}` } },
+                    );
+
+                    toast({
+                      title: "Success",
+                      description: res?.data?.message || "Permissions updated",
+                    });
+                    fetchUsers(currentPage);
+                    setIsPermissionModalOpen(false);
+                    setSelectedUserForPermissions(null);
+                    setAssignedPermissionIds([]);
+                    setAllPermissions([]);
+                  } catch (error: any) {
+                    toast({
+                      title: "Error",
+                      description:
+                        error?.response?.data?.message ||
+                        "Failed to update permissions",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-current" />
+                    Saving...
+                  </span>
+                ) : (
+                  "Save changes"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -737,7 +910,7 @@ const ExchangeAdminUser = () => {
         </Dialog>
 
         {/* ---------- Permission Selection Modal (inner dialog) ---------- */}
-        <Dialog
+        {/* <Dialog
           open={isPermissionSelectionModalOpen}
           onOpenChange={(open) => {
             if (!open) {
@@ -812,6 +985,92 @@ const ExchangeAdminUser = () => {
                 }}
               >
                 Save Selection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog> */}
+        <Dialog
+          open={isPermissionSelectionModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsPermissionSelectionModalOpen(false);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-2xl bg-white p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="text-xl font-bold">
+                Select Permissions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Choose which menus this user can access.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 pt-4 pb-2">
+              {loadingPermissions ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const allIds = getAllPermissionIds(permissionTree);
+                          setRawSelectedIds(allIds);
+                        }}
+                      >
+                        Select all
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRawSelectedIds([])}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                    <Badge variant="secondary" className="font-normal">
+                      {rawSelectedIds.length} selected
+                    </Badge>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto rounded-lg border bg-muted/30 p-3">
+                    <div className="space-y-2">
+                      {permissionTree.map((node) =>
+                        renderPermissionNode(
+                          node,
+                          0,
+                          effectiveSelectedIds,
+                          handleToggleNode,
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="px-6 py-4 mt-2 border-t bg-muted/20">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsPermissionSelectionModalOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="business"
+                onClick={() => {
+                  setNewUserPermissionIds(effectiveSelectedIds as string[]);
+                  setIsPermissionSelectionModalOpen(false);
+                }}
+              >
+                Save selection
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -945,52 +1204,6 @@ const ExchangeAdminUser = () => {
         )}
       </div>
       {/* Pagination */}
-      {/* {!loading && users.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-end mt-6">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-              disabled={currentPage === 0}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i;
-              } else if (currentPage < 3) {
-                pageNum = i;
-              } else if (currentPage > totalPages - 4) {
-                pageNum = totalPages - 5 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum + 1}
-                </Button>
-              );
-            })}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-              }
-              disabled={currentPage === totalPages - 1}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )} */}
       <PaginationControl
         className="mt-6"
         currentPage={currentPage}

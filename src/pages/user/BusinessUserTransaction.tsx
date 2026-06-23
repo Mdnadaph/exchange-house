@@ -617,7 +617,7 @@ const BusinessUserTransaction = () => {
         )}
 
         {/* Statistics Cards – now using API dashboard data */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -826,7 +826,7 @@ const BusinessUserTransaction = () => {
                       >
                         <CardContent className="p-6">
                           <div className="space-y-4">
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between flex-wrap gap-2">
                               <div className="space-y-2">
                                 {transaction?.businessName && (
                                   <div className="flex items-center gap-3">
@@ -841,7 +841,7 @@ const BusinessUserTransaction = () => {
                                     )}
                                   </div>
                                 )}
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
                                   <h3 className="font-semibold text-foreground">
                                     {transaction?.singleBeneficiary?.type ==
                                     "INDIVIDUAL"

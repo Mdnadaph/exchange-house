@@ -1199,6 +1199,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import {
@@ -1684,6 +1685,108 @@ const ExchangeStaffManagement = () => {
     });
     return ids;
   };
+
+  // Collects this node's id + every descendant id
+  const getNodeAndDescendantIds = (node: any): string[] => {
+    const ids = [String(node.id)];
+    if (node.children?.length) {
+      node.children.forEach((child: any) => {
+        ids.push(...getNodeAndDescendantIds(child));
+      });
+    }
+    return ids;
+  };
+
+  // True if every id in this node's subtree is selected
+  // const isNodeFullySelected = (node: any, selectedIds: string[]): boolean => {
+  //   const ids = getNodeAndDescendantIds(node);
+  //   return ids.every((id) => selectedIds.includes(id));
+  // };
+
+  // const isNodePartiallySelected = (
+  //   node: any,
+  //   selectedIds: string[],
+  // ): boolean => {
+  //   const ids = getNodeAndDescendantIds(node);
+  //   const selectedCount = ids.filter((id) => selectedIds.includes(id)).length;
+  //   return selectedCount > 0 && selectedCount < ids.length;
+  // };
+
+  // const handleToggleNode = (node: any) => {
+  //   setRawSelectedIds((prev) => {
+  //     const idsInSubtree = getNodeAndDescendantIds(node);
+  //     const isCurrentlyFullySelected = idsInSubtree.every((id) =>
+  //       prev.includes(id),
+  //     );
+
+  //     if (isCurrentlyFullySelected) {
+  //       // Was fully selected -> deselect node + all children
+  //       return prev.filter((id) => !idsInSubtree.includes(id));
+  //     } else {
+  //       // Was not fully selected -> select node + all children
+  //       return Array.from(new Set([...prev, ...idsInSubtree]));
+  //     }
+  //   });
+  // };
+
+  // const renderPermissionNode = (
+  //   node: any,
+  //   level: number,
+  //   effectiveSelectedIds: string[],
+  //   onToggle: (node: any) => void,
+  //   isReadOnly: boolean = false,
+  // ) => {
+  //   const nodeId = String(node.id);
+  //   const hasChildren = node.children?.length > 0;
+
+  //   const isChecked = hasChildren
+  //     ? isNodeFullySelected(node, effectiveSelectedIds)
+  //     : effectiveSelectedIds.includes(nodeId);
+
+  //   const isIndeterminate = hasChildren
+  //     ? isNodePartiallySelected(node, effectiveSelectedIds)
+  //     : false;
+
+  //   return (
+  //     <div key={nodeId} className="flex flex-col">
+  //       <div
+  //         style={{ marginLeft: `${level * 20}px` }}
+  //         className="flex items-start space-x-2"
+  //       >
+  //         <input
+  //           ref={(el) => {
+  //             if (el) el.indeterminate = isIndeterminate;
+  //           }}
+  //           disabled={isEditStaffModalOpen && node?.name == "Dashboard"}
+  //           type="checkbox"
+  //           id={`perm-${nodeId}`}
+  //           checked={isChecked}
+  //           onChange={() => !isReadOnly && onToggle(node)}
+  //           className="mt-1 h-4 w-4 accent-primary disabled:opacity-60"
+  //         />
+  //         <Label
+  //           htmlFor={`perm-${nodeId}`}
+  //           className={`text-lg ${isReadOnly ? "text-muted-foreground" : ""}`}
+  //         >
+  //           {node.name}
+  //         </Label>
+  //       </div>
+  //       {hasChildren && (
+  //         <div className="ml-4">
+  //           {node.children.map((child: any) =>
+  //             renderPermissionNode(
+  //               child,
+  //               level + 1,
+  //               effectiveSelectedIds,
+  //               onToggle,
+  //               isReadOnly,
+  //             ),
+  //           )}
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // };
 
   const renderPermissionNode = (
     node: any,
@@ -2341,7 +2444,7 @@ const ExchangeStaffManagement = () => {
         </Dialog>
 
         {/* ----------------- Permission Selection Modal (shared, editable) ----------------- */}
-        <Dialog
+        {/* <Dialog
           open={isPermissionSelectionModalOpen}
           onOpenChange={(open) => {
             if (!open) setIsPermissionSelectionModalOpen(false);
@@ -2415,6 +2518,96 @@ const ExchangeStaffManagement = () => {
                 }}
               >
                 Save Selection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog> */}
+        <Dialog
+          open={isPermissionSelectionModalOpen}
+          onOpenChange={(open) => {
+            if (!open) setIsPermissionSelectionModalOpen(false);
+          }}
+        >
+          <DialogContent className="sm:max-w-2xl bg-white p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="text-xl font-bold">
+                Select Permissions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Choose which menus this staff member can access.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 pt-4 pb-2">
+              {loadingPermissions ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Bulk actions + live count */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setRawSelectedIds(getAllPermissionIds(permissionTree))
+                        }
+                      >
+                        Select all
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRawSelectedIds([])}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                    <Badge variant="secondary" className="font-normal">
+                      {rawSelectedIds.length} selected
+                    </Badge>
+                  </div>
+
+                  {/* Tree list */}
+                  <div className="max-h-96 overflow-y-auto rounded-lg border bg-muted/30 p-3">
+                    <div className="space-y-2">
+                      {permissionTree.map((node) =>
+                        renderPermissionNode(
+                          node,
+                          0,
+                          effectiveSelectedIds,
+                          handleToggleNode,
+                          false,
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="px-6 py-4 mt-2 border-t bg-muted/20">
+              <Button
+                variant="outline"
+                onClick={() => setIsPermissionSelectionModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="business"
+                onClick={() => {
+                  const selected = effectiveSelectedIds as string[];
+                  if (permissionSelectionTarget === "create") {
+                    setNewStaffPermissionIds(selected);
+                  } else {
+                    setEditStaffPermissionIds(selected);
+                  }
+                  setIsPermissionSelectionModalOpen(false);
+                }}
+              >
+                Save selection
               </Button>
             </DialogFooter>
           </DialogContent>

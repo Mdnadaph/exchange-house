@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import BusinessUserLayout from '@/components/layout/BusinnessUserLayout';
+import BusinessUserLayout from "@/components/layout/BusinnessUserLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -82,7 +82,7 @@ const BussinessUserProfile = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         const data = response?.data?.data;
         if (!data) {
@@ -215,7 +215,7 @@ const BussinessUserProfile = () => {
                   </Label>
                   <p className="text-foreground font-medium">
                     {new Date(
-                      userProfile.basicInfo.lastLoginAt
+                      userProfile.basicInfo.lastLoginAt,
                     ).toLocaleString()}
                   </p>
                 </div>
@@ -233,9 +233,7 @@ const BussinessUserProfile = () => {
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">
-                    Business Name
-                  </Label>
+                  <Label className="text-muted-foreground">Business Name</Label>
                   <p className="font-medium">
                     {userProfile.organization.businessName}
                   </p>
@@ -267,9 +265,7 @@ const BussinessUserProfile = () => {
               <CardContent className="space-y-3 text-sm">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Role Name</Label>
-                  <p className="font-medium">
-                    {userProfile.role.roleName}
-                  </p>
+                  <p className="font-medium">{userProfile.role.roleName}</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Tier</Label>
@@ -291,7 +287,7 @@ const BussinessUserProfile = () => {
         </div>
 
         {/* Limits and Security */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -343,7 +339,9 @@ const BussinessUserProfile = () => {
                       : "destructive"
                   }
                 >
-                  {userProfile.security.twoFactorEnabled ? "Enabled" : "Disabled"}
+                  {userProfile.security.twoFactorEnabled
+                    ? "Enabled"
+                    : "Disabled"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -375,12 +373,10 @@ const BussinessUserProfile = () => {
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">
-                  Last 2FA Verified
-                </span>
+                <span className="text-muted-foreground">Last 2FA Verified</span>
                 <span className="font-medium">
                   {new Date(
-                    userProfile.security.last2faVerifiedAt
+                    userProfile.security.last2faVerifiedAt,
                   ).toLocaleString()}
                 </span>
               </div>

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BASE_URL from "@/config/config";
 import axios from "axios";
-import { IoIosWarning } from "react-icons/io";
+import { IoIosArrowBack, IoIosWarning } from "react-icons/io";
 const schema = Yup.object({
   newPassword: Yup.string().min(6).required("New Password required"),
 });
@@ -49,7 +49,7 @@ export default function ResetPassword() {
       setSubmitting(false);
     }
   };
-  console.log("data", data);
+
   return data?.data?.valid ? (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
@@ -110,7 +110,7 @@ export default function ResetPassword() {
                       className="w-full"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Setting..." : "Rest Password"}
+                      {isSubmitting ? "Setting..." : "Reset Password"}
                     </Button>
                   </CardContent>
                 </Form>
@@ -131,6 +131,16 @@ export default function ResetPassword() {
             <h1 className="text-2xl font-bold text-red-500">
               Invalid, expired, or already used token
             </h1>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <IoIosArrowBack className="w-4 h-4" />
+              Go Back
+            </button>
           </div>
         </div>
       </div>

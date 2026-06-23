@@ -83,7 +83,7 @@ interface ExchangeAdmin {
   fullName: string;
   phoneNumber: string;
   email: string;
-  primaryContactEmail: string | null; // Corrected from primaryContactMail
+  primaryContactMail: string | null; // Corrected from primaryContactMail
   active: boolean;
   legalBusinessName: string | null;
   tradingName: string | null;
@@ -347,7 +347,6 @@ const AdminExchangeHouses = () => {
         });
       }
     } catch (err: any) {
-      console.log("err", err);
       if (
         err.response?.data?.data &&
         typeof err.response.data.data === "object"
@@ -540,7 +539,6 @@ const AdminExchangeHouses = () => {
     }
     return { variant: "outline" as const, label: plan.name };
   };
-
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -662,7 +660,7 @@ const AdminExchangeHouses = () => {
                     <div className="space-y-2">
                       <Label htmlFor="phoneNumber">
                         {/* {t("phoneNumber")} * */}
-                        phone Number *
+                        Phone Number *
                       </Label>
                       <PhoneInput
                         country={"ae"} // Defaulting to UAE based on your preferredCountries
@@ -1257,7 +1255,7 @@ const AdminExchangeHouses = () => {
                                       fullName: admin.fullName || "",
                                       email: admin.email || "",
                                       primaryContactEmail:
-                                        admin.primaryContactEmail || "",
+                                        admin.primaryContactMail || "",
                                       phoneNumber: admin.phoneNumber || "",
                                       legalBusinessName:
                                         admin.legalBusinessName || "",
@@ -1278,6 +1276,7 @@ const AdminExchangeHouses = () => {
                                     });
                                     setIsEdit(true);
                                     setIsOnboardingOpen(true);
+                                    setErrors({});
                                   }}
                                 >
                                   <Edit
