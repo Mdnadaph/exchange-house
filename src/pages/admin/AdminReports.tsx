@@ -804,7 +804,7 @@ export default function AdminReports() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className=" grid grid-cols-2 gap-4">
+              <div className=" grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="bg-white p-4 rounded-xl shadow">
                   <h2 className="font-semibold mb-4">
                     {reportData?.transactionVolumeByBusiness?.title}

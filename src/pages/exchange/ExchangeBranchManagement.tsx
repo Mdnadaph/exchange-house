@@ -478,7 +478,7 @@ const ExchangeBranchManagement = () => {
               Branch Management
             </h1>
             <p className="text-muted-foreground">
-              Manage exchange house branches across UAE
+              Manage exchange house branches
             </p>
           </div>
 
