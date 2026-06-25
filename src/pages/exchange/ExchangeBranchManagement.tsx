@@ -400,11 +400,6 @@ const ExchangeBranchManagement = () => {
 
   const handleSubmit = async () => {
     if (!validateAll()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -683,7 +678,6 @@ const ExchangeBranchManagement = () => {
               {/* <p className="text-xs text-muted-foreground">Across UAE</p> */}
             </CardContent>
           </Card>
-
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

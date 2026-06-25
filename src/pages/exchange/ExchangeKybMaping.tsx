@@ -164,7 +164,7 @@ const ExchangeKybMapping = () => {
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  console.log("totoalPage", totalPages);
+
   // ── Dialog visibility ────────────────────────────────────────────────────────
   const [showCreateBT, setShowCreateBT] = useState(false);
   const [showCreateKYB, setShowCreateKYB] = useState(false);
@@ -212,6 +212,74 @@ const ExchangeKybMapping = () => {
     description: "",
   });
   const [editLoading, setEditLoading] = useState(false);
+  const [kybMappingErrors, setKybMappingError] = useState({
+    businessTypeId: "",
+    kybTypeId: "",
+  });
+
+  const [kybTypeError, setKybTypeError] = useState({
+    code: "",
+    name: "",
+  });
+
+  const [businessTypeErrors, setBusinessTypeError] = useState({
+    code: "",
+    name: "",
+  });
+
+  const handleKYBMappingValidationForm = () => {
+    const error = {
+      businessTypeId: "",
+      kybTypeId: "",
+    };
+    let isValid = true;
+    if (!mapForm?.businessTypeId) {
+      error.businessTypeId = "Business Type is required";
+      isValid = false;
+    }
+    if (!mapForm?.kybTypeId) {
+      error.kybTypeId = "KYB Type is required";
+      isValid = false;
+    }
+    setKybMappingError(error);
+    return isValid;
+  };
+
+  const handleKybTypeValidationForm = () => {
+    const error = {
+      code: "",
+      name: "",
+    };
+    let isValid = true;
+    if (!kybForm?.code) {
+      error.code = "Code is required";
+      isValid = false;
+    }
+    if (!kybForm?.name) {
+      error.name = "Name is required";
+      isValid = false;
+    }
+    setKybTypeError(error);
+    return isValid;
+  };
+
+  const handleBusinessTypeValidationForm = () => {
+    const error = {
+      code: "",
+      name: "",
+    };
+    let isValid = true;
+    if (!btForm?.code) {
+      error.code = "Code is required";
+      isValid = false;
+    }
+    if (!btForm?.name) {
+      error.name = "Name is required";
+      isValid = false;
+    }
+    setBusinessTypeError(error);
+    return isValid;
+  };
 
   // ── Auth headers ─────────────────────────────────────────────────────────────
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
@@ -578,14 +646,7 @@ const ExchangeKybMapping = () => {
 
   // ── Submit: Create Business Type ─────────────────────────────────────────────
   const handleCreateBT = async () => {
-    if (!btForm.code.trim() || !btForm.name.trim()) {
-      toast({
-        title: "Validation",
-        description: "Code and Name are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!handleBusinessTypeValidationForm()) return;
     setBtLoading(true);
     try {
       const res = await axios.post(
@@ -742,14 +803,7 @@ const ExchangeKybMapping = () => {
   };
   // ── Submit: Create KYB Type ──────────────────────────────────────────────────
   const handleCreateKYB = async () => {
-    if (!kybForm.code.trim() || !kybForm.name.trim()) {
-      toast({
-        title: "Validation",
-        description: "Code and Name are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!handleKybTypeValidationForm()) return;
     setKybLoading(true);
     try {
       const res = await axios.post(
@@ -782,14 +836,7 @@ const ExchangeKybMapping = () => {
 
   // ── Submit: Create Mapping ───────────────────────────────────────────────────
   const handleCreateMapping = async () => {
-    if (!mapForm.businessTypeId || !mapForm.kybTypeId) {
-      toast({
-        title: "Validation",
-        description: "Business Type and KYB Type are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!handleKYBMappingValidationForm()) return;
     setMapLoading(true);
     try {
       const payload = {
@@ -1483,6 +1530,10 @@ const ExchangeKybMapping = () => {
             setShowCreateBT(false);
             setEditableBusinessTypeId(null);
             setBtForm({ code: "", name: "", active: true });
+            setBusinessTypeError({
+              code: "",
+              name: "",
+            });
           }
         }}
       >
@@ -1499,10 +1550,19 @@ const ExchangeKybMapping = () => {
                 id="bt-code"
                 placeholder="e.g. IT"
                 value={btForm.code}
-                onChange={(e) =>
-                  setBtForm({ ...btForm, code: e.target.value.toUpperCase() })
-                }
+                onChange={(e) => {
+                  setBtForm({ ...btForm, code: e.target.value.toUpperCase() });
+                  setBusinessTypeError((prev) => ({
+                    ...prev,
+                    code: "",
+                  }));
+                }}
               />
+              {businessTypeErrors.code && (
+                <p className="text-sm text-red-500 mt-1">
+                  {businessTypeErrors.code}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="bt-name">
@@ -1512,9 +1572,20 @@ const ExchangeKybMapping = () => {
                 id="bt-name"
                 placeholder="e.g. Information Technology"
                 value={btForm.name}
-                onChange={(e) => setBtForm({ ...btForm, name: e.target.value })}
+                onChange={(e) => {
+                  setBtForm({ ...btForm, name: e.target.value });
+                  setBusinessTypeError((prev) => ({
+                    ...prev,
+                    name: "",
+                  }));
+                }}
               />
             </div>
+            {businessTypeErrors.name && (
+              <p className="text-sm text-red-500 mt-1">
+                {businessTypeErrors.name}
+              </p>
+            )}
             {/*<div className="flex items-center justify-between">
               <Label htmlFor="bt-active">Active</Label>
               <Switch
@@ -1531,6 +1602,10 @@ const ExchangeKybMapping = () => {
                 setShowCreateBT(false);
                 setEditableBusinessTypeId(null);
                 setBtForm({ code: "", name: "", active: true });
+                setBusinessTypeError({
+                  code: "",
+                  name: "",
+                });
               }}
             >
               Cancel
@@ -1558,6 +1633,10 @@ const ExchangeKybMapping = () => {
             setShowCreateKYB(false);
             setEditableKYBTypesId(null);
             setKybForm({ code: "", name: "", active: true });
+            setKybTypeError({
+              code: "",
+              name: "",
+            });
           }
         }}
       >
@@ -1574,10 +1653,20 @@ const ExchangeKybMapping = () => {
                 id="kyb-code"
                 placeholder="e.g. CODING"
                 value={kybForm.code}
-                onChange={(e) =>
-                  setKybForm({ ...kybForm, code: e.target.value.toUpperCase() })
-                }
+                onChange={(e) => {
+                  setKybTypeError((prev) => ({
+                    ...prev,
+                    code: "",
+                  }));
+                  setKybForm({
+                    ...kybForm,
+                    code: e.target.value.toUpperCase(),
+                  });
+                }}
               />
+              {kybTypeError.code && (
+                <p className="text-sm text-red-500 mt-1">{kybTypeError.code}</p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="kyb-name">
@@ -1587,10 +1676,17 @@ const ExchangeKybMapping = () => {
                 id="kyb-name"
                 placeholder="e.g. Coding KYB"
                 value={kybForm.name}
-                onChange={(e) =>
-                  setKybForm({ ...kybForm, name: e.target.value })
-                }
+                onChange={(e) => {
+                  setKybForm({ ...kybForm, name: e.target.value });
+                  setKybTypeError((prev) => ({
+                    ...prev,
+                    name: "",
+                  }));
+                }}
               />
+              {kybTypeError.name && (
+                <p className="text-sm text-red-500 mt-1">{kybTypeError.name}</p>
+              )}
             </div>
             {/*<div className="flex items-center justify-between">
               <Label htmlFor="kyb-active">Active</Label>
@@ -1610,6 +1706,10 @@ const ExchangeKybMapping = () => {
                 setShowCreateKYB(false);
                 setEditableKYBTypesId(null);
                 setKybForm({ code: "", name: "", active: true });
+                setKybTypeError({
+                  name: "",
+                  code: "",
+                });
               }}
             >
               Cancel
@@ -1624,7 +1724,18 @@ const ExchangeKybMapping = () => {
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create Mapping
       ══════════════════════════════════════════════════════════ */}
-      <Dialog open={showCreateMapping} onOpenChange={setShowCreateMapping}>
+      <Dialog
+        open={showCreateMapping}
+        onOpenChange={(open) => {
+          setShowCreateMapping(open);
+          if (!open) {
+            setKybMappingError({
+              businessTypeId: "",
+              kybTypeId: "",
+            });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create KYB Mapping</DialogTitle>
@@ -1636,9 +1747,13 @@ const ExchangeKybMapping = () => {
               </Label>
               <Select
                 value={mapForm.businessTypeId}
-                onValueChange={(val) =>
-                  setMapForm({ ...mapForm, businessTypeId: val })
-                }
+                onValueChange={(val) => {
+                  setMapForm({ ...mapForm, businessTypeId: val });
+                  setKybMappingError((prev) => ({
+                    ...prev,
+                    businessTypeId: "",
+                  }));
+                }}
                 disabled={loadingDropdowns}
               >
                 <SelectTrigger>
@@ -1686,6 +1801,11 @@ const ExchangeKybMapping = () => {
                   )} */}
                 </SelectContent>
               </Select>
+              {kybMappingErrors.businessTypeId && (
+                <p className="text-sm text-red-500 mt-1">
+                  {kybMappingErrors.businessTypeId}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label>
@@ -1693,9 +1813,13 @@ const ExchangeKybMapping = () => {
               </Label>
               <Select
                 value={mapForm.kybTypeId}
-                onValueChange={(val) =>
-                  setMapForm({ ...mapForm, kybTypeId: val })
-                }
+                onValueChange={(val) => {
+                  setMapForm({ ...mapForm, kybTypeId: val });
+                  setKybMappingError((prev) => ({
+                    ...prev,
+                    kybTypeId: "",
+                  }));
+                }}
                 disabled={loadingDropdowns}
               >
                 <SelectTrigger>
@@ -1741,6 +1865,11 @@ const ExchangeKybMapping = () => {
                   )} */}
                 </SelectContent>
               </Select>
+              {kybMappingErrors.kybTypeId && (
+                <p className="text-sm text-red-500 mt-1">
+                  {kybMappingErrors.kybTypeId}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="map-desc">Description</Label>
@@ -1779,7 +1908,13 @@ const ExchangeKybMapping = () => {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateMapping(false)}
+              onClick={() => {
+                setKybMappingError({
+                  businessTypeId: "",
+                  kybTypeId: "",
+                });
+                setShowCreateMapping(false);
+              }}
             >
               Cancel
             </Button>

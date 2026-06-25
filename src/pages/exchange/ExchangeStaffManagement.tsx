@@ -1371,7 +1371,14 @@ const ExchangeStaffManagement = () => {
           role: filterByRole,
         },
       });
-      console.log("branch", res?.data?.data?.content);
+      if (!res?.data?.status) {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message || "Failed to load branches with staff",
+          variant: "destructive",
+        });
+      }
       setBranches(res?.data?.data?.content || []);
       setTotalPages(res?.data?.data?.totalPages || 0);
       setCurrentPage(res?.data?.data?.page || 0);

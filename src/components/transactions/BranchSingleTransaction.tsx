@@ -217,7 +217,6 @@ export default function BranchSingleTransaction({
 
   useEffect(() => {
     if (!open) return;
-
     axios
       .get(`${BASE_URL}/api/v1/beneficiaries`, {
         headers: { Authorization: `Bearer ${token}` },

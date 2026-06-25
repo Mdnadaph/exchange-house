@@ -205,7 +205,7 @@ const BranchBulkTransactionForm = ({
 
     if (!amount || !rateObj) return "";
 
-    return (Number(amount) * Number(rateObj.rate)).toFixed(2);
+    return (Number(amount) * Number(1 / rateObj.rate)).toFixed(4);
   };
 
   const disableButtonForDocd = requiredDocForPorpose ? !document : false;
@@ -703,7 +703,9 @@ const BranchBulkTransactionForm = ({
                               </TableCell>
                               <TableCell>
                                 <span className="text-xs">
-                                  {rateObj ? rateObj?.rate : "-"}
+                                  {rateObj
+                                    ? Number(1 / rateObj?.rate)?.toFixed(4)
+                                    : "-"}
                                 </span>
                               </TableCell>
                               <TableCell>
@@ -714,7 +716,6 @@ const BranchBulkTransactionForm = ({
                                   {getConvertedAmount(ben) || "-"}
                                 </span>
                               </TableCell>
-
                               <TableCell>
                                 <Input
                                   placeholder="e.g. VKLXPD57"

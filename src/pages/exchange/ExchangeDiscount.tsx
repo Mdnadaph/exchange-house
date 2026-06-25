@@ -68,6 +68,14 @@ const ExchangeDiscount = () => {
   const token = cookies.token;
   const currencyCode = cookies.currencyCode;
   const { toast } = useToast();
+  const [errors, setErrors] = useState({
+    name: "",
+    type: "",
+    discountValue: "",
+    limit: "",
+    startDate: "",
+    expiryDate: "",
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [debounceValue, setDebounceValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -158,7 +166,6 @@ const ExchangeDiscount = () => {
 
   const createDiscount = async () => {
     const limitNum = form.limit === "" ? 0 : Number(form.limit);
-
     try {
       await axios.post(
         `${BASE_URL}/api/v1/discount/add`,
@@ -190,22 +197,73 @@ const ExchangeDiscount = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (
-      !form.name ||
-      !form.discountValue ||
-      !form.startDate ||
-      !form.expiryDate
-    ) {
-      toast({
-        title: "Error",
-        description:
-          "Please fill required fields (name, value, start date, expiry)",
-        variant: "destructive",
-      });
-      return;
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      type: "",
+      discountValue: "",
+      limit: "",
+      startDate: "",
+      expiryDate: "",
+    };
+
+    let isValid = true;
+
+    if (!form.name.trim()) {
+      newErrors.name = "Discount name is required";
+      isValid = false;
     }
 
+    if (!form.type) {
+      newErrors.type = "Discount type is required";
+      isValid = false;
+    }
+
+    if (!form.discountValue) {
+      newErrors.discountValue = "Discount value is required";
+      isValid = false;
+    } else if (Number(form.discountValue) <= 0) {
+      newErrors.discountValue = "Discount value must be greater than 0";
+      isValid = false;
+    } else if (form.type === "PERCENTAGE" && Number(form.discountValue) > 100) {
+      newErrors.discountValue = "Percentage discount cannot exceed 100";
+      isValid = false;
+    }
+
+    if (form.limit === "") {
+      newErrors.limit = "Usage limit is required";
+      isValid = false;
+    } else if (Number(form.limit) < 0) {
+      newErrors.limit = "Usage limit cannot be negative";
+      isValid = false;
+    }
+
+    if (!form.startDate) {
+      newErrors.startDate = "Start date is required";
+      isValid = false;
+    }
+
+    if (!form.expiryDate) {
+      newErrors.expiryDate = "Expiry date is required";
+      isValid = false;
+    }
+
+    if (
+      form.startDate &&
+      form.expiryDate &&
+      new Date(form.expiryDate) < new Date(form.startDate)
+    ) {
+      newErrors.expiryDate = "Expiry date must be after start date";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    return isValid;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
     const valueNum = Number(form.discountValue);
     const limitNum = form.limit === "" ? 0 : Number(form.limit);
 
@@ -312,7 +370,20 @@ const ExchangeDiscount = () => {
             </p>
           </div>
 
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Dialog
+            open={isModalOpen}
+            onOpenChange={(open) => {
+              setIsModalOpen(open);
+              setErrors({
+                name: "",
+                type: "",
+                discountValue: "",
+                limit: "",
+                startDate: "",
+                expiryDate: "",
+              });
+            }}
+          >
             <PermissionGate permission="BTN_CREATE_DISCOUNT">
               <DialogTrigger asChild>
                 <Button variant="business" onClick={openAddModal}>
@@ -321,7 +392,7 @@ const ExchangeDiscount = () => {
                 </Button>
               </DialogTrigger>
             </PermissionGate>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg ">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Tag className="h-5 w-5" />
@@ -329,17 +400,23 @@ const ExchangeDiscount = () => {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4 py-4">
-                <div>
+              <div className="space-y-4 py-4 max-h-[90vh] overflow-y-auto">
+                <div className="space-y-1">
                   <Label htmlFor="name">
                     Discount Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => {
+                      setForm({ ...form, name: e.target.value });
+                      setErrors((prev) => ({ ...prev, name: "" }));
+                    }}
                     placeholder="e.g., Welcome Bonus 2026"
                   />
+                  {errors.name && (
+                    <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                  )}
                 </div>
 
                 <div>
@@ -356,18 +433,19 @@ const ExchangeDiscount = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-1">
                     <Label htmlFor="type">
                       Discount Type <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={form.type}
-                      onValueChange={(v) =>
+                      onValueChange={(v) => {
                         setForm({
                           ...form,
                           type: v as "PERCENTAGE" | "FIXED_AMOUNT",
-                        })
-                      }
+                        });
+                        setErrors((prev) => ({ ...prev, type: "" }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -380,13 +458,16 @@ const ExchangeDiscount = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.type && (
+                      <p className="text-sm text-red-500 mt-1">{errors.type}</p>
+                    )}
                   </div>
 
-                  <div>
+                  <div className="space-y-1">
                     <Label htmlFor="discountValue">
                       Value{" "}
                       {form.type === "PERCENTAGE" ? "(%)" : `(${currencyCode})`}{" "}
-                      *
+                      <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="discountValue"
@@ -394,15 +475,21 @@ const ExchangeDiscount = () => {
                       step="0.01"
                       min="0.01"
                       value={form.discountValue}
-                      onChange={(e) =>
-                        setForm({ ...form, discountValue: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setForm({ ...form, discountValue: e.target.value });
+                        setErrors((prev) => ({ ...prev, discountValue: "" }));
+                      }}
                       placeholder={form.type === "PERCENTAGE" ? "25" : "50"}
                     />
+                    {errors.discountValue && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.discountValue}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <div>
+                <div className="space-y-1">
                   <Label htmlFor="limit">
                     Usage Limit (0 = unlimited){" "}
                     <span className="text-red-500">*</span>
@@ -412,15 +499,19 @@ const ExchangeDiscount = () => {
                     type="number"
                     min="0"
                     value={form.limit}
-                    onChange={(e) =>
-                      setForm({ ...form, limit: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setForm({ ...form, limit: e.target.value });
+                      setErrors((prev) => ({ ...prev, limit: "" }));
+                    }}
                     placeholder="e.g. 100, 500, 0"
                   />
+                  {errors.limit && (
+                    <p className="text-sm text-red-500 mt-1">{errors.limit}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-1">
                     <Label htmlFor="startDate">
                       Start Date <span className="text-red-500">*</span>
                     </Label>
@@ -428,13 +519,19 @@ const ExchangeDiscount = () => {
                       id="startDate"
                       type="date"
                       value={form.startDate}
-                      onChange={(e) =>
-                        setForm({ ...form, startDate: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setForm({ ...form, startDate: e.target.value });
+                        setErrors((prev) => ({ ...prev, startDate: "" }));
+                      }}
                     />
+                    {errors.startDate && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.startDate}
+                      </p>
+                    )}
                   </div>
 
-                  <div>
+                  <div className="space-y-1">
                     <Label htmlFor="expiryDate">
                       Expiry Date <span className="text-red-500">*</span>
                     </Label>
@@ -442,10 +539,16 @@ const ExchangeDiscount = () => {
                       id="expiryDate"
                       type="date"
                       value={form.expiryDate}
-                      onChange={(e) =>
-                        setForm({ ...form, expiryDate: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setForm({ ...form, expiryDate: e.target.value });
+                        setErrors((prev) => ({ ...prev, expiryDate: "" }));
+                      }}
                     />
+                    {errors.expiryDate && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.expiryDate}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -535,7 +638,6 @@ const ExchangeDiscount = () => {
                   />
                 </div>
               </div>
-
               <div className="space-y-1">
                 <Label className="text-sm whitespace-nowrap">Status:</Label>
                 <div className="flex border rounded-md overflow-hidden shadow-sm">
