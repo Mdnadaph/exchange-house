@@ -79,7 +79,7 @@ const DealRequestForm = ({
       isValid = false;
     }
     if (!formData.purpose) {
-      error.purpose = "Proposed rate is required";
+      error.purpose = "Transaction purpose is required";
       isValid = false;
     }
     setErrors(error);
