@@ -549,7 +549,7 @@ const ExchangeTransactions = () => {
       },
       REJECTED: {
         variant: "destructive" as const,
-        label: "Rejetced",
+        label: "Rejected",
         icon: AlertCircle,
       },
       DRAFT: {

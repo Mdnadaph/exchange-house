@@ -165,6 +165,22 @@ const ExchangeComplianceConfig = () => {
     return errors;
   };
 
+  const validateEditForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!editForm.name.trim()) errors.name = "Name is required";
+    if (!editForm.transactionType)
+      errors.transactionType = "Transaction type is required";
+    if (!editForm.payoutCountry)
+      errors.payoutCountry = "Payout country is required";
+    if (!editForm.thresholdAmount || editForm.thresholdAmount <= 0)
+      errors.thresholdAmount = "Threshold amount must be greater than 0";
+    if (!editForm.currency) errors.currency = "Currency is required";
+    if (!editForm.action) errors.action = "Action is required";
+    if (!editForm.frequency) errors.frequency = "Frequency is required";
+    if (!editForm.category) errors.category = "Category is required";
+    return errors;
+  };
+
   const getPayoutCountryList = async () => {
     try {
       const res = await axios.get(
@@ -301,7 +317,11 @@ const ExchangeComplianceConfig = () => {
   };
 
   const handleUpdate = async () => {
-    if (!editForm) return;
+    const errors = validateEditForm();
+    if (Object.keys(errors).length > 0) {
+      setCreateErrors(errors);
+      return;
+    }
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/compliance/rules/${editForm.id}`,
@@ -579,7 +599,15 @@ const ExchangeComplianceConfig = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Dialog
+              open={isCreateOpen}
+              onOpenChange={(open) => {
+                setIsCreateOpen(open);
+                if (!open) {
+                  setCreateErrors({});
+                }
+              }}
+            >
               <PermissionGate permission="BTN_CREATE_COMPLIANCE_RULE">
                 <DialogTrigger asChild>
                   <Button variant="business">
@@ -646,6 +674,7 @@ const ExchangeComplianceConfig = () => {
                         <span className="text-destructive">*</span>
                       </Label>
                       <Input
+                        onWheel={(e) => e.currentTarget.blur()}
                         type="number"
                         placeholder="0"
                         value={createForm.thresholdAmount}
@@ -821,7 +850,10 @@ const ExchangeComplianceConfig = () => {
                 <DialogFooter className="mt-6">
                   <Button
                     variant="outline"
-                    onClick={() => setIsCreateOpen(false)}
+                    onClick={() => {
+                      setCreateErrors({});
+                      setIsCreateOpen(false);
+                    }}
                   >
                     Cancel
                   </Button>
@@ -994,7 +1026,15 @@ const ExchangeComplianceConfig = () => {
         </Card>
 
         {/* Edit Modal */}
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <Dialog
+          open={isEditOpen}
+          onOpenChange={(open) => {
+            setIsEditOpen(open);
+            if (!open) {
+              setCreateErrors({});
+            }
+          }}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Compliance Rule</DialogTitle>
@@ -1003,21 +1043,31 @@ const ExchangeComplianceConfig = () => {
               <div className="space-y-4 mt-4">
                 <div>
                   <Label>Name</Label>
+                  <span className="text-red-500">*</span>
                   <Input
                     value={editForm.name || ""}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setEditForm({ ...editForm, name: e.target.value });
+                      clearFormError("name");
+                    }}
                   />
+                  {createErrors.name && (
+                    <p className="text-sm text-destructive mt-1">
+                      {createErrors.name}
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Transaction Type</Label>
+                    <Label>
+                      Transaction Type <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm.transactionType}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, transactionType: v })
-                      }
+                      onValueChange={(v) => {
+                        setEditForm({ ...editForm, transactionType: v });
+                        clearFormError("transactionType");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -1030,25 +1080,41 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.transactionType && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.transactionType}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label>Threshold Amount</Label>
+                    <Label>
+                      Threshold Amount <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
                       placeholder="0"
                       value={editForm.thresholdAmount}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setEditForm({
                           ...editForm,
                           thresholdAmount: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                        });
+                        clearFormError("thresholdAmount");
+                      }}
                     />
+                    {createErrors.thresholdAmount && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.thresholdAmount}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Payout Country</Label>
+                    <Label>
+                      Payout Country <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm?.payoutCountry || ""}
                       onValueChange={(v) => {
@@ -1064,6 +1130,7 @@ const ExchangeComplianceConfig = () => {
                           payoutCountry: v,
                           currency: newCurrency,
                         });
+                        clearFormError("payoutCountry");
                       }}
                     >
                       <SelectTrigger>
@@ -1081,30 +1148,46 @@ const ExchangeComplianceConfig = () => {
                         })}
                       </SelectContent>
                     </Select>
+                    {createErrors.payoutCountry && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.payoutCountry}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label>Currency</Label>
+                    <Label>
+                      Currency <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       disabled
                       placeholder="AED"
                       value={editForm?.currency || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setEditForm({
                           ...editForm,
                           currency: e.target.value.toUpperCase(),
-                        })
-                      }
+                        });
+                        clearFormError("currency");
+                      }}
                     />
+                    {createErrors.currency && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.currency}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Action</Label>
+                    <Label>
+                      Action <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm.action}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, action: v })
-                      }
+                      onValueChange={(v) => {
+                        setEditForm({ ...editForm, action: v });
+                        clearFormError("action");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select action" />
@@ -1117,14 +1200,22 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.action && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.action}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label>Frequency</Label>
+                    <Label>
+                      Frequency <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm.frequency || ""}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, frequency: v })
-                      }
+                      onValueChange={(v) => {
+                        setEditForm({ ...editForm, frequency: v });
+                        clearFormError("frequency");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
@@ -1137,15 +1228,23 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.frequency && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.frequency}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
-                  <Label>Category</Label>
+                  <Label>
+                    Category <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={editForm.category || ""}
-                    onValueChange={(v) =>
-                      setEditForm({ ...editForm, category: v })
-                    }
+                    onValueChange={(v) => {
+                      setEditForm({ ...editForm, category: v });
+                      clearFormError("category");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -1158,11 +1257,22 @@ const ExchangeComplianceConfig = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {createErrors.category && (
+                    <p className="text-sm text-destructive mt-1">
+                      {createErrors.category}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
             <DialogFooter className="mt-6">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditOpen(false);
+                  setCreateErrors({});
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUpdate}>Update</Button>

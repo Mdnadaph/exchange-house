@@ -786,7 +786,7 @@ const ExchangeAdminComplianceReview = () => {
                 <div className="flex flex-col items-center space-y-4">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <p className="text-muted-foreground">
-                    Loading transactions...
+                    Loading compliance review...
                   </p>
                 </div>
               </div>
@@ -795,13 +795,13 @@ const ExchangeAdminComplianceReview = () => {
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
                   {transactions.length === 0
-                    ? "No transactions found"
-                    : "No matching transactions"}
+                    ? "No compliance review found"
+                    : "No matching compliance review found"}
                 </h3>
                 <p className="text-muted-foreground">
                   {searchTerm
                     ? "Try adjusting your search criteria"
-                    : "No transactions available in the system"}
+                    : "No compliance review available in the system"}
                 </p>
               </div>
             ) : (

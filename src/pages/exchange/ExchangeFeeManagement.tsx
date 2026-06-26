@@ -97,6 +97,7 @@ const ExchangeFeeManagement = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [payoutCountryData, setPayoutCountryData] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [apiValidatioError, setApiValidationError] = useState<any>({});
 
   // Dialog Controls
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false); // Combined Create/Edit Dialog
@@ -354,11 +355,6 @@ const ExchangeFeeManagement = () => {
 
   const handleSaveRule = async () => {
     if (!validateForm()) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please fill all required field before submitting.",
-      });
       return;
     }
 
@@ -450,7 +446,6 @@ const ExchangeFeeManagement = () => {
           });
         }
       }
-
       handleCloseFormDialog();
       fetchFeeRules();
     } catch (error: any) {
@@ -460,6 +455,9 @@ const ExchangeFeeManagement = () => {
         description:
           error.response?.data?.message || "Check your input and try again.",
       });
+      console.log("fdhdfjhfdj");
+      setApiValidationError(error?.response?.data?.data);
+      console.log("res", error?.response?.data?.data);
     } finally {
       setIsSubmitting(false);
     }
@@ -585,6 +583,8 @@ const ExchangeFeeManagement = () => {
 
   const handleCloseFormDialog = () => {
     setIsFormDialogOpen(false);
+    setApiValidationError({});
+    setFormErrors({});
   };
 
   useEffect(() => {
@@ -637,6 +637,13 @@ const ExchangeFeeManagement = () => {
     //},
   ];
 
+  const clearApiValidationError = (field: string) => {
+    setApiValidationError((prev) => ({
+      ...prev,
+      [field]: [],
+    }));
+  };
+
   return (
     <ExchangeLayout>
       <div className="space-y-6">
@@ -662,7 +669,16 @@ const ExchangeFeeManagement = () => {
         </div>
 
         {/* --- Create/Edit Dialog --- */}
-        <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+        <Dialog
+          open={isFormDialogOpen}
+          onOpenChange={(open) => {
+            setIsFormDialogOpen(open);
+            if (!open) {
+              setApiValidationError({});
+              setFormErrors({});
+            }
+          }}
+        >
           <DialogContent
             className={`max-w-2xl ${newFeeRule?.transactionType == "SINGLE" ? "h-[90vh]" : ""}`}
           >
@@ -683,6 +699,7 @@ const ExchangeFeeManagement = () => {
                     onValueChange={(v) => {
                       setNewFeeRule({ ...newFeeRule, transactionType: v });
                       clearFormError("transactionType");
+                      clearApiValidationError("transactionType");
                     }}
                   >
                     <SelectTrigger>
@@ -701,6 +718,11 @@ const ExchangeFeeManagement = () => {
                       {formErrors.transactionType}
                     </p>
                   )}
+                  {apiValidatioError?.transactionType && (
+                    <p className="text-sm text-red-500">
+                      {apiValidatioError?.transactionType[0]}
+                    </p>
+                  )}
                 </div>
                 {newFeeRule?.transactionType == "SINGLE" && (
                   <div>
@@ -712,6 +734,7 @@ const ExchangeFeeManagement = () => {
                       onValueChange={(v) => {
                         setNewFeeRule({ ...newFeeRule, payoutCountry: v });
                         clearFormError("payoutCountry");
+                        clearApiValidationError("payoutCountry");
                       }}
                     >
                       <SelectTrigger>
@@ -730,6 +753,11 @@ const ExchangeFeeManagement = () => {
                         {formErrors.payoutCountry}
                       </p>
                     )}
+                    {apiValidatioError?.payoutCountry && (
+                      <p className="text-sm text-red-500">
+                        {apiValidatioError?.payoutCountry[0]}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -745,11 +773,17 @@ const ExchangeFeeManagement = () => {
                       vat: e.target.value,
                     });
                     clearFormError("vat");
+                    clearApiValidationError("vat");
                   }}
                   onWheel={(e) => e.currentTarget.blur()}
                 />
                 {formErrors.vat && (
                   <p className="text-sm text-red-500 mt-1">{formErrors.vat}</p>
+                )}
+                {apiValidatioError?.vat && (
+                  <p className="text-sm text-red-500">
+                    {apiValidatioError?.vat[0]}
+                  </p>
                 )}
               </div>
               {newFeeRule?.transactionType == "BULK" && (
@@ -766,12 +800,18 @@ const ExchangeFeeManagement = () => {
                         bulkTotalBeneficiary: e.target.value,
                       });
                       clearFormError("bulkTotalBeneficiary");
+                      clearApiValidationError("bulkTotalBeneficiary");
                     }}
                     onWheel={(e) => e.currentTarget.blur()}
                   />
                   {formErrors?.bulkTotalBeneficiary && (
                     <p className="text-sm text-red-500 mt-1">
                       {formErrors?.bulkTotalBeneficiary}
+                    </p>
+                  )}
+                  {apiValidatioError?.bulkTotalBeneficiary && (
+                    <p className="text-sm text-red-500">
+                      {apiValidatioError?.bulkTotalBeneficiary[0]}
                     </p>
                   )}
                 </div>
@@ -791,12 +831,18 @@ const ExchangeFeeManagement = () => {
                         bulkTotalAmount: e.target.value,
                       });
                       clearFormError("bulkTotalAmount");
+                      clearApiValidationError("bulkTotalAmount");
                     }}
                     onWheel={(e) => e.currentTarget.blur()}
                   />
                   {formErrors?.bulkTotalAmount && (
                     <p className="text-sm text-red-500 mt-1">
                       {formErrors?.bulkTotalAmount}
+                    </p>
+                  )}
+                  {apiValidatioError?.bulkTotalAmount && (
+                    <p className="text-sm text-red-500">
+                      {apiValidatioError?.bulkTotalAmount[0]}
                     </p>
                   )}
                 </div>
@@ -872,6 +918,7 @@ const ExchangeFeeManagement = () => {
                     onValueChange={(v) => {
                       setNewFeeRule({ ...newFeeRule, businessFeeType: v });
                       clearFormError("businessFeeType");
+                      clearApiValidationError("businessFeeType");
                     }}
                   >
                     <SelectTrigger>
@@ -887,6 +934,11 @@ const ExchangeFeeManagement = () => {
                   {formErrors.businessFeeType && (
                     <p className="text-sm text-red-500 mt-1">
                       {formErrors.businessFeeType}
+                    </p>
+                  )}
+                  {apiValidatioError?.businessFeeType && (
+                    <p className="text-sm text-red-500">
+                      {apiValidatioError?.businessFeeType[0]}
                     </p>
                   )}
                 </div>
@@ -910,11 +962,17 @@ const ExchangeFeeManagement = () => {
                         businessFeeValue: e.target.value,
                       });
                       clearFormError("businessFeeValue");
+                      clearApiValidationError("businessFeeValue");
                     }}
                   />
                   {formErrors.businessFeeValue && (
                     <p className="text-sm text-red-500 mt-1">
                       {formErrors.businessFeeValue}
+                    </p>
+                  )}
+                  {apiValidatioError?.businessFeeValue && (
+                    <p className="text-sm text-red-500">
+                      {apiValidatioError?.businessFeeValue[0]}
                     </p>
                   )}
                 </div>
@@ -953,6 +1011,7 @@ const ExchangeFeeManagement = () => {
                             beneficiaryFeeType: v,
                           });
                           clearFormError("beneficiaryFeeType");
+                          clearApiValidationError("beneficiaryFeeType");
                         }}
                       >
                         <SelectTrigger>
@@ -970,6 +1029,11 @@ const ExchangeFeeManagement = () => {
                       {formErrors.beneficiaryFeeType && (
                         <p className="text-sm text-red-500 mt-1">
                           {formErrors.beneficiaryFeeType}
+                        </p>
+                      )}
+                      {apiValidatioError?.beneficiaryFeeType && (
+                        <p className="text-sm text-red-500">
+                          {apiValidatioError?.beneficiaryFeeType[0]}
                         </p>
                       )}
                     </div>
@@ -996,11 +1060,17 @@ const ExchangeFeeManagement = () => {
                             beneficiaryFeeValue: e.target.value,
                           });
                           clearFormError("beneficiaryFeeValue");
+                          clearApiValidationError("beneficiaryFeeValue");
                         }}
                       />
                       {formErrors.beneficiaryFeeValue && (
                         <p className="text-sm text-red-500 mt-1">
                           {formErrors.beneficiaryFeeValue}
+                        </p>
+                      )}
+                      {apiValidatioError?.beneficiaryFeeValue && (
+                        <p className="text-sm text-red-500">
+                          {apiValidatioError?.beneficiaryFeeValue[0]}
                         </p>
                       )}
                     </div>
@@ -1026,7 +1096,10 @@ const ExchangeFeeManagement = () => {
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Business Fee Type *</Label>
+                        <Label>
+                          Business Fee Type{" "}
+                          <span className="text-red-500">*</span>
+                        </Label>
                         <Select
                           value={newFeeRule.sharedBusinessFeeType}
                           onValueChange={(v) => {
@@ -1035,6 +1108,7 @@ const ExchangeFeeManagement = () => {
                               sharedBusinessFeeType: v,
                             });
                             clearFormError("sharedBusinessFeeType");
+                            clearApiValidationError("sharedBusinessFeeType");
                           }}
                         >
                           <SelectTrigger>
@@ -1057,10 +1131,16 @@ const ExchangeFeeManagement = () => {
                             {formErrors.sharedBusinessFeeType}
                           </p>
                         )}
+                        {apiValidatioError?.sharedBusinessFeeType && (
+                          <p className="text-sm text-red-500">
+                            {apiValidatioError?.sharedBusinessFeeType[0]}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label>
-                          Business Fee Value *{" "}
+                          Business Fee Value{" "}
+                          <span className="text-red-500">*</span>{" "}
                           {newFeeRule.sharedBusinessFeeType === "BPS"
                             ? "(BPS)"
                             : `(${currencyCode})`}
@@ -1079,6 +1159,7 @@ const ExchangeFeeManagement = () => {
                               sharedBusinessFeeValue: e.target.value,
                             });
                             clearFormError("sharedBusinessFeeValue");
+                            clearApiValidationError("sharedBusinessFeeValue");
                           }}
                         />
                         {formErrors.sharedBusinessFeeValue && (
@@ -1086,11 +1167,19 @@ const ExchangeFeeManagement = () => {
                             {formErrors.sharedBusinessFeeValue}
                           </p>
                         )}
+                        {apiValidatioError?.sharedBusinessFeeValue && (
+                          <p className="text-sm text-red-500">
+                            {apiValidatioError?.sharedBusinessFeeValue[0]}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Beneficiary Fee Type *</Label>
+                        <Label>
+                          Beneficiary Fee Type{" "}
+                          <span className="text-red-500">*</span>
+                        </Label>
                         <Select
                           value={newFeeRule.sharedBeneficiaryFeeType}
                           onValueChange={(v) => {
@@ -1099,6 +1188,7 @@ const ExchangeFeeManagement = () => {
                               sharedBeneficiaryFeeType: v,
                             });
                             clearFormError("sharedBeneficiaryFeeType");
+                            clearApiValidationError("sharedBeneficiaryFeeType");
                           }}
                         >
                           <SelectTrigger>
@@ -1121,10 +1211,16 @@ const ExchangeFeeManagement = () => {
                             {formErrors.sharedBeneficiaryFeeType}
                           </p>
                         )}
+                        {apiValidatioError?.sharedBeneficiaryFeeType && (
+                          <p className="text-sm text-red-500">
+                            {apiValidatioError?.sharedBeneficiaryFeeType[0]}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label>
-                          Beneficiary Fee Value *{" "}
+                          Beneficiary Fee Value{" "}
+                          <span className="text-red-500">*</span>{" "}
                           {newFeeRule.sharedBeneficiaryFeeType === "BPS"
                             ? "(BPS)"
                             : `(${currencyCode})`}
@@ -1144,11 +1240,19 @@ const ExchangeFeeManagement = () => {
                               sharedBeneficiaryFeeValue: e.target.value,
                             });
                             clearFormError("sharedBeneficiaryFeeValue");
+                            clearApiValidationError(
+                              "sharedBeneficiaryFeeValue",
+                            );
                           }}
                         />
                         {formErrors.sharedBeneficiaryFeeValue && (
                           <p className="text-sm text-red-500 mt-1">
                             {formErrors.sharedBeneficiaryFeeValue}
+                          </p>
+                        )}
+                        {apiValidatioError?.sharedBeneficiaryFeeValue && (
+                          <p className="text-sm text-red-500">
+                            {apiValidatioError?.sharedBeneficiaryFeeValue[0]}
                           </p>
                         )}
                       </div>
@@ -1222,7 +1326,6 @@ const ExchangeFeeManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="w-full md:w-[300px]">
                 <Label className="mb-1 block">Filter by Transaction Type</Label>
                 <Select
@@ -1581,7 +1684,6 @@ const ExchangeFeeManagement = () => {
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </PermissionGate>
-
                             <PermissionGate permission="BTN_DELETE_FEE_RULE">
                               <Button
                                 variant="ghost"

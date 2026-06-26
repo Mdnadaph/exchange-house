@@ -529,8 +529,9 @@ export default function ExchangeCountryCurrency() {
           </DialogHeader>
           <div className="space-y-1">
             <div className="space-y-2">
-              <Label>Country *</Label>
-
+              <Label>
+                Country <span className="text-red-500">*</span>
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button

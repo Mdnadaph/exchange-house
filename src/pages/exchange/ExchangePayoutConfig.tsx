@@ -552,15 +552,6 @@ const ExchangePayoutConfig = () => {
   };
 
   const handleAddDestination = async () => {
-    // if (!destinationForm.country || destinationForm.mechanisms.length === 0) {
-    //   toast({
-    //     title: t("validationError") || "Validation Error",
-    //     description:
-    //       t("fillRequiredFields") || "Please fill in all required fields.",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
     let newErrors: any = {};
     if (!destinationForm?.country) newErrors.country = "Country is required";
     if (!destinationForm.mechanisms || destinationForm.mechanisms.length === 0)
@@ -651,8 +642,19 @@ const ExchangePayoutConfig = () => {
     // );
 
     // setDestinations(updatedDestinations);
+    let newErrors: any = {};
+    if (!destinationForm?.country) newErrors.country = "Country is required";
+    if (!destinationForm.mechanisms || destinationForm.mechanisms.length === 0)
+      newErrors.mechanisms = "Select at least one mechanism.";
+
+    setErrors(newErrors);
+
     const mechanismValid = validateMechanisms();
-    if (!mechanismValid) return;
+
+    const hasMainErrors = Object.keys(newErrors).length > 0;
+    if (!mechanismValid || hasMainErrors) return;
+    // Stop if any errors
+    if (Object.keys(newErrors).length > 0) return;
     const payload = buildPayload();
     try {
       const res = await fetch(
@@ -1270,6 +1272,7 @@ const ExchangePayoutConfig = () => {
             setAddDestinationOpen(open);
             if (!open) {
               setMechanismErrors({});
+              setErrors({});
             }
           }}
         >
@@ -1287,7 +1290,10 @@ const ExchangePayoutConfig = () => {
             <div className="space-y-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t("country") || "Country"} *</Label>
+                  <Label>
+                    {t("country") || "Country"}{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={destinationForm.country}
                     onValueChange={handleCountryChange}
@@ -1457,7 +1463,9 @@ const ExchangePayoutConfig = () => {
               </div>
               {/* MECHANISMS */}
               <div className="mt-6">
-                <Label>Available Mechanisms *</Label>
+                <Label>
+                  Available Mechanisms <span className="text-red-500">*</span>
+                </Label>
                 <div className="border rounded-lg p-4 mt-2">
                   {avaliable_machanisms.length === 0 ? (
                     <p className="text-muted-foreground text-sm text-center py-4">
@@ -1634,7 +1642,11 @@ const ExchangePayoutConfig = () => {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setAddDestinationOpen(false)}
+                onClick={() => {
+                  setAddDestinationOpen(false);
+                  setErrors({});
+                  setMechanismErrors({});
+                }}
               >
                 {t("cancel") || "Cancel"}
               </Button>
@@ -1652,7 +1664,12 @@ const ExchangePayoutConfig = () => {
         {/* Edit Destination Dialog */}
         <Dialog
           open={editDestinationOpen}
-          onOpenChange={setEditDestinationOpen}
+          onOpenChange={(open) => {
+            setEditDestinationOpen(open);
+            if (!open) {
+              setErrors({});
+            }
+          }}
         >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1685,6 +1702,9 @@ const ExchangePayoutConfig = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.country && (
+                    <p className="text-red-500 text-xs">{errors.country}</p>
+                  )}
                 </div>
 
                 {/*<div className="space-y-2">
@@ -1873,6 +1893,9 @@ const ExchangePayoutConfig = () => {
                     </div>
                   ))}
                 </div>
+                {errors?.mechanisms && (
+                  <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
+                )}
               </div>
 
               {/* <div className="grid grid-cols-2 gap-4">
@@ -2062,11 +2085,13 @@ const ExchangePayoutConfig = () => {
                 </div>
               </div>
             </div>
-
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setEditDestinationOpen(false)}
+                onClick={() => {
+                  setEditDestinationOpen(false);
+                  setErrors({});
+                }}
               >
                 {t("cancel") || "Cancel"}
               </Button>

@@ -775,7 +775,7 @@ const ExchangeTransactions = () => {
                 <div className="flex flex-col items-center space-y-4">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <p className="text-muted-foreground">
-                    Loading transactions...
+                    Loading pending payment...
                   </p>
                 </div>
               </div>
@@ -784,8 +784,8 @@ const ExchangeTransactions = () => {
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
                   {transactions.length === 0
-                    ? "No payment found"
-                    : "No matching transactions"}
+                    ? "No pending payment found"
+                    : "No matching pending payment"}
                 </h3>
                 {/* <p className="text-muted-foreground">
                   {searchTerm

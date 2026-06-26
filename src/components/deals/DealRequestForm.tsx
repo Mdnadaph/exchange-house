@@ -46,6 +46,46 @@ const DealRequestForm = ({
   const [transactionPurposeData, setTransactionPurpose] = useState([]);
   const [complianceCurrencies, setComplianceCurrencies] = useState<any[]>([]);
   const [exchangeRates, setExchangeRates] = useState<any[]>([]);
+  const [errors, setErrors] = useState({
+    sendingAmount: "",
+    payoutCountryId: "",
+    payoutCurrency: "",
+    proposedRate: "",
+    purpose: "",
+  });
+
+  const formValidation = () => {
+    const error = {
+      sendingAmount: "",
+      payoutCountryId: "",
+      payoutCurrency: "",
+      proposedRate: "",
+      purpose: "",
+    };
+    let isValid = true;
+    if (!formData.sendingAmount) {
+      error.sendingAmount = "Sending amount is required";
+      isValid = false;
+    }
+    if (!formData.payoutCountryId) {
+      error.payoutCountryId = "Payout country is required";
+    }
+    if (!formData.payoutCurrency) {
+      error.payoutCurrency = "Payout currency is required";
+      isValid = false;
+    }
+    if (!formData.proposedRate) {
+      error.proposedRate = "Proposed rate is required";
+      isValid = false;
+    }
+    if (!formData.purpose) {
+      error.purpose = "Proposed rate is required";
+      isValid = false;
+    }
+    setErrors(error);
+    return isValid;
+  };
+
   const [formData, setFormData] = useState({
     sendingAmount: "",
     payoutCountry: "",
@@ -158,6 +198,10 @@ const DealRequestForm = ({
       payoutCurrency: "",
       currentMarketRate: "",
     });
+    setErrors((prev) => ({
+      ...prev,
+      payoutCountryId: "",
+    }));
   };
 
   const handleCurrencyChange = (currency: string) => {
@@ -172,6 +216,10 @@ const DealRequestForm = ({
       payoutCurrency: currency,
       currentMarketRate: marketRate,
     });
+    setErrors((prev) => ({
+      ...prev,
+      payoutCurrency: "",
+    }));
   };
 
   const calculateSavings = () => {
@@ -254,20 +302,7 @@ const DealRequestForm = ({
   };
 
   const handleConfirm = () => {
-    if (
-      !formData.sendingAmount ||
-      !formData.payoutCountryId ||
-      !formData.payoutCurrency ||
-      !formData.proposedRate ||
-      !formData.purpose
-    ) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!formValidation()) return;
     setShowConfirmation(true);
   };
 
@@ -287,6 +322,13 @@ const DealRequestForm = ({
               currentMarketRate: "",
               purpose: "",
               notes: "",
+            });
+            setErrors({
+              sendingAmount: "",
+              payoutCountryId: "",
+              payoutCurrency: "",
+              proposedRate: "",
+              purpose: "",
             });
           }
         }}
@@ -349,24 +391,37 @@ const DealRequestForm = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sendingAmount">Amount to Send *</Label>
+                    <Label htmlFor="sendingAmount">
+                      Amount to Send <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="sendingAmount"
                       type="number"
                       placeholder="Enter amount"
                       value={formData.sendingAmount}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           sendingAmount: e.target.value,
-                        })
-                      }
+                        });
+                        setErrors((prev) => ({
+                          ...prev,
+                          sendingAmount: "",
+                        }));
+                      }}
                       onWheel={(e) => e.currentTarget.blur()}
                     />
+                    {errors?.sendingAmount && (
+                      <p className="text-sm font-normal text-red-500">
+                        {errors?.sendingAmount}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="payoutCountry">Payout Country *</Label>
+                    <Label htmlFor="payoutCountry">
+                      Payout Country <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={formData.payoutCountryId}
                       onValueChange={handleCountryChange}
@@ -385,10 +440,17 @@ const DealRequestForm = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors?.payoutCountryId && (
+                      <p className="text-sm font-normal text-red-500">
+                        {errors?.payoutCountryId}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="payoutCurrency">Payout Currency *</Label>
+                    <Label htmlFor="payoutCurrency">
+                      Payout Currency <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={formData.payoutCurrency}
                       onValueChange={handleCurrencyChange}
@@ -405,16 +467,27 @@ const DealRequestForm = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors?.payoutCurrency && (
+                      <p className="text-sm font-normal text-red-500">
+                        {errors?.payoutCurrency}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="purpose">Transaction Purpose *</Label>
+                  <Label htmlFor="purpose">
+                    Transaction Purpose <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={formData.purpose}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, purpose: value })
-                    }
+                    onValueChange={(value) => {
+                      setErrors((prev) => ({
+                        ...prev,
+                        purpose: "",
+                      }));
+                      setFormData({ ...formData, purpose: value });
+                    }}
                   >
                     <SelectTrigger id="purpose">
                       <SelectValue placeholder="Select purpose" />
@@ -430,6 +503,11 @@ const DealRequestForm = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors?.purpose && (
+                    <p className="text-sm font-normal text-red-500">
+                      {errors?.purpose}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -461,24 +539,35 @@ const DealRequestForm = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="proposedRate">Your Proposed Rate *</Label>
+                    <Label htmlFor="proposedRate">
+                      Your Proposed Rate <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="proposedRate"
                       type="number"
                       step="0.01"
                       placeholder="Enter your desired rate"
                       value={formData.proposedRate}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setErrors((prev) => ({
+                          ...prev,
+                          proposedRate: "",
+                        }));
                         setFormData({
                           ...formData,
                           proposedRate: e.target.value,
-                        })
-                      }
+                        });
+                      }}
                       onWheel={(e) => e.currentTarget.blur()}
                     />
                     <p className="text-xs text-muted-foreground">
                       Rate you would like to negotiate
                     </p>
+                    {errors?.proposedRate && (
+                      <p className="text-sm font-normal text-red-500">
+                        {errors?.proposedRate}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -549,7 +638,19 @@ const DealRequestForm = ({
 
             {/* Actions */}
             <div className="flex justify-between pt-4 border-t">
-              <Button variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setErrors({
+                    sendingAmount: "",
+                    payoutCountryId: "",
+                    payoutCurrency: "",
+                    proposedRate: "",
+                    purpose: "",
+                  });
+                  setOpen(false);
+                }}
+              >
                 Cancel
               </Button>
               <Button

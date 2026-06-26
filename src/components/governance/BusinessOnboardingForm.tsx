@@ -2358,7 +2358,13 @@ const BusinessOnboardingForm = ({
                   const step2Valid = validateStep2();
                   const step3Valid = validateStep3();
                   const step4Valid = validateStep4();
-                  if (step1Valid && step2Valid && step3Valid && step3Valid) {
+                  if (
+                    step1Valid &&
+                    step2Valid &&
+                    step3Valid &&
+                    step3Valid &&
+                    step4Valid
+                  ) {
                     handleSubmit();
                   } else {
                     if (!step1Valid) setCurrentStep(1);

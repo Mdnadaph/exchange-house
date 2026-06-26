@@ -189,6 +189,13 @@ const ExchangeBusinessOnboarding = () => {
             Pending Review
           </Badge>
         );
+      case "NOT_STARTED":
+        return (
+          <Badge variant="secondary">
+            <Clock className="h-3 w-3 mr-1" />
+            Not Started
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -227,7 +234,6 @@ const ExchangeBusinessOnboarding = () => {
             </p>
           </div>
           {/*<BusinessOnboardingForm onSuccess={refreshData} />*/}
-
           <PermissionGate permission="BTN_ONBOARD_BUSINESS">
             <BusinessOnboardingForm onSuccess={refreshData} />
           </PermissionGate>
