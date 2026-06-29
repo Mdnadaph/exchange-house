@@ -22,6 +22,7 @@ import {
   File,
   Image,
   FileSpreadsheet,
+  CircleX,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -162,6 +163,8 @@ const UserDocuments = () => {
       setError("Missing business ID or authentication token");
     }
   }, [id, token]);
+
+  console.log("apiData", apiData);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -309,7 +312,7 @@ const UserDocuments = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -380,6 +383,22 @@ const UserDocuments = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 Total required for KYB
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Rejected Documents
+              </CardTitle>
+              <CircleX className="h-5 w-5 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {documents.filter((d) => d.status === "rejected").length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Total rejected for KYB
               </p>
             </CardContent>
           </Card>

@@ -433,6 +433,7 @@ const UserTransactions = () => {
   useEffect(() => {
     fetchTransactions();
   }, [token, transactionType, page, debouncedSearch, fromDate, toDate]);
+
   //const getStatusBadge = (status: string) => {
   //  const statusMap = {
   //    COMPLETED: {

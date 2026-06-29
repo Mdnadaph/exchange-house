@@ -60,6 +60,8 @@ interface KYBApplication {
   country: string;
   branchName: string;
   kybStatus: string;
+  onboardedByType: string;
+  branchOnboarded: boolean;
   businessAdminName: string | null;
   businessAdminEmail: string | null;
   businessAdminPhone: string | null;
@@ -173,6 +175,8 @@ const ExchangeKYBReview = () => {
           id: `KYB-${app.id.toString().padStart(4, "0")}`,
           businessName: app.companyName || "",
           businessType: app.businessType || "",
+          branchOnboarded: app?.branchOnboarded,
+          onboardedByType: app?.onboardedByType || "",
           submittedDate: formatDate(app.createdDate) || "",
           priority: determinePriority(app.kybStatus, app.createdDate),
           status: mapKybStatus(app.kybStatus),
@@ -1124,6 +1128,25 @@ const ExchangeKYBReview = () => {
                               {application.completeness}% Complete
                             </p>
                           </div>
+                          {application?.branchOnboarded && (
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground text-sm">
+                                Onboarded By Branch:
+                              </span>
+
+                              <p className="text-xs font-medium">
+                                {application?.onboardedByType
+                                  ?.toLowerCase()
+                                  ?.split("_")
+                                  ?.map(
+                                    (word) =>
+                                      word?.charAt(0)?.toUpperCase() +
+                                      word?.slice(1),
+                                  )
+                                  ?.join(" ")}
+                              </p>
+                            </div>
+                          )}
                         </div>
 
                         {/* Transaction Profile */}

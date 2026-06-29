@@ -782,7 +782,7 @@ const UserProfile = () => {
                   <input
                     id="profileUpload"
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                     className="hidden"
                     onChange={handleImageUpload}
                   />

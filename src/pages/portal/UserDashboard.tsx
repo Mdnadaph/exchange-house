@@ -475,7 +475,11 @@ const UserDashboard = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Recent Transactions</CardTitle>
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/portal/transactions")}
+                  >
                     View All
                     <ArrowUpRight className="h-4 w-4 ml-1" />
                   </Button>

@@ -126,7 +126,7 @@ const UserDealRequests = () => {
   }, [searchTerm]);
   useEffect(() => {
     getRateDeals();
-  }, [debounceValue, statusFilter, fromDate, toDate]);
+  }, [debounceValue, statusFilter, fromDate, toDate, page]);
 
   // Search debounce effect
   useEffect(() => {
