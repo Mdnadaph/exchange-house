@@ -2343,13 +2343,13 @@ const UserBeneficiaries = () => {
                                 <Button variant="outline" size="sm">
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
+                                {/* <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDeleteGroup(group.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </Button> */}
                               </div>
                             </div>
                           </CardContent>

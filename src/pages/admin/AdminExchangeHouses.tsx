@@ -610,7 +610,9 @@ const AdminExchangeHouses = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">{t("fullName")} *</Label>
+                      <Label htmlFor="fullName">
+                        {t("fullName")} <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="fullName"
                         value={formData.fullName}
@@ -635,7 +637,10 @@ const AdminExchangeHouses = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t("adminEmail")} *</Label>
+                      <Label htmlFor="email">
+                        {t("adminEmail")}{" "}
+                        <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="email"
                         type="email"
@@ -660,7 +665,7 @@ const AdminExchangeHouses = () => {
                     <div className="space-y-2">
                       <Label htmlFor="phoneNumber">
                         {/* {t("phoneNumber")} * */}
-                        Phone Number *
+                        Phone Number <span className="text-red-500">*</span>
                       </Label>
                       <PhoneInput
                         country={"ae"} // Defaulting to UAE based on your preferredCountries
@@ -706,7 +711,8 @@ const AdminExchangeHouses = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="primaryContactEmail">
-                        {t("primaryContactEmail")} *
+                        {t("primaryContactEmail")}{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="primaryContactEmail"
@@ -742,7 +748,8 @@ const AdminExchangeHouses = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="legalBusinessName">
-                        {t("legalBusinessName")} *
+                        {t("legalBusinessName")}{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="legalBusinessName"
@@ -861,19 +868,26 @@ const AdminExchangeHouses = () => {
                       <Input
                         id="city"
                         value={formData.city}
-                        onChange={(e) =>
-                          setFormData({ ...formData, city: e.target.value })
-                        }
+                        onChange={(e) => {
+                          setFormData({ ...formData, city: e.target.value });
+                        }}
                         placeholder="Abu Dhabi"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="countryId">{t("country")}</Label>
+                      <Label htmlFor="countryId">
+                        {t("country")} <span className="text-red-500">*</span>
+                      </Label>
                       <Select
                         value={formData.countryId.toString()}
-                        onValueChange={(val) =>
-                          setFormData({ ...formData, countryId: Number(val) })
-                        }
+                        onValueChange={(val) => {
+                          setFormData({ ...formData, countryId: Number(val) });
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.countryId;
+                            return next;
+                          });
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectCountry")} />
@@ -886,6 +900,11 @@ const AdminExchangeHouses = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.countryId?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="postalCode">{t("postalCode")}</Label>

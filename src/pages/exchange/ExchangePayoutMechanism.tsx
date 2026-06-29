@@ -524,7 +524,9 @@ export default function ExchangePayoutMechanism() {
           <div className="w-full">
             {/* COUNTRY */}
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>
+                Country <span className="text-red-500">*</span>
+              </Label>
 
               <Popover>
                 <PopoverTrigger asChild>
@@ -576,7 +578,9 @@ export default function ExchangePayoutMechanism() {
 
             {/* MECHANISMS */}
             <div className="mt-6">
-              <Label>Payout Mechanisms *</Label>
+              <Label>
+                Payout Mechanisms <span className="text-red-500">*</span>
+              </Label>
 
               <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
                 {payoutList?.map((m) => (
@@ -765,7 +769,9 @@ export default function ExchangePayoutMechanism() {
           <div className="w-full">
             {/* COUNTRY */}
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>
+                Country <span className="text-red-500">*</span>
+              </Label>
 
               <Popover>
                 <PopoverTrigger asChild>
@@ -821,7 +827,9 @@ export default function ExchangePayoutMechanism() {
             </div>
             {/* MECHANISMS */}
             <div className="mt-6">
-              <Label>Payout Mechanisms *</Label>
+              <Label>
+                Payout Mechanisms <span className="text-red-500">*</span>
+              </Label>
               <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
                 {payoutList?.map((m) => (
                   <div key={m?.id}>

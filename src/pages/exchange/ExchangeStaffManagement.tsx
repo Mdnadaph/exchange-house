@@ -1406,11 +1406,6 @@ const ExchangeStaffManagement = () => {
 
   const createStaff = async () => {
     if (!validateAllStaff()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -1479,11 +1474,6 @@ const ExchangeStaffManagement = () => {
   // EditStaff sends permissionIds inside the main request
   const EditStaff = async () => {
     if (!validateAllStaff()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -2222,6 +2212,7 @@ const ExchangeStaffManagement = () => {
                     roleId: "",
                   });
                   setIsCreateModalOpen(false);
+                  setStaffErrors({});
                 }}
               >
                 Cancel

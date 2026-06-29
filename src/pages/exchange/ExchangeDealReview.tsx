@@ -70,13 +70,10 @@ const ExchangeDealReview = () => {
   const pageSize = 10;
   const [totalElements, setTotalElements] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [status, setStatus] = useState("");
   const getBranchList = async () => {
-    // IMPORTANT
-    // if (!hasMore) return;
-
     try {
       setBranchListLoading(true);
-
       const currentPage = branchPage;
 
       const res = await axios.get(
@@ -148,13 +145,12 @@ const ExchangeDealReview = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${debounceValue}&page=${page}&size=10&fromDate=${fromDate}&toDate=${toDate}&branchId=${branchId}`,
+        `${BASE_URL}/api/v1/rate-deals?query=${debounceValue}&page=${page}&size=10&fromDate=${fromDate}&toDate=${toDate}&branchId=${branchId}&status=${status}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const json = await res.json();
       if (json?.status !== true || !json.data) {
         throw new Error("Unexpected response format");
@@ -172,7 +168,7 @@ const ExchangeDealReview = () => {
   };
   useEffect(() => {
     getRateDeals();
-  }, [debounceValue, page, fromDate, toDate, branchId]);
+  }, [debounceValue, page, fromDate, toDate, branchId, status]);
   const exchangeAdminStats = rateDealsData?.exchangeAdminStats;
   const dealsData = rateDealsData?.rateDeals?.content;
   const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
@@ -490,8 +486,18 @@ const ExchangeDealReview = () => {
               </div>
 
               <div className="flex gap-2 items-end flex-wrap">
-                <Button variant="outline">Pending</Button>
-                <Button variant="outline">All Branches</Button>
+                <Button variant="outline" onClick={() => setStatus("")}>
+                  All
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setStatus("PENDING_REVIEW")}
+                >
+                  Pending
+                </Button>
+                <Button variant="outline" onClick={() => setBranchId("")}>
+                  All Branches
+                </Button>
                 <Button variant="outline">This Week</Button>
               </div>
             </div>

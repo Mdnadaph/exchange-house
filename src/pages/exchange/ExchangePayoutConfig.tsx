@@ -1516,7 +1516,9 @@ const ExchangePayoutConfig = () => {
                     </h4>
                     {/* NEW DYNAMIC FIELDS SECTION */}
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">List</p>
+                      <p className="font-serif">
+                        List <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismLists[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
                           <div className="space-y-2 w-full">
@@ -1557,7 +1559,10 @@ const ExchangePayoutConfig = () => {
                       ))}
                     </div>
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">Customer Information</p>
+                      <p className="font-serif">
+                        Customer Information{" "}
+                        <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismInformation[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
                           <div className="space-y-2 w-full">
@@ -1969,7 +1974,9 @@ const ExchangePayoutConfig = () => {
                     </h4>
                     {/* List Section */}
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">List</p>
+                      <p className="font-serif">
+                        List <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismLists[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
                           <div className="space-y-2 w-full">
@@ -2013,7 +2020,10 @@ const ExchangePayoutConfig = () => {
 
                     {/* Customer Information Section */}
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">Customer Information</p>
+                      <p className="font-serif">
+                        Customer Information{" "}
+                        <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismInformation[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
                           <div className="space-y-2 w-full">

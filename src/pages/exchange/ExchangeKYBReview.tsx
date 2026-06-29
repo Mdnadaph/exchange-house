@@ -1888,7 +1888,7 @@ const ExchangeKYBReview = () => {
                           htmlFor="rejection-reason"
                           className="text-sm font-medium"
                         >
-                          Rejection Reason (Optional)
+                          Rejection Reason (Required for reject document)
                         </Label>
                         <Textarea
                           id="rejection-reason"
