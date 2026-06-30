@@ -471,7 +471,9 @@ const BranchBulkTransactionForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Purpose of Transaction *</Label>
+            <Label>
+              Purpose of Transaction <span className="text-red-500">*</span>
+            </Label>
             <Select
               value={transactionPurpose}
               onValueChange={setTransactionPurpose}
@@ -497,7 +499,9 @@ const BranchBulkTransactionForm = ({
           </div>
 
           <div className="space-y-1">
-            <Label>Fee Responsibility *</Label>
+            <Label>
+              Fee Responsibility <span className="text-red-500">*</span>
+            </Label>
             <Input disabled defaultValue="BUSINESS" />
           </div>
 
@@ -531,7 +535,9 @@ const BranchBulkTransactionForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Select Mode Of Transaction *</Label>
+            <Label>
+              Select Mode Of Transaction <span className="text-red-500">*</span>
+            </Label>
             <Select value={selectedSource} onValueChange={setSelectedSource}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose account" />

@@ -502,7 +502,7 @@ const ExchangeTransactions = () => {
         icon: Clock,
       },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "outline" as const,
         label: "Proof of Payment Sent",
         icon: Clock,
       },

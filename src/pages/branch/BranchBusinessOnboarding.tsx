@@ -164,16 +164,16 @@ const BranchBusinessOnboarding = () => {
     switch (status) {
       case "NOT_STARTED":
         return (
-          <Badge variant="secondary">
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             <Clock className="h-3 w-3 mr-1" />
-            Not Started
+            Pending Review
           </Badge>
         );
       case "APPROVED":
         return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
+          <Badge variant="default">
             <CheckCircle className="h-3 w-3 mr-1" />
-            Verified
+            Approved
           </Badge>
         );
       case "PENDING":
@@ -183,6 +183,14 @@ const BranchBusinessOnboarding = () => {
             Pending Review
           </Badge>
         );
+      case "REJECTED":
+        return (
+          <Badge variant="destructive">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Review
+          </Badge>
+        );
+
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

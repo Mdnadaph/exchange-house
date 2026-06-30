@@ -250,6 +250,20 @@ const ExchangeDealReview = () => {
             Counter Proposal
           </Badge>
         );
+      case "COUNTER_PROPOSAL_DECLINED":
+        return (
+          <Badge variant="destructive">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Counter Proposal Declinded
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_ACCEPTED":
+        return (
+          <Badge variant="destructive" className="bg-green-100 text-green-800">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Counter Proposal Accepted
+          </Badge>
+        );
       case "REJECTED":
         return (
           <Badge variant="destructive">
@@ -484,7 +498,6 @@ const ExchangeDealReview = () => {
                   </Select>
                 </div>
               </div>
-
               <div className="flex gap-2 items-end flex-wrap">
                 <Button variant="outline" onClick={() => setStatus("")}>
                   All

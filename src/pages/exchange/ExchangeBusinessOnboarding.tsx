@@ -175,16 +175,22 @@ const ExchangeBusinessOnboarding = () => {
   const getKYBStatusBadge = (status) => {
     switch (status) {
       case "VERIFIED":
-      case "APPROVED":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
             Verified
           </Badge>
         );
+      case "APPROVED":
+        return (
+          <Badge variant="default">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Approved
+          </Badge>
+        );
       case "PENDING":
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <Badge variant="secondary">
             <Clock className="h-3 w-3 mr-1" />
             Pending Review
           </Badge>
@@ -193,7 +199,14 @@ const ExchangeBusinessOnboarding = () => {
         return (
           <Badge variant="secondary">
             <Clock className="h-3 w-3 mr-1" />
-            Not Started
+            Pending Review
+          </Badge>
+        );
+      case "REJECTED":
+        return (
+          <Badge variant="destructive">
+            <Clock className="h-3 w-3 mr-1" />
+            Rejected
           </Badge>
         );
       default:

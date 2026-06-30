@@ -527,7 +527,7 @@ const ExchangeBusinessDocuments = () => {
 
                 return (
                   <Card key={doc.documentId}>
-                    <CardContent className="p-4 flex justify-between">
+                    <CardContent className="p-4 flex justify-between flex-wrap gap-2">
                       <div className="flex gap-3">
                         <FileText className="h-8 w-8 text-primary" />
                         <div>
@@ -554,7 +554,7 @@ const ExchangeBusinessDocuments = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2  flex-wrap">
                         {/* ✅ CHANGED: only THIS button disables and shows spinner */}
                         <Button
                           variant="outline"
