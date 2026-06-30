@@ -583,6 +583,16 @@ const UserTransactions = () => {
         label: "Compliance Review",
         icon: AlertCircle,
       },
+      CANCELLED_WITH_REFUND: {
+        variant: "destructive",
+        label: "Cancelled With Refund",
+        icon: AlertCircle,
+      },
+      CANCELLED: {
+        variant: "destructive",
+        label: "Cancelled",
+        icon: AlertCircle,
+      },
     };
 
     return (

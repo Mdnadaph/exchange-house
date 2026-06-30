@@ -187,7 +187,7 @@ const BranchBusinessOnboarding = () => {
         return (
           <Badge variant="destructive">
             <Clock className="h-3 w-3 mr-1" />
-            Pending Review
+            Rejected
           </Badge>
         );
 

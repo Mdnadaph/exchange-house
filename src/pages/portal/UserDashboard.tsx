@@ -269,8 +269,13 @@ const UserDashboard = () => {
         icon: AlertCircle,
       },
       CANCELLED_WITH_REFUND: {
-        variant: "outline",
+        variant: "destructive",
         label: "Cancelled With Refund",
+        icon: AlertCircle,
+      },
+      CANCELLED: {
+        variant: "destructive",
+        label: "Cancelled ",
         icon: AlertCircle,
       },
     };

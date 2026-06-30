@@ -160,7 +160,7 @@ const BussinessUserDashboard = () => {
         icon: Clock,
       },
       PAYMENT_PENDING: {
-        variant: "destructive" as const,
+        variant: "outline" as const,
         label: "Pending Payment",
         icon: Wallet,
       },

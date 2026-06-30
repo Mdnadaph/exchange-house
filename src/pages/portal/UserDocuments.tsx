@@ -164,8 +164,6 @@ const UserDocuments = () => {
     }
   }, [id, token]);
 
-  console.log("apiData", apiData);
-
   const getStatusBadge = (status: string) => {
     const statusMap = {
       approved: {

@@ -193,6 +193,27 @@ const UserDealRequests = () => {
             Expired
           </Badge>
         );
+      case "USED":
+        return (
+          <Badge variant="default">
+            <Clock className="h-3 w-3 mr-1" />
+            Used
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_DECLINED":
+        return (
+          <Badge variant="outline">
+            <Clock className="h-3 w-3 mr-1" />
+            Counter Proposal Declined
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_ACCEPTED":
+        return (
+          <Badge variant="default">
+            <Clock className="h-3 w-3 mr-1" />
+            Counter Proposal Accepted
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

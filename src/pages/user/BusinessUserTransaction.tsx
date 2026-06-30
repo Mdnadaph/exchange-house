@@ -444,7 +444,7 @@ const BusinessUserTransaction = () => {
         icon: Clock,
       },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "secondary" as const,
         label: "Proof of Payment Sent",
         icon: Clock,
       },

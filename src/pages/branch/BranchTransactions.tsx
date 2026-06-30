@@ -451,7 +451,7 @@ const BranchTransactions = () => {
         icon: Clock,
       },
       PAYMENT_VERIFICATION_PENDING: {
-        variant: "destructive" as const,
+        variant: "secondary" as const,
         label: "Payment Verification Pending",
         icon: Clock,
       },
@@ -491,7 +491,7 @@ const BranchTransactions = () => {
         icon: Clock,
       },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "secondary" as const,
         label: "Proof of Payment Sent",
         icon: Clock,
       },
