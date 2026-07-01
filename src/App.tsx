@@ -105,6 +105,7 @@ import ExchangeReports from "./pages/exchange/ExchangeReports";
 import UserReports from "./pages/portal/UserReports";
 import BranchBeneficries from "./pages/branch/BranchBeneficries";
 import ExchangeAdminMember from "./pages/exchange/ExchangeAdminMember";
+import ExchangeAdminCurrencyExchangeRate from "./pages/exchange/ExchangeAdminCurrencyExchangeRate";
 
 const queryClient = new QueryClient();
 
@@ -356,6 +357,10 @@ function App() {
                       element={<ExchangeBusinessDocuments />}
                     />
                     <Route
+                      path="currency-exchange-rate"
+                      element={<ExchangeAdminCurrencyExchangeRate />}
+                    />
+                    <Route
                       path="fee-management"
                       element={<ExchangeFeeManagement />}
                     />
@@ -418,7 +423,6 @@ function App() {
                     />
                   </Route>
                 </Route>
-
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

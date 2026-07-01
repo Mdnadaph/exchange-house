@@ -29,6 +29,7 @@ import {
   ShieldCheck,
   Globe,
   FileBarChart,
+  Banknote,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 import { useEffect, useRef } from "react";
@@ -115,11 +116,17 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
         //   icon: BookOpen,
         //   code: "NAV_TRANSACTION_REPORT",
         // },
+
         {
           name: "Documents",
           href: "/exchange/documents",
           icon: Files,
           code: "NAV_DOCUMENTS",
+        },
+        {
+          name: "Currency Exchange Rate",
+          href: "/exchange/currency-exchange-rate",
+          icon: Banknote,
         },
       ],
     },
