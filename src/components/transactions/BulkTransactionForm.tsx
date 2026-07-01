@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Info,
   Trash2,
+  Download,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -87,6 +88,7 @@ const BulkTransactionForm = ({
 
   const [payoutErrors, setPayoutErrors] = useState<Record<string, boolean>>({});
   const [amountErrors, setAmountErrors] = useState<Record<string, boolean>>({});
+  const [fileName, setFileName] = useState(null);
 
   // Mock sources (replace with real fetch if needed)
   const transactionSources = [
@@ -186,6 +188,16 @@ const BulkTransactionForm = ({
       delete updated[id];
       return updated;
     });
+  };
+
+  const handleDownloadTemplate = () => {
+    // Wire this up to your actual template file download
+    console.log("Download template");
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setFileName(file.name);
   };
 
   const requiredDocForPorpose = transactionPurposeList?.find(
@@ -658,7 +670,79 @@ const BulkTransactionForm = ({
                 ))}
               </SelectContent>
             </Select>
+            {/* <Card className="p-6 ">
+              <div className="max-w-3xl mx-auto p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Upload size={18} className="text-gray-900" />
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Upload Beneficiary Data
+                  </h2>
+                </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-xl border-2 border-dashed border-[#1B2A6B] bg-[#EEF0FA] px-6 py-8 flex flex-col items-center text-center">
+                    <button
+                      onClick={handleDownloadTemplate}
+                      className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 transition-colors"
+                    >
+                      <Download size={16} />
+                      Download Template
+                    </button>
+                    <p className="mt-4 text-sm font-semibold text-gray-900">
+                      Step 1: Download Template
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Get the Vendor Payment template
+                    </p>
+                  </div>
+
+                  <label
+                    htmlFor="beneficiary-upload"
+                    className="rounded-xl border-2 border-dashed border-gray-300 px-6 py-8 flex flex-col items-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    <input
+                      id="beneficiary-upload"
+                      type="file"
+                      accept=".xlsx,.csv"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                    <Upload size={22} className="text-gray-400" />
+                    <p className="mt-4 text-sm font-semibold text-gray-900">
+                      Step 2: Upload Filled Template
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {fileName ? fileName : "Excel (.xlsx) or CSV files"}
+                    </p>
+                  </label>
+                </div>
+
+                <div className="mt-4 rounded-xl bg-[#FBF8F1] px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <Info size={16} className="text-amber-500" />
+                    <span className="text-sm font-semibold text-gray-900">
+                      Required Information
+                    </span>
+                  </div>
+                  <ul className="mt-2 space-y-1.5 pl-1">
+                    {[
+                      "Beneficiary Name and Account Details",
+                      "Individual Transaction Amounts",
+                      "Purpose/Description for each payment",
+                      "Employee ID (for salary payments)",
+                    ].map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2 text-sm text-gray-500"
+                      >
+                        <span className="mt-1.5 h-1 w-1 rounded-full bg-gray-400 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card> */}
             {selectedGroup &&
               selectedGroup !== "none" &&
               getSelectedGroup() && (

@@ -2,6 +2,7 @@ import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BusinessOnboardingForm from "@/components/governance/BusinessOnboardingForm";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
   Building2,
   CheckCircle,
@@ -27,12 +28,15 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useEffect, useState } from "react";
-import { Button } from "react-day-picker";
+// import { Button } from "react-day-picker";
+import { Button } from "@/components/ui/button";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import { Label } from "recharts";
 import { Input } from "@/components/ui/input";
 import PaginationSummary from "@/components/PaginationSummary";
 import PaginationControl from "@/components/PaginationControl";
+import { number } from "yup";
+import { useToast } from "@/hooks/use-toast";
 
 const ExchangeBusinessOnboarding = () => {
   const [cookies] = useCookies(["token"]);
@@ -47,6 +51,10 @@ const ExchangeBusinessOnboarding = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [businessAdminEmail, setBusinessAdminEmail] = useState<string>("");
+  const [resentEmailLoading, setResendEmailLoading] = useState<boolean>(false);
+  const { toast } = useToast();
   const [stats, setStats] = useState({
     totalBusinesses: 0,
     pendingKYB: 0,
@@ -171,6 +179,47 @@ const ExchangeBusinessOnboarding = () => {
     fromDate,
     toDate,
   ]);
+  console.log("business", businesses);
+
+  const handleSubmit = async () => {
+    setResendEmailLoading(true);
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v3/business-auth/resend-invitation?email=${businessAdminEmail}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setShowConfirmation(false);
+        setBusinessAdminEmail(null);
+        fetchBusinesses();
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while resend email",
+      });
+    } finally {
+      setResendEmailLoading(false);
+    }
+  };
 
   const getKYBStatusBadge = (status) => {
     switch (status) {
@@ -183,9 +232,9 @@ const ExchangeBusinessOnboarding = () => {
         );
       case "APPROVED":
         return (
-          <Badge variant="default">
+          <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
-            Approved
+            Verified
           </Badge>
         );
       case "PENDING":
@@ -503,6 +552,20 @@ const ExchangeBusinessOnboarding = () => {
                             </div>
                           </div>
                         </div>
+                        {business?.canResendInvitation && (
+                          <Button
+                            variant="outline"
+                            type="button"
+                            onClick={() => {
+                              setShowConfirmation(true);
+                              setBusinessAdminEmail(
+                                business?.businessAdminEmail,
+                              );
+                            }}
+                          >
+                            Resend Invitation
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -530,6 +593,15 @@ const ExchangeBusinessOnboarding = () => {
           </CardContent>
         </Card>
       </div>
+      <ConfirmationDialog
+        isConfirming={resentEmailLoading}
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleSubmit}
+        title="Confirm Resend Email"
+        description={`Are you sure you want to resend this email?`}
+        confirmText="Submit Request"
+      />
     </ExchangeLayout>
   );
 };

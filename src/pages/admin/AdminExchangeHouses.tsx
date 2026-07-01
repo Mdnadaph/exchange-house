@@ -92,6 +92,7 @@ interface ExchangeAdmin {
   licenseExpiryDate: string | null;
   businessAddress: string | null;
   city: string | null;
+  canResendInvitation: boolean;
   country: string;
   countryId: number;
   postalCode: string | null;
@@ -170,6 +171,9 @@ const AdminExchangeHouses = () => {
     postalCode: "",
     subscriptionPlanId: 2, // default Professional
   });
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [id, setId] = useState<number | null>(null);
+  const [resentEmailLoading, setResendEmailLoading] = useState<boolean>(false);
 
   // Fetch countries and plans once
   useEffect(() => {
@@ -241,6 +245,46 @@ const AdminExchangeHouses = () => {
       // });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setResendEmailLoading(true);
+      const res = await axios.post(
+        `${BASE_URL}/api/v3/super/exchange-admins/${id}/resend-invitation`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setShowConfirmation(false);
+        setId(null);
+        fetchExchangeAdmins();
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while resend email",
+      });
+    } finally {
+      setResendEmailLoading(false);
     }
   };
 
@@ -1213,6 +1257,17 @@ const AdminExchangeHouses = () => {
                           <div
                             className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
                           >
+                            {admin?.canResendInvitation && (
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setShowConfirmation(true);
+                                  setId(admin?.id);
+                                }}
+                              >
+                                Resend Invitation
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -1365,6 +1420,15 @@ const AdminExchangeHouses = () => {
           description={t("confirmActivateDesc")}
           confirmText={t("activateExchangeHouse")}
           onConfirm={handleActivate}
+        />
+        <ConfirmationDialog
+          isConfirming={resentEmailLoading}
+          open={showConfirmation}
+          onOpenChange={setShowConfirmation}
+          onConfirm={handleSubmit}
+          title="Confirm Resend Email"
+          description={`Are you sure you want to resend this email?`}
+          confirmText="Submit Request"
         />
       </div>
     </AdminLayout>

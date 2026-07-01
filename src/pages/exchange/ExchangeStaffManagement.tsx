@@ -1219,6 +1219,7 @@ import { PermissionGate } from "@/contexts/PermissionGate";
 import { Loader2 } from "lucide-react";
 import PaginationSummary from "@/components/PaginationSummary";
 import PaginationControl from "@/components/PaginationControl";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 
@@ -1295,6 +1296,11 @@ const ExchangeStaffManagement = () => {
   >("create");
   const [rawSelectedIds, setRawSelectedIds] = useState<string[]>([]);
   // ---------- End permission state ----------
+
+  const [resendInvitationloading, setResendInvitationLoading] =
+    useState<boolean>(false);
+  const [staffEmail, setStaffEmail] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
 
   const clearStaffError = (field: string) => {
     setStaffErrors((prev) => {
@@ -1403,6 +1409,46 @@ const ExchangeStaffManagement = () => {
   useEffect(() => {
     if (token) fetchBranchWithStaff(currentPage);
   }, [token, currentPage, debounceValue, filterByRole]);
+
+  const handleSubmit = async () => {
+    setResendInvitationLoading(true);
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v3/admin/staff/${staffEmail}/resend-invitation`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setShowConfirmation(false);
+        setStaffEmail(null);
+        fetchBranchWithStaff();
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while resend email",
+      });
+    } finally {
+      setResendInvitationLoading(false);
+    }
+  };
 
   const createStaff = async () => {
     if (!validateAllStaff()) {
@@ -2913,6 +2959,19 @@ const ExchangeStaffManagement = () => {
                                           </div>
                                         </div>
                                         <div className="flex flex-col space-y-2 ml-4">
+                                          {staff?.canResendInvitation && (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                setShowConfirmation(true);
+                                                setStaffEmail(staff?.email);
+                                              }}
+                                            >
+                                              Resend Invitation
+                                            </Button>
+                                          )}
+
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -2962,6 +3021,15 @@ const ExchangeStaffManagement = () => {
           onPageChange={(page) => setCurrentPage(page)}
         />
       )}
+      <ConfirmationDialog
+        isConfirming={resendInvitationloading}
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleSubmit}
+        title="Confirm Resend Email"
+        description={`Are you sure you want to resend this email?`}
+        confirmText="Submit Request"
+      />
     </>
   );
 };

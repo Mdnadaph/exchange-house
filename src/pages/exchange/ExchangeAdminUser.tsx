@@ -49,6 +49,7 @@ import { Loader2 } from "lucide-react";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import PaginationSummary from "@/components/PaginationSummary";
 import PaginationControl from "@/components/PaginationControl";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 const ExchangeAdminUser = () => {
   const [cookies] = useCookies(["token", "email"]);
@@ -57,6 +58,10 @@ const ExchangeAdminUser = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
+  const [exchangeMemberUuid, setExchangeMemberUuid] = useState<string>("");
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [resendEmailLoading, setResendEmailLoading] = useState<boolean>(false);
+
   const [pageSize] = useState(10);
   const token = cookies.token;
   const email = cookies.email;
@@ -330,6 +335,46 @@ const ExchangeAdminUser = () => {
   useEffect(() => {
     if (token) fetchUsers(currentPage);
   }, [token, currentPage]);
+
+  const handleSubmit = async () => {
+    setResendEmailLoading(true);
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/exchange-users/${exchangeMemberUuid}/resend-invitation`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setShowConfirmation(false);
+        setExchangeMemberUuid(null);
+        fetchUsers();
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while resend email",
+      });
+    } finally {
+      setResendEmailLoading(false);
+    }
+  };
 
   const createUser = async () => {
     if (!validateAll()) {
@@ -1171,6 +1216,15 @@ const ExchangeAdminUser = () => {
                             <Edit className="h-4 w-4 mr-1" /> Edit Details
                           </Button> */}
                               <Button
+                                onClick={() => {
+                                  setShowConfirmation(true);
+                                  setExchangeMemberUuid(user?.uuid);
+                                }}
+                                variant="outline"
+                              >
+                                Resend Invitation
+                              </Button>
+                              <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={async () => {
@@ -1209,6 +1263,16 @@ const ExchangeAdminUser = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={(page) => setCurrentPage(page)}
+      />
+
+      <ConfirmationDialog
+        isConfirming={resendEmailLoading}
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleSubmit}
+        title="Confirm Resend Email"
+        description={`Are you sure you want to resend this email?`}
+        confirmText="Submit Request"
       />
     </>
   );

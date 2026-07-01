@@ -45,8 +45,9 @@ const ApprovalRuleForm = ({
   editRule,
   onSuccess,
 }: ApprovalRuleFormProps) => {
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies.token;
+  const currencyCode = cookies.currencyCode;
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: editRule?.name || "",
@@ -439,6 +440,9 @@ const ApprovalRuleForm = ({
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value={currencyCode}>
+                        {currencyCode}
+                      </SelectItem>
                       {currencies.map((c) => (
                         <SelectItem key={c.currencyCode} value={c.currencyCode}>
                           {c.currencyCode}
