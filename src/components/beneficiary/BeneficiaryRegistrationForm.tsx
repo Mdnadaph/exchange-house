@@ -911,7 +911,7 @@ const BeneficiaryRegistrationForm = ({
                       </Card>
                     ))}
 
-                    <Button
+                    {/*<Button
                       type="button"
                       variant="outline"
                       className="w-full border-dashed border-primary text-primary hover:bg-primary/5 gap-2"
@@ -919,7 +919,7 @@ const BeneficiaryRegistrationForm = ({
                     >
                       <Plus className="h-4 w-4" />
                       Add Another {selectedMechanism.payoutTypeName} Account
-                    </Button>
+                    </Button>*/}
                   </div>
                 )}
               </>
