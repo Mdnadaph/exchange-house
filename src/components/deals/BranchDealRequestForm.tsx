@@ -29,12 +29,14 @@ interface DealRequestFormProps {
   trigger?: React.ReactNode;
   onSubmitSuccess?: () => void;
   refetch?: () => any;
+  clearFilterData?: () => void;
 }
 
 const BranchDealRequestForm = ({
   trigger,
   onSubmitSuccess,
   refetch,
+  clearFilterData,
 }: DealRequestFormProps) => {
   const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies.token;
@@ -59,6 +61,60 @@ const BranchDealRequestForm = ({
     notes: "",
     businessId: "",
   });
+
+  const [error, setError] = useState({
+    sendingAmount: "",
+    payoutCountryId: "",
+    payoutCurrency: "",
+    proposedRate: "",
+    purpose: "",
+    businessId: "",
+  });
+
+  const formValidation = () => {
+    const err = {
+      sendingAmount: "",
+      payoutCountryId: "",
+      payoutCurrency: "",
+      proposedRate: "",
+      purpose: "",
+      businessId: "",
+    };
+    let isValid = true;
+    if (!formData?.sendingAmount) {
+      err.sendingAmount = "Amount is required";
+      isValid = false;
+    }
+    if (!formData?.payoutCountryId) {
+      err.payoutCountryId = "Payout Country is required";
+      isValid = false;
+    }
+    if (!formData?.payoutCurrency) {
+      err.payoutCurrency = "Payout Currency is required";
+      isValid = false;
+    }
+    if (!formData.proposedRate) {
+      err.proposedRate = "Proposed Rate is required";
+      isValid = false;
+    }
+    if (!formData.purpose) {
+      err.purpose = "Transaction Purpose is required";
+      isValid = false;
+    }
+    if (!formData.businessId) {
+      err.businessId = "Business is required";
+      isValid = false;
+    }
+    setError(err);
+    return isValid;
+  };
+
+  const clearError = (field: string) => {
+    setError((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
+  };
 
   // Derive unique countries from complianceCurrencies
   const countries = Array.from(
@@ -179,8 +235,6 @@ const BranchDealRequestForm = ({
     getBusinessUserList();
   }, [open]);
 
-  console.log("BusinessUser", businessList);
-
   const handleCountryChange = (countryId: string) => {
     // Find the matching country entry to get countryCode for UI filtering
     const countryEntry = complianceCurrencies.find(
@@ -194,6 +248,7 @@ const BranchDealRequestForm = ({
       payoutCurrency: "",
       currentMarketRate: "",
     });
+    clearError("payoutCountryId");
   };
 
   const handleCurrencyChange = (currency: string) => {
@@ -201,13 +256,14 @@ const BranchDealRequestForm = ({
     const rateEntry = exchangeRates?.find(
       (r) => r?.name?.toLowerCase() === currency?.toLowerCase(),
     );
-    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(2) : "";
+    const marketRate = rateEntry ? (1 / rateEntry?.rate).toFixed(7) : "";
 
     setFormData({
       ...formData,
       payoutCurrency: currency,
       currentMarketRate: marketRate,
     });
+    clearError("payoutCurrency");
   };
 
   const calculateSavings = () => {
@@ -259,7 +315,7 @@ const BranchDealRequestForm = ({
       if (!res.ok || json.status !== true) {
         throw new Error(json.message || "Create failed");
       }
-
+      clearFilterData?.();
       setFormData({
         sendingAmount: "",
         payoutCountry: "",
@@ -292,20 +348,7 @@ const BranchDealRequestForm = ({
   };
 
   const handleConfirm = () => {
-    if (
-      !formData.sendingAmount ||
-      !formData.payoutCountryId ||
-      !formData.payoutCurrency ||
-      !formData.proposedRate ||
-      !formData.purpose
-    ) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!formValidation()) return;
     setShowConfirmation(true);
   };
 
@@ -325,6 +368,14 @@ const BranchDealRequestForm = ({
               currentMarketRate: "",
               purpose: "",
               notes: "",
+              businessId: "",
+            });
+            setError({
+              sendingAmount: "",
+              payoutCountryId: "",
+              payoutCurrency: "",
+              proposedRate: "",
+              purpose: "",
               businessId: "",
             });
           }
@@ -388,20 +439,28 @@ const BranchDealRequestForm = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sendingAmount">Amount to Send *</Label>
+                    <Label htmlFor="sendingAmount">
+                      Amount to Send <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="sendingAmount"
                       type="number"
                       placeholder="Enter amount"
                       value={formData.sendingAmount}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           sendingAmount: e.target.value,
-                        })
-                      }
+                        });
+                        clearError("sendingAmount");
+                      }}
                       onWheel={(e) => e.currentTarget.blur()}
                     />
+                    {error?.sendingAmount && (
+                      <p className="text-red-600 text-sm font-normal">
+                        {error?.sendingAmount}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -424,6 +483,11 @@ const BranchDealRequestForm = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    {error?.payoutCountryId && (
+                      <p className="text-red-600 text-sm font-normal">
+                        {error?.payoutCountryId}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -444,6 +508,11 @@ const BranchDealRequestForm = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    {error?.payoutCurrency && (
+                      <p className="text-red-600 text-sm font-normal">
+                        {error?.payoutCurrency}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -451,9 +520,10 @@ const BranchDealRequestForm = ({
                   <Label htmlFor="business">Business *</Label>
                   <Select
                     value={formData.businessId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, businessId: value })
-                    }
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, businessId: value });
+                      clearError("businessId");
+                    }}
                   >
                     <SelectTrigger id="business">
                       <SelectValue placeholder="Select business" />
@@ -469,14 +539,20 @@ const BranchDealRequestForm = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  {error?.businessId && (
+                    <p className="text-red-600 text-sm font-normal">
+                      {error?.businessId}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="purpose">Transaction Purpose *</Label>
                   <Select
                     value={formData.purpose}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, purpose: value })
-                    }
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, purpose: value });
+                      clearError("purpose");
+                    }}
                   >
                     <SelectTrigger id="purpose">
                       <SelectValue placeholder="Select purpose" />
@@ -492,6 +568,11 @@ const BranchDealRequestForm = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  {error?.purpose && (
+                    <p className="text-red-600 text-sm font-normal">
+                      {error?.purpose}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -530,14 +611,20 @@ const BranchDealRequestForm = ({
                       step="0.01"
                       placeholder="Enter your desired rate"
                       value={formData.proposedRate}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           proposedRate: e.target.value,
-                        })
-                      }
+                        });
+                        clearError("proposedRate");
+                      }}
                       onWheel={(e) => e.currentTarget.blur()}
                     />
+                    {error?.proposedRate && (
+                      <p className="text-red-600 text-sm font-normal">
+                        {error?.proposedRate}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Rate you would like to negotiate
                     </p>
@@ -611,7 +698,31 @@ const BranchDealRequestForm = ({
 
             {/* Actions */}
             <div className="flex justify-between pt-4 border-t">
-              <Button variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOpen(false);
+                  setError({
+                    sendingAmount: "",
+                    payoutCountryId: "",
+                    payoutCurrency: "",
+                    proposedRate: "",
+                    purpose: "",
+                    businessId: "",
+                  });
+                  setFormData({
+                    sendingAmount: "",
+                    payoutCountry: "",
+                    payoutCountryId: "",
+                    payoutCurrency: "",
+                    proposedRate: "",
+                    currentMarketRate: "",
+                    purpose: "",
+                    notes: "",
+                    businessId: "",
+                  });
+                }}
+              >
                 Cancel
               </Button>
               <Button

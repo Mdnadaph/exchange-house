@@ -134,11 +134,11 @@ const BusinessUserLayout = ({ children }: UserLayoutProps) => {
       items: [
         { name: "Dashboard", href: "/user", icon: Home },
         { name: "Profile", href: `/user/profile`, icon: UserCircle },
-        {
-          name: "Transaction Report",
-          href: "/user/transaction-report",
-          icon: BookOpen,
-        },
+        // {
+        //   name: "Transaction Report",
+        //   href: "/user/transaction-report",
+        //   icon: BookOpen,
+        // },
       ],
     },
     {

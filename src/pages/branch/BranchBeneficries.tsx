@@ -1,5 +1,5 @@
 import BranchLayout from "@/components/layout/BranchLayout";
-import React from "react";
+import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
 import BranchBeneficiaryRegistrationForm from "@/components/beneficiary/BranchBeneficiaryRegistrationForm";
 import BranchBeneficiaryGroupForm from "@/components/beneficiary/BranchBeneficiaryGroupForm";
+import { PermissionGate } from "@/contexts/PermissionGate";
+import axios from "axios";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -180,6 +191,8 @@ export default function BranchBeneficries() {
   const [appliedSearch, setAppliedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [beneficiariesPage, setBeneficiariesPage] = useState(0);
   const [beneficiariesSize] = useState(10);
@@ -193,8 +206,46 @@ export default function BranchBeneficries() {
   const [payOutConfigData, setPayOutConfigData] = useState(null);
   const [payOutId, setPayOutId] = useState<null | number>(null);
   const [page, setPage] = useState(0);
+  const [totalElementsOfPayoutConfig, setTotalElementsOfPayoutConfig] =
+    useState<number>(0);
+  const [totalPageOfPayoutConfig, setTotalPageOfPayoutConfig] =
+    useState<number>(0);
   const [open, setOpen] = useState(false);
   const [beneficiaryId, setBeneficiaryId] = useState<null | number>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [businessPage, setBusinessPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [businessLoading, setBusinessLoading] = useState<boolean>(false);
+  const [businessId, setBusinessId] = useState("");
+  const [businessAdminList, setBusinessAdminList] = useState([]);
+  const [groupForBusinessId, setGroupForBusinessId] = useState("");
+  const [groupForFromDate, setGroupForFromDate] = useState("");
+  const [groupForToDate, setGroupForToDate] = useState("");
+  const [groupAppliedSearch, setGroupAppliedSearch] = useState("");
+  const [groupSearchInput, setGroupSearchInput] = useState("");
+  const [groupBeneficiaryLoading, setGroupBeneficiaryLoading] =
+    useState<boolean>(false);
+  const [payoutConfigLoading, setPayoutConfigLoading] = useState(false);
+  const [debounce, setDebounce] = useState("");
+  const [groupDebounce, setGroupDebounce] = useState("");
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setGroupDebounce(groupSearchInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [groupSearchInput]);
 
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
@@ -219,9 +270,9 @@ export default function BranchBeneficries() {
   const fetchBeneficiaries = async () => {
     try {
       setLoading(true);
-      let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}`;
+      let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}&fromDate=${fromDate}&toDate=${toDate}&businessId=${businessId}`;
       if (appliedSearch) {
-        url += `&search=${encodeURIComponent(appliedSearch)}`;
+        url += `&search=${encodeURIComponent(debounce)}`;
       }
 
       let approvalStatus = "";
@@ -306,8 +357,9 @@ export default function BranchBeneficries() {
         averageTransaction: item.avgAmount ? String(item.avgAmount) : "0",
       }));
       setBeneficiaries(mappedData);
-      setBeneficiariesTotalPages(json.data.pagination.totalPages);
-      setBeneficiariesTotalItems(json.data.pagination.totalItems);
+      setBeneficiariesTotalPages(json.data.pagination.totalPages || 0);
+      setBeneficiariesTotalItems(json.data.pagination.totalItems || 0);
+      setBeneficiariesPage(json?.data?.pagination?.page || 0);
     } catch (err: any) {
       setError(err.message || "Failed to fetch beneficiaries");
       toast({
@@ -321,6 +373,7 @@ export default function BranchBeneficries() {
   };
 
   const getPayOutConfig = async () => {
+    setPayoutConfigLoading(true);
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/payout/config?page=${page}&size=10`,
@@ -335,9 +388,15 @@ export default function BranchBeneficries() {
         throw new Error("Unexpected response format");
       }
       setPayOutConfigData(json);
+      console.log("payoutConfig", json);
+      setPage(json?.currentPage || 0);
+      setTotalElementsOfPayoutConfig(json?.totalElements || 0);
+      setTotalPageOfPayoutConfig(json?.totalPages || 0);
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setPayoutConfigLoading(false);
     }
   };
 
@@ -347,8 +406,9 @@ export default function BranchBeneficries() {
 
   // Fetch groups from API
   const fetchGroups = async () => {
+    setGroupBeneficiaryLoading(true);
     try {
-      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
+      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}&search=${groupDebounce}&businessId=${groupForBusinessId}&fromDate=${groupForFromDate}&toDate=${groupForToDate}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -376,28 +436,51 @@ export default function BranchBeneficries() {
       }));
 
       setBeneficiaryGroups(mappedGroups);
-      setGroupsTotalPages(json.data.pagination.totalPages);
-      setGroupsTotalItems(json.data.pagination.totalItems);
+      setGroupsTotalPages(json.data.pagination.totalPages || 0);
+      setGroupsTotalItems(json.data.pagination.totalItems || 0);
+      setGroupsPage(json?.data.pagination?.page || 0);
     } catch (err: any) {
       toast({
         title: "Error",
         description: err?.message,
         variant: "destructive",
       });
+    } finally {
+      setGroupBeneficiaryLoading(false);
     }
   };
 
   useEffect(() => {
     fetchBeneficiaries();
-  }, [token, beneficiariesPage, appliedSearch, filterStatus]);
+  }, [
+    token,
+    beneficiariesPage,
+    debounce,
+    filterStatus,
+    fromDate,
+    toDate,
+    businessId,
+  ]);
   useEffect(() => {
     fetchGroups();
-  }, [token, groupsPage]);
+  }, [
+    token,
+    groupsPage,
+    groupDebounce,
+    groupForBusinessId,
+    groupForFromDate,
+    groupForToDate,
+  ]);
 
-  const handleSearch = () => {
-    setAppliedSearch(searchInput);
-    setBeneficiariesPage(0);
-  };
+  // const handleSearch = () => {
+  //   setAppliedSearch(searchInput);
+  //   setBeneficiariesPage(0);
+  // };
+
+  // const handleGroupSearch = () => {
+  //   setGroupAppliedSearch(groupSearchInput);
+  //   setGroupsPage(0);
+  // };
 
   const filteredBeneficiaries = beneficiaries;
 
@@ -439,6 +522,72 @@ export default function BranchBeneficries() {
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
 
+  const getBusinessAdminList = async () => {
+    // IMPORTANT
+    if (businessLoading || !hasMore) return;
+
+    try {
+      setBusinessLoading(true);
+
+      const currentPage = businessPage;
+
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/business?page=${currentPage}&pageSize=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        const newData = res?.data?.data?.businesses?.items || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMore(false);
+        }
+
+        // Prevent duplicate data
+        setBusinessAdminList((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setBusinessPage((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+      });
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !businessLoading && hasMore) {
+      getBusinessAdminList();
+    }
+  };
+  useEffect(() => {
+    getBusinessAdminList();
+  }, []);
   const getAvailabePayoutDestinationStatusBadge = (status: string) => {
     const statusMap = {
       ACTIVE: {
@@ -512,20 +661,20 @@ export default function BranchBeneficries() {
   }, [payOutConfigData?.data?.countries]);
 
   // Loading state
-  if (loading) {
-    return (
-      <BranchLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">
-              Loading beneficiaries...
-            </p>
-          </div>
-        </div>
-      </BranchLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <BranchLayout>
+  //       <div className="flex items-center justify-center h-screen">
+  //         <div className="text-center">
+  //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+  //           <p className="mt-4 text-muted-foreground">
+  //             Loading beneficiaries...
+  //           </p>
+  //         </div>
+  //       </div>
+  //     </BranchLayout>
+  //   );
+  // }
 
   // Error state
   if (error) {
@@ -548,7 +697,7 @@ export default function BranchBeneficries() {
       {view === "list" && (
         <div className="space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 Beneficiaries
@@ -557,20 +706,24 @@ export default function BranchBeneficries() {
                 Manage your payment recipients, groups, and verification status
               </p>
             </div>
-            <div className="flex gap-2">
-              <BranchBeneficiaryGroupForm
-                onGroupCreated={handleGroupCreated}
-                trigger={
-                  <Button variant="outline">
-                    <FolderPlus className="h-4 w-4 mr-2" />
-                    Create Group
-                  </Button>
-                }
-              />
-              <Button variant="business" onClick={() => setView("register")}>
-                <Plus className="h-4 w-4 mr-2" />
-                Register Beneficiary
-              </Button>
+            <div className="flex gap-2 flex-wrap">
+              <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_GROUP">
+                <BranchBeneficiaryGroupForm
+                  onGroupCreated={handleGroupCreated}
+                  trigger={
+                    <Button variant="outline">
+                      <FolderPlus className="h-4 w-4 mr-2" />
+                      Create Group
+                    </Button>
+                  }
+                />
+              </PermissionGate>
+              <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_SINGLE">
+                <Button variant="business" onClick={() => setView("register")}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Register Beneficiary
+                </Button>
+              </PermissionGate>
             </div>
           </div>
 
@@ -582,80 +735,92 @@ export default function BranchBeneficries() {
                   <Globe className="h-5 w-5 text-primary" />
                   Available Payout Destinations
                 </CardTitle>
+                <div className="flex justify-end">
+                  <PaginationSummary
+                    totalElements={totalElementsOfPayoutConfig}
+                    currentPage={page}
+                    pageSize={10}
+                    itemCount={payOutConfigData?.data?.countries?.length}
+                    itemLabel="Country"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                  {payOutConfigData?.data?.countries?.length > 0 ? (
-                    payOutConfigData?.data?.countries?.map(
-                      (destination: any) => {
-                        const status = getAvailabePayoutDestinationStatusBadge(
-                          destination?.status,
-                        );
-                        const StatusIcon = status.icon;
-                        return (
-                          <div
-                            key={destination.countryId}
-                            onClick={() => setPayOutId(destination?.id)}
-                            className="cursor-pointer flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-primary">
-                                  {destination?.currency}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium text-foreground">
-                                  {destination?.countryName}
-                                </p>
-                              </div>
+                  {payoutConfigLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading payout Destination...
+                        </p>
+                      </div>
+                    </div>
+                  ) : payOutConfigData?.data?.countries?.length > 0 ? (
+                    payOutConfigData?.data?.countries?.map((destination) => {
+                      const status = getAvailabePayoutDestinationStatusBadge(
+                        destination?.status,
+                      );
+
+                      const StatusIcon = status.icon;
+
+                      const isActive = payOutId === destination?.id;
+
+                      return (
+                        <div
+                          key={destination?.id}
+                          onClick={() => setPayOutId(destination?.id)}
+                          className={`cursor-pointer flex items-center justify-between p-3 border rounded-lg transition-all duration-200
+            ${
+              isActive
+                ? "bg-primary/10 border-primary shadow-sm"
+                : "hover:bg-muted/50"
+            }
+          `}
+                        >
+                          {/* LEFT SIDE */}
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center
+                ${isActive ? "bg-primary text-white" : "bg-primary/10 text-primary"}
+              `}
+                            >
+                              <span className="text-xs font-bold">
+                                {destination?.countryCode}
+                              </span>
                             </div>
-                            <div className="text-right">
-                              <Badge
-                                variant={status?.variant}
-                                className="flex items-center gap-1 self-start sm:self-auto"
-                              >
-                                <StatusIcon className="h-3 w-3" />
-                                {status?.label}
-                              </Badge>
+
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {destination?.countryName}
+                              </p>
                             </div>
                           </div>
-                        );
-                      },
-                    )
+
+                          {/* RIGHT SIDE */}
+                          <div className="text-right flex items-center gap-2">
+                            <Badge
+                              variant={status?.variant}
+                              className="flex items-center gap-1"
+                            >
+                              <StatusIcon className="h-3 w-3" />
+                              {status?.label}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
                     <p className="text-center font-medium text-gray-400 text-xl">
                       No Data Found
                     </p>
                   )}
-                  {totalPayOutConfigDataList > 10 && (
-                    <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                      <p className="text-sm text-muted-foreground">
-                        Showing {payOutConfigData?.data?.countries?.length} of{" "}
-                        {totalPayOutConfigDataList} beneficiaries
-                      </p>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === 0}
-                          onClick={() => setPage(page - 1)}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={
-                            (page + 1) * 10 >= totalPayOutConfigDataList
-                          }
-                          onClick={() => setPage(page + 1)}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {/* PAGINATION */}
+                  <PaginationControl
+                    currentPage={page}
+                    totalPages={totalPageOfPayoutConfig}
+                    onPageChange={(page) => setPage(page)}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -668,32 +833,35 @@ export default function BranchBeneficries() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {supportedPayoutMechanisms?.mechanisms?.length > 0 ? (
-                    supportedPayoutMechanisms?.mechanisms?.map(
-                      (mechanisms: any) => (
-                        <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
-                          <Banknote className="h-6 w-6 text-primary" />
+                  {supportedPayoutMechanisms?.mechanismLists ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(
+                        supportedPayoutMechanisms?.mechanismLists || {},
+                      ).map(([key, value]: any) => (
+                        <div
+                          key={key}
+                          className="flex  gap-3 p-4 rounded-lg border bg-accent-muted/20"
+                        >
+                          <Banknote className="h-8 w-8 text-primary" />
                           <div>
-                            <p className="font-medium text-foreground">
-                              {mechanisms?.name
-                                ?.toLowerCase()
-                                .split("_")
-                                ?.map(
-                                  (word: any) =>
-                                    word[0].toUpperCase() + word.slice(1),
-                                )
-                                ?.join(" ")}
+                            <p className="font-semibold text-foreground">
+                              {key}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              Fee Range:{mechanisms?.feeRange}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Processing Time:{mechanisms?.processingTime}
-                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {value?.map((item: string) => (
+                                <span
+                                  key={item}
+                                  className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20"
+                                >
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      ),
-                    )
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-center font-medium text-xl text-gray-500">
                       No Supported Payout Mechanisms Data Available
@@ -705,7 +873,7 @@ export default function BranchBeneficries() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
             <Card className="shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -807,7 +975,20 @@ export default function BranchBeneficries() {
           {/* Tabs for Beneficiaries and Groups */}
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "beneficiaries" | "groups")}
+            onValueChange={(v) => {
+              setActiveTab(v as "beneficiaries" | "groups");
+              setAppliedSearch("");
+              setFromDate("");
+              setToDate("");
+              setBusinessId("");
+              setSearchInput("");
+              setGroupAppliedSearch("");
+              setGroupForBusinessId("");
+              setGroupForFromDate("");
+              setGroupForToDate("");
+              setGroupForBusinessId("");
+              setGroupSearchInput("");
+            }}
           >
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger
@@ -823,6 +1004,109 @@ export default function BranchBeneficries() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="groups" className="mt-6">
+              <Card className="shadow-card mb-3">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+                    <div className="flex-1">
+                      <Label htmlFor="search">Search For Group</Label>
+                      <div className="relative flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="search"
+                            placeholder="Search by name, account, bank, or country..."
+                            className="pl-9"
+                            value={groupSearchInput}
+                            onChange={(e) => {
+                              setGroupSearchInput(e.target.value);
+                              setGroupsPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleGroupSearch()
+                            // }
+                          />
+                        </div>
+                        {/* <Button
+                          onClick={handleGroupSearch}
+                          className="mt-auto"
+                          disabled={!groupSearchInput.trim()}
+                        >
+                          Search
+                        </Button> */}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-col gap-1 mt-2">
+                        <Label htmlFor="groupForFromDate">From Date</Label>
+                        <input
+                          type="date"
+                          placeholder="Select Date"
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          value={groupForFromDate}
+                          onChange={(e) => {
+                            setGroupForFromDate(e.target.value);
+                            setGroupsPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-2">
+                        <Label htmlFor="toDate">To Date</Label>
+                        <input
+                          type="date"
+                          placeholder="Select Date"
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          value={groupForToDate}
+                          onChange={(e) => {
+                            setGroupForToDate(e.target.value);
+                            setGroupsPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="w-[250px] mt-1">
+                        <label>Filter By Business</label>
+                        <Select
+                          value={groupForBusinessId}
+                          onValueChange={(val) => {
+                            setGroupForBusinessId(val == "all" ? "" : val);
+                            setGroupsPage(0);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Business Admin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <div
+                              ref={listRef}
+                              onScroll={handleScroll}
+                              className="max-h-60 overflow-y-auto"
+                            >
+                              {businessAdminList?.length > 0 && (
+                                <SelectItem value="all">All</SelectItem>
+                              )}
+                              {businessAdminList?.map((c, index) => (
+                                <SelectItem key={index} value={c?.id}>
+                                  {c?.companyName}
+                                </SelectItem>
+                              ))}
+                              {/* OBSERVER TARGET */}
+                              {businessLoading && (
+                                <div className="py-2 text-center text-sm text-gray-500">
+                                  Loading...
+                                </div>
+                              )}
+                              {/* {!hasMore && (
+                                <div className="py-2 text-center text-sm text-gray-400">
+                                  No More Data
+                                </div>
+                              )} */}
+                            </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               {/* Groups Section */}
               <Card className="shadow-card">
                 <CardHeader>
@@ -831,13 +1115,33 @@ export default function BranchBeneficries() {
                       <Layers className="h-5 w-5" />
                       Beneficiary Groups
                     </CardTitle>
-                    <BranchBeneficiaryGroupForm
-                      onGroupCreated={handleGroupCreated}
+                    <PermissionGate permission="BTN_BRANCH_REGISTER_BENFICIARY_GROUP">
+                      <BranchBeneficiaryGroupForm
+                        onGroupCreated={handleGroupCreated}
+                      />
+                    </PermissionGate>
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <PaginationSummary
+                      totalElements={groupsTotalItems}
+                      pageSize={groupsSize}
+                      currentPage={groupsPage}
+                      itemCount={groupsWithBeneficiaryData.length}
+                      itemLabel="group beneficiaries"
                     />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {groupsWithBeneficiaryData.length === 0 ? (
+                  {groupBeneficiaryLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading beneficiaries group...
+                        </p>
+                      </div>
+                    </div>
+                  ) : groupsWithBeneficiaryData.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Layers className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No groups created yet</p>
@@ -912,30 +1216,12 @@ export default function BranchBeneficries() {
                     </div>
                   )}
                   {/* Pagination for groups */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {beneficiaryGroups?.length} of {groupsTotalItems}{" "}
-                      groups
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage === 0}
-                        onClick={() => setGroupsPage(groupsPage - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage >= groupsTotalPages - 1}
-                        onClick={() => setGroupsPage(groupsPage + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+
+                  <PaginationControl
+                    currentPage={groupsPage}
+                    totalPages={groupsTotalPages}
+                    onPageChange={(page) => setGroupsPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -943,7 +1229,7 @@ export default function BranchBeneficries() {
               {/* Search and Filters */}
               <Card className="shadow-card">
                 <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
                     <div className="flex-1">
                       <Label htmlFor="search">Search Beneficiaries</Label>
                       <div className="relative flex gap-2">
@@ -954,39 +1240,128 @@ export default function BranchBeneficries() {
                             placeholder="Search by name, account, bank, or country..."
                             className="pl-9"
                             value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleSearch()
-                            }
+                            onChange={(e) => {
+                              setSearchInput(e.target.value);
+                              setBeneficiariesPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleSearch()
+                            // }
                           />
                         </div>
-                        <Button
+                        {/* <Button
                           onClick={handleSearch}
                           className="mt-auto"
                           disabled={!searchInput.trim()}
                         >
                           Search
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
-                    <div className="flex gap-2"></div>
+                    <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-col gap-1 mt-2">
+                        <Label htmlFor="fromDate">From Date</Label>
+                        <input
+                          type="date"
+                          placeholder="Select Date"
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          value={fromDate}
+                          onChange={(e) => {
+                            setFromDate(e.target.value);
+                            setBeneficiariesPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-2">
+                        <Label htmlFor="toDate">To Date</Label>
+                        <input
+                          type="date"
+                          placeholder="Select Date"
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          value={toDate}
+                          onChange={(e) => {
+                            setToDate(e.target.value);
+                            setBeneficiariesPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="w-[250px] mt-1">
+                        <label>Filter By Business</label>
+                        <Select
+                          value={businessId}
+                          onValueChange={(val) => {
+                            setBusinessId(val == "all" ? "" : val);
+                            setBeneficiariesPage(0);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Business Admin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <div
+                              ref={listRef}
+                              onScroll={handleScroll}
+                              className="max-h-60 overflow-y-auto"
+                            >
+                              {businessAdminList?.length > 0 && (
+                                <SelectItem value="all">All</SelectItem>
+                              )}
+                              {businessAdminList?.map((c, index) => (
+                                <SelectItem key={index} value={c?.id}>
+                                  {c?.companyName}
+                                </SelectItem>
+                              ))}
+                              {/* OBSERVER TARGET */}
+                              {businessLoading && (
+                                <div className="py-2 text-center text-sm text-gray-500">
+                                  Loading...
+                                </div>
+                              )}
+                              {/* {!hasMore && (
+                                <div className="py-2 text-center text-sm text-gray-400">
+                                  No More Data
+                                </div>
+                              )} */}
+                            </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
               {/* Beneficiaries List */}
               <Card className="shadow-card">
                 <CardHeader>
-                  <CardTitle>Registered Beneficiaries</CardTitle>
+                  <div className="flex gap-2 justify-between items-center flex-wrap">
+                    <CardTitle>Registered Beneficiaries</CardTitle>
+                    <PaginationSummary
+                      totalElements={beneficiariesTotalItems}
+                      pageSize={beneficiariesSize}
+                      currentPage={beneficiariesPage}
+                      itemCount={filteredBeneficiaries?.length}
+                      itemLabel="Beneficiaries"
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {filteredBeneficiaries.length === 0 ? (
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading beneficiaries...
+                        </p>
+                      </div>
+                    </div>
+                  ) : filteredBeneficiaries?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No beneficiaries found</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {filteredBeneficiaries.map((beneficiary: any) => {
+                      {filteredBeneficiaries?.map((beneficiary: any) => {
                         const status = getStatusBadge(beneficiary.status);
                         const verification = getVerificationBadge(
                           beneficiary.verificationStatus,
@@ -998,10 +1373,10 @@ export default function BranchBeneficries() {
                             className="border-l-4 border-l-primary hover:shadow-md transition-smooth"
                           >
                             <CardContent className="p-6">
-                              <div className="flex items-start justify-between">
+                              <div className="flex items-start justify-between flex-wrap gap-2">
                                 <div className="space-y-4 flex-1">
                                   {/* Beneficiary Header */}
-                                  <div className="flex items-center space-x-4">
+                                  <div className="flex items-center ap-4 flex-wrap">
                                     <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                                       {beneficiary.type === "business" ? (
                                         <Building className="h-6 w-6 text-muted-foreground" />
@@ -1010,7 +1385,7 @@ export default function BranchBeneficries() {
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-1">
+                                      <div className="flex items-center gap-3 mb-1 flex-wrap">
                                         <h3 className="font-semibold text-foreground">
                                           {beneficiary.name}
                                         </h3>
@@ -1052,7 +1427,7 @@ export default function BranchBeneficries() {
                                         <p className="text-xs text-muted-foreground">
                                           Email
                                         </p>
-                                        <p className="font-medium">
+                                        <p className="font-medium break-all">
                                           {beneficiary.email || "N/A"}
                                         </p>
                                       </div>
@@ -1255,40 +1630,48 @@ export default function BranchBeneficries() {
                                 </div>
                                 {/* Enhanced Actions */}
                                 <div className="flex flex-col space-y-2 ml-4">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedBeneficiary(beneficiary);
-                                      setView("profile");
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View Detail
-                                  </Button>
-                                  {/* Edit Details — uses data already in list */}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditBeneficiary(beneficiary);
-                                      setView("edit");
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4 mr-1" />
-                                    Edit Details
-                                  </Button>
-                                  {beneficiary?.status === "active" && (
+                                  <PermissionGate permission="BTN_BRANCH_BENEFICIARY_VIEW">
                                     <Button
-                                      variant="business"
+                                      variant="outline"
                                       size="sm"
                                       onClick={() => {
-                                        setOpen(true);
-                                        setBeneficiaryId(beneficiary?.id);
+                                        setSelectedBeneficiary(beneficiary);
+                                        setView("profile");
                                       }}
                                     >
-                                      Send Payment
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      View Detail
                                     </Button>
+                                  </PermissionGate>
+
+                                  {/* Edit Details — uses data already in list */}
+                                  <PermissionGate permission="BTN_BRANCH_BENEFICIARY_EDIT">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditBeneficiary(beneficiary);
+                                        setView("edit");
+                                      }}
+                                    >
+                                      <Edit className="h-4 w-4 mr-1" />
+                                      Edit Details
+                                    </Button>
+                                  </PermissionGate>
+
+                                  {beneficiary?.status === "active" && (
+                                    <PermissionGate permission="BTN_BRANCH_BENEFICIARY_SEND_PAYMENT">
+                                      <Button
+                                        variant="business"
+                                        size="sm"
+                                        onClick={() => {
+                                          setOpen(true);
+                                          setBeneficiaryId(beneficiary?.id);
+                                        }}
+                                      >
+                                        Send Payment
+                                      </Button>
+                                    </PermissionGate>
                                   )}
                                   {(beneficiary.verificationStatus ===
                                     "expired" ||
@@ -1307,36 +1690,12 @@ export default function BranchBeneficries() {
                     </div>
                   )}
                   {/* Pagination */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {filteredBeneficiaries.length} of{" "}
-                      {beneficiariesTotalItems} beneficiaries
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={beneficiariesPage === 0}
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage - 1)
-                        }
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={
-                          beneficiariesPage >= beneficiariesTotalPages - 1
-                        }
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage + 1)
-                        }
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginationControl
+                    className="mt-6"
+                    currentPage={beneficiariesPage}
+                    totalPages={beneficiariesTotalPages}
+                    onPageChange={(page) => setBeneficiariesPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

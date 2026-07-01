@@ -1320,6 +1320,8 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SingleTransactionWithPreselected from "@/components/transactions/SingleTransactionWithPreSelected";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // Type definitions matching real API
 interface Beneficiary {
@@ -1462,18 +1464,26 @@ const UserBeneficiaries = () => {
 
   const [beneficiariesPage, setBeneficiariesPage] = useState(0);
   const [beneficiariesSize] = useState(10);
-  const [beneficiariesTotalPages, setBeneficiariesTotalPages] = useState(1);
+  const [beneficiariesTotalPages, setBeneficiariesTotalPages] = useState(0);
   const [beneficiariesTotalItems, setBeneficiariesTotalItems] = useState(0);
 
   const [groupsPage, setGroupsPage] = useState(0);
   const [groupsSize] = useState(10);
-  const [groupsTotalPages, setGroupsTotalPages] = useState(1);
+  const [groupsTotalPages, setGroupsTotalPages] = useState(0);
   const [groupsTotalItems, setGroupsTotalItems] = useState(0);
   const [payOutConfigData, setPayOutConfigData] = useState(null);
   const [payOutId, setPayOutId] = useState<null | number>(null);
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
   const [beneficiaryId, setBeneficiaryId] = useState<null | number>(null);
+  const [debounceValue, setDebounceValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [searchGroupInput, setSearchGroupInput] = useState("");
+  const [searchGroupDebounce, setSearchDebounceGroup] = useState("");
+  const [groupFromDate, setGroupFromDate] = useState("");
+  const [groupToDate, setGroupToDate] = useState("");
+  const [groupLoading, setGroupLoading] = useState<boolean>(false);
 
   // Helper function to map API status to component status
   const mapStatus = (active: boolean, approvalStatus: string) => {
@@ -1495,12 +1505,31 @@ const UserBeneficiaries = () => {
   const { t, language } = useLanguage();
 
   // Fetch beneficiaries from API
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setSearchDebounceGroup(searchGroupInput);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchGroupInput]);
+
   const fetchBeneficiaries = async () => {
     try {
       setLoading(true);
-      let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}`;
-      if (appliedSearch) {
-        url += `&search=${encodeURIComponent(appliedSearch)}`;
+      let url = `${BASE_URL}/api/v1/beneficiaries?page=${beneficiariesPage}&size=${beneficiariesSize}&fromDate=${fromDate}&toDate=${toDate}`;
+      if (debounceValue) {
+        url += `&search=${encodeURIComponent(debounceValue)}`;
       }
 
       let approvalStatus = "";
@@ -1584,8 +1613,9 @@ const UserBeneficiaries = () => {
         averageTransaction: item.avgAmount ? String(item.avgAmount) : "0",
       }));
       setBeneficiaries(mappedData);
-      setBeneficiariesTotalPages(json.data.pagination.totalPages);
-      setBeneficiariesTotalItems(json.data.pagination.totalItems);
+      setBeneficiariesTotalPages(json.data.pagination.totalPages || 0);
+      setBeneficiariesTotalItems(json.data.pagination.totalItems || 0);
+      setBeneficiariesPage(json?.data?.pagination?.page || 0);
     } catch (err: any) {
       setError(err.message || "Failed to fetch beneficiaries");
       toast({
@@ -1625,8 +1655,9 @@ const UserBeneficiaries = () => {
 
   // Fetch groups from API
   const fetchGroups = async () => {
+    setGroupLoading(true);
     try {
-      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}`;
+      let url = `${BASE_URL}/api/v1/beneficiary-groups?page=${groupsPage}&size=${groupsSize}&search=${searchGroupDebounce}&fromDate=${groupFromDate}&toDate=${groupToDate}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -1654,28 +1685,31 @@ const UserBeneficiaries = () => {
       }));
 
       setBeneficiaryGroups(mappedGroups);
-      setGroupsTotalPages(json.data.pagination.totalPages);
-      setGroupsTotalItems(json.data.pagination.totalItems);
+      setGroupsTotalPages(json.data.pagination.totalPages || 0);
+      setGroupsTotalItems(json.data.pagination.totalItems || 0);
+      setGroupsPage(json?.pagination?.page || 0);
     } catch (err: any) {
       toast({
         title: "Error",
         description: err?.message,
         variant: "destructive",
       });
+    } finally {
+      setGroupLoading(false);
     }
   };
 
   useEffect(() => {
     fetchBeneficiaries();
-  }, [token, beneficiariesPage, appliedSearch, filterStatus]);
+  }, [token, beneficiariesPage, debounceValue, filterStatus, fromDate, toDate]);
   useEffect(() => {
     fetchGroups();
-  }, [token, groupsPage]);
+  }, [token, groupsPage, searchGroupDebounce, groupFromDate, groupToDate]);
 
-  const handleSearch = () => {
-    setAppliedSearch(searchInput);
-    setBeneficiariesPage(0);
-  };
+  // const handleSearch = () => {
+  //   setAppliedSearch(searchInput);
+  //   setBeneficiariesPage(0);
+  // };
 
   const filteredBeneficiaries = beneficiaries;
 
@@ -1790,20 +1824,20 @@ const UserBeneficiaries = () => {
   }, [payOutConfigData?.data?.countries]);
 
   // Loading state
-  if (loading) {
-    return (
-      <UserLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">
-              Loading beneficiaries...
-            </p>
-          </div>
-        </div>
-      </UserLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <UserLayout>
+  //       <div className="flex items-center justify-center h-screen">
+  //         <div className="text-center">
+  //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+  //           <p className="mt-4 text-muted-foreground">
+  //             Loading beneficiaries...
+  //           </p>
+  //         </div>
+  //       </div>
+  //     </UserLayout>
+  //   );
+  // }
 
   // Error state
   if (error) {
@@ -1827,7 +1861,7 @@ const UserBeneficiaries = () => {
       {view === "list" && (
         <div className="space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 Beneficiaries
@@ -1836,7 +1870,7 @@ const UserBeneficiaries = () => {
                 Manage your payment recipients, groups, and verification status
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <BeneficiaryGroupForm
                 onGroupCreated={handleGroupCreated}
                 trigger={
@@ -1865,76 +1899,118 @@ const UserBeneficiaries = () => {
               <CardContent>
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {payOutConfigData?.data?.countries?.length > 0 ? (
-                    payOutConfigData?.data?.countries?.map(
-                      (destination: any) => {
-                        const status = getAvailabePayoutDestinationStatusBadge(
-                          destination?.status,
-                        );
-                        const StatusIcon = status.icon;
-                        return (
-                          <div
-                            key={destination.countryId}
-                            onClick={() => setPayOutId(destination?.id)}
-                            className="cursor-pointer flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-primary">
-                                  {destination?.currency}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium text-foreground">
-                                  {destination?.countryName}
-                                </p>
-                              </div>
+                    payOutConfigData?.data?.countries?.map((destination) => {
+                      const status = getAvailabePayoutDestinationStatusBadge(
+                        destination?.status,
+                      );
+                      const StatusIcon = status.icon;
+                      const isActive = payOutId === destination?.id;
+                      return (
+                        <div
+                          key={destination?.id}
+                          onClick={() => setPayOutId(destination?.id)}
+                          className={`cursor-pointer flex items-center justify-between p-3 border rounded-lg transition-all duration-200
+            ${
+              isActive
+                ? "bg-primary/10 border-primary shadow-sm"
+                : "hover:bg-muted/50"
+            }
+          `}
+                        >
+                          {/* LEFT SIDE */}
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center
+                ${isActive ? "bg-primary text-white" : "bg-primary/10 text-primary"}
+              `}
+                            >
+                              <span className="text-xs font-bold">
+                                {destination?.countryCode}
+                              </span>
                             </div>
-                            <div className="text-right">
-                              <Badge
-                                variant={status?.variant}
-                                className="flex items-center gap-1 self-start sm:self-auto"
-                              >
-                                <StatusIcon className="h-3 w-3" />
-                                {status?.label}
-                              </Badge>
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {destination?.countryName}
+                              </p>
                             </div>
                           </div>
-                        );
-                      },
-                    )
+
+                          {/* RIGHT SIDE */}
+                          <div className="text-right flex items-center gap-2">
+                            <Badge
+                              variant={status?.variant}
+                              className="flex items-center gap-1"
+                            >
+                              <StatusIcon className="h-3 w-3" />
+                              {status?.label}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
                     <p className="text-center font-medium text-gray-400 text-xl">
                       No Data Found
                     </p>
                   )}
-                  {totalPayOutConfigDataList > 10 && (
+
+                  {/* PAGINATION */}
+                  {/* {totalPayOutConfigDataList > 10 && (
                     <div className="flex items-center justify-between mt-6 pt-6 border-t">
                       <p className="text-sm text-muted-foreground">
                         Showing {payOutConfigData?.data?.countries?.length} of{" "}
                         {totalPayOutConfigDataList} beneficiaries
                       </p>
+
                       <div className="flex space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={page === 0}
-                          onClick={() => setPage(page - 1)}
+                          onClick={() => setPage((prev) => prev - 1)}
                         >
                           Previous
                         </Button>
+
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={
                             (page + 1) * 10 >= totalPayOutConfigDataList
                           }
-                          onClick={() => setPage(page + 1)}
+                          onClick={() => setPage((prev) => prev + 1)}
                         >
                           Next
                         </Button>
                       </div>
                     </div>
-                  )}
+                  )} */}
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {payOutConfigData?.data?.countries?.length} of{" "}
+                      {totalPayOutConfigDataList} beneficiaries
+                    </p>
+
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 0}
+                        onClick={() => setPage((prev) => prev - 1)}
+                      >
+                        Previous
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={(page + 1) * 10 >= totalPayOutConfigDataList}
+                        onClick={() => setPage((prev) => prev + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1947,32 +2023,36 @@ const UserBeneficiaries = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {supportedPayoutMechanisms?.mechanisms?.length > 0 ? (
-                    supportedPayoutMechanisms?.mechanisms?.map(
-                      (mechanisms: any) => (
-                        <div className="flex items-center space-x-3 p-3 bg-accent-muted/20 rounded-lg">
-                          <Banknote className="h-6 w-6 text-primary" />
+                  {supportedPayoutMechanisms?.mechanismLists ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(
+                        supportedPayoutMechanisms?.mechanismLists || {},
+                      ).map(([key, value]: any) => (
+                        <div
+                          key={key}
+                          className="flex  gap-3 p-4 rounded-lg border bg-accent-muted/20"
+                        >
+                          <Banknote className="h-8 w-8 text-primary" />
+
                           <div>
-                            <p className="font-medium text-foreground">
-                              {mechanisms?.name
-                                ?.toLowerCase()
-                                .split("_")
-                                ?.map(
-                                  (word: any) =>
-                                    word[0].toUpperCase() + word.slice(1),
-                                )
-                                ?.join(" ")}
+                            <p className="font-semibold text-foreground">
+                              {key}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              Fee Range:{mechanisms?.feeRange}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Processing Time:{mechanisms?.processingTime}
-                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {value?.map((item: string) => (
+                                <span
+                                  key={item}
+                                  className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20"
+                                >
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      ),
-                    )
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-center font-medium text-xl text-gray-500">
                       No Supported Payout Mechanisms Data Available
@@ -1984,7 +2064,7 @@ const UserBeneficiaries = () => {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <Card className="shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -2086,7 +2166,15 @@ const UserBeneficiaries = () => {
           {/* Tabs for Beneficiaries and Groups */}
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "beneficiaries" | "groups")}
+            onValueChange={(v) => {
+              setGroupFromDate("");
+              setGroupToDate("");
+              setSearchGroupInput("");
+              setFromDate("");
+              setSearchInput("");
+              setToDate("");
+              setActiveTab(v as "beneficiaries" | "groups");
+            }}
           >
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger
@@ -2103,18 +2191,99 @@ const UserBeneficiaries = () => {
             </TabsList>
             <TabsContent value="groups" className="mt-6">
               {/* Groups Section */}
+              <Card className="shadow-card  mb-3">
+                <CardHeader className="p-6">
+                  <div className="flex flex-wrap gap-4 my-2 px-5">
+                    <div className="flex-1">
+                      <Label htmlFor="search">Search Beneficiaries Group</Label>
+                      <div className="relative flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="search"
+                            placeholder="Search by name, account, bank, or country..."
+                            className="pl-9"
+                            value={searchGroupInput}
+                            onChange={(e) => {
+                              setSearchGroupInput(e.target.value);
+                              setGroupsPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleSearch()
+                            // }
+                          />
+                        </div>
+                        {/* <Button
+                          onClick={handleSearch}
+                          className="mt-auto"
+                          disabled={!searchInput.trim()}
+                        >
+                          Search
+                        </Button> */}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="fromDate">From Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="From Date"
+                          value={groupFromDate}
+                          onChange={(e) => {
+                            setGroupFromDate(e?.target?.value);
+                            setGroupsPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="toDate">To Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="To Date"
+                          value={groupToDate}
+                          onChange={(e) => {
+                            setGroupToDate(e?.target?.value);
+                            setGroupsPage(0);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
               <Card className="shadow-card">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="flex items-center gap-2 ">
                       <Layers className="h-5 w-5" />
                       Beneficiary Groups
                     </CardTitle>
                     <BeneficiaryGroupForm onGroupCreated={handleGroupCreated} />
                   </div>
+                  <div className="flex justify-end">
+                    <PaginationSummary
+                      totalElements={groupsTotalItems}
+                      pageSize={groupsSize}
+                      currentPage={groupsPage}
+                      itemCount={groupsWithBeneficiaryData?.length}
+                      itemLabel="Group Beneficiaries"
+                    />
+                  </div>
                 </CardHeader>
+
                 <CardContent>
-                  {groupsWithBeneficiaryData.length === 0 ? (
+                  {groupLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading beneficiaries group...
+                        </p>
+                      </div>
+                    </div>
+                  ) : groupsWithBeneficiaryData?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Layers className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No groups created yet</p>
@@ -2131,9 +2300,9 @@ const UserBeneficiaries = () => {
                           className="border-l-4 border-l-primary"
                         >
                           <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-3 mb-2 flex-wrap">
                                   <h3 className="font-semibold text-lg">
                                     {group.name}
                                   </h3>
@@ -2174,13 +2343,13 @@ const UserBeneficiaries = () => {
                                 <Button variant="outline" size="sm">
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
+                                {/* <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDeleteGroup(group.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </Button> */}
                               </div>
                             </div>
                           </CardContent>
@@ -2188,31 +2357,11 @@ const UserBeneficiaries = () => {
                       ))}
                     </div>
                   )}
-                  {/* Pagination for groups */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {beneficiaryGroups?.length} of {groupsTotalItems}{" "}
-                      groups
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage === 0}
-                        onClick={() => setGroupsPage(groupsPage - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={groupsPage >= groupsTotalPages - 1}
-                        onClick={() => setGroupsPage(groupsPage + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginationControl
+                    currentPage={groupsPage}
+                    totalPages={groupsTotalPages}
+                    onPageChange={(page) => setGroupsPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -2220,8 +2369,8 @@ const UserBeneficiaries = () => {
               {/* Search and Filters */}
               <Card className="shadow-card">
                 <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
+                  <div className="flex flex-wrap gap-4">
+                    <div className="w-full md:flex-1">
                       <Label htmlFor="search">Search Beneficiaries</Label>
                       <div className="relative flex gap-2">
                         <div className="relative flex-1">
@@ -2231,32 +2380,80 @@ const UserBeneficiaries = () => {
                             placeholder="Search by name, account, bank, or country..."
                             className="pl-9"
                             value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleSearch()
-                            }
+                            onChange={(e) => {
+                              setSearchInput(e.target.value);
+                              setPage(0);
+                            }}
+                            // onKeyDown={(e) =>
+                            //   e.key === "Enter" && handleSearch()
+                            // }
                           />
                         </div>
-                        <Button
+                        {/* <Button
                           onClick={handleSearch}
                           className="mt-auto"
                           disabled={!searchInput.trim()}
                         >
                           Search
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
-                    <div className="flex gap-2"></div>
+                    <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="fromDate">From Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="From Date"
+                          value={fromDate}
+                          onChange={(e) => {
+                            setFromDate(e?.target?.value);
+                            setPage(0);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Label htmlFor="toDate">To Date</Label>
+                        <input
+                          className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                          type="date"
+                          placeholder="To Date"
+                          value={toDate}
+                          onChange={(e) => {
+                            setToDate(e?.target?.value);
+                            setPage(0);
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
               {/* Beneficiaries List */}
               <Card className="shadow-card">
                 <CardHeader>
-                  <CardTitle>Registered Beneficiaries</CardTitle>
+                  <div className="flex justify-between items-center gap-2 flex-wrap">
+                    <CardTitle>Registered Beneficiaries</CardTitle>
+                    <PaginationSummary
+                      totalElements={beneficiariesTotalItems}
+                      pageSize={beneficiariesSize}
+                      currentPage={beneficiariesPage}
+                      itemCount={filteredBeneficiaries?.length}
+                      itemLabel="Beneficaries"
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {filteredBeneficiaries.length === 0 ? (
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-4 text-muted-foreground">
+                          Loading beneficiaries...
+                        </p>
+                      </div>
+                    </div>
+                  ) : filteredBeneficiaries.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No beneficiaries found</p>
@@ -2275,10 +2472,10 @@ const UserBeneficiaries = () => {
                             className="border-l-4 border-l-primary hover:shadow-md transition-smooth"
                           >
                             <CardContent className="p-6">
-                              <div className="flex items-start justify-between">
+                              <div className="flex items-start justify-between flex-wrap gap-2">
                                 <div className="space-y-4 flex-1">
                                   {/* Beneficiary Header */}
-                                  <div className="flex items-center space-x-4">
+                                  <div className="flex items-center gap-4 flex-wrap">
                                     <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                                       {beneficiary.type === "business" ? (
                                         <Building className="h-6 w-6 text-muted-foreground" />
@@ -2287,7 +2484,7 @@ const UserBeneficiaries = () => {
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-1">
+                                      <div className="flex items-center gap-3 mb-1 flex-wrap">
                                         <h3 className="font-semibold text-foreground">
                                           {beneficiary.name}
                                         </h3>
@@ -2310,7 +2507,7 @@ const UserBeneficiaries = () => {
                                   </div>
 
                                   {/* ── NEW: Country / Email / Contact / Relationship ── */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 text-sm">
                                     <div className="flex items-center gap-2">
                                       <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <div>
@@ -2584,36 +2781,12 @@ const UserBeneficiaries = () => {
                     </div>
                   )}
                   {/* Pagination */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {filteredBeneficiaries.length} of{" "}
-                      {beneficiariesTotalItems} beneficiaries
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={beneficiariesPage === 0}
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage - 1)
-                        }
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={
-                          beneficiariesPage >= beneficiariesTotalPages - 1
-                        }
-                        onClick={() =>
-                          setBeneficiariesPage(beneficiariesPage + 1)
-                        }
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginationControl
+                    className="mt-6"
+                    currentPage={beneficiariesPage}
+                    totalPages={beneficiariesTotalPages}
+                    onPageChange={(page) => setBeneficiariesPage(page)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

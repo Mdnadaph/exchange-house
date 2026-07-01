@@ -389,7 +389,9 @@ const BranchBeneficiaryGroupForm = ({
           {/* Beneficiary picker */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Select Beneficiaries</Label>
+              <Label>
+                Select Beneficiaries <span className="text-red-500">*</span>
+              </Label>
               {filtered.length > 0 && (
                 <Button variant="ghost" size="sm" onClick={toggleAll}>
                   {selectedIds.length === filtered.length

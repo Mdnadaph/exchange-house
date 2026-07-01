@@ -85,6 +85,9 @@ const BulkTransactionForm = ({
   >({});
   const [applicableRate, setApplicableRate] = useState([]);
 
+  const [payoutErrors, setPayoutErrors] = useState<Record<string, boolean>>({});
+  const [amountErrors, setAmountErrors] = useState<Record<string, boolean>>({});
+
   // Mock sources (replace with real fetch if needed)
   const transactionSources = [
     {
@@ -160,6 +163,13 @@ const BulkTransactionForm = ({
   // Change handlers
   const handleAmountChange = (id: number, value: string) => {
     setBeneficiaryAmounts((prev) => ({ ...prev, [id]: value }));
+    if (value !== "" && Number(value) > 0) {
+      setAmountErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+    }
   };
 
   const handleDiscountChange = (id: number, value: string) => {
@@ -171,6 +181,11 @@ const BulkTransactionForm = ({
       ...prev,
       [id]: prev[id] === value ? undefined : value,
     }));
+    setPayoutErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[id];
+      return updated;
+    });
   };
 
   const requiredDocForPorpose = transactionPurposeList?.find(
@@ -276,14 +291,12 @@ const BulkTransactionForm = ({
         });
         return;
       }
-
       toast({
         title: "Success",
         description:
           data?.message ||
           `Submitted ${validBeneficiaries.length} payments for approval`,
       });
-
       setOpen(false);
       refetch?.();
 
@@ -432,6 +445,35 @@ const BulkTransactionForm = ({
     getTransactionPurpose();
   }, [open]);
 
+  const validateStep1Beneficiaries = () => {
+    const group = getSelectedGroup();
+    if (!group?.beneficiaries?.length) return true; // nothing to validate
+
+    const newPayoutErrors: Record<string, boolean> = {};
+    const newAmountErrors: Record<string, boolean> = {};
+    let isValid = true;
+
+    group.beneficiaries.forEach((ben: any) => {
+      const hasPayout = !!selectedPayouts?.[ben.id];
+      const amount = beneficiaryAmounts?.[ben.id];
+      const hasValidAmount =
+        amount !== undefined && amount !== "" && Number(amount) > 0;
+
+      if (!hasPayout) {
+        newPayoutErrors[ben.id] = true;
+        isValid = false;
+      }
+      if (!hasValidAmount) {
+        newAmountErrors[ben.id] = true;
+        isValid = false;
+      }
+    });
+
+    setPayoutErrors(newPayoutErrors);
+    setAmountErrors(newAmountErrors);
+    return isValid;
+  };
+
   // ─── UI ─────────────────────────────────────────────
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
@@ -470,7 +512,9 @@ const BulkTransactionForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Purpose of Transaction *</Label>
+            <Label>
+              Purpose of Transaction <span className="text-red-500">*</span>
+            </Label>
             <Select
               value={transactionPurpose}
               onValueChange={setTransactionPurpose}
@@ -496,7 +540,9 @@ const BulkTransactionForm = ({
           </div>
 
           <div className="space-y-1">
-            <Label>Fee Responsibility *</Label>
+            <Label>
+              Fee Responsibility <span className="text-red-500">*</span>
+            </Label>
             <Input disabled defaultValue="BUSINESS" />
           </div>
 
@@ -530,7 +576,9 @@ const BulkTransactionForm = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Select Mode Of Transaction *</Label>
+            <Label>
+              Select Mode Of Transaction <span className="text-red-500">*</span>
+            </Label>
             <Select value={selectedSource} onValueChange={setSelectedSource}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose account" />
@@ -631,8 +679,14 @@ const BulkTransactionForm = ({
                         <TableRow>
                           <TableHead>Beneficiary</TableHead>
                           <TableHead>Type</TableHead>
-                          <TableHead>Beneficiary Payout</TableHead>
-                          <TableHead>Value (Amount)</TableHead>
+                          <TableHead>
+                            Beneficiary Payout{" "}
+                            <span className="text-red-500">*</span>
+                          </TableHead>
+                          <TableHead>
+                            Value (Amount){" "}
+                            <span className="text-red-500">*</span>
+                          </TableHead>
                           <TableHead>Exchnage Rate</TableHead>
                           <TableHead>Currency Code</TableHead>
                           <TableHead>Converted Amount</TableHead>
@@ -666,23 +720,30 @@ const BulkTransactionForm = ({
                                   {ben?.payoutDetails?.map((vv: any) => (
                                     <div
                                       key={vv.payoutDetailId}
-                                      className="flex items-center gap-2"
+                                      className="space-y-1"
                                     >
-                                      <Checkbox
-                                        checked={
-                                          selectedPayouts?.[ben.id] ===
-                                          vv.payoutDetailId
-                                        }
-                                        onCheckedChange={() =>
-                                          handlePayoutChange(
-                                            ben.id,
-                                            vv.payoutDetailId,
-                                          )
-                                        }
-                                      />
-                                      <span className="text-xs">
-                                        {vv.payoutMechanismType}
-                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        <Checkbox
+                                          checked={
+                                            selectedPayouts?.[ben.id] ===
+                                            vv.payoutDetailId
+                                          }
+                                          onCheckedChange={() =>
+                                            handlePayoutChange(
+                                              ben.id,
+                                              vv.payoutDetailId,
+                                            )
+                                          }
+                                        />
+                                        <span className="text-xs">
+                                          {vv.payoutMechanismType}
+                                        </span>
+                                      </div>
+                                      {payoutErrors[ben.id] && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                          This field is required
+                                        </p>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -699,6 +760,11 @@ const BulkTransactionForm = ({
                                     handleAmountChange(ben.id, e.target.value)
                                   }
                                 />
+                                {amountErrors[ben.id] && (
+                                  <p className="text-xs text-red-500 mt-1">
+                                    This field is required
+                                  </p>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <span className="text-xs">
@@ -902,7 +968,11 @@ const BulkTransactionForm = ({
 
               {currentStep === 1 ? (
                 <Button
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => {
+                    if (validateStep1Beneficiaries()) {
+                      setCurrentStep(2);
+                    }
+                  }}
                   disabled={
                     !selectedGroup ||
                     selectedGroup === "none" ||

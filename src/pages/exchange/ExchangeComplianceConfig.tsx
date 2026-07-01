@@ -55,6 +55,9 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { previousDay } from "date-fns";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 type ComplianceFormData = {
   highRiskCountries: string[];
@@ -77,13 +80,15 @@ type ComplianceFormData = {
 
 const ExchangeComplianceConfig = () => {
   const { toast } = useToast();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
+  const sourceCurrencyCode = cookies?.currencyCode;
   const [rules, setRules] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [countryMap, setCountryMap] = useState<{ [key: string]: string }>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [createForm, setCreateForm] = useState({
     name: "",
     transactionType: "SINGLE",
@@ -97,7 +102,8 @@ const ExchangeComplianceConfig = () => {
   const [editForm, setEditForm] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [createErrors, setCreateErrors] = useState<{ [key: string]: string }>(
     {},
@@ -159,6 +165,22 @@ const ExchangeComplianceConfig = () => {
     return errors;
   };
 
+  const validateEditForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!editForm.name.trim()) errors.name = "Name is required";
+    if (!editForm.transactionType)
+      errors.transactionType = "Transaction type is required";
+    if (!editForm.payoutCountry)
+      errors.payoutCountry = "Payout country is required";
+    if (!editForm.thresholdAmount || editForm.thresholdAmount <= 0)
+      errors.thresholdAmount = "Threshold amount must be greater than 0";
+    if (!editForm.currency) errors.currency = "Currency is required";
+    if (!editForm.action) errors.action = "Action is required";
+    if (!editForm.frequency) errors.frequency = "Frequency is required";
+    if (!editForm.category) errors.category = "Category is required";
+    return errors;
+  };
+
   const getPayoutCountryList = async () => {
     try {
       const res = await axios.get(
@@ -168,7 +190,6 @@ const ExchangeComplianceConfig = () => {
         },
       );
       setPayoutCountryData(res?.data?.data);
-      console.log("res", res);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -221,8 +242,9 @@ const ExchangeComplianceConfig = () => {
       });
       const data = await res.json();
       setRules(data.data || []);
-      setTotalPages(data.totalPages || 1);
+      setTotalPages(data.totalPages || 0);
       setCurrentPage(data.currentPage || 0);
+      setTotalElements(data?.totalElements || 0);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -295,7 +317,11 @@ const ExchangeComplianceConfig = () => {
   };
 
   const handleUpdate = async () => {
-    if (!editForm) return;
+    const errors = validateEditForm();
+    if (Object.keys(errors).length > 0) {
+      setCreateErrors(errors);
+      return;
+    }
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/compliance/rules/${editForm.id}`,
@@ -437,7 +463,40 @@ const ExchangeComplianceConfig = () => {
     }
   };
 
+  const validateComplianceForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!complianceFormData?.sanctionsListUpdate) {
+      newErrors.sanctionsListUpdate = "Please select the sanctions list update";
+    }
+    if (!complianceFormData?.pepDatabaseRefresh) {
+      newErrors.pepDatabaseRefresh = "Please select the pep database refresh";
+    }
+    if (!complianceFormData?.adverseMediaCheck) {
+      newErrors.adverseMediaCheck = "Please select the adverse media check";
+    }
+    if (!complianceFormData?.highRiskCountries?.length) {
+      newErrors.highRiskCountries = "Please select the high risk countries";
+    }
+    if (!complianceFormData?.prohibitedCountries?.length) {
+      newErrors.prohibitedCountries = "Please select the prohibited countries";
+    }
+    if (!complianceFormData?.enhancedMonitoringCountries?.length) {
+      newErrors.enhancedMonitoringCountries =
+        "Please select the enhanced monitoring countries";
+    }
+    if (!complianceFormData?.complianceOfficerAlerts) {
+      newErrors.complianceOfficerAlerts =
+        "Please select the compliance officer alerts";
+    }
+    if (!complianceFormData?.managementReports) {
+      newErrors.managementReports = "Please select the management reports";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleComplianceConfiguration = async () => {
+    if (!validateComplianceForm()) return;
     setLoading(true);
     try {
       const res = await fetch(
@@ -522,14 +581,14 @@ const ExchangeComplianceConfig = () => {
     const found = payoutCountryData.find(
       (c: any) => c?.countryCode === countryCode || c?.isoCode === countryCode,
     );
-    return found ? found.id : "";
+    return found ? found?.id : "";
   };
 
   return (
     <ExchangeLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Compliance Configuration
@@ -540,7 +599,15 @@ const ExchangeComplianceConfig = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Dialog
+              open={isCreateOpen}
+              onOpenChange={(open) => {
+                setIsCreateOpen(open);
+                if (!open) {
+                  setCreateErrors({});
+                }
+              }}
+            >
               <PermissionGate permission="BTN_CREATE_COMPLIANCE_RULE">
                 <DialogTrigger asChild>
                   <Button variant="business">
@@ -571,7 +638,7 @@ const ExchangeComplianceConfig = () => {
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>
                         Transaction Type
@@ -607,6 +674,7 @@ const ExchangeComplianceConfig = () => {
                         <span className="text-destructive">*</span>
                       </Label>
                       <Input
+                        onWheel={(e) => e.currentTarget.blur()}
                         type="number"
                         placeholder="0"
                         value={createForm.thresholdAmount}
@@ -625,7 +693,7 @@ const ExchangeComplianceConfig = () => {
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>
                         Payout Country <span className="text-red-500">*</span>
@@ -692,7 +760,7 @@ const ExchangeComplianceConfig = () => {
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>
                         Action <span className="text-destructive">*</span>
@@ -782,7 +850,10 @@ const ExchangeComplianceConfig = () => {
                 <DialogFooter className="mt-6">
                   <Button
                     variant="outline"
-                    onClick={() => setIsCreateOpen(false)}
+                    onClick={() => {
+                      setCreateErrors({});
+                      setIsCreateOpen(false);
+                    }}
                   >
                     Cancel
                   </Button>
@@ -795,155 +866,175 @@ const ExchangeComplianceConfig = () => {
 
         {/* Regulatory Thresholds */}
         <Card className="shadow-card">
-          <div className="flex p-6">
+          <div className="flex p-6  flex-wrap gap-3">
             <div className="flex-1">
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                Transaction Monitoring Thresholds
+              <CardTitle className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                  Transaction Monitoring Thresholds
+                </div>
               </CardTitle>
             </div>
-            <div className="flex gap-2 items-end">
+            <div className="flex gap-2 items-end flex-wrap">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
-                onClick={() => setFilter("all")}
+                onClick={() => {
+                  setCurrentPage(0);
+                  setFilter("all");
+                }}
               >
                 All Compliance
               </Button>
               <Button
                 variant={filter === "active" ? "default" : "outline"}
-                onClick={() => setFilter("active")}
+                onClick={() => {
+                  setCurrentPage(0);
+                  setFilter("active");
+                }}
               >
                 Active Compliance
               </Button>
               <Button
                 variant={filter === "inactive" ? "default" : "outline"}
-                onClick={() => setFilter("inactive")}
+                onClick={() => {
+                  setFilter("inactive");
+                  setCurrentPage(0);
+                }}
               >
                 Inactive Compliance
               </Button>
             </div>
           </div>
           <CardContent className="space-y-6">
-            {rules.map((rule) => {
-              const categoryBadge = getCategoryBadge(rule.category);
-              const ruleName = rule.name || "Unnamed Rule";
-              const ruleStatus = rule.active ? "active" : "inactive";
-              const countryName =
-                countryMap[rule.payoutCountry] || rule.payoutCountry;
-              return (
-                <Card key={rule.id} className="border-l-4 border-l-primary">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <AlertTriangle className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-foreground">
-                            {ruleName}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            Threshold: {rule.thresholdAmount.toLocaleString()}{" "}
-                            {rule.currency || "N/A"} for {rule.transactionType}{" "}
-                            to {countryName}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={categoryBadge.variant}>
-                          {categoryBadge.label}
-                        </Badge>
-                        <Badge variant={rule.active ? "default" : "secondary"}>
-                          {ruleStatus}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 rounded-lg p-4">
-                      <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">
-                          Action:
-                        </div>
-                        <p className="font-medium capitalize">
-                          {(rule.action || "N/A").replace(/_/g, " ")}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">
-                          Frequency:
-                        </div>
-                        <p className="font-medium capitalize">
-                          {rule.frequency || "N/A"}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-muted-foreground text-sm">
-                          Currency:
-                        </div>
-                        <p className="font-medium">{rule.currency || "N/A"}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-end space-x-2 mt-4">
-                      <PermissionGate permission="BTN_EDIT_COMPLIANCE_RULE">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const payoutId = getPayoutCountryId(
-                              rule.payoutCountry,
-                            );
-                            setEditForm({
-                              ...rule,
-                              payoutCountry: payoutId,
-                            });
-                            setIsEditOpen(true);
-                          }}
-                        >
-                          Edit
-                        </Button>
-                      </PermissionGate>
-                      <Switch
-                        checked={rule.active}
-                        onCheckedChange={(checked) =>
-                          handleToggleActive(rule.id, checked)
-                        }
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-            <div className="flex justify-center items-center space-x-4 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const prev = currentPage - 1;
-                  setCurrentPage(prev);
-                  fetchRules(prev, filter);
-                }}
-                disabled={currentPage === 0}
-              >
-                Previous
-              </Button>
-              <span className="text-muted-foreground">
-                Page {currentPage + 1} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const next = currentPage + 1;
-                  setCurrentPage(next);
-                  fetchRules(next, filter);
-                }}
-                disabled={currentPage + 1 >= totalPages}
-              >
-                Next
-              </Button>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                itemCount={rules?.length}
+                itemLabel="Compliance Rules"
+              />
             </div>
+            {rules?.length > 0 ? (
+              <div className="space-y-4">
+                {rules?.map((rule) => {
+                  const categoryBadge = getCategoryBadge(rule.category);
+                  const ruleName = rule.name || "Unnamed Rule";
+                  const ruleStatus = rule.active ? "active" : "inactive";
+                  const countryName =
+                    countryMap[rule.payoutCountry] || rule.payoutCountry;
+                  return (
+                    <Card key={rule.id} className="border-l-4 border-l-primary">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <AlertTriangle className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-semibold text-foreground">
+                                {ruleName}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                Threshold:{" "}
+                                {rule.thresholdAmount.toLocaleString()}{" "}
+                                {rule.currency || "N/A"} for{" "}
+                                {rule.transactionType} to {countryName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={categoryBadge.variant}>
+                              {categoryBadge.label}
+                            </Badge>
+                            <Badge
+                              variant={rule.active ? "default" : "secondary"}
+                            >
+                              {ruleStatus}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 rounded-lg p-4">
+                          <div className="space-y-1">
+                            <div className="text-muted-foreground text-sm">
+                              Action:
+                            </div>
+                            <p className="font-medium capitalize">
+                              {(rule.action || "N/A").replace(/_/g, " ")}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-muted-foreground text-sm">
+                              Frequency:
+                            </div>
+                            <p className="font-medium capitalize">
+                              {rule.frequency || "N/A"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-muted-foreground text-sm">
+                              Currency:
+                            </div>
+                            <p className="font-medium">
+                              {rule.currency || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 mt-4">
+                          <PermissionGate permission="BTN_EDIT_COMPLIANCE_RULE">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const payoutId = getPayoutCountryId(
+                                  rule.payoutCountry,
+                                );
+                                setEditForm({
+                                  ...rule,
+                                  payoutCountry: payoutId,
+                                });
+                                setIsEditOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          </PermissionGate>
+                          <Switch
+                            checked={rule.active}
+                            onCheckedChange={(checked) =>
+                              handleToggleActive(rule.id, checked)
+                            }
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            ) : (
+              <p className="text-center py-4 text-gray-400 text-base font-normal">
+                No Compilance rule
+              </p>
+            )}
           </CardContent>
         </Card>
 
         {/* Edit Modal */}
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <Dialog
+          open={isEditOpen}
+          onOpenChange={(open) => {
+            setIsEditOpen(open);
+            if (!open) {
+              setCreateErrors({});
+            }
+          }}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Compliance Rule</DialogTitle>
@@ -952,21 +1043,31 @@ const ExchangeComplianceConfig = () => {
               <div className="space-y-4 mt-4">
                 <div>
                   <Label>Name</Label>
+                  <span className="text-red-500">*</span>
                   <Input
                     value={editForm.name || ""}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setEditForm({ ...editForm, name: e.target.value });
+                      clearFormError("name");
+                    }}
                   />
+                  {createErrors.name && (
+                    <p className="text-sm text-destructive mt-1">
+                      {createErrors.name}
+                    </p>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Transaction Type</Label>
+                    <Label>
+                      Transaction Type <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm.transactionType}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, transactionType: v })
-                      }
+                      onValueChange={(v) => {
+                        setEditForm({ ...editForm, transactionType: v });
+                        clearFormError("transactionType");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -979,25 +1080,41 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.transactionType && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.transactionType}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label>Threshold Amount</Label>
+                    <Label>
+                      Threshold Amount <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
                       placeholder="0"
                       value={editForm.thresholdAmount}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setEditForm({
                           ...editForm,
                           thresholdAmount: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                        });
+                        clearFormError("thresholdAmount");
+                      }}
                     />
+                    {createErrors.thresholdAmount && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.thresholdAmount}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Payout Country</Label>
+                    <Label>
+                      Payout Country <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm?.payoutCountry || ""}
                       onValueChange={(v) => {
@@ -1013,6 +1130,7 @@ const ExchangeComplianceConfig = () => {
                           payoutCountry: v,
                           currency: newCurrency,
                         });
+                        clearFormError("payoutCountry");
                       }}
                     >
                       <SelectTrigger>
@@ -1030,30 +1148,46 @@ const ExchangeComplianceConfig = () => {
                         })}
                       </SelectContent>
                     </Select>
+                    {createErrors.payoutCountry && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.payoutCountry}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label>Currency</Label>
+                    <Label>
+                      Currency <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       disabled
                       placeholder="AED"
                       value={editForm?.currency || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setEditForm({
                           ...editForm,
                           currency: e.target.value.toUpperCase(),
-                        })
-                      }
+                        });
+                        clearFormError("currency");
+                      }}
                     />
+                    {createErrors.currency && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.currency}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Action</Label>
+                    <Label>
+                      Action <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm.action}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, action: v })
-                      }
+                      onValueChange={(v) => {
+                        setEditForm({ ...editForm, action: v });
+                        clearFormError("action");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select action" />
@@ -1066,14 +1200,22 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.action && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.action}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label>Frequency</Label>
+                    <Label>
+                      Frequency <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={editForm.frequency || ""}
-                      onValueChange={(v) =>
-                        setEditForm({ ...editForm, frequency: v })
-                      }
+                      onValueChange={(v) => {
+                        setEditForm({ ...editForm, frequency: v });
+                        clearFormError("frequency");
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
@@ -1086,15 +1228,23 @@ const ExchangeComplianceConfig = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {createErrors.frequency && (
+                      <p className="text-sm text-destructive mt-1">
+                        {createErrors.frequency}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
-                  <Label>Category</Label>
+                  <Label>
+                    Category <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={editForm.category || ""}
-                    onValueChange={(v) =>
-                      setEditForm({ ...editForm, category: v })
-                    }
+                    onValueChange={(v) => {
+                      setEditForm({ ...editForm, category: v });
+                      clearFormError("category");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -1107,11 +1257,22 @@ const ExchangeComplianceConfig = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {createErrors.category && (
+                    <p className="text-sm text-destructive mt-1">
+                      {createErrors.category}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
             <DialogFooter className="mt-6">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditOpen(false);
+                  setCreateErrors({});
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUpdate}>Update</Button>
@@ -1128,7 +1289,7 @@ const ExchangeComplianceConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   Screening Settings
@@ -1223,12 +1384,16 @@ const ExchangeComplianceConfig = () => {
                     </Label>
                     <Select
                       value={complianceFormData?.sanctionsListUpdate}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           sanctionsListUpdate: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          sanctionsListUpdate: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select sanctions update" />
@@ -1240,17 +1405,26 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="WEEKLY">Weekly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.sanctionsListUpdate && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.sanctionsListUpdate}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pep-frequency">PEP Database Refresh</Label>
                     <Select
                       value={complianceFormData?.pepDatabaseRefresh}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           pepDatabaseRefresh: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          pepDatabaseRefresh: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select PEP Database Refresh" />
@@ -1261,17 +1435,26 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="MONTHLY">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.pepDatabaseRefresh && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.pepDatabaseRefresh}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="media-frequency">Adverse Media Check</Label>
                     <Select
                       value={complianceFormData?.adverseMediaCheck}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           adverseMediaCheck: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          adverseMediaCheck: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select adverse media check" />
@@ -1282,6 +1465,11 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="MONTHLY">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.adverseMediaCheck && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.adverseMediaCheck}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1298,7 +1486,7 @@ const ExchangeComplianceConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   High Risk Countries
@@ -1345,6 +1533,10 @@ const ExchangeComplianceConfig = () => {
                                       highRiskCountries: newCountries,
                                     };
                                   });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    highRiskCountries: "",
+                                  }));
                                 }}
                               >
                                 <Check
@@ -1362,6 +1554,11 @@ const ExchangeComplianceConfig = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.highRiskCountries && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.highRiskCountries}
+                  </p>
+                )}
               </div>
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
@@ -1409,6 +1606,10 @@ const ExchangeComplianceConfig = () => {
                                       prohibitedCountries: newCountries,
                                     };
                                   });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    prohibitedCountries: "",
+                                  }));
                                 }}
                               >
                                 <Check
@@ -1426,6 +1627,11 @@ const ExchangeComplianceConfig = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.prohibitedCountries && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.prohibitedCountries}
+                  </p>
+                )}
               </div>
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
@@ -1475,6 +1681,10 @@ const ExchangeComplianceConfig = () => {
                                       enhancedMonitoringCountries: newCountries,
                                     };
                                   });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    enhancedMonitoringCountries: "",
+                                  }));
                                 }}
                               >
                                 <Check
@@ -1492,6 +1702,11 @@ const ExchangeComplianceConfig = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.enhancedMonitoringCountries && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.enhancedMonitoringCountries}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -1506,7 +1721,7 @@ const ExchangeComplianceConfig = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="font-semibold text-foreground">
                   CBUAE Reporting
@@ -1514,7 +1729,7 @@ const ExchangeComplianceConfig = () => {
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="large-transaction">
-                      Large Transaction Threshold (AED)
+                      {` Large Transaction Threshold (${sourceCurrencyCode})`}
                     </Label>
                     <Input
                       id="large-transaction"
@@ -1572,12 +1787,16 @@ const ExchangeComplianceConfig = () => {
                     </Label>
                     <Select
                       value={complianceFormData?.complianceOfficerAlerts}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           complianceOfficerAlerts: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          complianceOfficerAlerts: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select compliance officer alerts" />
@@ -1592,6 +1811,11 @@ const ExchangeComplianceConfig = () => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.complianceOfficerAlerts && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.complianceOfficerAlerts}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="audit-trail">
@@ -1619,12 +1843,16 @@ const ExchangeComplianceConfig = () => {
                     </Label>
                     <Select
                       value={complianceFormData?.managementReports}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setComplianceFormData((prev: any) => ({
                           ...prev,
                           managementReports: value,
-                        }))
-                      }
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          managementReports: "",
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select management report" />
@@ -1635,6 +1863,11 @@ const ExchangeComplianceConfig = () => {
                         <SelectItem value="QUARTERLY">Quarterly</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.managementReports && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.managementReports}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1643,7 +1876,7 @@ const ExchangeComplianceConfig = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3">
+        <div className="flex justify-end gap-3 flex-wrap">
           <Button variant="outline">Test Configuration</Button>
           <Button variant="outline">Reset to Defaults</Button>
           <Button

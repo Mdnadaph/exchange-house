@@ -144,11 +144,11 @@ const UserLayout = ({ children }: UserLayoutProps) => {
           href: "/portal/reports",
           icon: FileBarChart,
         },
-        {
-          name: "Transaction Report",
-          href: "/portal/transaction-report",
-          icon: BookOpen,
-        },
+        // {
+        //   name: "Transaction Report",
+        //   href: "/portal/transaction-report",
+        //   icon: BookOpen,
+        // },
         { name: "Documents", href: `/portal/documents/${id}`, icon: FileText },
       ],
     },

@@ -187,7 +187,8 @@ const AdminKybMapping = () => {
     } catch (err: any) {
       toast({
         title: "Error",
-        description: err?.response?.data?.message ?? "Failed to fetch mappings.",
+        description:
+          err?.response?.data?.message ?? "Failed to fetch mappings.",
         variant: "destructive",
       });
     } finally {
@@ -213,7 +214,8 @@ const AdminKybMapping = () => {
     } catch (err: any) {
       toast({
         title: "Error",
-        description: err?.response?.data?.message ?? "Failed to load dropdown data.",
+        description:
+          err?.response?.data?.message ?? "Failed to load dropdown data.",
         variant: "destructive",
       });
     } finally {
@@ -253,22 +255,38 @@ const AdminKybMapping = () => {
   // ── Submit: Create Business Type ─────────────────────────────────────────────
   const handleCreateBT = async () => {
     if (!btForm.code.trim() || !btForm.name.trim()) {
-      toast({ title: "Validation", description: "Code and Name are required.", variant: "destructive" });
+      toast({
+        title: "Validation",
+        description: "Code and Name are required.",
+        variant: "destructive",
+      });
       return;
     }
     setBtLoading(true);
     try {
       const res = await axios.post(
         `${BASE_URL}/api/v3/admin/business-types`,
-        { code: btForm.code.trim(), name: btForm.name.trim(), active: btForm.active },
-        { headers: getHeaders() }
+        {
+          code: btForm.code.trim(),
+          name: btForm.name.trim(),
+          active: btForm.active,
+        },
+        { headers: getHeaders() },
       );
-      toast({ title: "Success", description: res.data?.message ?? "Business type created." });
+      toast({
+        title: "Success",
+        description: res.data?.message ?? "Business type created.",
+      });
       setBtForm({ code: "", name: "", active: true });
       setShowCreateBT(false);
       fetchDropdowns();
     } catch (err: any) {
-      toast({ title: "Error", description: err?.response?.data?.message ?? "Failed to create business type.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description:
+          err?.response?.data?.message ?? "Failed to create business type.",
+        variant: "destructive",
+      });
     } finally {
       setBtLoading(false);
     }
@@ -277,22 +295,38 @@ const AdminKybMapping = () => {
   // ── Submit: Create KYB Type ──────────────────────────────────────────────────
   const handleCreateKYB = async () => {
     if (!kybForm.code.trim() || !kybForm.name.trim()) {
-      toast({ title: "Validation", description: "Code and Name are required.", variant: "destructive" });
+      toast({
+        title: "Validation",
+        description: "Code and Name are required.",
+        variant: "destructive",
+      });
       return;
     }
     setKybLoading(true);
     try {
       const res = await axios.post(
         `${BASE_URL}/api/v3/admin/kyb-types`,
-        { code: kybForm.code.trim(), name: kybForm.name.trim(), active: kybForm.active },
-        { headers: getHeaders() }
+        {
+          code: kybForm.code.trim(),
+          name: kybForm.name.trim(),
+          active: kybForm.active,
+        },
+        { headers: getHeaders() },
       );
-      toast({ title: "Success", description: res.data?.message ?? "KYB type created." });
+      toast({
+        title: "Success",
+        description: res.data?.message ?? "KYB type created.",
+      });
       setKybForm({ code: "", name: "", active: true });
       setShowCreateKYB(false);
       fetchDropdowns();
     } catch (err: any) {
-      toast({ title: "Error", description: err?.response?.data?.message ?? "Failed to create KYB type.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description:
+          err?.response?.data?.message ?? "Failed to create KYB type.",
+        variant: "destructive",
+      });
     } finally {
       setKybLoading(false);
     }
@@ -301,7 +335,11 @@ const AdminKybMapping = () => {
   // ── Submit: Create Mapping ───────────────────────────────────────────────────
   const handleCreateMapping = async () => {
     if (!mapForm.businessTypeId || !mapForm.kybTypeId) {
-      toast({ title: "Validation", description: "Business Type and KYB Type are required.", variant: "destructive" });
+      toast({
+        title: "Validation",
+        description: "Business Type and KYB Type are required.",
+        variant: "destructive",
+      });
       return;
     }
     setMapLoading(true);
@@ -313,16 +351,34 @@ const AdminKybMapping = () => {
         isDefault: mapForm.isDefault,
         description: mapForm.description.trim(),
       };
-      const res = await axios.post(`${BASE_URL}/api/v1/kyb-type-mappings`, payload, {
-        headers: getHeaders(),
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/kyb-type-mappings`,
+        payload,
+        {
+          headers: getHeaders(),
+        },
+      );
+      toast({
+        title: "Success",
+        description: res.data?.message ?? "Mapping created.",
       });
-      toast({ title: "Success", description: res.data?.message ?? "Mapping created." });
-      setMapForm({ businessTypeId: "", kybTypeId: "", active: true, isDefault: false, description: "" });
+      setMapForm({
+        businessTypeId: "",
+        kybTypeId: "",
+        active: true,
+        isDefault: false,
+        description: "",
+      });
       setShowCreateMapping(false);
       if (currentPage === 0) fetchMappings(0, debouncedSearch);
       else setCurrentPage(0);
     } catch (err: any) {
-      toast({ title: "Error", description: err?.response?.data?.message ?? "Failed to create mapping.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description:
+          err?.response?.data?.message ?? "Failed to create mapping.",
+        variant: "destructive",
+      });
     } finally {
       setMapLoading(false);
     }
@@ -355,15 +411,19 @@ const AdminKybMapping = () => {
       const res = await axios.put(
         `${BASE_URL}/api/v1/kyb-type-mappings/${editForm.id}`,
         payload,
-        { headers: getHeaders() }
+        { headers: getHeaders() },
       );
-      toast({ title: "Success", description: res.data?.message ?? "Mapping updated." });
+      toast({
+        title: "Success",
+        description: res.data?.message ?? "Mapping updated.",
+      });
       setShowEditMapping(false);
       fetchMappings(currentPage, debouncedSearch);
     } catch (err: any) {
       toast({
         title: "Error",
-        description: err?.response?.data?.message ?? "Failed to update mapping.",
+        description:
+          err?.response?.data?.message ?? "Failed to update mapping.",
         variant: "destructive",
       });
     } finally {
@@ -382,18 +442,29 @@ const AdminKybMapping = () => {
   return (
     <AdminLayout>
       <div className="space-y-8">
-
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">KYB Mapping Management</h1>
-            <p className="text-muted-foreground">Manage business type to KYB type mappings</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              KYB Mapping Management
+            </h1>
+            <p className="text-muted-foreground">
+              Manage business type to KYB type mappings
+            </p>
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={() => setShowCreateBT(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateBT(true)}
+            >
               <Plus className="h-4 w-4 mr-1" /> Create Business Type
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowCreateKYB(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateKYB(true)}
+            >
               <Plus className="h-4 w-4 mr-1" /> Create KYB Type
             </Button>
             <Button size="sm" onClick={handleOpenMappingDialog}>
@@ -406,41 +477,57 @@ const AdminKybMapping = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Mappings</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Mappings
+              </CardTitle>
               <FileCheck className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalMappings}</div>
-              <p className="text-xs text-muted-foreground">All configurations</p>
+              <p className="text-xs text-muted-foreground">
+                All configurations
+              </p>
             </CardContent>
           </Card>
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Active
+              </CardTitle>
               <CheckCircle className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.activeMappings}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.activeMappings}
+              </div>
               <p className="text-xs text-muted-foreground">Across all pages</p>
             </CardContent>
           </Card>
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">High Risk</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                High Risk
+              </CardTitle>
               <AlertCircle className="h-5 w-5 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.highRiskMappings}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.highRiskMappings}
+              </div>
               <p className="text-xs text-muted-foreground">Elevated scrutiny</p>
             </CardContent>
           </Card>
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Default Fallback</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Default Fallback
+              </CardTitle>
               <Shield className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.defaultFallbackMappings}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.defaultFallbackMappings}
+              </div>
               <p className="text-xs text-muted-foreground">Fallback rules</p>
             </CardContent>
           </Card>
@@ -451,7 +538,9 @@ const AdminKybMapping = () => {
           <CardContent className="p-4">
             <div className="flex gap-3 items-end">
               <div className="flex-1">
-                <Label htmlFor="search" className="mb-1 block">Search Mappings</Label>
+                <Label htmlFor="search" className="mb-1 block">
+                  Search Mappings
+                </Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -468,7 +557,9 @@ const AdminKybMapping = () => {
                 onClick={() => fetchMappings(currentPage, debouncedSearch)}
                 disabled={loadingMappings}
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${loadingMappings ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-1 ${loadingMappings ? "animate-spin" : ""}`}
+                />
                 Refresh
               </Button>
             </div>
@@ -483,10 +574,13 @@ const AdminKybMapping = () => {
           <CardContent>
             {loadingMappings ? (
               <div className="flex items-center justify-center py-16 text-muted-foreground">
-                <RefreshCw className="h-5 w-5 animate-spin mr-2" /> Loading mappings…
+                <RefreshCw className="h-5 w-5 animate-spin mr-2" /> Loading
+                mappings…
               </div>
             ) : mappings.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">No mappings found.</div>
+              <div className="text-center py-16 text-muted-foreground">
+                No mappings found.
+              </div>
             ) : (
               <>
                 <div className="overflow-x-auto">
@@ -505,15 +599,22 @@ const AdminKybMapping = () => {
                     </thead>
                     <tbody className="divide-y">
                       {mappings.map((m) => (
-                        <tr key={m.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="py-3 pr-4 font-medium">{m.businessType}</td>
+                        <tr
+                          key={m.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 pr-4 font-medium">
+                            {m.businessType}
+                          </td>
                           <td className="py-3 pr-4">
                             <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
                               {m.businessTypeCode}
                             </span>
                           </td>
                           <td className="py-3 pr-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getKybBadgeClass(m.kybTypeCode)}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getKybBadgeClass(m.kybTypeCode)}`}
+                            >
                               {m.kybTypeName}
                             </span>
                           </td>
@@ -522,7 +623,10 @@ const AdminKybMapping = () => {
                               {m.kybTypeCode}
                             </span>
                           </td>
-                          <td className="py-3 pr-4 text-muted-foreground max-w-[200px] truncate" title={m.description}>
+                          <td
+                            className="py-3 pr-4 text-muted-foreground max-w-[200px] truncate"
+                            title={m.description}
+                          >
                             {m.description || "—"}
                           </td>
                           <td className="py-3 pr-4">
@@ -532,9 +636,16 @@ const AdminKybMapping = () => {
                           </td>
                           <td className="py-3 pr-4">
                             {m.default ? (
-                              <Badge variant="outline" className="border-blue-400 text-blue-600">Default</Badge>
+                              <Badge
+                                variant="outline"
+                                className="border-blue-400 text-blue-600"
+                              >
+                                Default
+                              </Badge>
                             ) : (
-                              <span className="text-muted-foreground text-xs">—</span>
+                              <span className="text-muted-foreground text-xs">
+                                —
+                              </span>
                             )}
                           </td>
                           {/* ── Edit action ── */}
@@ -556,7 +667,7 @@ const AdminKybMapping = () => {
                 </div>
 
                 {/* ── Pagination ── */}
-                {totalPages > 1 && (
+                {/* {totalPages > 1 && (
                   <div className="mt-6">
                     <Pagination>
                       <PaginationContent>
@@ -588,7 +699,56 @@ const AdminKybMapping = () => {
                       </PaginationContent>
                     </Pagination>
                   </div>
-                )}
+                )} */}
+
+                <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }}
+                          className={
+                            currentPage === 0
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                      {getPageNumbers().map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#"
+                            isActive={page === currentPage}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(page);
+                            }}
+                          >
+                            {page + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }}
+                          className={
+                            currentPage >= totalPages - 1
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
               </>
             )}
           </CardContent>
@@ -600,27 +760,50 @@ const AdminKybMapping = () => {
       ══════════════════════════════════════════════════════════ */}
       <Dialog open={showCreateBT} onOpenChange={setShowCreateBT}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Create Business Type</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Create Business Type</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label htmlFor="bt-code">Code <span className="text-destructive">*</span></Label>
-              <Input id="bt-code" placeholder="e.g. IT" value={btForm.code}
-                onChange={(e) => setBtForm({ ...btForm, code: e.target.value.toUpperCase() })} />
+              <Label htmlFor="bt-code">
+                Code <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="bt-code"
+                placeholder="e.g. IT"
+                value={btForm.code}
+                onChange={(e) =>
+                  setBtForm({ ...btForm, code: e.target.value.toUpperCase() })
+                }
+              />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="bt-name">Name <span className="text-destructive">*</span></Label>
-              <Input id="bt-name" placeholder="e.g. Information Technology" value={btForm.name}
-                onChange={(e) => setBtForm({ ...btForm, name: e.target.value })} />
+              <Label htmlFor="bt-name">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="bt-name"
+                placeholder="e.g. Information Technology"
+                value={btForm.name}
+                onChange={(e) => setBtForm({ ...btForm, name: e.target.value })}
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="bt-active">Active</Label>
-              <Switch id="bt-active" checked={btForm.active}
-                onCheckedChange={(val) => setBtForm({ ...btForm, active: val })} />
+              <Switch
+                id="bt-active"
+                checked={btForm.active}
+                onCheckedChange={(val) => setBtForm({ ...btForm, active: val })}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateBT(false)}>Cancel</Button>
-            <Button onClick={handleCreateBT} disabled={btLoading}>{btLoading ? "Creating…" : "Create"}</Button>
+            <Button variant="outline" onClick={() => setShowCreateBT(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateBT} disabled={btLoading}>
+              {btLoading ? "Creating…" : "Create"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -630,27 +813,54 @@ const AdminKybMapping = () => {
       ══════════════════════════════════════════════════════════ */}
       <Dialog open={showCreateKYB} onOpenChange={setShowCreateKYB}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Create KYB Type</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Create KYB Type</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label htmlFor="kyb-code">Code <span className="text-destructive">*</span></Label>
-              <Input id="kyb-code" placeholder="e.g. CODING" value={kybForm.code}
-                onChange={(e) => setKybForm({ ...kybForm, code: e.target.value.toUpperCase() })} />
+              <Label htmlFor="kyb-code">
+                Code <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="kyb-code"
+                placeholder="e.g. CODING"
+                value={kybForm.code}
+                onChange={(e) =>
+                  setKybForm({ ...kybForm, code: e.target.value.toUpperCase() })
+                }
+              />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="kyb-name">Name <span className="text-destructive">*</span></Label>
-              <Input id="kyb-name" placeholder="e.g. Coding KYB" value={kybForm.name}
-                onChange={(e) => setKybForm({ ...kybForm, name: e.target.value })} />
+              <Label htmlFor="kyb-name">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="kyb-name"
+                placeholder="e.g. Coding KYB"
+                value={kybForm.name}
+                onChange={(e) =>
+                  setKybForm({ ...kybForm, name: e.target.value })
+                }
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="kyb-active">Active</Label>
-              <Switch id="kyb-active" checked={kybForm.active}
-                onCheckedChange={(val) => setKybForm({ ...kybForm, active: val })} />
+              <Switch
+                id="kyb-active"
+                checked={kybForm.active}
+                onCheckedChange={(val) =>
+                  setKybForm({ ...kybForm, active: val })
+                }
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateKYB(false)}>Cancel</Button>
-            <Button onClick={handleCreateKYB} disabled={kybLoading}>{kybLoading ? "Creating…" : "Create"}</Button>
+            <Button variant="outline" onClick={() => setShowCreateKYB(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateKYB} disabled={kybLoading}>
+              {kybLoading ? "Creating…" : "Create"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -660,41 +870,71 @@ const AdminKybMapping = () => {
       ══════════════════════════════════════════════════════════ */}
       <Dialog open={showCreateMapping} onOpenChange={setShowCreateMapping}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Create KYB Mapping</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Create KYB Mapping</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label>Business Type <span className="text-destructive">*</span></Label>
-              <Select value={mapForm.businessTypeId}
-                onValueChange={(val) => setMapForm({ ...mapForm, businessTypeId: val })}
-                disabled={loadingDropdowns}>
+              <Label>
+                Business Type <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={mapForm.businessTypeId}
+                onValueChange={(val) =>
+                  setMapForm({ ...mapForm, businessTypeId: val })
+                }
+                disabled={loadingDropdowns}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={loadingDropdowns ? "Loading…" : "Select business type"} />
+                  <SelectValue
+                    placeholder={
+                      loadingDropdowns ? "Loading…" : "Select business type"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {businessTypes.length === 0 && !loadingDropdowns ? (
-                    <SelectItem value="__none__" disabled>No business types found</SelectItem>
+                    <SelectItem value="__none__" disabled>
+                      No business types found
+                    </SelectItem>
                   ) : (
                     businessTypes.map((bt) => (
-                      <SelectItem key={bt.id} value={String(bt.id)}>{bt.name}</SelectItem>
+                      <SelectItem key={bt.id} value={String(bt.id)}>
+                        {bt.name}
+                      </SelectItem>
                     ))
                   )}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>KYB Type <span className="text-destructive">*</span></Label>
-              <Select value={mapForm.kybTypeId}
-                onValueChange={(val) => setMapForm({ ...mapForm, kybTypeId: val })}
-                disabled={loadingDropdowns}>
+              <Label>
+                KYB Type <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={mapForm.kybTypeId}
+                onValueChange={(val) =>
+                  setMapForm({ ...mapForm, kybTypeId: val })
+                }
+                disabled={loadingDropdowns}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={loadingDropdowns ? "Loading…" : "Select KYB type"} />
+                  <SelectValue
+                    placeholder={
+                      loadingDropdowns ? "Loading…" : "Select KYB type"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {kybTypes.length === 0 && !loadingDropdowns ? (
-                    <SelectItem value="__none__" disabled>No KYB types found</SelectItem>
+                    <SelectItem value="__none__" disabled>
+                      No KYB types found
+                    </SelectItem>
                   ) : (
                     kybTypes.map((kt) => (
-                      <SelectItem key={kt.id} value={String(kt.id)}>{kt.name}</SelectItem>
+                      <SelectItem key={kt.id} value={String(kt.id)}>
+                        {kt.name}
+                      </SelectItem>
                     ))
                   )}
                 </SelectContent>
@@ -702,24 +942,48 @@ const AdminKybMapping = () => {
             </div>
             <div className="space-y-1">
               <Label htmlFor="map-desc">Description</Label>
-              <Textarea id="map-desc" placeholder="e.g. Coding businesses go to IT KYB" rows={2}
+              <Textarea
+                id="map-desc"
+                placeholder="e.g. Coding businesses go to IT KYB"
+                rows={2}
                 value={mapForm.description}
-                onChange={(e) => setMapForm({ ...mapForm, description: e.target.value })} />
+                onChange={(e) =>
+                  setMapForm({ ...mapForm, description: e.target.value })
+                }
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="map-active">Active</Label>
-              <Switch id="map-active" checked={mapForm.active}
-                onCheckedChange={(val) => setMapForm({ ...mapForm, active: val })} />
+              <Switch
+                id="map-active"
+                checked={mapForm.active}
+                onCheckedChange={(val) =>
+                  setMapForm({ ...mapForm, active: val })
+                }
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="map-default">Set as Default</Label>
-              <Switch id="map-default" checked={mapForm.isDefault}
-                onCheckedChange={(val) => setMapForm({ ...mapForm, isDefault: val })} />
+              <Switch
+                id="map-default"
+                checked={mapForm.isDefault}
+                onCheckedChange={(val) =>
+                  setMapForm({ ...mapForm, isDefault: val })
+                }
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateMapping(false)}>Cancel</Button>
-            <Button onClick={handleCreateMapping} disabled={mapLoading || loadingDropdowns}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateMapping(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateMapping}
+              disabled={mapLoading || loadingDropdowns}
+            >
               {mapLoading ? "Creating…" : "Create Mapping"}
             </Button>
           </DialogFooter>
@@ -735,10 +999,11 @@ const AdminKybMapping = () => {
             <DialogTitle>Edit Mapping #{editForm.id}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-
             {/* businessTypeId — dropdown showing name, passes id to API */}
             <div className="space-y-1">
-              <Label>Business Type <span className="text-destructive">*</span></Label>
+              <Label>
+                Business Type <span className="text-destructive">*</span>
+              </Label>
               <Select
                 disabled
                 value={String(editForm.businessTypeId)}
@@ -748,7 +1013,11 @@ const AdminKybMapping = () => {
                 // disabled={loadingDropdowns}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={loadingDropdowns ? "Loading…" : "Select business type"} />
+                  <SelectValue
+                    placeholder={
+                      loadingDropdowns ? "Loading…" : "Select business type"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {businessTypes.map((bt) => (
@@ -762,7 +1031,9 @@ const AdminKybMapping = () => {
 
             {/* kybTypeId — dropdown populated from fetched KYB types */}
             <div className="space-y-1">
-              <Label>KYB Type <span className="text-destructive">*</span></Label>
+              <Label>
+                KYB Type <span className="text-destructive">*</span>
+              </Label>
               <Select
                 value={String(editForm.kybTypeId)}
                 onValueChange={(val) =>
@@ -771,7 +1042,11 @@ const AdminKybMapping = () => {
                 disabled={loadingDropdowns}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={loadingDropdowns ? "Loading…" : "Select KYB type"} />
+                  <SelectValue
+                    placeholder={
+                      loadingDropdowns ? "Loading…" : "Select KYB type"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {kybTypes.map((kt) => (
@@ -802,7 +1077,9 @@ const AdminKybMapping = () => {
               <Switch
                 id="edit-active"
                 checked={editForm.active}
-                onCheckedChange={(val) => setEditForm({ ...editForm, active: val })}
+                onCheckedChange={(val) =>
+                  setEditForm({ ...editForm, active: val })
+                }
               />
             </div>
 
@@ -812,7 +1089,9 @@ const AdminKybMapping = () => {
               <Switch
                 id="edit-default"
                 checked={editForm.default}
-                onCheckedChange={(val) => setEditForm({ ...editForm, default: val })}
+                onCheckedChange={(val) =>
+                  setEditForm({ ...editForm, default: val })
+                }
               />
             </div>
           </div>
@@ -827,7 +1106,6 @@ const AdminKybMapping = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </AdminLayout>
   );
 };

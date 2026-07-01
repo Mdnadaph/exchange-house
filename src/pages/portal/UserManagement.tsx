@@ -26,6 +26,8 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import UserEditForm from "@/components/governance/UserEdit";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const UserManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -40,7 +42,7 @@ const UserManagement = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<any>();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
@@ -60,6 +62,7 @@ const UserManagement = () => {
         setDashboard(json.data.dashboard);
         setUsers(json.data.users);
         setPagination(json.data.pagination);
+        setCurrentPage(json?.data?.pagination?.page || 0);
       }
     } catch (error) {
       toast({
@@ -140,7 +143,7 @@ const UserManagement = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               User Management & Governance
@@ -157,7 +160,7 @@ const UserManagement = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg::grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -238,7 +241,10 @@ const UserManagement = () => {
                     placeholder="Search by name, email, or role..."
                     className="pl-9"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(0);
+                    }}
                   />
                 </div>
               </div>
@@ -253,8 +259,17 @@ const UserManagement = () => {
 
         {/* Users Table */}
         <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Business Users</CardTitle>
+          <CardHeader className="w-full">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <CardTitle>Business Users</CardTitle>
+              <PaginationSummary
+                totalElements={pagination?.totalItems}
+                pageSize={pagination?.size}
+                currentPage={currentPage}
+                itemCount={users?.length}
+                itemLabel="Business User"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -268,7 +283,7 @@ const UserManagement = () => {
                     className="hover:shadow-md transition-smooth"
                   >
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between flex-wrap gap-2">
                         <div className="space-y-4 flex-1">
                           {/* User Header */}
                           <div className="flex items-center space-x-4">
@@ -308,19 +323,23 @@ const UserManagement = () => {
 
                           {/* User Details Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                               <div className="flex items-center text-muted-foreground">
-                                <Mail className="h-3 w-3 mr-1" />
+                                <Mail className="h-3 w-3 mr-1 shrink-0" />
                                 Email:
                               </div>
-                              <p className="font-medium">{user.email}</p>
+                              <p className="font-medium break-all">
+                                {user.email}
+                              </p>
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                               <div className="flex items-center text-muted-foreground">
-                                <Shield className="h-3 w-3 mr-1" />
+                                <Shield className="h-3 w-3 mr-1 shrink-0" />
                                 Department:
                               </div>
-                              <p className="font-medium">{user.department}</p>
+                              <p className="font-medium break-words">
+                                {user.department}
+                              </p>
                             </div>
                             <div className="space-y-1">
                               <span className="text-muted-foreground">
@@ -418,29 +437,13 @@ const UserManagement = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {users.length} of {pagination.totalItems} users
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === 0}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage >= pagination.totalPages - 1}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+
+            <PaginationControl
+              className="mt-6"
+              currentPage={currentPage}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </CardContent>
         </Card>
       </div>

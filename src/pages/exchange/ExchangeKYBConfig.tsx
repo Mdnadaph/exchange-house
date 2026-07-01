@@ -158,7 +158,7 @@ const ExchangeKYBConfig = () => {
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               KYB Rules Configuration
@@ -187,7 +187,7 @@ const ExchangeKYBConfig = () => {
                 <div className="text-sm text-muted-foreground">
                   Showing {Math.min(currentPage * pageSize + 1, totalElements)}{" "}
                   - {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
-                  {totalElements} rules
+                  {totalElements} KYB Rules
                 </div>
               )}
             </div>
@@ -357,69 +357,66 @@ const ExchangeKYBConfig = () => {
                 </div>
 
                 {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="flex flex-col sm:flex-row items-center justify-center pt-6 border-t border-gray-200 gap-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 0}
-                        className={`flex items-center justify-center w-9 h-9 rounded-md border ${
-                          currentPage === 0
-                            ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                            : "text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                        }`}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
 
-                      <div className="flex items-center gap-1">
-                        {getPageNumbers().map((pageNum, index) => {
-                          if (pageNum === "...") {
-                            return (
-                              <span
-                                key={`ellipsis-${index}`}
-                                className="px-2 text-muted-foreground"
-                              >
-                                ...
-                              </span>
-                            );
-                          }
+                <div className="flex flex-col sm:flex-row items-center justify-center pt-6 border-t border-gray-200 gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 0}
+                      className={`flex items-center justify-center w-9 h-9 rounded-md border ${
+                        currentPage === 0
+                          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                          : "text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                      }`}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {getPageNumbers().map((pageNum, index) => {
+                        if (pageNum === "...") {
                           return (
-                            <button
-                              key={pageNum}
-                              onClick={() =>
-                                handlePageChange(pageNum as number)
-                              }
-                              className={`flex items-center justify-center min-w-9 h-9 px-2 rounded-md text-sm font-medium ${
-                                currentPage === pageNum
-                                  ? "bg-primary text-white border border-primary"
-                                  : "text-gray-700 border border-gray-300 hover:bg-gray-50"
-                              }`}
+                            <span
+                              key={`ellipsis-${index}`}
+                              className="px-2 text-muted-foreground"
                             >
-                              {(pageNum as number) + 1}
-                            </button>
+                              ...
+                            </span>
                           );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages - 1}
-                        className={`flex items-center justify-center w-9 h-9 rounded-md border ${
-                          currentPage === totalPages - 1
-                            ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                            : "text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                        }`}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum as number)}
+                            className={`flex items-center justify-center min-w-9 h-9 px-2 rounded-md text-sm font-medium ${
+                              currentPage === pageNum
+                                ? "bg-primary text-white border border-primary"
+                                : "text-gray-700 border border-gray-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            {(pageNum as number) + 1}
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    <div className="text-sm text-muted-foreground pl-28">
-                      Page {currentPage + 1} of {totalPages}
-                    </div>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages - 1}
+                      className={`flex items-center justify-center w-9 h-9 rounded-md border ${
+                        currentPage === totalPages - 1
+                          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                          : "text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                      }`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
                   </div>
-                )}
+
+                  <div className="text-sm text-muted-foreground pl-28">
+                    Page {currentPage + 1} of {totalPages}
+                  </div>
+                </div>
               </>
             )}
           </CardContent>

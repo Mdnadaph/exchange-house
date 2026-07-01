@@ -662,7 +662,8 @@ const ApprovalRuleForm = ({
 
                       <div>
                         <Label className="text-sm font-medium mb-2 block">
-                          Eligible Approver Roles
+                          Eligible Approver Roles{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                           {approverRoles.map((role) => (
@@ -675,6 +676,7 @@ const ApprovalRuleForm = ({
                                 checked={tier.roles.includes(role)}
                                 onCheckedChange={(checked) => {
                                   handleRoleChange(index, role, !!checked);
+                                  clearFieldError(`tier-${index}-roles`);
                                 }}
                               />
                               <Label

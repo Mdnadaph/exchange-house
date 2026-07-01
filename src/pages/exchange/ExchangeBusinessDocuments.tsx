@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,11 +39,23 @@ import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
 import axios from "axios";
 import { useCookies } from "react-cookie";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const ExchangeBusinessDocuments = () => {
   const { toast } = useToast();
   const [cookies] = useCookies(["token"]);
   const token = cookies.token;
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const [documents, setDocuments] = useState<any[]>([]);
   const [dashboard, setDashboard] = useState<any>({
@@ -54,21 +66,97 @@ const ExchangeBusinessDocuments = () => {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("All");
 
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [businessLoading, setBusinessLoading] = useState<boolean>(false);
+  const [businessAdminList, setBusinessAdminList] = useState([]);
+  const [businessId, setBusinessId] = useState("");
 
   const [previewOpen, setPreviewOpen] = useState(false);
   // ✅ CHANGED: track loading per document ID instead of a single boolean
   const [loadingDocId, setLoadingDocId] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [debounce, setDebounce] = useState("");
   const [previewFileType, setPreviewFileType] = useState<
     "image" | "pdf" | "other"
   >("other");
   const [previewFileName, setPreviewFileName] = useState("");
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchQuery);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchQuery]);
+  const getBusinessAdminList = async () => {
+    // IMPORTANT
+    if (businessLoading || !hasMore) return;
+
+    try {
+      setBusinessLoading(true);
+
+      const currentPage = page;
+
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/business?page=${currentPage}&pageSize=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        const newData = res?.data?.data?.businesses?.items || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMore(false);
+        }
+
+        // Prevent duplicate data
+        setBusinessAdminList((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setPage((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+      });
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !businessLoading && hasMore) {
+      getBusinessAdminList();
+    }
+  };
 
   /* ================= VIEW DOCUMENT ================= */
   const handleView = async (doc: any) => {
@@ -151,12 +239,12 @@ const ExchangeBusinessDocuments = () => {
       setLoading(true);
 
       const res = await axios.get(
-        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}`,
+        `${BASE_URL}/api/v3/admin/kyb/documents?page=${page}&size=${pageSize}&businessId=${businessId}&documentStatus=${selectedStatus}&search=${debounce}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (res.data?.status) {
@@ -164,6 +252,7 @@ const ExchangeBusinessDocuments = () => {
         setDashboard(res.data.data.dashboard || {});
         setTotalPages(res.data.totalPages || 0);
         setCurrentPage(res.data.currentPage || 0);
+        setTotalElements(res?.data?.totalElements || 0);
       }
     } catch (error: any) {
       toast({
@@ -179,34 +268,37 @@ const ExchangeBusinessDocuments = () => {
 
   useEffect(() => {
     fetchDocuments(currentPage);
-  }, [currentPage]);
+  }, [currentPage, businessId, selectedStatus, debounce]);
+  useEffect(() => {
+    getBusinessAdminList();
+  }, []);
 
   /* ================= FILTER (status + search) ================= */
-  const filteredDocuments = documents.filter((doc) => {
-    if (selectedStatus !== "all") {
-      if (selectedStatus === "verified" && doc.status !== "Verified")
-        return false;
-      if (
-        selectedStatus === "pending_review" &&
-        doc.status !== "Pending Review"
-      )
-        return false;
-      if (selectedStatus === "rejected" && doc.status !== "Rejected")
-        return false;
-    }
+  // const filteredDocuments = documents.filter((doc) => {
+  //   if (selectedStatus !== "all") {
+  //     if (selectedStatus === "verified" && doc.status !== "Verified")
+  //       return false;
+  //     if (
+  //       selectedStatus === "pending_review" &&
+  //       doc.status !== "Pending Review"
+  //     )
+  //       return false;
+  //     if (selectedStatus === "rejected" && doc.status !== "Rejected")
+  //       return false;
+  //   }
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        doc.documentName?.toLowerCase().includes(q) ||
-        doc.businessName?.toLowerCase().includes(q) ||
-        doc.documentType?.toLowerCase().includes(q) ||
-        doc.branchName?.toLowerCase().includes(q)
-      );
-    }
+  //   if (searchQuery.trim()) {
+  //     const q = searchQuery.toLowerCase();
+  //     return (
+  //       doc.documentName?.toLowerCase().includes(q) ||
+  //       doc.businessName?.toLowerCase().includes(q) ||
+  //       doc.documentType?.toLowerCase().includes(q) ||
+  //       doc.branchName?.toLowerCase().includes(q)
+  //     );
+  //   }
 
-    return true;
-  });
+  //   return true;
+  // });
 
   /* ================= STATUS BADGE ================= */
   const getStatusBadge = (status: string) => {
@@ -251,7 +343,7 @@ const ExchangeBusinessDocuments = () => {
         </div>
 
         {/* ================= DASHBOARD ================= */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row justify-between pb-2">
               <CardTitle className="text-sm">Total Documents</CardTitle>
@@ -259,8 +351,9 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboard.totalDocuments}
+                {dashboard?.totalDocuments || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">{`From ${dashboard?.activeBusinesses || 0} businesses`}</p>
             </CardContent>
           </Card>
 
@@ -271,11 +364,13 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {dashboard.verifiedDocuments}
+                {dashboard.verifiedDocuments || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">
+                Approved documents
+              </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row justify-between pb-2">
               <CardTitle className="text-sm">Pending Review</CardTitle>
@@ -283,8 +378,11 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {dashboard.pendingDocuments}
+                {dashboard.pendingDocuments || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">
+                Awaiting verification
+              </p>
             </CardContent>
           </Card>
 
@@ -295,15 +393,18 @@ const ExchangeBusinessDocuments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboard.activeBusinesses}
+                {dashboard.activeBusinesses || 0}
               </div>
+              <p className="text-sm font-medium text-gray-500">
+                Active businesses
+              </p>
             </CardContent>
           </Card>
         </div>
 
         {/* ================= FILTERS ================= */}
         <Card>
-          <CardContent className="p-6 flex gap-4 flex-wrap">
+          <CardContent className="p-6 flex justify-between flex-wrap gap-3">
             <div className="flex-1">
               <Label>Search Documents</Label>
               <div className="relative">
@@ -312,14 +413,36 @@ const ExchangeBusinessDocuments = () => {
                   className="pl-9"
                   placeholder="Search by name, business, type, branch..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(0);
+                  }}
                 />
               </div>
             </div>
-
-            <div>
-              <Label>Status</Label>
-              <select
+            <div className="flex gap-4 flex-wrap">
+              <div className="w-[200px]">
+                <Label>Status</Label>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={(val) => {
+                    setSelectedStatus(val);
+                    setCurrentPage(0);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="max-h-60 overflow-y-auto">
+                      <SelectItem value="All">All</SelectItem>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                    </div>
+                  </SelectContent>
+                </Select>
+                {/* <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="h-10 px-3 border rounded-md"
@@ -328,7 +451,49 @@ const ExchangeBusinessDocuments = () => {
                 <option value="verified">Verified</option>
                 <option value="pending_review">Pending Review</option>
                 <option value="rejected">Rejected</option>
-              </select>
+              </select> */}
+              </div>
+              <div className="w-[250px]">
+                <label>Filter By Business</label>
+                <Select
+                  value={businessId}
+                  onValueChange={(val) => {
+                    setBusinessId(val == "all" ? "" : val);
+                    setCurrentPage(0);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Business Admin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div
+                      ref={listRef}
+                      onScroll={handleScroll}
+                      className="max-h-60 overflow-y-auto"
+                    >
+                      {businessAdminList?.length > 0 && (
+                        <SelectItem value="all">All</SelectItem>
+                      )}
+                      {businessAdminList?.map((c, index) => (
+                        <SelectItem key={index} value={c?.id}>
+                          {c?.companyName}
+                        </SelectItem>
+                      ))}
+                      {/* OBSERVER TARGET */}
+                      {businessLoading && (
+                        <div className="py-2 text-center text-sm text-gray-500">
+                          Loading...
+                        </div>
+                      )}
+                      {/* {!hasMore && (
+                        <div className="py-2 text-center text-sm text-gray-400">
+                          No More Data
+                        </div>
+                      )} */}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -336,7 +501,16 @@ const ExchangeBusinessDocuments = () => {
         {/* ================= DOCUMENT LIST ================= */}
         <Card>
           <CardHeader>
-            <CardTitle>Documents ({filteredDocuments.length})</CardTitle>
+            <div className="flex justify-between gap-2 flex-wrap">
+              <CardTitle>Documents ({documents.length})</CardTitle>
+              <PaginationSummary
+                currentPage={currentPage}
+                pageSize={10}
+                itemCount={documents?.length || 0}
+                itemLabel="Documents"
+                totalElements={totalElements}
+              />
+            </div>
           </CardHeader>
 
           <CardContent className="space-y-3">
@@ -347,13 +521,13 @@ const ExchangeBusinessDocuments = () => {
             )}
 
             {!loading &&
-              filteredDocuments.map((doc) => {
+              documents?.map((doc) => {
                 // ✅ CHANGED: each row checks if ITS OWN ID is loading
                 const isThisDocLoading = loadingDocId === doc.documentId;
 
                 return (
                   <Card key={doc.documentId}>
-                    <CardContent className="p-4 flex justify-between">
+                    <CardContent className="p-4 flex justify-between flex-wrap gap-2">
                       <div className="flex gap-3">
                         <FileText className="h-8 w-8 text-primary" />
                         <div>
@@ -374,13 +548,13 @@ const ExchangeBusinessDocuments = () => {
                               <Calendar className="inline h-3 w-3 mr-1" />
                               {doc.uploadedAt}
                             </span>
-                            <span>{(doc.fileSize / 1024).toFixed(1)} KB</span>
+                            <span>{(doc.fileSize / 1024)?.toFixed(1)} KB</span>
                             <Badge variant="outline">{doc.branchName}</Badge>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2  flex-wrap">
                         {/* ✅ CHANGED: only THIS button disables and shows spinner */}
                         <Button
                           variant="outline"
@@ -405,7 +579,7 @@ const ExchangeBusinessDocuments = () => {
                           Download
                         </Button>
 
-                        {doc.status === "Pending Review" && (
+                        {/* {doc.status === "Pending Review" && (
                           <>
                             <Button variant="default" size="sm">
                               <CheckCircle className="h-4 w-4 mr-1" />
@@ -416,14 +590,14 @@ const ExchangeBusinessDocuments = () => {
                               Reject
                             </Button>
                           </>
-                        )}
+                        )} */}
                       </div>
                     </CardContent>
                   </Card>
                 );
               })}
 
-            {!loading && filteredDocuments.length === 0 && (
+            {!loading && documents.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
                 <p>No documents found</p>
@@ -438,7 +612,7 @@ const ExchangeBusinessDocuments = () => {
         </Card>
 
         {/* ================= PAGINATION ================= */}
-        {totalPages > 1 && (
+        {/* {totalPages > 1 && (
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -467,7 +641,40 @@ const ExchangeBusinessDocuments = () => {
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        )}
+        )} */}
+        <PaginationControl
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+        {/* <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+              />
+            </PaginationItem>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={i === currentPage}
+                  onClick={() => setCurrentPage(i)}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination> */}
 
         {/* ================= PREVIEW MODAL ================= */}
         <Dialog open={previewOpen} onOpenChange={handleClosePreview}>

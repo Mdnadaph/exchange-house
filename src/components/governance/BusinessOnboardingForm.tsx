@@ -807,7 +807,7 @@ const BusinessOnboardingForm = ({
     }
 
     if (!formData.dealValidityDays) {
-      newErrors.dealValidityDays = "Deal validity days is required";
+      newErrors.dealValidityDays = "Deal validity hours is required";
     } else if (Number(formData.dealValidityDays) <= 0) {
       newErrors.dealValidityDays = "Deal validity must be greater than 0";
     }
@@ -946,6 +946,10 @@ const BusinessOnboardingForm = ({
     setUboData(updated);
   };
 
+  const mappedBusinessType = businessTypeData?.filter(
+    (b) => b?.mapped === true,
+  );
+
   const renderStep1 = () => (
     <div className="space-y-6">
       <Card>
@@ -1054,7 +1058,7 @@ const BusinessOnboardingForm = ({
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {businessTypeData.map((type) => (
+                  {mappedBusinessType?.map((type) => (
                     <SelectItem key={type?.id} value={type?.id}>
                       {type?.name}
                     </SelectItem>
@@ -2128,7 +2132,7 @@ const BusinessOnboardingForm = ({
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
-                Deal Validity Period (Days){" "}
+                Deal Validity Period (Hours){" "}
                 <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -2159,7 +2163,8 @@ const BusinessOnboardingForm = ({
                 </p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Number of days a negotiated deal remains valid before expiration
+                Number of hours a negotiated deal remains valid before
+                expiration
               </p>
             </div>
           </div>
@@ -2353,7 +2358,13 @@ const BusinessOnboardingForm = ({
                   const step2Valid = validateStep2();
                   const step3Valid = validateStep3();
                   const step4Valid = validateStep4();
-                  if (step1Valid && step2Valid && step3Valid && step3Valid) {
+                  if (
+                    step1Valid &&
+                    step2Valid &&
+                    step3Valid &&
+                    step3Valid &&
+                    step4Valid
+                  ) {
                     handleSubmit();
                   } else {
                     if (!step1Valid) setCurrentStep(1);

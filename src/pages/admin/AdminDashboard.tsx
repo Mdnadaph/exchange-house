@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-
+import dayjs from "@/utils/dayjs";
 import {
   Users,
   Building,
@@ -45,6 +45,8 @@ import { useCookies } from "react-cookie";
 import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/config";
 import { useLanguage } from "@/contexts/LanguageContext";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -59,7 +61,8 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalElements, setTotalElements] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [recentActivities, setRecentActivities] = useState([]);
   const { t, isRTL } = useLanguage();
   /* =========================
      AUTH / TOAST
@@ -82,6 +85,7 @@ const AdminDashboard = () => {
       });
       const admins = res.data.data.exchangeAdmins || [];
       setExchangeAdmins(admins);
+      setRecentActivities(res?.data?.data?.recentActivities);
       setDashboardStats(
         res.data.data.stats || {
           totalExchangeAdmin: 0,
@@ -146,32 +150,32 @@ const AdminDashboard = () => {
     },
   ];
 
-  const recentActivities = [
-    {
-      type: "user_created",
-      message: "New business user created: Michael Johnson",
-      time: "2 hours ago",
-      status: "success",
-    },
-    {
-      type: "kyb_pending",
-      message: "KYB application requires review: TechCorp LLC",
-      time: "4 hours ago",
-      status: "pending",
-    },
-    {
-      type: "rule_updated",
-      message: "Approval threshold updated for USD transactions",
-      time: "1 day ago",
-      status: "info",
-    },
-    {
-      type: "beneficiary_approved",
-      message: "Beneficiary approved: Global Suppliers Inc",
-      time: "1 day ago",
-      status: "success",
-    },
-  ];
+  // const recentActivities = [
+  //   {
+  //     type: "user_created",
+  //     message: "New business user created: Michael Johnson",
+  //     time: "2 hours ago",
+  //     status: "success",
+  //   },
+  //   {
+  //     type: "kyb_pending",
+  //     message: "KYB application requires review: TechCorp LLC",
+  //     time: "4 hours ago",
+  //     status: "pending",
+  //   },
+  //   {
+  //     type: "rule_updated",
+  //     message: "Approval threshold updated for USD transactions",
+  //     time: "1 day ago",
+  //     status: "info",
+  //   },
+  //   {
+  //     type: "beneficiary_approved",
+  //     message: "Beneficiary approved: Global Suppliers Inc",
+  //     time: "1 day ago",
+  //     status: "success",
+  //   },
+  // ];
 
   const pendingTasks = [
     {
@@ -291,6 +295,15 @@ const AdminDashboard = () => {
               <FileText className="h-5 w-5" />
               Exchange Admins
             </CardTitle>
+            <div className="flex justify-end my-1">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                itemCount={paginatedAdmins?.length}
+                itemLabel="exchange admin"
+              />
+            </div>
           </CardHeader>
 
           <CardContent>
@@ -346,28 +359,13 @@ const AdminDashboard = () => {
                           {status.label}
                         </Badge>
                       </TableCell>
-
-                      {/* <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell> */}
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
 
-            {!loadingAdmins && totalPages > 1 && (
+            {/* {!loadingAdmins && totalPages > 1 && (
               <Pagination className="mt-4">
                 <PaginationContent>
                   <PaginationItem>
@@ -408,7 +406,55 @@ const AdminDashboard = () => {
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
-            )}
+            )} */}
+            {/* {!loadingAdmins && (
+              <Pagination className="mt-4">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 0) {
+                          setCurrentPage(currentPage - 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        href="#"
+                        isActive={index === currentPage}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(index);
+                        }}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages - 1) {
+                          setCurrentPage(currentPage + 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )} */}
+            <PaginationControl
+              className="nt-4"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </CardContent>
         </Card>
 
@@ -425,29 +471,46 @@ const AdminDashboard = () => {
                   </Button> */}
                 </CardTitle>
               </CardHeader>
-              {/* <CardContent className="space-y-4">
-                {recentActivities.map((a, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-3 p-3 bg-muted/50 rounded-lg"
-                  >
-                    {a.status === "success" && (
-                      <CheckCircle className="h-5 w-5 text-success" />
-                    )}
-                    {a.status === "pending" && (
-                      <Clock className="h-5 w-5 text-warning" />
-                    )}
-                    {a.status === "info" && (
-                      <AlertCircle className="h-5 w-5 text-primary" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium">{a.message}</p>
-                      <p className="text-xs text-muted-foreground">{a.time}</p>
-                    </div>
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
+                {loadingAdmins ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="flex gap-3 p-3 bg-muted/50 rounded-lg animate-pulse"
+                      >
+                        <div className="h-5 w-5 bg-gray-300 rounded-full" />
+                        <div className="space-y-2 w-full">
+                          <div className="h-3 w-1/3 bg-gray-300 rounded" />
+                          <div className="h-2 w-1/4 bg-gray-300 rounded" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </CardContent> */}
-              <p className="text-center pb-2">No data found</p>
+                ) : recentActivities?.length > 0 ? (
+                  <div className="space-y-1">
+                    {recentActivities.map((a, i) => (
+                      <div
+                        key={i}
+                        className="flex gap-3 p-3 bg-muted/50 rounded-lg"
+                      >
+                        <CheckCircle className="h-5 w-5 text-success" />
+                        <div>
+                          <p className="text-sm font-medium">{a?.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {dayjs(a?.activityAt || "").fromNow()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-600 font-normal text-base">
+                    No Recent Activities Data Found
+                  </p>
+                )}
+              </CardContent>
+              {/* <p className="text-center pb-2">No data found</p> */}
             </Card>
           </div>
 

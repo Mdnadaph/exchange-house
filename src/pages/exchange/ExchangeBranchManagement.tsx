@@ -45,8 +45,19 @@ import {
   Trash2,
   Globe,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const ExchangeBranchManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -56,7 +67,8 @@ const ExchangeBranchManagement = () => {
   const uuid = useParams();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState<boolean>(true);
+  const [debounceValue, setDebounceValue] = useState("");
 
   const [branches, setBranches] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,6 +76,21 @@ const ExchangeBranchManagement = () => {
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [totalElement, setTotalElements] = useState<number>(0);
+  const [dashboardStats, setDashboardStats] = useState<Record<string, number>>({
+    totalBranches: 0,
+    activeBranches: 0,
+    totalStaffs: 0,
+  });
+  const [isFetchingbranchList, setIsFetchingBranchList] =
+    useState<boolean>(false);
+  const [pagination, setPagination] = useState({
+    pageNumber: 0,
+    pageSize: 10,
+    totalPages: 0,
+    totalElements: 0,
+  });
+
   const [form, setForm] = useState({
     name: "",
     emirate: "",
@@ -129,13 +156,27 @@ const ExchangeBranchManagement = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchQuery);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchQuery]);
+
   const fetchBranches = async () => {
+    setIsFetchingBranchList(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/v3/branch/all-branches`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/branch/all-branches?page=${pagination?.pageNumber}&pageSize=10&active=${filterStatus}&search=${debounceValue}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       if (!res?.data?.status) {
         toast({
           title: "Error",
@@ -143,14 +184,26 @@ const ExchangeBranchManagement = () => {
           variant: "destructive",
         });
       }
-      const apiData = res.data.data || [];
+      const apiData = res?.data?.data || [];
+      setPagination({
+        pageNumber: res?.data?.currentPage || 0,
+        pageSize: res?.data?.pageSize || 10,
+        totalPages: res?.data?.totalPages || 0,
+        totalElements: res?.data?.totalElements || 0,
+      });
+
+      setDashboardStats({
+        totalBranches: res?.data?.dashboardStats?.totalBranches || 0,
+        activeBranches: res?.data?.dashboardStats?.activeBranches || 0,
+        totalStaffs: res?.data?.dashboardStats?.totalStaffs || 0,
+      });
 
       const formatted = apiData.map((b: any) => ({
         id: b.branchId,
         uuid: b.uuid,
         name: b.name,
         location: b.location,
-        address: b.location,
+        address: b.address,
         emirate: b.city,
         email: b.email,
         phone: b.contactNumber,
@@ -168,6 +221,7 @@ const ExchangeBranchManagement = () => {
         operatingHours: "N/A",
         openingDate: b.createdDate,
         efficiency: 0,
+        managerRole: b?.managerRoleName,
       }));
 
       setBranches(formatted);
@@ -178,12 +232,14 @@ const ExchangeBranchManagement = () => {
           error?.response?.data?.message || "Failed to fetch branches",
         variant: "destructive",
       });
+    } finally {
+      setIsFetchingBranchList(false);
     }
   };
-
+  console.log("totalElement", totalElement);
   useEffect(() => {
     fetchBranches();
-  }, []);
+  }, [filterStatus, pagination?.pageNumber, debounceValue]);
 
   /* =========================
      OPEN ADD MODAL
@@ -344,11 +400,6 @@ const ExchangeBranchManagement = () => {
 
   const handleSubmit = async () => {
     if (!validateAll()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -389,36 +440,40 @@ const ExchangeBranchManagement = () => {
     return "text-destructive";
   };
 
-  const filteredBranches = branches.filter((branch) => {
-    const matchesSearch =
-      (branch.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-      (branch.location?.toLowerCase() || "").includes(
-        searchQuery.toLowerCase(),
-      ) ||
-      (branch.manager?.toLowerCase() || "").includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || branch.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  // const filteredBranches = branches.filter((branch) => {
+  //   const matchesSearch =
+  //     (branch.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+  //     (branch.location?.toLowerCase() || "").includes(
+  //       searchQuery.toLowerCase(),
+  //     ) ||
+  //     (branch.manager?.toLowerCase() || "").includes(searchQuery.toLowerCase());
+  //   const matchesStatus =
+  //     filterStatus === "all" || branch.status === filterStatus;
+  //   return matchesSearch && matchesStatus;
+  // });
 
-  const totalStats = {
-    totalBranches: branches.length,
-    activeBranches: branches.filter((b) => b.status === "active").length,
-    totalStaff: branches.reduce((sum, b) => sum + b.staffCount, 0),
-    totalKYB: branches.reduce((sum, b) => sum + b.completedKYB, 0),
+  // const totalStats = {
+  //   totalBranches: branches.length,
+  //   activeBranches: branches.filter((b) => b.status === "active").length,
+  //   totalStaff: branches.reduce((sum, b) => sum + b.staffCount, 0),
+  //   totalKYB: branches.reduce((sum, b) => sum + b.completedKYB, 0),
+  // };
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < pagination.totalPages) {
+      setPagination((prev) => ({ ...prev, pageNumber: newPage }));
+    }
   };
-
   return (
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Branch Management
             </h1>
             <p className="text-muted-foreground">
-              Manage exchange house branches across UAE
+              Manage exchange house branches
             </p>
           </div>
 
@@ -462,7 +517,7 @@ const ExchangeBranchManagement = () => {
 
                   <div>
                     <Label htmlFor="emirate">
-                      city <span className="text-red-500">*</span>
+                      City <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="emirate"
@@ -608,7 +663,7 @@ const ExchangeBranchManagement = () => {
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -618,12 +673,11 @@ const ExchangeBranchManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {totalStats.totalBranches}
+                {dashboardStats?.totalBranches}
               </div>
-              <p className="text-xs text-muted-foreground">Across UAE</p>
+              {/* <p className="text-xs text-muted-foreground">Across UAE</p> */}
             </CardContent>
           </Card>
-
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -633,11 +687,12 @@ const ExchangeBranchManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {totalStats.activeBranches}
+                {dashboardStats?.activeBranches}
               </div>
               <p className="text-xs text-muted-foreground">
                 {Math.round(
-                  (totalStats.activeBranches / totalStats.totalBranches) *
+                  (dashboardStats?.activeBranches /
+                    dashboardStats?.totalBranches) *
                     100 || 0,
                 )}
                 % operational
@@ -653,7 +708,9 @@ const ExchangeBranchManagement = () => {
               <Users className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalStats.totalStaff}</div>
+              <div className="text-2xl font-bold">
+                {dashboardStats?.totalStaffs}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Across all branches
               </p>
@@ -677,7 +734,7 @@ const ExchangeBranchManagement = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 flex-wrap items-center">
               <div className="flex-1">
                 <Label htmlFor="search">Search Branches</Label>
                 <div className="relative">
@@ -687,35 +744,53 @@ const ExchangeBranchManagement = () => {
                     placeholder="Search by name, location, or manager..."
                     className="pl-9"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPagination((prev) => ({
+                        ...prev,
+                        pageNumber: 0,
+                      }));
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 {/*<Button
                   variant={filterStatus === "all" ? "default" : "outline"}
                   onClick={() => setFilterStatus("all")}
                 >
                   All Branches
                 </Button>*/}
-                {/*<Button
-                  variant={filterStatus === "active" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("active")}
+                <Button
+                  variant={filterStatus === true ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterStatus(true);
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageNumber: 0,
+                    }));
+                  }}
                 >
                   Active
                 </Button>
                 <Button
-                  variant={filterStatus === "inactive" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("inactive")}
+                  variant={filterStatus === false ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterStatus(false);
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageNumber: 0,
+                    }));
+                  }}
                 >
                   Inactive
                 </Button>
-                <Button
+                {/* <Button
                   variant={filterStatus === "pending" ? "default" : "outline"}
                   onClick={() => setFilterStatus("pending")}
                 >
                   Pending
-                </Button>*/}
+                </Button> */}
               </div>
             </div>
           </CardContent>
@@ -723,88 +798,124 @@ const ExchangeBranchManagement = () => {
 
         {/* Branches List */}
         <div className="space-y-6">
-          {filteredBranches.map((branch) => {
-            const status = getStatusBadge(branch.status);
-            const StatusIcon = status.icon;
+          {isFetchingbranchList ? (
+            <div>
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading Branch Data...
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : branches?.length > 0 ? (
+            <div>
+              <div className="flex justify-end mb-1">
+                <PaginationSummary
+                  totalElements={pagination?.totalElements}
+                  pageSize={pagination?.pageSize}
+                  currentPage={pagination?.pageNumber}
+                  itemCount={branches?.length}
+                  itemLabel="Branchs"
+                />
+              </div>
+              {branches?.map((branch) => {
+                const status = getStatusBadge(branch.status);
+                const StatusIcon = status.icon;
+                return (
+                  <Card
+                    key={branch.id}
+                    className="shadow-card hover:shadow-lg transition-smooth"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-4 flex-1">
+                          {/* Branch Header */}
+                          <div className="flex items-center space-x-4">
+                            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center">
+                              <Building2 className="h-7 w-7 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h3 className="text-xl font-semibold text-foreground">
+                                  {branch?.name}
+                                </h3>
+                                <Badge
+                                  variant={status.variant}
+                                  className="flex items-center gap-1"
+                                >
+                                  <StatusIcon className="h-3 w-3" />
+                                  {status?.label}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {branch?.location}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Globe className="h-4 w-4" />
+                                  {branch?.emirate}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
 
-            return (
-              <Card
-                key={branch.id}
-                className="shadow-card hover:shadow-lg transition-smooth"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-4 flex-1">
-                      {/* Branch Header */}
-                      <div className="flex items-center space-x-4">
-                        <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center">
-                          <Building2 className="h-7 w-7 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-xl font-semibold text-foreground">
-                              {branch.name}
-                            </h3>
-                            <Badge
-                              variant={status.variant}
-                              className="flex items-center gap-1"
-                            >
-                              <StatusIcon className="h-3 w-3" />
-                              {status.label}
-                            </Badge>
+                          {/* Branch Details */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center text-muted-foreground">
+                                <Users className="h-3 w-3 mr-1" />
+                                {branch?.managerRole
+                                  ?.replace(/^ROLE_/, "")
+                                  ?.split("_")
+                                  ?.map(
+                                    (word) =>
+                                      word?.charAt(0)?.toUpperCase() +
+                                      word?.slice(1)?.toLowerCase(),
+                                  )
+                                  ?.join(" ")}
+                                :
+                              </div>
+                              <p className="font-medium">{branch.manager}</p>
+                              {/* <p className="text-xs">ID: {branch.managerId}</p> */}
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center text-muted-foreground">
+                                <Phone className="h-3 w-3 mr-1" />
+                                Contact:
+                              </div>
+                              <p className="font-medium">{branch.phone}</p>
+                              <p className="text-xs">{branch.email}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center text-muted-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Operating Hours:
+                              </div>
+                              <p className="font-medium">
+                                {branch.operatingHours}
+                              </p>
+                              <p className="text-xs">
+                                Open: {branch.openingDate}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">
+                                Staff:
+                              </span>
+                              <p className="font-medium">
+                                {branch?.staffCount} members
+                              </p>
+                              <p className="text-xs">
+                                {branch?.activeKYB} active KYB
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {branch.location}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Globe className="h-4 w-4" />
-                              {branch.emirate}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
 
-                      {/* Branch Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center text-muted-foreground">
-                            <Users className="h-3 w-3 mr-1" />
-                            Branch Manager:
-                          </div>
-                          <p className="font-medium">{branch.manager}</p>
-                          <p className="text-xs">ID: {branch.managerId}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center text-muted-foreground">
-                            <Phone className="h-3 w-3 mr-1" />
-                            Contact:
-                          </div>
-                          <p className="font-medium">{branch.phone}</p>
-                          <p className="text-xs">{branch.email}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center text-muted-foreground">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Operating Hours:
-                          </div>
-                          <p className="font-medium">{branch.operatingHours}</p>
-                          <p className="text-xs">Open: {branch.openingDate}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground">Staff:</span>
-                          <p className="font-medium">
-                            {branch.staffCount} members
-                          </p>
-                          <p className="text-xs">
-                            {branch.activeKYB} active KYB
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Performance Metrics */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          {/* Performance Metrics */}
+                          {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="text-center p-3 bg-primary/10 rounded-lg">
                           <p className="font-semibold text-primary text-lg">
                             {branch.completedKYB}
@@ -843,49 +954,51 @@ const ExchangeBranchManagement = () => {
                             Efficiency
                           </p>
                         </div>
-                      </div>
+                      </div> */}
 
-                      {/* Address */}
-                      <div className="text-sm text-muted-foreground border-t pt-3">
-                        <span className="font-medium text-foreground">
-                          Address:{" "}
-                        </span>
-                        {branch.address}
-                      </div>
-                    </div>
+                          {/* Address */}
+                          <div className="text-sm text-muted-foreground border-t pt-3">
+                            <span className="font-medium text-foreground">
+                              Address:{" "}
+                            </span>
+                            {branch.address}
+                          </div>
+                        </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col space-y-2 ml-6">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/exchange/Details/${branch.uuid}`)
-                        }
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
+                        {/* Actions */}
+                        <div className="flex flex-col space-y-2 ml-6">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(
+                                `/exchange/branches/Details/${branch.uuid}`,
+                              )
+                            }
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Details
+                          </Button>
 
-                      <PermissionGate permission="BTN_EDIT_BRANCH">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditModal(branch)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit Branch
-                        </Button>
-                      </PermissionGate>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate("/exchange/staff")}
-                      >
-                        <Users className="h-4 w-4 mr-1" />
-                        Manage Staff
-                      </Button>
-                      {/* {branch.status === "active" ? (
+                          <PermissionGate permission="BTN_EDIT_BRANCH">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditModal(branch)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit Branch
+                            </Button>
+                          </PermissionGate>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate("/exchange/member")}
+                          >
+                            <Users className="h-4 w-4 mr-1" />
+                            Manage Staff
+                          </Button>
+                          {/* {branch.status === "active" ? (
                         <Button variant="destructive" size="sm">
                           <XCircle className="h-4 w-4 mr-1" />
                           Deactivate
@@ -901,15 +1014,38 @@ const ExchangeBranchManagement = () => {
                           Complete Setup
                         </Button>
                       )} */}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              <PaginationControl
+                className="mt-6"
+                currentPage={pagination?.pageNumber}
+                totalPages={pagination?.totalPages}
+                onPageChange={(page) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageNumber: page,
+                  }))
+                }
+              />
+            </div>
+          ) : (
+            <Card className="shadow-card">
+              <CardContent className="p-12 text-center">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No branches found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search or filter criteria
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {filteredBranches.length === 0 && (
+        {/* {branches?.length === 0 && (
           <Card className="shadow-card">
             <CardContent className="p-12 text-center">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -919,7 +1055,7 @@ const ExchangeBranchManagement = () => {
               </p>
             </CardContent>
           </Card>
-        )}
+        )} */}
       </div>
     </ExchangeLayout>
   );

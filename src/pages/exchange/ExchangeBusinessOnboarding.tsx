@@ -9,6 +9,9 @@ import {
   Users,
   TrendingUp,
   Plus,
+  Search,
+  Loader2,
+  FileText,
 } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import BASE_URL from "@/config/config";
@@ -26,6 +29,10 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "react-day-picker";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import { Label } from "recharts";
+import { Input } from "@/components/ui/input";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const ExchangeBusinessOnboarding = () => {
   const [cookies] = useCookies(["token"]);
@@ -35,6 +42,11 @@ const ExchangeBusinessOnboarding = () => {
   const { uuid } = useParams();
 
   const [businesses, setBusinesses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDebounceValue, setSearchDebounceValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [stats, setStats] = useState({
     totalBusinesses: 0,
     pendingKYB: 0,
@@ -45,14 +57,21 @@ const ExchangeBusinessOnboarding = () => {
   const [pagination, setPagination] = useState({
     pageNumber: 0,
     pageSize: 10,
-    totalPages: 1,
+    totalPages: 0,
     totalElements: 0,
   });
 
-  const fetchBusinesses = async (page = 0, size = 10) => {
+  const fetchBusinesses = async (
+    page = 0,
+    size = 10,
+    search = "",
+    fromDate = "",
+    toDate = "",
+  ) => {
+    setLoading(true);
     try {
       const response = await axios.get(
-        `${BASE_URL}/api/v3/business?page=${page}&size=${size}`,
+        `${BASE_URL}/api/v3/business?page=${page}&size=${size}&search=${search}&fromDate=${fromDate}&toDate=${toDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,7 +98,7 @@ const ExchangeBusinessOnboarding = () => {
       setPagination({
         pageNumber: apiData?.businesses?.pagination?.page || 0,
         pageSize: apiData?.businesses?.pagination?.size || 10,
-        totalPages: apiData?.businesses?.pagination?.totalPages || 1,
+        totalPages: apiData?.businesses?.pagination?.totalPages || 0,
         totalElements: apiData?.businesses?.pagination?.totalItems || 0,
       });
 
@@ -96,6 +115,8 @@ const ExchangeBusinessOnboarding = () => {
     } catch (error) {
       console.error("Error fetching businesses:", error);
       setBusinesses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,25 +149,64 @@ const ExchangeBusinessOnboarding = () => {
   };
 
   useEffect(() => {
-    fetchBusinesses(pagination.pageNumber, pagination.pageSize);
+    const debounce = setTimeout(() => {
+      setSearchDebounceValue(searchTerm);
+    }, 500);
+    return () => clearTimeout(debounce);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchBusinesses(
+      pagination.pageNumber,
+      pagination.pageSize,
+      searchDebounceValue,
+      fromDate,
+      toDate,
+    );
     fetchStats();
-  }, [pagination.pageNumber, pagination.pageSize]);
+  }, [
+    pagination.pageNumber,
+    pagination.pageSize,
+    searchDebounceValue,
+    fromDate,
+    toDate,
+  ]);
 
   const getKYBStatusBadge = (status) => {
     switch (status) {
       case "VERIFIED":
-      case "APPROVED":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
             Verified
           </Badge>
         );
+      case "APPROVED":
+        return (
+          <Badge variant="default">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Approved
+          </Badge>
+        );
       case "PENDING":
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <Badge variant="secondary">
             <Clock className="h-3 w-3 mr-1" />
             Pending Review
+          </Badge>
+        );
+      case "NOT_STARTED":
+        return (
+          <Badge variant="secondary">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Review
+          </Badge>
+        );
+      case "REJECTED":
+        return (
+          <Badge variant="destructive">
+            <Clock className="h-3 w-3 mr-1" />
+            Rejected
           </Badge>
         );
       default:
@@ -177,7 +237,7 @@ const ExchangeBusinessOnboarding = () => {
     <ExchangeLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Business Onboarding
@@ -187,7 +247,6 @@ const ExchangeBusinessOnboarding = () => {
             </p>
           </div>
           {/*<BusinessOnboardingForm onSuccess={refreshData} />*/}
-
           <PermissionGate permission="BTN_ONBOARD_BUSINESS">
             <BusinessOnboardingForm onSuccess={refreshData} />
           </PermissionGate>
@@ -275,16 +334,90 @@ const ExchangeBusinessOnboarding = () => {
         </div>
 
         {/* Recently Onboarded Businesses */}
+
+        <Card className="shadow-card">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="space-y-1 flex-1">
+                <label className="text-base font-medium text-gray-800">
+                  Search OnBoard Business
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by business"
+                    className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      pagination.pageNumber = 0;
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-base font-medium text-gray-800">
+                  From Date
+                </label>
+                <input
+                  className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                  type="date"
+                  placeholder="From Date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e?.target?.value);
+                    pagination.pageNumber = 0;
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-base font-medium text-gray-800">
+                  To Date
+                </label>
+                <input
+                  className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                  type="date"
+                  placeholder="To Date"
+                  value={toDate}
+                  onChange={(e) => {
+                    setToDate(e?.target?.value);
+                    pagination.pageNumber = 0;
+                  }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Recently Onboarded Businesses
+            <CardTitle className="flex items-center gap-2 justify-between flex-wrap">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Recently Onboarded Businesses
+              </div>
+              <PaginationSummary
+                totalElements={pagination?.totalElements}
+                pageSize={pagination?.pageSize}
+                currentPage={pagination?.pageNumber}
+                itemCount={businesses?.length}
+                itemLabel="Onboard Business"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {businesses.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">
+                      Load Business Onboarding...
+                    </p>
+                  </div>
+                </div>
+              ) : businesses.length > 0 ? (
                 businesses.map((business) => (
                   <Card
                     key={business.id}
@@ -375,61 +508,25 @@ const ExchangeBusinessOnboarding = () => {
                   </Card>
                 ))
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No businesses found.
+                <div className="text-center py-12">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    No Business Onboarding found...
+                  </h3>
                 </div>
               )}
             </div>
 
-            {pagination.totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber - 1);
-                      }}
-                      className={
-                        pagination.pageNumber === 0
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(index);
-                        }}
-                        isActive={pagination.pageNumber === index}
-                        className="cursor-pointer"
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pagination.pageNumber + 1);
-                      }}
-                      className={
-                        pagination.pageNumber === pagination.totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
+            <PaginationControl
+              currentPage={pagination?.pageNumber}
+              totalPages={pagination?.totalPages}
+              onPageChange={(page) =>
+                setPagination((prev) => ({
+                  ...prev,
+                  pageNumber: page,
+                }))
+              }
+            />
           </CardContent>
         </Card>
       </div>

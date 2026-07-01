@@ -53,6 +53,7 @@ import {
 interface BusinessOnboardingFormProps {
   trigger?: React.ReactNode;
   refetch: (a?: number, b?: number) => void;
+  clearFilterData?: () => void;
 }
 
 import BASE_URL from "@/config/config";
@@ -65,6 +66,7 @@ import { cn } from "@/lib/utils";
 const StaffOnboardingForm = ({
   trigger,
   refetch,
+  clearFilterData,
 }: BusinessOnboardingFormProps) => {
   const { toast } = useToast();
 
@@ -177,7 +179,7 @@ const StaffOnboardingForm = ({
           },
         },
       );
-      setBusinessTypeData(res?.data?.data);
+      setBusinessTypeData(res?.data?.data || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -215,7 +217,9 @@ const StaffOnboardingForm = ({
     fetchCountries();
     getBusinessType();
   }, []);
-
+  const mappedOnyBusinessType = businessTypeData?.filter(
+    (b) => b?.mapped === true,
+  );
   useEffect(() => {
     if (open) {
       setErrors({});
@@ -379,6 +383,7 @@ const StaffOnboardingForm = ({
         setIdDocuments([]);
         setSelectedCurrencies(["AED"]);
         refetch();
+        clearFilterData?.();
         setUboData([
           {
             uboType: "",
@@ -855,7 +860,7 @@ const StaffOnboardingForm = ({
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {businessTypeData.map((type) => (
+                  {mappedOnyBusinessType?.map((type) => (
                     <SelectItem key={type?.id} value={type?.id}>
                       {type?.name}
                     </SelectItem>
@@ -1812,7 +1817,7 @@ const StaffOnboardingForm = ({
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dealValidityDays">
-                Deal Validity Period (Days) *
+                Deal Validity Period (Hours) *
               </Label>
               <Input
                 id="dealValidityDays"
@@ -1832,7 +1837,8 @@ const StaffOnboardingForm = ({
                 placeholder="7"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Number of days a negotiated deal remains valid before expiration
+                Number of hours a negotiated deal remains valid before
+                expiration
               </p>
               {errors.dealValidityDays && (
                 <p className="text-sm text-red-500 mt-1">

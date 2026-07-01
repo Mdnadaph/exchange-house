@@ -1199,6 +1199,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import {
@@ -1216,14 +1217,23 @@ import { useCookies } from "react-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import { PermissionGate } from "@/contexts/PermissionGate";
 import { Loader2 } from "lucide-react";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 
 const ExchangeStaffManagement = () => {
   const [cookies] = useCookies(["token", "email"]);
+  const [dashboardStats, setDashboardStats] = useState<Record<string, number>>({
+    totalStaff: 0,
+    activeStaff: 0,
+    totalStaffs: 0,
+    activeMembers: 0,
+  });
   const [branches, setBranches] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [pageSize] = useState(4);
   const token = cookies.token;
@@ -1240,6 +1250,7 @@ const ExchangeStaffManagement = () => {
   const [editableStaffData, setEditableStaffData] = useState<any>({});
   const [staffUUID, setStaffUUID] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounceValue, setDebounceValue] = useState<string>("");
   const [filterByRole, setFilterByRole] = useState("");
   const [staffForm, setStaffForm] = useState({
     fullName: "",
@@ -1296,7 +1307,7 @@ const ExchangeStaffManagement = () => {
   const validateAllStaff = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!staffForm.fullName.trim()) {
+    if (!staffForm?.fullName?.trim()) {
       newErrors.fullName = "Full name is required";
     } else if (staffForm.fullName.trim().length < 2) {
       newErrors.fullName = "Full name must be at least 2 characters";
@@ -1338,6 +1349,15 @@ const ExchangeStaffManagement = () => {
     { id: 4, label: "KYB Officer", value: "ROLE_KYB_OFFICER" },
   ];
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchQuery);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchQuery]);
+
   const fetchBranchWithStaff = async (page = 0) => {
     if (!token) return;
     try {
@@ -1347,13 +1367,28 @@ const ExchangeStaffManagement = () => {
         params: {
           page,
           size: pageSize,
-          query: searchQuery,
+          query: debounceValue,
           role: filterByRole,
         },
       });
+      if (!res?.data?.status) {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message || "Failed to load branches with staff",
+          variant: "destructive",
+        });
+      }
       setBranches(res?.data?.data?.content || []);
       setTotalPages(res?.data?.data?.totalPages || 0);
       setCurrentPage(res?.data?.data?.page || 0);
+      setTotalElements(res?.data?.data?.totalElements || 0);
+      setDashboardStats({
+        totalBranches: res?.data?.data?.dashboardStats?.totalBranches || 0,
+        activeBranches: res?.data?.data?.dashboardStats?.activeBranches || 0,
+        totalStaffs: res?.data?.data?.dashboardStats?.totalStaffs || 0,
+        activeMembers: res?.data?.data?.dashboardStats?.activeMembers || 0,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -1367,15 +1402,10 @@ const ExchangeStaffManagement = () => {
 
   useEffect(() => {
     if (token) fetchBranchWithStaff(currentPage);
-  }, [token, currentPage, searchQuery, filterByRole]);
+  }, [token, currentPage, debounceValue, filterByRole]);
 
   const createStaff = async () => {
     if (!validateAllStaff()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -1444,11 +1474,6 @@ const ExchangeStaffManagement = () => {
   // EditStaff sends permissionIds inside the main request
   const EditStaff = async () => {
     if (!validateAllStaff()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -1574,6 +1599,7 @@ const ExchangeStaffManagement = () => {
       const { filtered: treeDataFiltered, dashboardId } =
         filterOutDashboard(treeData);
       setPermissionTree(treeDataFiltered);
+      setViewingPermissionsTree(treeDataFiltered);
       setDashboardPermissionId(dashboardId);
 
       const buildParentMap = (
@@ -1657,6 +1683,108 @@ const ExchangeStaffManagement = () => {
     return ids;
   };
 
+  // Collects this node's id + every descendant id
+  const getNodeAndDescendantIds = (node: any): string[] => {
+    const ids = [String(node.id)];
+    if (node.children?.length) {
+      node.children.forEach((child: any) => {
+        ids.push(...getNodeAndDescendantIds(child));
+      });
+    }
+    return ids;
+  };
+
+  // True if every id in this node's subtree is selected
+  // const isNodeFullySelected = (node: any, selectedIds: string[]): boolean => {
+  //   const ids = getNodeAndDescendantIds(node);
+  //   return ids.every((id) => selectedIds.includes(id));
+  // };
+
+  // const isNodePartiallySelected = (
+  //   node: any,
+  //   selectedIds: string[],
+  // ): boolean => {
+  //   const ids = getNodeAndDescendantIds(node);
+  //   const selectedCount = ids.filter((id) => selectedIds.includes(id)).length;
+  //   return selectedCount > 0 && selectedCount < ids.length;
+  // };
+
+  // const handleToggleNode = (node: any) => {
+  //   setRawSelectedIds((prev) => {
+  //     const idsInSubtree = getNodeAndDescendantIds(node);
+  //     const isCurrentlyFullySelected = idsInSubtree.every((id) =>
+  //       prev.includes(id),
+  //     );
+
+  //     if (isCurrentlyFullySelected) {
+  //       // Was fully selected -> deselect node + all children
+  //       return prev.filter((id) => !idsInSubtree.includes(id));
+  //     } else {
+  //       // Was not fully selected -> select node + all children
+  //       return Array.from(new Set([...prev, ...idsInSubtree]));
+  //     }
+  //   });
+  // };
+
+  // const renderPermissionNode = (
+  //   node: any,
+  //   level: number,
+  //   effectiveSelectedIds: string[],
+  //   onToggle: (node: any) => void,
+  //   isReadOnly: boolean = false,
+  // ) => {
+  //   const nodeId = String(node.id);
+  //   const hasChildren = node.children?.length > 0;
+
+  //   const isChecked = hasChildren
+  //     ? isNodeFullySelected(node, effectiveSelectedIds)
+  //     : effectiveSelectedIds.includes(nodeId);
+
+  //   const isIndeterminate = hasChildren
+  //     ? isNodePartiallySelected(node, effectiveSelectedIds)
+  //     : false;
+
+  //   return (
+  //     <div key={nodeId} className="flex flex-col">
+  //       <div
+  //         style={{ marginLeft: `${level * 20}px` }}
+  //         className="flex items-start space-x-2"
+  //       >
+  //         <input
+  //           ref={(el) => {
+  //             if (el) el.indeterminate = isIndeterminate;
+  //           }}
+  //           disabled={isEditStaffModalOpen && node?.name == "Dashboard"}
+  //           type="checkbox"
+  //           id={`perm-${nodeId}`}
+  //           checked={isChecked}
+  //           onChange={() => !isReadOnly && onToggle(node)}
+  //           className="mt-1 h-4 w-4 accent-primary disabled:opacity-60"
+  //         />
+  //         <Label
+  //           htmlFor={`perm-${nodeId}`}
+  //           className={`text-lg ${isReadOnly ? "text-muted-foreground" : ""}`}
+  //         >
+  //           {node.name}
+  //         </Label>
+  //       </div>
+  //       {hasChildren && (
+  //         <div className="ml-4">
+  //           {node.children.map((child: any) =>
+  //             renderPermissionNode(
+  //               child,
+  //               level + 1,
+  //               effectiveSelectedIds,
+  //               onToggle,
+  //               isReadOnly,
+  //             ),
+  //           )}
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // };
+
   const renderPermissionNode = (
     node: any,
     level: number,
@@ -1674,6 +1802,7 @@ const ExchangeStaffManagement = () => {
           className="flex items-start space-x-2"
         >
           <input
+            disabled={isEditStaffModalOpen && node?.name == "Dashboard"}
             type="checkbox"
             id={`perm-${nodeId}`}
             checked={isChecked}
@@ -1713,7 +1842,7 @@ const ExchangeStaffManagement = () => {
     // Use the permissions directly from the staff object (already in the response)
     const perms = staff.permissions?.map((id: number) => String(id)) || [];
     setViewingAssignedIds(perms);
-    setViewingPermissionsTree(permissionTree);
+    // setViewingPermissionsTree(permissionTree);
     setLoadingViewTree(false);
     setIsViewPermissionsModalOpen(true);
   };
@@ -1767,7 +1896,7 @@ const ExchangeStaffManagement = () => {
       acc + (branch.staff?.filter((s: any) => s.active)?.length || 0),
     0,
   );
-  const totalBranches = branches.length;
+  // const totalBranches = branches.length;
   const individualStaffData = editableStaffData?.staff?.find(
     (staff: any) => staff?.uuid == staffUUID,
   );
@@ -1789,10 +1918,10 @@ const ExchangeStaffManagement = () => {
   }, [isEditStaffModalOpen, individualStaffData]);
 
   return (
-    <ExchangeLayout>
+    <>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Staff Management
@@ -1812,8 +1941,20 @@ const ExchangeStaffManagement = () => {
               </Button>
             </PermissionGate>
           </div>
+        </div> */}
+        <div className="flex  justify-end">
+          <div className="flex space-x-3">
+            <PermissionGate permission="BTN_CREATE_STAFF">
+              <Button
+                variant="business"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Staff Member
+              </Button>
+            </PermissionGate>
+          </div>
         </div>
-
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="shadow-card">
@@ -1824,9 +1965,11 @@ const ExchangeStaffManagement = () => {
               <Users className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalStaff}</div>
+              <div className="text-2xl font-bold">
+                {dashboardStats?.totalStaffs}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Across {totalBranches} branches
+                Across {dashboardStats?.totalBranches} branches
               </p>
             </CardContent>
           </Card>
@@ -1839,16 +1982,16 @@ const ExchangeStaffManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {activeStaff}
+                {dashboardStats?.activeMembers}
               </div>
               <p className="text-xs text-muted-foreground">
-                {totalStaff > 0
-                  ? `${Math.round((activeStaff / totalStaff) * 100)}% availability`
+                {dashboardStats?.totalStaffs > 0
+                  ? `${Math.round((dashboardStats?.activeMembers / dashboardStats?.totalStaffs) * 100)}% availability`
                   : "No staff"}
               </p>
             </CardContent>
           </Card>
-          <Card className="shadow-card">
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Avg Efficiency
@@ -1875,7 +2018,7 @@ const ExchangeStaffManagement = () => {
                 Data not available
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* ----------------- Create Staff Modal ----------------- */}
@@ -1883,7 +2026,16 @@ const ExchangeStaffManagement = () => {
           open={isCreateModalOpen}
           onOpenChange={(open) => {
             setIsCreateModalOpen(open);
-            if (!open) setStaffErrors({});
+            if (!open) {
+              setStaffForm({
+                fullName: "",
+                email: "",
+                contactNumber: "",
+                branchId: "",
+                roleId: "",
+              });
+              setStaffErrors({});
+            }
           }}
         >
           <DialogContent className="sm:max-w-2xl">
@@ -1899,7 +2051,10 @@ const ExchangeStaffManagement = () => {
                   <Input
                     value={staffForm.fullName}
                     onChange={(e) => {
-                      setStaffForm({ ...staffForm, fullName: e.target.value });
+                      setStaffForm({
+                        ...staffForm,
+                        fullName: e.target.value,
+                      });
                       clearStaffError("fullName");
                     }}
                     placeholder="full name"
@@ -1929,69 +2084,72 @@ const ExchangeStaffManagement = () => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <Label>
-                    Contact Number <span className="text-red-500">*</span>
-                  </Label>
-                  <PhoneInput
-                    country={"ae"}
-                    value={staffForm.contactNumber}
-                    onChange={(value) => {
-                      setStaffForm({ ...staffForm, contactNumber: value });
-                      clearStaffError("contactNumber");
-                    }}
-                    inputProps={{ name: "phone", id: "phone" }}
-                    containerClass="w-full mt-1"
-                    inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
-                    buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
-                    dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
-                    enableSearch
-                    searchPlaceholder="Search country..."
-                    preferredCountries={["ae", "in"]}
-                  />
-                  {staffErrors.contactNumber && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.contactNumber}
-                    </p>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label>
+                      Select Branch <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={staffForm.branchId}
+                      onValueChange={(value) => {
+                        setStaffForm({ ...staffForm, branchId: value });
+                        clearStaffError("branchId");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            branchLoading
+                              ? "Loading branches..."
+                              : "Select Branch"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchList.map((branch) => (
+                          <SelectItem
+                            key={branch.branchId}
+                            value={String(branch.branchId)}
+                          >
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {staffErrors.branchId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.branchId}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>
+                      Contact Number <span className="text-red-500">*</span>
+                    </Label>
+                    <PhoneInput
+                      country={"ae"}
+                      value={staffForm.contactNumber}
+                      onChange={(value) => {
+                        setStaffForm({ ...staffForm, contactNumber: value });
+                        clearStaffError("contactNumber");
+                      }}
+                      inputProps={{ name: "phone", id: "phone" }}
+                      containerClass="w-full mt-1"
+                      inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                      buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                      dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                      enableSearch
+                      searchPlaceholder="Search country..."
+                      preferredCountries={["ae", "in"]}
+                    />
+                    {staffErrors.contactNumber && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.contactNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label>
-                    Select Branch <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={staffForm.branchId}
-                    onValueChange={(value) => {
-                      setStaffForm({ ...staffForm, branchId: value });
-                      clearStaffError("branchId");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          branchLoading
-                            ? "Loading branches..."
-                            : "Select Branch"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branchList.map((branch) => (
-                        <SelectItem
-                          key={branch.branchId}
-                          value={String(branch.branchId)}
-                        >
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {staffErrors.branchId && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.branchId}
-                    </p>
-                  )}
-                </div>
+
                 <div>
                   <Label>
                     Staff Role <span className="text-red-500">*</span>
@@ -2045,7 +2203,17 @@ const ExchangeStaffManagement = () => {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={() => {
+                  setStaffForm({
+                    fullName: "",
+                    email: "",
+                    contactNumber: "",
+                    branchId: "",
+                    roleId: "",
+                  });
+                  setIsCreateModalOpen(false);
+                  setStaffErrors({});
+                }}
               >
                 Cancel
               </Button>
@@ -2072,6 +2240,16 @@ const ExchangeStaffManagement = () => {
             if (!open) {
               setEditableStaffData({});
               setStaffUUID("");
+              if (!open) {
+                setStaffForm({
+                  fullName: "",
+                  email: "",
+                  contactNumber: "",
+                  branchId: "",
+                  roleId: "",
+                });
+                setStaffErrors({});
+              }
               setStaffErrors({});
               setEditStaffPermissionIds([]);
             }
@@ -2090,7 +2268,10 @@ const ExchangeStaffManagement = () => {
                   <Input
                     value={staffForm.fullName}
                     onChange={(e) => {
-                      setStaffForm({ ...staffForm, fullName: e.target.value });
+                      setStaffForm({
+                        ...staffForm,
+                        fullName: e.target.value,
+                      });
                       clearStaffError("fullName");
                     }}
                     placeholder="full name"
@@ -2121,69 +2302,72 @@ const ExchangeStaffManagement = () => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <Label>
-                    Contact Number <span className="text-red-500">*</span>
-                  </Label>
-                  <PhoneInput
-                    country={"ae"}
-                    value={staffForm.contactNumber}
-                    onChange={(value) => {
-                      setStaffForm({ ...staffForm, contactNumber: value });
-                      clearStaffError("contactNumber");
-                    }}
-                    inputProps={{ name: "phone", id: "phone" }}
-                    containerClass="w-full mt-1"
-                    inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
-                    buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
-                    dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
-                    enableSearch
-                    searchPlaceholder="Search country..."
-                    preferredCountries={["ae", "in"]}
-                  />
-                  {staffErrors.contactNumber && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.contactNumber}
-                    </p>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label>
+                      Select Branch <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={staffForm.branchId}
+                      onValueChange={(value) => {
+                        setStaffForm({ ...staffForm, branchId: value });
+                        clearStaffError("branchId");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            branchLoading
+                              ? "Loading branches..."
+                              : "Select Branch"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchList.map((branch) => (
+                          <SelectItem
+                            key={branch?.branchId}
+                            value={String(branch?.branchId)}
+                          >
+                            {branch?.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {staffErrors.branchId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.branchId}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>
+                      Contact Number <span className="text-red-500">*</span>
+                    </Label>
+                    <PhoneInput
+                      country={"ae"}
+                      value={staffForm.contactNumber}
+                      onChange={(value) => {
+                        setStaffForm({ ...staffForm, contactNumber: value });
+                        clearStaffError("contactNumber");
+                      }}
+                      inputProps={{ name: "phone", id: "phone" }}
+                      containerClass="w-full mt-1"
+                      inputClass="!h-10 !w-full !rounded-md !border !border-input !bg-background !px-3 !py-2 !text-sm !ring-offset-background !pl-[52px] !focus:outline-none !focus:ring-2 !focus:ring-ring !focus:ring-offset-2"
+                      buttonClass="!absolute !left-0 !top-0 !h-10 !w-12 !border-0 !bg-transparent !flex !items-center !justify-center !rounded-l-md hover:!bg-accent/50"
+                      dropdownClass="!bg-background !border !border-border !rounded-md !shadow-lg"
+                      enableSearch
+                      searchPlaceholder="Search country..."
+                      preferredCountries={["ae", "in"]}
+                    />
+                    {staffErrors.contactNumber && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {staffErrors.contactNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label>
-                    Select Branch <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={staffForm.branchId}
-                    onValueChange={(value) => {
-                      setStaffForm({ ...staffForm, branchId: value });
-                      clearStaffError("branchId");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          branchLoading
-                            ? "Loading branches..."
-                            : "Select Branch"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branchList.map((branch) => (
-                        <SelectItem
-                          key={branch.branchId}
-                          value={String(branch.branchId)}
-                        >
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {staffErrors.branchId && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {staffErrors.branchId}
-                    </p>
-                  )}
-                </div>
+
                 <div>
                   <Label>
                     Staff Role <span className="text-red-500">*</span>
@@ -2232,6 +2416,13 @@ const ExchangeStaffManagement = () => {
                 variant="outline"
                 onClick={() => {
                   setIsEditStaffModalOpen(false);
+                  setStaffForm({
+                    fullName: "",
+                    email: "",
+                    contactNumber: "",
+                    branchId: "",
+                    roleId: "",
+                  });
                   setEditableStaffData({});
                   setStaffUUID("");
                   setStaffErrors({});
@@ -2251,7 +2442,7 @@ const ExchangeStaffManagement = () => {
         </Dialog>
 
         {/* ----------------- Permission Selection Modal (shared, editable) ----------------- */}
-        <Dialog
+        {/* <Dialog
           open={isPermissionSelectionModalOpen}
           onOpenChange={(open) => {
             if (!open) setIsPermissionSelectionModalOpen(false);
@@ -2328,6 +2519,96 @@ const ExchangeStaffManagement = () => {
               </Button>
             </DialogFooter>
           </DialogContent>
+        </Dialog> */}
+        <Dialog
+          open={isPermissionSelectionModalOpen}
+          onOpenChange={(open) => {
+            if (!open) setIsPermissionSelectionModalOpen(false);
+          }}
+        >
+          <DialogContent className="sm:max-w-2xl bg-white p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="text-xl font-bold">
+                Select Permissions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Choose which menus this staff member can access.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 pt-4 pb-2">
+              {loadingPermissions ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Bulk actions + live count */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setRawSelectedIds(getAllPermissionIds(permissionTree))
+                        }
+                      >
+                        Select all
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRawSelectedIds([])}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                    <Badge variant="secondary" className="font-normal">
+                      {rawSelectedIds.length} selected
+                    </Badge>
+                  </div>
+
+                  {/* Tree list */}
+                  <div className="max-h-96 overflow-y-auto rounded-lg border bg-muted/30 p-3">
+                    <div className="space-y-2">
+                      {permissionTree.map((node) =>
+                        renderPermissionNode(
+                          node,
+                          0,
+                          effectiveSelectedIds,
+                          handleToggleNode,
+                          false,
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="px-6 py-4 mt-2 border-t bg-muted/20">
+              <Button
+                variant="outline"
+                onClick={() => setIsPermissionSelectionModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="business"
+                onClick={() => {
+                  const selected = effectiveSelectedIds as string[];
+                  if (permissionSelectionTarget === "create") {
+                    setNewStaffPermissionIds(selected);
+                  } else {
+                    setEditStaffPermissionIds(selected);
+                  }
+                  setIsPermissionSelectionModalOpen(false);
+                }}
+              >
+                Save selection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
 
         {/* ----------------- Read-only Permissions Dialog (tree view, disabled checkboxes) ----------------- */}
@@ -2400,7 +2681,7 @@ const ExchangeStaffManagement = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 item-center flex-wrap">
               <div className="flex-1">
                 <Label htmlFor="search">Search Staff</Label>
                 <div className="relative">
@@ -2409,29 +2690,47 @@ const ExchangeStaffManagement = () => {
                     id="search"
                     placeholder="Search by name, role, or branch..."
                     className="pl-9"
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(0);
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setFilterByRole("")}>
+              <div className="flex gap-2 mt-6 flex-wrap">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFilterByRole("");
+                    setCurrentPage(0);
+                  }}
+                >
                   All Staff
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setFilterByRole("BRANCH_MANAGER")}
+                  onClick={() => {
+                    setFilterByRole("BRANCH_MANAGER");
+                    setCurrentPage(0);
+                  }}
                 >
                   Branch Managers
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setFilterByRole("KYB_OFFICER")}
+                  onClick={() => {
+                    setFilterByRole("KYB_OFFICER");
+                    setCurrentPage(0);
+                  }}
                 >
                   KYB Officers
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setFilterByRole("SENIOR_KYB_OFFICER")}
+                  onClick={() => {
+                    setFilterByRole("SENIOR_KYB_OFFICER");
+                    setCurrentPage(0);
+                  }}
                 >
                   Senior KYB Officer
                 </Button>
@@ -2452,7 +2751,7 @@ const ExchangeStaffManagement = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {branches.length === 0 ? (
+            {branches?.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-lg font-medium mb-2">No branches found</h3>
@@ -2461,230 +2760,209 @@ const ExchangeStaffManagement = () => {
                 </p>
               </div>
             ) : (
-              branches.map((branch) => {
-                const mapStatus = (apiStatus: string) => {
-                  const statusMap: Record<string, string> = {
-                    ACTIVE: "active",
-                    INACTIVE: "inactive",
-                    PENDING: "training",
-                  };
-                  return statusMap[apiStatus] || "inactive";
-                };
-                const getRoleLabel = (roleName: string) => {
-                  const roleMap: Record<string, string> = {
-                    ROLE_BRANCH_MANAGER: "Branch Manager",
-                    ROLE_SENIOR_KYB_OFFICER: "Senior KYB Officer",
-                    ROLE_KYB_OFFICER: "KYB Officer",
-                  };
-                  return roleMap[roleName] || roleName;
-                };
+              <div>
+                <div className="flex justify-end mb-2">
+                  <PaginationSummary
+                    totalElements={totalElements}
+                    pageSize={pageSize}
+                    currentPage={currentPage}
+                    itemCount={branches?.length}
+                    itemLabel="Staff Member"
+                  />
+                </div>
 
-                return (
-                  <Card
-                    key={branch.branchId || branch.uuid}
-                    className="shadow-card"
-                  >
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <MapPin className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-semibold text-foreground">
-                              {branch.name}
-                            </h3>
-                            <div className="flex gap-2 text-sm text-muted-foreground">
-                              <span>{branch.location}</span>
-                              <span>•</span>
-                              <span>{branch.emirate}</span>
+                <div>
+                  {branches?.map((branch) => {
+                    const mapStatus = (apiStatus: string) => {
+                      const statusMap: Record<string, string> = {
+                        ACTIVE: "active",
+                        INACTIVE: "inactive",
+                        PENDING: "training",
+                      };
+                      return statusMap[apiStatus] || "inactive";
+                    };
+                    const getRoleLabel = (roleName: string) => {
+                      const roleMap: Record<string, string> = {
+                        ROLE_BRANCH_MANAGER: "Branch Manager",
+                        ROLE_SENIOR_KYB_OFFICER: "Senior KYB Officer",
+                        ROLE_KYB_OFFICER: "KYB Officer",
+                      };
+                      return roleMap[roleName] || roleName;
+                    };
+
+                    return (
+                      <Card
+                        key={branch.branchId || branch.uuid}
+                        className="shadow-card"
+                      >
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <MapPin className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-semibold text-foreground">
+                                  {branch.name}
+                                </h3>
+                                <div className="flex gap-2 text-sm text-muted-foreground">
+                                  <span>{branch.location}</span>
+                                  <span>•</span>
+                                  <span>{branch.emirate}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {branch.address}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {branch.address}
-                            </p>
+                            <Badge variant="outline" className="text-sm">
+                              {branch.staff?.length || 0} Staff Members
+                            </Badge>
                           </div>
-                        </div>
-                        <Badge variant="outline" className="text-sm">
-                          {branch.staff?.length || 0} Staff Members
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {branch.staff && branch.staff.length > 0 && (
-                        <div className="space-y-4">
-                          {branch.staff.map((staff: any) => {
-                            const status = getStatusBadge(
-                              mapStatus(staff.status),
-                            );
-                            const StatusIcon = status.icon;
-                            return (
-                              <Card
-                                key={staff.uuid}
-                                className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
-                              >
-                                <CardContent className="p-6">
-                                  <div className="flex items-start justify-between">
-                                    <div className="space-y-4 flex-1">
-                                      <div className="flex items-center space-x-4">
-                                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                                          <span className="text-primary-foreground font-semibold">
-                                            {staff.fullName
-                                              ?.split(" ")
-                                              .map((n: string) => n[0])
-                                              .join("")}
-                                          </span>
+                        </CardHeader>
+                        <CardContent>
+                          {branch.staff && branch.staff.length > 0 && (
+                            <div className="space-y-4">
+                              {branch.staff.map((staff: any) => {
+                                const status = getStatusBadge(
+                                  mapStatus(staff.status),
+                                );
+                                const StatusIcon = status.icon;
+                                return (
+                                  <Card
+                                    key={staff.uuid}
+                                    className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
+                                  >
+                                    <CardContent className="p-6">
+                                      <div className="flex items-start justify-between flex-wrap gap-2">
+                                        <div className="space-y-4 flex-1">
+                                          <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                              <span className="text-primary-foreground font-semibold">
+                                                {staff.fullName
+                                                  ?.split(" ")
+                                                  .map((n: string) => n[0])
+                                                  .join("")}
+                                              </span>
+                                            </div>
+                                            <div className="flex-1">
+                                              <div className="flex items-center gap-3 mb-1">
+                                                <h4 className="font-semibold text-foreground">
+                                                  {staff.fullName}
+                                                </h4>
+                                                <Badge
+                                                  variant={status.variant}
+                                                  className="flex items-center gap-1"
+                                                >
+                                                  <StatusIcon className="h-3 w-3" />{" "}
+                                                  {status.label}
+                                                </Badge>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <span
+                                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(getRoleLabel(staff.roleName))}`}
+                                                >
+                                                  {getRoleLabel(staff.roleName)}
+                                                </span>
+                                                <span className="text-sm text-muted-foreground">
+                                                  ID: {staff.uuid?.slice(0, 8)}
+                                                  ...
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                                            <div className="space-y-1">
+                                              <div className="flex items-center text-muted-foreground">
+                                                <Mail className="h-3 w-3 mr-1" />{" "}
+                                                Contact:
+                                              </div>
+                                              <p className="font-medium">
+                                                {staff.email}
+                                              </p>
+                                              <p className="text-xs">
+                                                {staff.contactNumber}
+                                              </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                              <div className="flex items-center text-muted-foreground">
+                                                <Shield className="h-3 w-3 mr-1" />{" "}
+                                                Status:
+                                              </div>
+                                              <p className="font-medium">
+                                                {staff.active
+                                                  ? "Active"
+                                                  : "Inactive"}
+                                              </p>
+                                              <p className="text-xs">
+                                                {staff.status}
+                                              </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                              <div className="flex items-center text-muted-foreground">
+                                                <Phone className="h-3 w-3 mr-1" />{" "}
+                                                Branch:
+                                              </div>
+                                              <p className="font-medium">
+                                                {branch.name}
+                                              </p>
+                                              <p className="text-xs">
+                                                {branch.emirate}
+                                              </p>
+                                            </div>
+                                          </div>
                                         </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-3 mb-1">
-                                            <h4 className="font-semibold text-foreground">
-                                              {staff.fullName}
-                                            </h4>
-                                            <Badge
-                                              variant={status.variant}
-                                              className="flex items-center gap-1"
-                                            >
-                                              <StatusIcon className="h-3 w-3" />{" "}
-                                              {status.label}
-                                            </Badge>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <span
-                                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(getRoleLabel(staff.roleName))}`}
-                                            >
-                                              {getRoleLabel(staff.roleName)}
-                                            </span>
-                                            <span className="text-sm text-muted-foreground">
-                                              ID: {staff.uuid?.slice(0, 8)}...
-                                            </span>
-                                          </div>
+                                        <div className="flex flex-col space-y-2 ml-4">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setIsEditStaffModalOpen(true);
+                                              setEditableStaffData(branch);
+                                              setStaffUUID(staff?.uuid);
+                                            }}
+                                          >
+                                            <Edit className="h-4 w-4 mr-1" />{" "}
+                                            Edit Details
+                                          </Button>
+                                          {/* Read-only permissions button with tree view */}
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              openViewPermissionsModal(staff)
+                                            }
+                                          >
+                                            <Shield className="h-4 w-4 mr-1" />{" "}
+                                            View Permissions
+                                          </Button>
                                         </div>
                                       </div>
-                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
-                                        <div className="space-y-1">
-                                          <div className="flex items-center text-muted-foreground">
-                                            <Mail className="h-3 w-3 mr-1" />{" "}
-                                            Contact:
-                                          </div>
-                                          <p className="font-medium">
-                                            {staff.email}
-                                          </p>
-                                          <p className="text-xs">
-                                            {staff.contactNumber}
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <div className="flex items-center text-muted-foreground">
-                                            <Shield className="h-3 w-3 mr-1" />{" "}
-                                            Status:
-                                          </div>
-                                          <p className="font-medium">
-                                            {staff.active
-                                              ? "Active"
-                                              : "Inactive"}
-                                          </p>
-                                          <p className="text-xs">
-                                            {staff.status}
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <div className="flex items-center text-muted-foreground">
-                                            <Phone className="h-3 w-3 mr-1" />{" "}
-                                            Branch:
-                                          </div>
-                                          <p className="font-medium">
-                                            {branch.name}
-                                          </p>
-                                          <p className="text-xs">
-                                            {branch.emirate}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col space-y-2 ml-4">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          setIsEditStaffModalOpen(true);
-                                          setEditableStaffData(branch);
-                                          setStaffUUID(staff?.uuid);
-                                        }}
-                                      >
-                                        <Edit className="h-4 w-4 mr-1" /> Edit
-                                        Details
-                                      </Button>
-                                      {/* Read-only permissions button with tree view */}
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          openViewPermissionsModal(staff)
-                                        }
-                                      >
-                                        <Shield className="h-4 w-4 mr-1" /> View
-                                        Permissions
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
-
       {/* Pagination */}
-      {!loading && branches.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-end mt-6">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-              disabled={currentPage === 0}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) pageNum = i;
-              else if (currentPage < 3) pageNum = i;
-              else if (currentPage > totalPages - 4)
-                pageNum = totalPages - 5 + i;
-              else pageNum = currentPage - 2 + i;
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum + 1}
-                </Button>
-              );
-            })}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-              }
-              disabled={currentPage === totalPages - 1}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      {!loading && (
+        <PaginationControl
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
       )}
-    </ExchangeLayout>
+    </>
   );
 };
 

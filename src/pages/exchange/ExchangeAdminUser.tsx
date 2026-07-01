@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogOverlay,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import {
@@ -46,6 +47,8 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Loader2 } from "lucide-react";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 const DASHBOARD_PERMISSION_CODE = "NAV_DASHBOARD";
 const ExchangeAdminUser = () => {
   const [cookies] = useCookies(["token", "email"]);
@@ -54,7 +57,7 @@ const ExchangeAdminUser = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(4);
+  const [pageSize] = useState(10);
   const token = cookies.token;
   const email = cookies.email;
 
@@ -182,7 +185,6 @@ const ExchangeAdminUser = () => {
         },
       );
       const treeData = res.data?.data || [];
-      console.log("res", res);
       const { filtered: treeDataFiltered, dashboardId } =
         filterOutDashboard(treeData);
       setPermissionTree(treeDataFiltered);
@@ -311,6 +313,9 @@ const ExchangeAdminUser = () => {
         params: { page, size: pageSize },
       });
       setUsers(res?.data?.data?.content || []);
+      setTotalElements(res?.data?.data?.totalElements || 0);
+      setTotalPages(res?.data?.data?.totalPages || 0);
+      setCurrentPage(res?.data?.data?.pageable?.pageNumber || 0);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -412,10 +417,10 @@ const ExchangeAdminUser = () => {
     });
   };
   return (
-    <ExchangeLayout>
+    <>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Exchange User Management
@@ -434,11 +439,23 @@ const ExchangeAdminUser = () => {
               </Button>
             </PermissionGate>
           </div>
+        </div> */}
+        <div className="flex justify-end">
+          <div className="flex space-x-3">
+            <PermissionGate permission="BTN_CREATE_EXCHANGE_USER">
+              <Button
+                variant="business"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Exchange Member
+              </Button>
+            </PermissionGate>
+          </div>
         </div>
         {/* <h1 className="text-3xl font-bold">Exchange Admin User Lists</h1> */}
 
         {/* ---------- Permission Edit Modal (for existing users) ---------- */}
-        <Dialog
+        {/* <Dialog
           open={isPermissionModalOpen}
           onOpenChange={(open) => {
             if (!open) {
@@ -469,7 +486,6 @@ const ExchangeAdminUser = () => {
                   ) : (
                     permissionTree?.map((perm) => (
                       <div key={perm.id} className="space-y-2">
-                        {/* Parent */}
                         <div className="flex items-start space-x-3">
                           <input
                             type="checkbox"
@@ -487,8 +503,6 @@ const ExchangeAdminUser = () => {
                             {perm.name}
                           </Label>
                         </div>
-
-                        {/* Children */}
                         {perm.children && perm.children.length > 0 && (
                           <div className="ml-6 space-y-2">
                             {perm.children.map((child: any) => (
@@ -538,7 +552,6 @@ const ExchangeAdminUser = () => {
                   if (!selectedUserForPermissions) return;
                   let permissionIds = assignedPermissionIds.map(Number);
 
-                  // Always include dashboard
                   if (
                     dashboardPermissionId &&
                     !permissionIds.includes(Number(dashboardPermissionId))
@@ -575,6 +588,182 @@ const ExchangeAdminUser = () => {
                 }}
               >
                 Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog> */}
+        <Dialog
+          open={isPermissionModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsPermissionModalOpen(false);
+              setSelectedUserForPermissions(null);
+              setAssignedPermissionIds([]);
+              setAllPermissions([]);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-xl p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="text-xl font-bold">
+                Manage Permissions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {selectedUserForPermissions?.fullName}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 pt-4 pb-2">
+              {loadingPermissions ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Live count */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Permissions
+                    </span>
+                    <Badge variant="secondary" className="font-normal">
+                      {assignedPermissionIds.length} selected
+                    </Badge>
+                  </div>
+
+                  {/* Tree list */}
+                  <div className="max-h-96 overflow-y-auto rounded-lg border bg-muted/30 p-3">
+                    {permissionTree?.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-10 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          No permissions available
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {permissionTree?.map((perm) => (
+                          <div key={perm.id} className="flex flex-col">
+                            {/* Parent */}
+                            <div className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-muted/60 transition-colors">
+                              <input
+                                type="checkbox"
+                                id={`perm-${perm.id}`}
+                                checked={assignedPermissionIds.includes(
+                                  String(perm.id),
+                                )}
+                                onChange={() => handleToggle(perm)}
+                                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                              />
+                              <Label
+                                htmlFor={`perm-${perm.id}`}
+                                className="text-sm font-semibold cursor-pointer select-none"
+                              >
+                                {perm.name}
+                              </Label>
+                              {perm.children?.length > 0 && (
+                                <span className="text-[11px] text-muted-foreground ml-auto pr-1">
+                                  {perm.children.length}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Children */}
+                            {perm.children && perm.children.length > 0 && (
+                              <div className="ml-5 pl-2 border-l border-border/60 flex flex-col gap-0.5 mt-0.5">
+                                {perm.children.map((child: any) => (
+                                  <div
+                                    key={child.id}
+                                    className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-muted/60 transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      id={`perm-${child.id}`}
+                                      checked={assignedPermissionIds.includes(
+                                        String(child.id),
+                                      )}
+                                      onChange={() =>
+                                        handleToggle({ id: child.id })
+                                      }
+                                      className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                                    />
+                                    <Label
+                                      htmlFor={`perm-${child.id}`}
+                                      className="text-sm font-normal text-foreground/80 cursor-pointer select-none"
+                                    >
+                                      {child.name}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="px-6 py-4 mt-2 border-t bg-muted/20">
+              <Button
+                variant="outline"
+                onClick={() => setIsPermissionModalOpen(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="business"
+                disabled={loading}
+                onClick={async () => {
+                  setLoading(true);
+                  if (!selectedUserForPermissions) return;
+                  let permissionIds = assignedPermissionIds.map(Number);
+
+                  // Always include dashboard
+                  if (
+                    dashboardPermissionId &&
+                    !permissionIds.includes(Number(dashboardPermissionId))
+                  ) {
+                    permissionIds.push(Number(dashboardPermissionId));
+                  }
+                  try {
+                    const res = await axios.put(
+                      `${BASE_URL}/api/v1/exchange-users/${selectedUserForPermissions.uuid}/permissions`,
+                      { permissionIds },
+                      { headers: { Authorization: `Bearer ${token}` } },
+                    );
+
+                    toast({
+                      title: "Success",
+                      description: res?.data?.message || "Permissions updated",
+                    });
+                    fetchUsers(currentPage);
+                    setIsPermissionModalOpen(false);
+                    setSelectedUserForPermissions(null);
+                    setAssignedPermissionIds([]);
+                    setAllPermissions([]);
+                  } catch (error: any) {
+                    toast({
+                      title: "Error",
+                      description:
+                        error?.response?.data?.message ||
+                        "Failed to update permissions",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-current" />
+                    Saving...
+                  </span>
+                ) : (
+                  "Save changes"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -721,7 +910,7 @@ const ExchangeAdminUser = () => {
         </Dialog>
 
         {/* ---------- Permission Selection Modal (inner dialog) ---------- */}
-        <Dialog
+        {/* <Dialog
           open={isPermissionSelectionModalOpen}
           onOpenChange={(open) => {
             if (!open) {
@@ -799,6 +988,92 @@ const ExchangeAdminUser = () => {
               </Button>
             </DialogFooter>
           </DialogContent>
+        </Dialog> */}
+        <Dialog
+          open={isPermissionSelectionModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsPermissionSelectionModalOpen(false);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-2xl bg-white p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="text-xl font-bold">
+                Select Permissions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Choose which menus this user can access.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 pt-4 pb-2">
+              {loadingPermissions ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const allIds = getAllPermissionIds(permissionTree);
+                          setRawSelectedIds(allIds);
+                        }}
+                      >
+                        Select all
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRawSelectedIds([])}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                    <Badge variant="secondary" className="font-normal">
+                      {rawSelectedIds.length} selected
+                    </Badge>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto rounded-lg border bg-muted/30 p-3">
+                    <div className="space-y-2">
+                      {permissionTree.map((node) =>
+                        renderPermissionNode(
+                          node,
+                          0,
+                          effectiveSelectedIds,
+                          handleToggleNode,
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="px-6 py-4 mt-2 border-t bg-muted/20">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsPermissionSelectionModalOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="business"
+                onClick={() => {
+                  setNewUserPermissionIds(effectiveSelectedIds as string[]);
+                  setIsPermissionSelectionModalOpen(false);
+                }}
+              >
+                Save selection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
 
         {/* ---------- User List ---------- */}
@@ -820,148 +1095,122 @@ const ExchangeAdminUser = () => {
                 </p>
               </div>
             ) : (
-              users.map((user) => {
-                const status = getStatusBadge(
-                  user.active ? "active" : "inactive",
-                );
-                const StatusIcon = status.icon;
-                return (
-                  <Card
-                    key={user.uuid || user.id}
-                    className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-4 flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                              <span className="text-primary-foreground font-semibold">
-                                {user.fullName
-                                  ?.split(" ")
-                                  .map((n: string) => n[0])
-                                  .join("")}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-1">
-                                <h2 className="font-semibold text-foreground text-2xl">
-                                  {user.fullName}
-                                </h2>
-                                <Badge
-                                  variant={status.variant}
-                                  className="flex items-center gap-1"
-                                >
-                                  <StatusIcon className="h-3 w-3" />{" "}
-                                  {status.label}
-                                </Badge>
+              <div>
+                <div className="mb-3 flex justify-end">
+                  <PaginationSummary
+                    totalElements={totalElements}
+                    pageSize={pageSize}
+                    currentPage={currentPage}
+                    itemCount={users?.length}
+                    itemLabel="Exchange Member"
+                  />
+                </div>
+                <div className="space-y-2">
+                  {users?.map((user) => {
+                    const status = getStatusBadge(
+                      user.active ? "active" : "inactive",
+                    );
+                    const StatusIcon = status.icon;
+                    return (
+                      <Card
+                        key={user.uuid || user.id}
+                        className="border-l-4 border-l-accent hover:shadow-md transition-smooth"
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between flex-wrap gap-2">
+                            <div className="space-y-4 flex-1">
+                              <div className="flex items-center space-x-4">
+                                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                  <span className="text-primary-foreground font-semibold">
+                                    {user.fullName
+                                      ?.split(" ")
+                                      .map((n: string) => n[0])
+                                      .join("")}
+                                  </span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <h2 className="font-semibold text-foreground text-2xl">
+                                      {user.fullName}
+                                    </h2>
+                                    <Badge
+                                      variant={status.variant}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <StatusIcon className="h-3 w-3" />{" "}
+                                      {status.label}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-muted-foreground">
+                                    <Mail className="h-3 w-3 mr-1" /> Email:
+                                  </div>
+                                  <p className="font-medium">{user.email}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-muted-foreground">
+                                    <Phone className="h-3 w-3 mr-1" /> Phone:
+                                  </div>
+                                  <p className="font-medium">
+                                    {user.phoneNumber}
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-muted-foreground">
+                                    <MapPin className="h-3 w-3 mr-1" /> Address:
+                                  </div>
+                                  <p className="font-medium">{user.address}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-muted/30 rounded-lg p-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <Mail className="h-3 w-3 mr-1" /> Email:
-                              </div>
-                              <p className="font-medium">{user.email}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <Phone className="h-3 w-3 mr-1" /> Phone:
-                              </div>
-                              <p className="font-medium">{user.phoneNumber}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center text-muted-foreground">
-                                <MapPin className="h-3 w-3 mr-1" /> Address:
-                              </div>
-                              <p className="font-medium">{user.address}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col space-y-2 ml-4">
-                          {/* <Button variant="outline" size="sm">
+                            <div className="flex flex-col space-y-2 ml-4">
+                              {/* <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-1" /> Edit Details
                           </Button> */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              setSelectedUserForPermissions(user);
-                              setLoadingPermissions(true);
-                              await Promise.all([
-                                fetchAllPermissions(),
-                                // fetchUserPermissions(user.uuid),
-                              ]);
-                              setLoadingPermissions(false);
-                              setIsPermissionModalOpen(true);
-                              setAssignedPermissionIds(
-                                user?.permissions?.map((id: number) =>
-                                  String(id),
-                                ),
-                              );
-                            }}
-                          >
-                            <Shield className="h-4 w-4 mr-1" /> Permissions
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  setSelectedUserForPermissions(user);
+                                  setLoadingPermissions(true);
+                                  await Promise.all([
+                                    fetchAllPermissions(),
+                                    // fetchUserPermissions(user.uuid),
+                                  ]);
+                                  setLoadingPermissions(false);
+                                  setIsPermissionModalOpen(true);
+                                  setAssignedPermissionIds(
+                                    user?.permissions?.map((id: number) =>
+                                      String(id),
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Shield className="h-4 w-4 mr-1" /> Permissions
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
-
       {/* Pagination */}
-      {!loading && users.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-end mt-6">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-              disabled={currentPage === 0}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i;
-              } else if (currentPage < 3) {
-                pageNum = i;
-              } else if (currentPage > totalPages - 4) {
-                pageNum = totalPages - 5 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum + 1}
-                </Button>
-              );
-            })}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-              }
-              disabled={currentPage === totalPages - 1}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-    </ExchangeLayout>
+      <PaginationControl
+        className="mt-6"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
+    </>
   );
 };
 

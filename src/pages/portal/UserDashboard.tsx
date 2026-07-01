@@ -21,19 +21,25 @@ import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { formateDate } from "@/utils/formateDateTime";
+import dayjs from "dayjs";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
 
 const UserDashboard = () => {
+  const { toast } = useToast();
+  const [kybStatus, setKybStatus] = useState("");
   const navigate = useNavigate();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode", "businessId"]);
   const token = cookies.token;
-
+  const sourceCurrency = cookies?.currencyCode;
+  const id = cookies.businessId;
   // Mock KYB status - in real implementation this would come from backend
-  const kybStatus = "pending_kyb" as
-    | "verified"
-    | "pending_review"
-    | "pending_kyb"
-    | "rejected";
-  const kybSubmitted = false;
+  // const kybStatus = "pending_kyb" as
+  //   | "verified"
+  //   | "pending_review"
+  //   | "pending_kyb"
+  //   | "rejected";
+  // const kybSubmitted = false;
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -60,6 +66,7 @@ const UserDashboard = () => {
         const result = await response.json();
         if (result.status) {
           setDashboardData(result.data);
+          console.log("res", result?.data);
         } else {
           throw new Error(
             result.message || "Failed to retrieve dashboard data",
@@ -75,6 +82,35 @@ const UserDashboard = () => {
     fetchDashboardData();
   }, [token]);
 
+  const fetchBusinessProfile = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v3/business/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response?.data?.data;
+      setKybStatus(data?.kybStatus);
+      if (!data) {
+        toast({
+          title: "Error",
+          description: "No data received from server",
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load business profile",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinessProfile();
+  }, [id]);
   const stats = dashboardData
     ? [
         {
@@ -109,29 +145,30 @@ const UserDashboard = () => {
     : [];
 
   const recentTransactions = dashboardData
-    ? dashboardData.recentTransactions
+    ? dashboardData?.recentTransactions
     : [];
+  const pendingActions = dashboardData ? dashboardData?.pendingActions : [];
 
-  const pendingActions = [
-    {
-      type: "approval_required",
-      message: "Transaction TXN-2024-002 requires your approval",
-      priority: "high",
-      time: "2 hours ago",
-    },
-    {
-      type: "document_needed",
-      message: "Upload invoice for TXN-2024-005",
-      priority: "medium",
-      time: "4 hours ago",
-    },
-    {
-      type: "beneficiary_expiring",
-      message: "Beneficiary verification expires in 3 days",
-      priority: "low",
-      time: "1 day ago",
-    },
-  ];
+  // const pendingActions = [
+  //   {
+  //     type: "approval_required",
+  //     message: "Transaction TXN-2024-002 requires your approval",
+  //     priority: "high",
+  //     time: "2 hours ago",
+  //   },
+  //   {
+  //     type: "document_needed",
+  //     message: "Upload invoice for TXN-2024-005",
+  //     priority: "medium",
+  //     time: "4 hours ago",
+  //   },
+  //   {
+  //     type: "beneficiary_expiring",
+  //     message: "Beneficiary verification expires in 3 days",
+  //     priority: "low",
+  //     time: "1 day ago",
+  //   },
+  // ];
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<
@@ -231,6 +268,16 @@ const UserDashboard = () => {
         label: "Compliance Review",
         icon: AlertCircle,
       },
+      CANCELLED_WITH_REFUND: {
+        variant: "destructive",
+        label: "Cancelled With Refund",
+        icon: AlertCircle,
+      },
+      CANCELLED: {
+        variant: "destructive",
+        label: "Cancelled ",
+        icon: AlertCircle,
+      },
     };
 
     return (
@@ -280,7 +327,7 @@ const UserDashboard = () => {
           </Card>
         )}
 
-        {kybStatus === "pending_review" && (
+        {/* {kybStatus === "pending_review" && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -293,6 +340,31 @@ const UserDashboard = () => {
                     Your KYB application is under review. This typically takes
                     1-2 business days.
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )} */}
+        {(kybStatus === "NOT_STARTED" || kybStatus === "PENDING") && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900">
+                    KYB Verification Required
+                  </h3>
+                  <p className="text-sm text-orange-800 mt-1">
+                    Complete your KYB verification to unlock all platform
+                    features and start making transactions.
+                  </p>
+                  <Button
+                    className="mt-3 bg-blue-900 hover:bg-blue-950 text-white"
+                    onClick={() => navigate(`/portal/profile/${id}`)}
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Complete Verification Now
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -350,7 +422,7 @@ const UserDashboard = () => {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">
@@ -408,7 +480,11 @@ const UserDashboard = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Recent Transactions</CardTitle>
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/portal/transactions")}
+                  >
                     View All
                     <ArrowUpRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -439,7 +515,7 @@ const UserDashboard = () => {
                           className="flex items-center justify-between p-4 rounded-lg bg-muted/50 "
                         >
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-medium text-foreground">
                                 {transaction?.companyName}
                               </p>
@@ -475,13 +551,45 @@ const UserDashboard = () => {
 
           {/* Pending Actions */}
           <div>
-            <Card className="shadow-card">
+            <Card className="shadow-card pb-3">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-warning" />
                   Pending Actions
                 </CardTitle>
               </CardHeader>
+              <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
+                {pendingActions?.map((action, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex   items-start justify-between flex-wrap gap-1">
+                      <p className="text-sm font-medium text-foreground leading-tight">
+                        {action?.message}
+                      </p>
+                      <Badge
+                        variant={
+                          action.priority === "high"
+                            ? "destructive"
+                            : action.priority === "medium"
+                              ? "secondary"
+                              : "secondary"
+                        }
+                        className="text-xs"
+                      >
+                        {action?.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {dayjs(action.timestamp)?.fromNow()}
+                    </p>
+                    {/* {index < pendingActions.length - 1 && (
+                      <div className="border-b" />
+                    )} */}
+                  </div>
+                ))}
+                {/* <Button variant="outline" className="w-full mt-4">
+                  View All Actions
+                </Button> */}
+              </CardContent>
               {/* <CardContent className="space-y-4">
                 {pendingActions.map((action, index) => (
                   <div key={index} className="space-y-2">
@@ -514,7 +622,7 @@ const UserDashboard = () => {
                   View All Actions
                 </Button>
               </CardContent> */}
-              <p className="text-center pb-3">No data available</p>
+              {/* <p className="text-center pb-3">No data available</p> */}
             </Card>
           </div>
         </div>
@@ -557,14 +665,14 @@ const UserDashboard = () => {
                 onClick={() => navigate("/portal/deals")}
               >
                 <FileText className="h-6 w-6 mb-2" />
-                <span className="text-sm">Add Rete Deals</span>
+                <span className="text-sm">Add Rate Deals</span>
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Transaction Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -572,65 +680,86 @@ const UserDashboard = () => {
                 Monthly Summary
               </CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
+            <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Total Sent</span>
-                <span className="font-semibold">USD 45,230</span>
+                <span className="font-semibold">
+                  {sourceCurrency}{" "}
+                  {dashboardData?.monthlySummary?.totalSent || 0}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Transactions</span>
-                <span className="font-semibold">28</span>
+                <span className="font-semibold">
+                  {dashboardData?.monthlySummary?.transactionCount || 0}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Success Rate</span>
-                <span className="font-semibold text-success">96.4%</span>
+                <span className="font-semibold text-success">
+                  {dashboardData?.monthlySummary?.successRate || 0}%
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Avg. Amount</span>
-                <span className="font-semibold">USD 1,615</span>
+                <span className="font-semibold">
+                  {sourceCurrency} {dashboardData?.monthlyLimit?.avgAmount || 0}
+                </span>
               </div>
-            </CardContent> */}
-            <p className="text-center pb-5">No data found</p>
+            </CardContent>
+            {/* <p className="text-center pb-5">No data found</p> */}
           </Card>
 
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>Transaction Limits</CardTitle>
             </CardHeader>
-            {/* <CardContent className="space-y-4">
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Daily Limit</span>
-                  <span className="font-semibold">USD 50,000</span>
+                  <span className="font-semibold">
+                    {sourceCurrency}{" "}
+                    {dashboardData?.transactionLimits?.dailyLimit || 0}
+                  </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full"
-                    style={{ width: "30%" }}
+                    style={{
+                      width: `${dashboardData?.transactionLimits?.dailyUsedPercent || 0}%`,
+                    }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Used: USD 15,000 (30%)
+                  Used: {sourceCurrency}{" "}
+                  {dashboardData?.transactionLimits?.dailyUsed || 0} (
+                  {dashboardData?.transactionLimits?.dailyUsedPercent} %)
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Monthly Limit</span>
-                  <span className="font-semibold">USD 500,000</span>
+                  <span className="font-semibold">
+                    {sourceCurrency}{" "}
+                    {dashboardData?.transactionLimits?.monthlyLimit || 0}
+                  </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-accent h-2 rounded-full"
-                    style={{ width: "9%" }}
+                    style={{
+                      width: `${dashboardData?.transactionLimits?.monthlyUsedPercent || 0}%`,
+                    }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Used: USD 45,230 (9%)
+                  Used: USD {dashboardData?.transactionLimits?.monthlyUsed} (
+                  {dashboardData?.transactionLimits?.monthlyUsedPercent}%)
                 </p>
               </div>
-            </CardContent> */}
-            <p className="text-center pb-5">No data found</p>
+            </CardContent>
           </Card>
         </div>
       </div>

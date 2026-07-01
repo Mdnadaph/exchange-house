@@ -113,12 +113,12 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
           icon: Files,
           code: "NAV_BRANCH_DOCUMENTS",
         },
-        {
-          name: "Transaction Report",
-          href: "/branch/transaction-report",
-          icon: BookOpen,
-          code: "NAV_BRANCH_TRANSACTION_REPORT",
-        },
+        // {
+        //   name: "Transaction Report",
+        //   href: "/branch/transaction-report",
+        //   icon: BookOpen,
+        //   code: "NAV_BRANCH_TRANSACTION_REPORT",
+        // },
       ],
     },
     {
@@ -213,13 +213,11 @@ const BranchLayout = ({ children }: BranchLayoutProps) => {
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-2">
                   {group.group}
                 </p>
-
                 <div className="space-y-1">
                   {group.items
                     .filter((item) => can(item.code))
                     .map((item) => {
                       const Icon = item.icon;
-
                       return (
                         <Link
                           key={item.name}

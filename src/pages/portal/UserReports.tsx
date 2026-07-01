@@ -21,6 +21,8 @@ import {
   Legend,
   LineChart,
   Line,
+  AreaChart,
+  Area,
 } from "recharts";
 import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
@@ -98,8 +100,8 @@ const beneficiariesTypeOptions = [
 
 export default function UserReports() {
   const { toast } = useToast();
-  const [countryIsoCode, setCountryIsoCode] = useState("");
-  const [currency, setCurrency] = useState("");
+  const [countryIsoCode, setCountryIsoCode] = useState([]);
+  const [currency, setCurrency] = useState([]);
   const [loading, setLoading] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -109,19 +111,48 @@ export default function UserReports() {
   const [countryData, setCountryData] = useState<any>([]);
   const [beneficiaryType, setBeneficiaryType] = useState("");
   const [reportData, setReportData] = useState<any>(null);
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
+  const currencyCode = cookies?.currencyCode;
+  const buildAnalyticsUrl = () => {
+    const params = new URLSearchParams();
+
+    countryIsoCode.forEach((code) => {
+      params.append("countryIsoCode", code);
+    });
+
+    currency.forEach((cur) => {
+      params.append("currency", cur);
+    });
+    if (beneficiaryType) {
+      params.append("beneficiaryType", beneficiaryType);
+    }
+    if (transactionStatus) {
+      params.append("transactionStatus", transactionStatus);
+    }
+
+    if (fromDate) {
+      params.append("fromDate", fromDate);
+    }
+
+    if (toDate) {
+      params.append("toDate", toDate);
+    }
+
+    if (transactionType) {
+      params.append("transactionType", transactionType);
+    }
+
+    return `${BASE_URL}/api/v1/dashboard/business-portal/analytics?${params.toString()}`;
+  };
   const getReports = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `${BASE_URL}/api/v1/dashboard/business-portal/analytics?beneficiaryType=${beneficiaryType}&countryIsoCode=${countryIsoCode}&currency=${currency}&transactionStatus=${transactionStatus}&fromDate=${fromDate}&toDate=${toDate}&transactionType=${transactionType}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await axios.get(buildAnalyticsUrl(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       if (!res?.data?.status) {
         toast({
           title: "Error",
@@ -322,6 +353,57 @@ export default function UserReports() {
       </div>
     );
   };
+  const transformStackedData = (points: any[]) => {
+    const map: Record<string, any> = {};
+
+    points?.forEach((item) => {
+      const country = item?.label;
+      const currency = item?.currency; // or item.currency
+
+      if (!map[country]) {
+        map[country] = { label: country };
+      }
+      map[country][currency] = `${item.value} ${currencyCode}`;
+    });
+
+    return Object.values(map);
+  };
+  const rawPoints =
+    reportData?.transactionVolumeByCountryAndCurrency?.points || [];
+  const chartData = transformStackedData(rawPoints);
+  const currencies = Array.from(new Set(rawPoints.map((p) => p?.group)));
+  const getDynamicColor = (index: number, total: number) => {
+    const baseHue = 210; // blue tone
+
+    const lightness = 35 + index * (40 / Math.max(total - 1, 1));
+    const saturation = 70;
+
+    return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
+  };
+  const rowHeight = 45; // space per bar (adjust)
+  const baseHeight = 120; // header + padding
+
+  const chartHeight = (chartData?.length || 0) * rowHeight + baseHeight;
+  const BENEFICIARY_COLORS: Record<string, string> = {
+    INDIVIDUAL: "#6366F1", // indigo (primary)
+    BUSINESS: "#22C55E", // green (growth/business)
+  };
+  const STATUS_COLORSCODE: Record<string, string> = {
+    INTERNAL_REVIEW_PENDING: "#F59E0B", // amber
+    PAYMENT_PENDING: "#3B82F6", // blue
+    PROOF_OF_PAYMENT_PENDING: "#8B5CF6", // purple
+    COMPLIANCE_REVIEW: "#F97316", // orange
+    PAYMENT_VERIFICATION_PENDING: "#06B6D4", // cyan
+    PROCESSING: "#6366F1", // indigo
+    COMPLETED: "#22C55E", // green
+    CANCELLED: "#EF4444", // red
+    CANCELLED_WITH_REFUND: "#FB7185", // pink/red
+  };
+  const transactionVolumeByBeneficiaryPoints =
+    reportData?.transactionVolumeByBeneficiary?.points || [];
+
+  const BeneficiaryPointsCardHeight =
+    transactionVolumeByBeneficiaryPoints.length * 45 + 120; //
   return (
     <UserLayout>
       <div className="space-y-8">
@@ -334,7 +416,10 @@ export default function UserReports() {
           </p>
         </div>
         <div className="flex gap-4 items-center flex-wrap">
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Beneficiaries
+            </h2>
             <Select
               value={beneficiaryType}
               onValueChange={(val) =>
@@ -354,7 +439,83 @@ export default function UserReports() {
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="w-[200px] space-y-1">
+            <h2 className="text-base font-normal text-gray-700">Country</h2>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Country" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <div className="p-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={countryIsoCode.length === 0}
+                      onChange={() => setCountryIsoCode([])}
+                    />
+                    All
+                  </label>
+
+                  {countryData?.map((c) => (
+                    <label key={c.id} className="flex items-center gap-2 mt-2">
+                      <input
+                        type="checkbox"
+                        checked={countryIsoCode.includes(c.currencyCode)}
+                        onChange={() => {
+                          setCountryIsoCode((prev) =>
+                            prev.includes(c.currencyCode)
+                              ? prev.filter((x) => x !== c.currencyCode)
+                              : [...prev, c.currencyCode],
+                          );
+                        }}
+                      />
+                      {c.name}
+                    </label>
+                  ))}
+                </div>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-[200px] space-y-1">
+            <h2 className="text-base font-normal text-gray-700">Currency</h2>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Currency" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <div className="p-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={currency.length === 0}
+                      onChange={() => setCurrency([])}
+                    />
+                    All
+                  </label>
+
+                  {currencyData?.map((c) => (
+                    <label key={c.id} className="flex items-center gap-2 mt-2">
+                      <input
+                        type="checkbox"
+                        checked={currency.includes(c.code)}
+                        onChange={() => {
+                          setCurrency((prev) =>
+                            prev.includes(c.code)
+                              ? prev.filter((x) => x !== c.code)
+                              : [...prev, c.code],
+                          );
+                        }}
+                      />
+                      {c.code}
+                    </label>
+                  ))}
+                </div>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* <div>
             <Select
               value={countryIsoCode}
               onValueChange={(val) =>
@@ -392,15 +553,17 @@ export default function UserReports() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div>
+          </div> */}
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">From Date</h2>
             <Input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">To Date</h2>
             <Input
               type="date"
               placeholder="Select To Date"
@@ -408,7 +571,10 @@ export default function UserReports() {
               onChange={(e) => setToDate(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Transaction Status
+            </h2>
             <Select
               value={transactionStatus}
               onValueChange={(val) =>
@@ -427,7 +593,10 @@ export default function UserReports() {
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">
+              Transaction Type
+            </h2>
             <Select
               value={transactionType}
               onValueChange={(val) =>
@@ -449,11 +618,262 @@ export default function UserReports() {
         </div>
         <div>
           {loading ? (
-            <div className="text-center font-semibold text-xl text-gray-700">
+            <div className="text-center font-normal text-base text-gray-700">
               Loading...
             </div>
           ) : (
-            <DynamicChart data={reportData} />
+            // <DynamicChart data={reportData} />
+            <div className="space-y-6">
+              <div
+                className="
+                                    grid grid-cols-1 lg:grid-cols-3 gap-4
+                                    "
+              >
+                <div className="bg-white p-4 rounded-xl shadow lg:col-span-2">
+                  <h5 className="text-[#0B1437] text-base font-medium pb-2">
+                    {reportData?.transactionVolumeTimeline?.title}
+                  </h5>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart
+                      data={reportData?.transactionVolumeTimeline?.points}
+                      margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+                    >
+                      {/* Gradient Fill */}
+                      <defs>
+                        <linearGradient
+                          id="colorValue"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#4F46E5"
+                            stopOpacity={0.4}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#4F46E5"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+
+                      <CartesianGrid strokeDasharray="3 3" />
+
+                      <XAxis dataKey="label" />
+                      <YAxis />
+
+                      <Tooltip />
+
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#4F46E5"
+                        fill="url(#colorValue)"
+                        strokeWidth={3}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="bg-white p-4 rounded-xl shadow">
+                  <h5 className="text-[#0B1437] text-base font-medium pb-2">
+                    {reportData?.transactionVolumeByBeneficiaryType?.title}
+                  </h5>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={
+                          reportData?.transactionVolumeByBeneficiaryType?.points
+                        }
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60} // doughnut effect
+                        outerRadius={100}
+                        dataKey="value"
+                        nameKey="label"
+                        label={false}
+                      >
+                        {reportData?.transactionVolumeByBeneficiaryType?.points?.map(
+                          (entry, index) => (
+                            <Cell
+                              key={index}
+                              fill={
+                                BENEFICIARY_COLORS[entry.label] || "#94A3B8"
+                              }
+                            />
+                          ),
+                        )}
+                      </Pie>
+
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  {/* Custom Legend */}
+                  <div className="flex flex-wrap gap-2 mt-3 text-xs">
+                    {reportData?.transactionVolumeByBeneficiaryType?.points?.map(
+                      (d, i) => (
+                        <div key={i} className="flex items-center gap-1">
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor:
+                                BENEFICIARY_COLORS[d?.label] || "#94A3B8",
+                            }}
+                          />
+                          {d?.label
+                            ?.toLowerCase()
+                            ?.split("_")
+                            ?.map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            ?.join(" ")}
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+              {/* STACKED COUNTRY CHART */}
+              <div className="bg-white p-4 rounded-xl shadow">
+                <h2 className="font-semibold mb-4">
+                  {reportData?.transactionVolumeByCountryAndCurrency?.title}
+                </h2>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={chartData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+
+                    <XAxis type="number" />
+                    <YAxis dataKey="label" type="category" />
+
+                    <Tooltip />
+                    <Legend />
+
+                    {currencies.map((cur, i) => (
+                      <Bar
+                        key={i}
+                        dataKey={cur as string}
+                        stackId="a"
+                        fill={getDynamicColor(i, currencies.length)}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className=" grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-xl shadow">
+                  <h2 className="font-semibold mb-4">
+                    {reportData?.transactionVolumeByBeneficiary?.title}
+                  </h2>
+                  <ResponsiveContainer
+                    width="100%"
+                    height={BeneficiaryPointsCardHeight}
+                  >
+                    <BarChart
+                      data={reportData?.transactionVolumeByBeneficiary?.points}
+                      layout="vertical" // 👈 makes it horizontal
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      {/* Swap axes */}
+                      <XAxis type="number" />
+                      <YAxis type="category" dataKey="label" />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#6366F1" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="bg-white p-4 rounded-xl shadow">
+                  <h5 className="text-[#0B1437] text-base font-medium pb-2">
+                    {reportData?.transactionCountByStatus?.title}
+                  </h5>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={reportData?.transactionCountByStatus?.points}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60} // doughnut effect
+                        outerRadius={100}
+                        dataKey="value"
+                        nameKey="label"
+                        label={false}
+                      >
+                        {reportData?.transactionCountByStatus?.points?.map(
+                          (entry, index) => (
+                            <Cell
+                              key={index}
+                              fill={STATUS_COLORSCODE[entry.label] || "#94A3B8"}
+                            />
+                          ),
+                        )}
+                      </Pie>
+
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  {/* Custom Legend */}
+                  <div className="flex flex-wrap gap-2 mt-3 text-xs">
+                    {reportData?.transactionCountByStatus?.points?.map(
+                      (d, i) => (
+                        <div key={i} className="flex items-center gap-1">
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor:
+                                STATUS_COLORSCODE[d?.label] || "#94A3B8",
+                            }}
+                          />
+                          {d.label
+                            ?.toLowerCase()
+                            ?.split("_")
+                            ?.map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            ?.join(" ")}
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl shadow">
+                <h2 className="font-semibold mb-4">
+                  {reportData?.transactionVolumeByCurrency?.title}
+                </h2>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart
+                    data={reportData?.transactionVolumeByCurrency?.points}
+                  >
+                    <CartesianGrid strokeDasharray="1 1" />
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#6366F1" barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {/* <div className="bg-white p-4 rounded-xl shadow">
+                            <h2 className="font-semibold mb-4">
+                              {reportData?.transactionVolumeByBranch?.title}
+                            </h2>
+                            <ResponsiveContainer width="100%" height={250}>
+                              <BarChart
+                                data={reportData?.transactionVolumeByBranch?.points}
+                              >
+                                <CartesianGrid strokeDasharray="1 1" />
+                                <XAxis dataKey="label" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="value" fill="#6366F1" barSize={40} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div> */}
+            </div>
           )}
         </div>
       </div>

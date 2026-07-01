@@ -109,6 +109,7 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [kybContext, setKybContext] = useState<KYBContext | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const uploadSectionRef = useRef<HTMLDivElement>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>({
     id: 0,
     companyName: "",
@@ -544,13 +545,20 @@ const UserProfile = () => {
           description: "Your business profile has been updated successfully.",
         });
       } else {
-        throw new Error(response.data?.message || "Update failed");
+        // throw new Error(response.data?.message || "Update failed");
+        toast({
+          title: "Error",
+          description:
+            response?.data?.message ||
+            "Something went wrong while updating profile",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       toast({
         title: "Update Failed",
         description:
-          error.response?.data?.message || "Failed to update business profile",
+          error?.response?.data?.message || "Failed to update business profile",
         variant: "destructive",
       });
     } finally {
@@ -690,7 +698,39 @@ const UserProfile = () => {
   return (
     <UserLayout>
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        {(businessProfile?.kybStatus == "PENDING" ||
+          businessProfile?.kybStatus == "NOT_STARTED") && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900">
+                    KYB Verification Required
+                  </h3>
+                  <p className="text-sm text-orange-800 mt-1">
+                    Please complete your KYB (Know Your Business) verification
+                    to start using all platform features.
+                  </p>
+                  <Button
+                    className="mt-3 bg-blue-900 hover:bg-blue-950 text-white"
+                    onClick={() =>
+                      uploadSectionRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      })
+                    }
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Complete KYB Verification
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Business Profile
@@ -706,7 +746,13 @@ const UserProfile = () => {
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditing(false);
+                  setProfileImage(null);
+                }}
+              >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
@@ -736,7 +782,7 @@ const UserProfile = () => {
                   <input
                     id="profileUpload"
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                     className="hidden"
                     onChange={handleImageUpload}
                   />
@@ -772,6 +818,7 @@ const UserProfile = () => {
                   <Label className="text-muted-foreground">Company Name</Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.companyName}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -793,6 +840,7 @@ const UserProfile = () => {
                   </Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.tradeLicense}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -812,6 +860,7 @@ const UserProfile = () => {
                   <Label className="text-muted-foreground">Tax Number</Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.taxNumber}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -844,6 +893,7 @@ const UserProfile = () => {
                   </Label>
                   {isEditing ? (
                     <Input
+                      disabled={businessProfile.kybStatus === "APPROVED"}
                       value={businessProfile.businessPhone}
                       onChange={(e) =>
                         setBusinessProfile({
@@ -985,185 +1035,228 @@ const UserProfile = () => {
           <CardContent className="space-y-4">
             {businessProfile?.ubos?.map((uboItem: any) => (
               <div className="w-full" key={uboItem?.uuid}>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                  <div className="flex gap-3 item-center">
-                    <p className="text-muted-foreground">UBO Type</p>
-                    <p className="font-medium">
-                      {uboItem?.uboType?.charAt(0)?.toUpperCase()}
-                      {uboItem?.uboType?.slice(1)?.toLowerCase()}
-                    </p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start ">
+                      <p className="text-muted-foreground shrink-0">
+                        UBO Type:
+                      </p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.uboType?.charAt(0)?.toUpperCase()}
+                        {uboItem?.uboType?.slice(1)?.toLowerCase()}
+                      </p>
+                    </CardContent>
+                  </Card>
+
                   {uboItem?.uboType == "INDIVIDUAL" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Full Name</p>
-                      <p className="font-medium">{uboItem?.fullName}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Full Name
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.fullName}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                   {uboItem?.uboType == "INDIVIDUAL" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Email</p>
-                      <p className="font-medium">{uboItem?.email}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">Email:</p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.email}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
-                  <div className="flex gap-3 item-center">
-                    <p className="text-muted-foreground">
-                      OwnerShip Percentage
-                    </p>
-                    <p className="font-medium">
-                      {uboItem?.ownershipPercentage}%
-                    </p>
-                  </div>
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start">
+                      <p className="text-muted-foreground shrink-0">
+                        OwnerShip Percentage:
+                      </p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.ownershipPercentage}
+                      </p>
+                    </CardContent>
+                  </Card>
                   {uboItem?.uboType == "INDIVIDUAL" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Contact Number</p>
-                      <p className="font-medium">{uboItem?.contactNumber}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Contact Number:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.contactNumber}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                   {uboItem?.uboType == "ORGANIZATION" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">
-                        Organization Name:
-                      </p>
-                      <p className="font-medium">{uboItem?.organizationName}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Organization Name:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.organizationName}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
-                  <div className="flex gap-3 item-center">
-                    <p className="text-muted-foreground">Date Of Birth</p>
-                    <p className="font-medium">{uboItem?.dateOfBirth}</p>
-                  </div>
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start">
+                      <p className="text-muted-foreground shrink-0">
+                        Date Of Birth:
+                      </p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.dateOfBirth}
+                      </p>
+                    </CardContent>
+                  </Card>
                   {uboItem?.uboType == "ORGANIZATION" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">
-                        Registration Number:
-                      </p>
-                      <p className="font-medium">
-                        {uboItem?.registrationNumber}
-                      </p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Registration Number:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.registrationNumber}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                   {uboItem?.uboType == "ORGANIZATION" && (
-                    <div className="flex gap-3 item-center">
-                      <p className="text-muted-foreground">Phone Number:</p>
-                      <p className="font-medium">{uboItem?.phoneNumber}</p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-4 flex gap-2 items-start">
+                        <p className="text-muted-foreground shrink-0">
+                          Phone Number:
+                        </p>
+                        <p className="font-medium break-all min-w-0">
+                          {uboItem?.phoneNumber}
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               </div>
             ))}
           </CardContent>
         </Card>
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5 text-primary" />
-              Upload New Document
-            </CardTitle>
-          </CardHeader>
+        <div ref={uploadSectionRef}>
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5 text-primary" />
+                Upload New Document
+              </CardTitle>
+            </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="documentNumber">Document Number</Label>
-                <Input
-                  id="documentNumber"
-                  type="text"
-                  placeholder="e.g., License No. 12345"
-                  value={documentNumber}
-                  onChange={(e) => setDocumentNumber(e.target.value)}
-                  className="w-full"
-                />
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="documentNumber">Document Number</Label>
+                  <Input
+                    id="documentNumber"
+                    type="text"
+                    placeholder="e.g., License No. 12345"
+                    value={documentNumber}
+                    onChange={(e) => setDocumentNumber(e.target.value)}
+                    className="w-full"
+                  />
 
-                <Label htmlFor="documentType">Document Type</Label>
-                <select
-                  id="documentType"
-                  value={documentType}
-                  onChange={(e) => {
-                    setDocumentType(e.target.value);
-                    setExpireDate("");
-                  }}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                >
-                  <option value="">Select document type...</option>
-                  {documentTypes.map((type) => {
-                    const docInfo = kybContext?.documents.find(
-                      (d) => d.name === type,
-                    );
-                    return (
-                      <option key={type} value={type}>
-                        {type} {docInfo?.code ? `(${docInfo.code})` : ""}{" "}
-                        {docInfo?.required ? "- Required" : "- Optional"}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fileUpload">Select File</Label>
-                <Input
-                  id="fileUpload"
-                  type="file"
-                  onChange={handleFileSelect}
-                  ref={fileInputRef}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                />
-                {expiryDateRequired && (
-                  <div className="space-y-1">
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      value={expiryDate}
-                      id="expiryDate"
-                      type="date"
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={(e) => {
-                        setExpireDate(e.target.value);
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {selectedFile && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">{selectedFile.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3 items-center">
-                  <Button
-                    onClick={() => {
-                      setSelectedFile(null);
-                      setDocumentType("");
-                      setDocumentNumber("");
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = "";
-                      }
+                  <Label htmlFor="documentType">Document Type</Label>
+                  <select
+                    id="documentType"
+                    value={documentType}
+                    onChange={(e) => {
+                      setDocumentType(e.target.value);
+                      setExpireDate("");
                     }}
-                    variant="outline"
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button onClick={handleUploadDocument} variant="default">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload
-                  </Button>
+                    <option value="">Select document type...</option>
+                    {documentTypes.map((type) => {
+                      const docInfo = kybContext?.documents.find(
+                        (d) => d.name === type,
+                      );
+                      return (
+                        <option key={type} value={type}>
+                          {type} {docInfo?.code ? `(${docInfo.code})` : ""}{" "}
+                          {docInfo?.required ? "- Required" : "- Optional"}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fileUpload">Select File</Label>
+                  <Input
+                    id="fileUpload"
+                    type="file"
+                    onChange={handleFileSelect}
+                    ref={fileInputRef}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                  {expiryDateRequired && (
+                    <div className="space-y-1">
+                      <Label htmlFor="expiryDate">Expiry Date</Label>
+                      <Input
+                        value={expiryDate}
+                        id="expiryDate"
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        onChange={(e) => {
+                          setExpireDate(e.target.value);
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
 
-            <p className="text-xs text-muted-foreground">
-              Accepted formats: PDF, DOC, DOCX, JPG, PNG. Maximum file size:
-              20MB
-            </p>
-          </CardContent>
-        </Card>
+              {selectedFile && (
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">{selectedFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <Button
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setDocumentType("");
+                        setDocumentNumber("");
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = "";
+                        }
+                      }}
+                      variant="outline"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUploadDocument} variant="default">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Accepted formats: PDF, DOC, DOCX, JPG, PNG. Maximum file size:
+                20MB
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="shadow-card">
           <CardHeader>

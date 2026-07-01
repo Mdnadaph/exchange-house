@@ -61,6 +61,8 @@ import {
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // Types based on your API responses
 interface Country {
@@ -81,7 +83,7 @@ interface ExchangeAdmin {
   fullName: string;
   phoneNumber: string;
   email: string;
-  primaryContactEmail: string | null; // Corrected from primaryContactMail
+  primaryContactMail: string | null; // Corrected from primaryContactMail
   active: boolean;
   legalBusinessName: string | null;
   tradingName: string | null;
@@ -148,6 +150,7 @@ const AdminExchangeHouses = () => {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
   const pageSize = 10;
 
   // Form state - aligned with API payload
@@ -226,6 +229,8 @@ const AdminExchangeHouses = () => {
           },
         );
         setTotalPages(data.totalPages || 0);
+        setTotalElements(data?.totalElements || 0);
+        setCurrentPage(data?.currentPage || 0);
       }
     } catch (err) {
       console.error("Failed to fetch exchange admins", err);
@@ -342,7 +347,6 @@ const AdminExchangeHouses = () => {
         });
       }
     } catch (err: any) {
-      console.log("err", err);
       if (
         err.response?.data?.data &&
         typeof err.response.data.data === "object"
@@ -535,7 +539,6 @@ const AdminExchangeHouses = () => {
     }
     return { variant: "outline" as const, label: plan.name };
   };
-
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -607,7 +610,9 @@ const AdminExchangeHouses = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">{t("fullName")} *</Label>
+                      <Label htmlFor="fullName">
+                        {t("fullName")} <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="fullName"
                         value={formData.fullName}
@@ -632,7 +637,10 @@ const AdminExchangeHouses = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t("adminEmail")} *</Label>
+                      <Label htmlFor="email">
+                        {t("adminEmail")}{" "}
+                        <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="email"
                         type="email"
@@ -657,7 +665,7 @@ const AdminExchangeHouses = () => {
                     <div className="space-y-2">
                       <Label htmlFor="phoneNumber">
                         {/* {t("phoneNumber")} * */}
-                        phone Number *
+                        Phone Number <span className="text-red-500">*</span>
                       </Label>
                       <PhoneInput
                         country={"ae"} // Defaulting to UAE based on your preferredCountries
@@ -703,7 +711,8 @@ const AdminExchangeHouses = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="primaryContactEmail">
-                        {t("primaryContactEmail")} *
+                        {t("primaryContactEmail")}{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="primaryContactEmail"
@@ -739,7 +748,8 @@ const AdminExchangeHouses = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="legalBusinessName">
-                        {t("legalBusinessName")} *
+                        {t("legalBusinessName")}{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="legalBusinessName"
@@ -858,19 +868,26 @@ const AdminExchangeHouses = () => {
                       <Input
                         id="city"
                         value={formData.city}
-                        onChange={(e) =>
-                          setFormData({ ...formData, city: e.target.value })
-                        }
+                        onChange={(e) => {
+                          setFormData({ ...formData, city: e.target.value });
+                        }}
                         placeholder="Abu Dhabi"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="countryId">{t("country")}</Label>
+                      <Label htmlFor="countryId">
+                        {t("country")} <span className="text-red-500">*</span>
+                      </Label>
                       <Select
                         value={formData.countryId.toString()}
-                        onValueChange={(val) =>
-                          setFormData({ ...formData, countryId: Number(val) })
-                        }
+                        onValueChange={(val) => {
+                          setFormData({ ...formData, countryId: Number(val) });
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.countryId;
+                            return next;
+                          });
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectCountry")} />
@@ -883,6 +900,11 @@ const AdminExchangeHouses = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.countryId?.map((msg, i) => (
+                        <p key={i} className="text-sm text-destructive mt-1">
+                          {msg}
+                        </p>
+                      ))}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="postalCode">{t("postalCode")}</Label>
@@ -1068,7 +1090,10 @@ const AdminExchangeHouses = () => {
           <Input
             placeholder="Search exchange houses..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(0);
+            }}
             className={isRTL ? "pr-10" : "pl-10"}
           />
         </div>
@@ -1085,65 +1110,77 @@ const AdminExchangeHouses = () => {
                 {searchQuery ? "No results found" : "No exchange houses found"}
               </div>
             ) : (
-              exchangeAdmins.map((admin) => {
-                // console.log(
-                //   `Admin ID: ${admin.id}, Status: ${admin.exchangeStatus}`,
-                // ); // Debug log - remove after testing
-                const status = getStatusBadge(admin.exchangeStatus);
-                const plan = getPlanBadge(admin.subscriptionPlan);
-                const StatusIcon = status.icon;
+              <div>
+                <div className="flex justify-end my-1">
+                  <PaginationSummary
+                    totalElements={totalElements}
+                    pageSize={pageSize}
+                    currentPage={currentPage}
+                    itemCount={exchangeAdmins?.length}
+                    itemLabel="Exchange Admin"
+                  />
+                </div>
+                {exchangeAdmins?.map((admin) => {
+                  // console.log(
+                  //   `Admin ID: ${admin.id}, Status: ${admin.exchangeStatus}`,
+                  // ); // Debug log - remove after testing
+                  const status = getStatusBadge(admin.exchangeStatus);
+                  const plan = getPlanBadge(admin.subscriptionPlan);
+                  const StatusIcon = status.icon;
 
-                const displayName =
-                  admin.legalBusinessName ||
-                  admin.tradingName ||
-                  admin.fullName ||
-                  "Unnamed Exchange";
+                  const displayName =
+                    admin.legalBusinessName ||
+                    admin.tradingName ||
+                    admin.fullName ||
+                    "Unnamed Exchange";
 
-                return (
-                  <Card key={admin.id} className="shadow-card">
-                    <CardContent className="p-6">
-                      <div
-                        className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
-                          isRTL ? "lg:flex-row-reverse" : ""
-                        }`}
-                      >
+                  return (
+                    <Card key={admin.id} className="shadow-card">
+                      <CardContent className="p-6">
                         <div
-                          className={`flex items-start gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+                          className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                            isRTL ? "lg:flex-row-reverse" : ""
+                          }`}
                         >
-                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Landmark className="h-6 w-6 text-primary" />
-                          </div>
-                          <div className={isRTL ? "text-right" : ""}>
-                            <div
-                              className={`flex items-center gap-2 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}
-                            >
-                              <h3 className="font-semibold text-lg">
-                                {displayName}
-                              </h3>
-                              <Badge
-                                variant={status.variant}
-                                className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
-                              >
-                                <StatusIcon className="h-3 w-3" />
-                                {status.label}
-                              </Badge>
-                              <Badge variant={plan.variant}>{plan.label}</Badge>
+                          <div
+                            className={`flex items-start gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+                          >
+                            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Landmark className="h-6 w-6 text-primary" />
                             </div>
-
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {admin.tradingName ||
-                                admin.legalBusinessName ||
-                                admin.fullName}
-                            </p>
-
-                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                              <span
-                                className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                            <div className={isRTL ? "text-right" : ""}>
+                              <div
+                                className={`flex items-center gap-2 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}
                               >
-                                <Building2 className="h-3.5 w-3.5" />
-                                {admin.city}, {admin?.country}
-                              </span>
-                              {/* <span
+                                <h3 className="font-semibold text-lg">
+                                  {displayName}
+                                </h3>
+                                <Badge
+                                  variant={status.variant}
+                                  className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                                >
+                                  <StatusIcon className="h-3 w-3" />
+                                  {status.label}
+                                </Badge>
+                                <Badge variant={plan.variant}>
+                                  {plan.label}
+                                </Badge>
+                              </div>
+
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {admin.tradingName ||
+                                  admin.legalBusinessName ||
+                                  admin.fullName}
+                              </p>
+
+                              <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                                <span
+                                  className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                                >
+                                  <Building2 className="h-3.5 w-3.5" />
+                                  {admin.city}, {admin?.country}
+                                </span>
+                                {/* <span
                                 className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
                               >
                                 <GitBranch className="h-3.5 w-3.5" />
@@ -1151,122 +1188,123 @@ const AdminExchangeHouses = () => {
                                   "N/A"}{" "}
                                 Branches
                               </span> */}
-                              <span
-                                className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
-                              >
-                                <Users className="h-3.5 w-3.5" />
-                                {admin.fullName}
-                              </span>
-                            </div>
+                                <span
+                                  className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                                >
+                                  <Users className="h-3.5 w-3.5" />
+                                  {admin.fullName}
+                                </span>
+                              </div>
 
-                            <div className="flex flex-wrap gap-4 mt-1 text-xs text-muted-foreground">
-                              <span>
-                                {t("centralBankLicense")}:{" "}
-                                {admin.centralBankLicense}
-                              </span>
-                              <span>
-                                {t("dateOnboarded")}:{" "}
-                                {admin.subscriptionStartDate}
-                              </span>
-                              <span>Email: {admin?.email}</span>
+                              <div className="flex flex-wrap gap-4 mt-1 text-xs text-muted-foreground">
+                                <span>
+                                  {t("centralBankLicense")}:{" "}
+                                  {admin.centralBankLicense}
+                                </span>
+                                <span>
+                                  {t("dateOnboarded")}:{" "}
+                                  {admin.subscriptionStartDate}
+                                </span>
+                                <span>Email: {admin?.email}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div
-                          className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              navigate(`/admin/exchange-houses/${admin.id}`)
-                            }
+                          <div
+                            className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
                           >
-                            <Eye
-                              className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
-                            />
-                            {t("viewDetails")}
-                          </Button>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align={isRTL ? "start" : "end"}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                navigate(`/admin/exchange-houses/${admin.id}`)
+                              }
                             >
-                              {admin.exchangeStatus?.toLowerCase() ===
-                              "active" ? (
-                                <DropdownMenuItem
-                                  className={`text-orange-600 ${isRTL ? "flex-row-reverse" : ""}`}
-                                  onClick={() => {
-                                    setSelectedHouseId(admin.id);
-                                    setSuspendDialogOpen(true);
-                                  }}
-                                >
-                                  <Ban
-                                    className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
-                                  />
-                                  {t("suspendExchangeHouse")}
-                                </DropdownMenuItem>
-                              ) : admin.exchangeStatus?.toLowerCase() ===
-                                "suspended" ? (
-                                <div>
+                              <Eye
+                                className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                              />
+                              {t("viewDetails")}
+                            </Button>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align={isRTL ? "start" : "end"}
+                              >
+                                {admin.exchangeStatus?.toLowerCase() ===
+                                "active" ? (
                                   <DropdownMenuItem
-                                    className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
+                                    className={`text-orange-600 ${isRTL ? "flex-row-reverse" : ""}`}
                                     onClick={() => {
                                       setSelectedHouseId(admin.id);
-                                      setActivateDialogOpen(true);
+                                      setSuspendDialogOpen(true);
                                     }}
                                   >
-                                    <Power
+                                    <Ban
                                       className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                                     />
-                                    {t("activateExchangeHouse")}
+                                    {t("suspendExchangeHouse")}
                                   </DropdownMenuItem>
-                                </div>
-                              ) : null}
-                              <DropdownMenuItem
-                                className={isRTL ? "flex-row-reverse" : ""}
-                                onClick={() => {
-                                  setSelectedAdmin(admin);
-                                  setFormData({
-                                    fullName: admin.fullName || "",
-                                    email: admin.email || "",
-                                    primaryContactEmail:
-                                      admin.primaryContactEmail || "",
-                                    phoneNumber: admin.phoneNumber || "",
-                                    legalBusinessName:
-                                      admin.legalBusinessName || "",
-                                    tradingName: admin.tradingName || "",
-                                    registrationNumber:
-                                      admin.registrationNumber || "",
-                                    centralBankLicense:
-                                      admin.centralBankLicense || "",
-                                    licenseExpiryDate:
-                                      admin.licenseExpiryDate || "",
-                                    businessAddress:
-                                      admin.businessAddress || "",
-                                    city: admin.city || "",
-                                    countryId: admin.countryId || 1,
-                                    postalCode: admin.postalCode || "",
-                                    subscriptionPlanId:
-                                      admin.subscriptionPlan?.id || 2,
-                                  });
-                                  setIsEdit(true);
-                                  setIsOnboardingOpen(true);
-                                }}
-                              >
-                                <Edit
-                                  className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
-                                />
-                                {t("editExchangeHouse")}
-                              </DropdownMenuItem>
+                                ) : admin.exchangeStatus?.toLowerCase() ===
+                                  "suspended" ? (
+                                  <div>
+                                    <DropdownMenuItem
+                                      className={`text-green-600 ${isRTL ? "flex-row-reverse" : ""}`}
+                                      onClick={() => {
+                                        setSelectedHouseId(admin.id);
+                                        setActivateDialogOpen(true);
+                                      }}
+                                    >
+                                      <Power
+                                        className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                      />
+                                      {t("activateExchangeHouse")}
+                                    </DropdownMenuItem>
+                                  </div>
+                                ) : null}
+                                <DropdownMenuItem
+                                  className={isRTL ? "flex-row-reverse" : ""}
+                                  onClick={() => {
+                                    setSelectedAdmin(admin);
+                                    setFormData({
+                                      fullName: admin.fullName || "",
+                                      email: admin.email || "",
+                                      primaryContactEmail:
+                                        admin.primaryContactMail || "",
+                                      phoneNumber: admin.phoneNumber || "",
+                                      legalBusinessName:
+                                        admin.legalBusinessName || "",
+                                      tradingName: admin.tradingName || "",
+                                      registrationNumber:
+                                        admin.registrationNumber || "",
+                                      centralBankLicense:
+                                        admin.centralBankLicense || "",
+                                      licenseExpiryDate:
+                                        admin.licenseExpiryDate || "",
+                                      businessAddress:
+                                        admin.businessAddress || "",
+                                      city: admin.city || "",
+                                      countryId: admin.countryId || 1,
+                                      postalCode: admin.postalCode || "",
+                                      subscriptionPlanId:
+                                        admin.subscriptionPlan?.id || 2,
+                                    });
+                                    setIsEdit(true);
+                                    setIsOnboardingOpen(true);
+                                    setErrors({});
+                                  }}
+                                >
+                                  <Edit
+                                    className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                                  />
+                                  {t("editExchangeHouse")}
+                                </DropdownMenuItem>
 
-                              {/* <DropdownMenuItem
+                                {/* <DropdownMenuItem
                                 className={`text-destructive ${isRTL ? "flex-row-reverse" : ""}`}
                                 onClick={() => {
                                   setSelectedHouseId(admin.id);
@@ -1278,68 +1316,26 @@ const AdminExchangeHouses = () => {
                                 />
                                 {t("deleteExchangeHouse")}
                               </DropdownMenuItem> */}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <Pagination className="mt-6">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 0) setCurrentPage(currentPage - 1);
-                  }}
-                  aria-disabled={currentPage <= 0}
-                  className={
-                    currentPage <= 0 ? "pointer-events-none opacity-50" : ""
-                  }
-                />
-              </PaginationItem>
-              {[...Array(totalPages)].map((_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrentPage(i);
-                    }}
-                    isActive={currentPage === i}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages - 1)
-                      setCurrentPage(currentPage + 1);
-                  }}
-                  aria-disabled={currentPage >= totalPages - 1}
-                  className={
-                    currentPage >= totalPages - 1
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+        <PaginationControl
+          className="mt-6"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
 
         {/* Dialogs */}
         <ConfirmationDialog

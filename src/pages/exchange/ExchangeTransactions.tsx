@@ -35,6 +35,8 @@ import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import ApproveRejectTransactionModal from "@/components/transactions/ApproveRejectTransactionModal";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface TransactionDocument {
   id: number;
@@ -96,6 +98,8 @@ interface ApiResponse {
     transactions: ApiTransaction[];
     pagination: {
       totalItems: number;
+      totalPages: number;
+      page: number;
     };
   };
 }
@@ -158,18 +162,29 @@ interface Transaction {
   beneficiaryName?: string;
   businessName?: string;
   rateDeal?: {
-    requestedExchangeRate: number | null;
-    currentExchangeRate: number | null;
-    counterProposalCount: number;
-    counterProposalsRemaining: number;
+    requestedExchangeRate?: number | null;
+    currentExchangeRate?: number | null;
+    counterProposalCount?: number;
+    counterProposalsRemaining?: number;
+    payoutCurrency: string;
+    proposedRate: number;
     isTerminal: boolean;
+    dealStatus: string;
+    dealAmount: number | null;
+    usedAmount: number | null;
+    remainingAmount: number | null;
+    appliedRate: number | null;
+    currentMarketRate: number | null;
+    country: string;
     waitingForEmail: string | null;
-    history: Array<{
-      action: string;
-      actorEmail: string;
+    negotiationHistory: Array<{
+      id: number;
+      actionType: string;
+      performedBy: string;
       rate: number | null;
-      message: string | null;
-      actedAt: string;
+      comments: string | null;
+      createdAt: string;
+      performedByRole: string;
     }>;
   };
 }
@@ -224,6 +239,9 @@ const ExchangeTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [reference, setReference] = useState("");
   const [cookies] = useCookies([
@@ -235,6 +253,9 @@ const ExchangeTransactions = () => {
     "currencyCode",
   ]);
   const [page, setPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const pageSize = 10;
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [transitionDashboardData, setTransationDashboardData] = useState(null);
 
@@ -275,13 +296,16 @@ const ExchangeTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&search=${debounceValue}&fromDate=${fromDate}&toDate=${toDate}`,
         config,
       );
 
       const data = response?.data;
       setTransationDashboardData(data?.data);
       setTotalTransactionData(data?.data?.pagination?.totalItems);
+      setTotalElements(data?.data?.pagination?.totalItems || 0);
+      setTotalPages(data?.data?.pagination?.totalPages || 0);
+      setPage(data?.data?.pagination?.page);
       if (data.status && data.data) {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
@@ -424,23 +448,32 @@ const ExchangeTransactions = () => {
   };
 
   useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
     fetchTransactions();
-  }, [transactionType, page]);
+  }, [transactionType, page, debounceValue, fromDate, toDate]);
   // console.log("transitionData", transactions);
   // Filter transactions based on search
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -505,7 +538,7 @@ const ExchangeTransactions = () => {
         icon: Clock,
       },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "outline" as const,
         label: "Proof of Payment Sent",
         icon: Clock,
       },
@@ -516,7 +549,7 @@ const ExchangeTransactions = () => {
       },
       REJECTED: {
         variant: "destructive" as const,
-        label: "Rejetced",
+        label: "Rejected",
         icon: AlertCircle,
       },
       DRAFT: {
@@ -582,19 +615,18 @@ const ExchangeTransactions = () => {
   };
 
   const statistics = calculateStatistics();
-  console.log("transaction", filteredTransactions);
-  if (isLoading) {
-    return (
-      <ExchangeLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </ExchangeLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <ExchangeLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </ExchangeLayout>
+  //   );
+  // }
 
   return (
     <ExchangeLayout>
@@ -633,7 +665,7 @@ const ExchangeTransactions = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -644,9 +676,9 @@ const ExchangeTransactions = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {/* {statistics.totalTransactions} */}
-                {transitionDashboardData?.dashboard?.totalTransactions}
+                {transitionDashboardData?.dashboard?.totalTransactions || 0}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -659,7 +691,7 @@ const ExchangeTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {transitionDashboardData?.dashboard?.completedTransactions}
+                {transitionDashboardData?.dashboard?.completedTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {transitionDashboardData?.dashboard?.totalTransactions > 0
@@ -678,7 +710,7 @@ const ExchangeTransactions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {transitionDashboardData?.dashboard?.pendingTransactions}
+                {transitionDashboardData?.dashboard?.pendingTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting processing
@@ -691,14 +723,14 @@ const ExchangeTransactions = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Volume
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {transitionDashboardData?.dashboard?.totalAmount?.toLocaleString(
                   "en-US",
-                )}
+                ) || 0}
               </div>
               <p className="text-xs text-muted-foreground">This year</p>
             </CardContent>
@@ -708,25 +740,59 @@ const ExchangeTransactions = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by ID, business, beneficiary, or reference..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    disabled={error !== null}
+            <div className="flex flex-col sm:flex-row gap-4 justify-between flex-wrap item-center">
+              <div className="flex-1 flex gap-2 items-center flex-wrap">
+                <div className="w-full md:flex-1">
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, business, beneficiary, or reference..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                      disabled={error !== null}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("ALL")}
+                  onClick={() => {
+                    setTransactionType("ALL");
+                    setPage(0);
+                  }}
                 >
                   All Status
                 </Button>
@@ -734,13 +800,19 @@ const ExchangeTransactions = () => {
                 {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("SINGLE");
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setTransactionType("BULK");
+                    setPage(0);
+                  }}
                 >
                   Bulk
                 </Button>
@@ -753,6 +825,15 @@ const ExchangeTransactions = () => {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="Transactions"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -763,7 +844,16 @@ const ExchangeTransactions = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
+              </div>
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -779,7 +869,7 @@ const ExchangeTransactions = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
+                {transactions?.map((transaction) => {
                   const status = getStatusBadge(transaction?.status);
                   const StatusIcon = status?.icon;
 
@@ -791,7 +881,7 @@ const ExchangeTransactions = () => {
                       <CardContent className="p-6">
                         <div className="space-y-4">
                           {/* Transaction Header */}
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between flex-wrap">
                             <div className="space-y-2">
                               {transaction.businessName && (
                                 <div className="flex items-center gap-3">
@@ -806,7 +896,7 @@ const ExchangeTransactions = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction?.singleBeneficiary?.type ==
                                   "INDIVIDUAL"
@@ -816,7 +906,6 @@ const ExchangeTransactions = () => {
                                   ({transaction?.singleBeneficiary?.country}) (
                                   {transaction?.receivingCurrency})
                                 </h3>
-
                                 <Badge
                                   variant={status.variant}
                                   className="flex items-center gap-1"
@@ -1069,7 +1158,7 @@ const ExchangeTransactions = () => {
 
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2">
-                            <div className="flex space-x-2">
+                            <div className="flex gap-2 flex-wrap">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1163,7 +1252,7 @@ const ExchangeTransactions = () => {
                             transaction.rateDeal && (
                               <div className="pt-4 border-t space-y-4">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                  <DealNegotiationTimeline
+                                  {/* <DealNegotiationTimeline
                                     events={transformDealHistory(
                                       transaction.rateDeal.history,
                                       transaction.id,
@@ -1173,8 +1262,19 @@ const ExchangeTransactions = () => {
                                       ""
                                     }
                                     currency={transaction.localCurrency}
+                                  /> */}
+                                  <DealNegotiationTimeline
+                                    events={
+                                      transaction.rateDeal?.negotiationHistory
+                                    }
+                                    currentRate={
+                                      transaction?.rateDeal?.proposedRate
+                                    }
+                                    currency={
+                                      transaction?.rateDeal?.payoutCurrency
+                                    }
                                   />
-                                  {!transaction.rateDeal.isTerminal && (
+                                  {/* {!transaction.rateDeal.isTerminal && (
                                     <DealResponseForm
                                       refetch={fetchTransactions}
                                       dealId={transaction.id}
@@ -1187,7 +1287,118 @@ const ExchangeTransactions = () => {
                                       }
                                       currency={transaction.localCurrency}
                                     />
-                                  )}
+                                  )} */}
+                                  <Card>
+                                    <CardContent className="p-6">
+                                      <h3 className="font-semibold mb-4">
+                                        Rate Deal History
+                                      </h3>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Deal Status:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.dealStatus}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Deal Amount:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.dealAmount}{" "}
+                                            {currencyCode}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Used Amount:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.usedAmount}{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Remaining Amount:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {
+                                              transaction?.rateDeal
+                                                ?.remainingAmount
+                                            }{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Applied Rate:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.appliedRate}{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Current Market Rate:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {
+                                              transaction?.rateDeal
+                                                ?.currentMarketRate
+                                            }{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            proposed Rate:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {
+                                              transaction?.rateDeal
+                                                ?.proposedRate
+                                            }{" "}
+                                            {
+                                              transaction?.rateDeal
+                                                ?.payoutCurrency
+                                            }
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                                          <span className="text-muted-foreground capitalize">
+                                            Country:
+                                          </span>
+
+                                          <span className="font-medium text-foreground">
+                                            {transaction?.rateDeal?.country}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
                                 </div>
                               </div>
                             )}
@@ -1221,34 +1432,12 @@ const ExchangeTransactions = () => {
                 })}
               </div>
             )}
-
-            {/* Pagination */}
-            {totalTransactionData > 10 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Showing {transactions?.length} of {totalTransactionData}{" "}
-                  transactions
-                </p>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={(page + 1) * 10 >= totalTransactionData}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            <PaginationControl
+              className="mt-6"
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(page) => setPage(page)}
+            />
           </CardContent>
         </Card>
       </div>

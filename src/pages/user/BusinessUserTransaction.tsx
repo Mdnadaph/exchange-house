@@ -39,6 +39,8 @@ import TransactionDetailModal, {
 } from "../portal/TransactionDetailModal";
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import ComplianceStatus from "@/components/transactions/ComplianceStatus";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface TransactionDocument {
   id: number;
@@ -192,6 +194,7 @@ const BusinessUserTransaction = () => {
   const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
   const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounce, setDebounce] = useState("");
   const [reviewActionData, setReviewActionData] = useState<any>({});
   const [cookies] = useCookies([
     "token",
@@ -214,7 +217,11 @@ const BusinessUserTransaction = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [page, setPage] = useState<number>(0);
+  const [totalPage, setTotalPage] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
   const token = cookies.token;
   const userName = cookies.fullName || "User";
   const fullname = cookies.fullName;
@@ -222,7 +229,17 @@ const BusinessUserTransaction = () => {
   const lastName = cookies.lastName;
   const operatorName = firstName + lastName;
   const currencyCode = cookies.currencyCode;
+  const pageSize = 10;
   const { toast } = useToast();
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounce(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
 
   const fetchTransactions = async () => {
     try {
@@ -242,18 +259,18 @@ const BusinessUserTransaction = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&search=${debounce}&fromDate=${fromDate}&toDate=${toDate}`,
         config,
       );
-
       const data = response?.data;
-
       if (data.status && data?.data) {
         // Save dashboard stats from API
         setDashboardStats(data.data?.dashboard);
 
         setTotalTransactionsData(data.data?.pagination?.totalItems);
-        console.log("data", data?.data?.transactions);
+        setTotalPage(data?.data?.pagination?.totalPages || 0);
+        setTotalElements(data?.data?.pagination.totalItems || 0);
+        setPage(data?.data?.pagination?.page);
         const transformedTransactions: Transaction[] =
           data.data.transactions.map((apiTx: any) => {
             // --- Discount logic ---
@@ -388,23 +405,21 @@ const BusinessUserTransaction = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page]);
+  }, [token, transactionType, page, debounce, fromDate, toDate]);
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
-
-  console.log("transactionData", transactions);
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -429,7 +444,7 @@ const BusinessUserTransaction = () => {
         icon: Clock,
       },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "secondary" as const,
         label: "Proof of Payment Sent",
         icon: Clock,
       },
@@ -555,18 +570,18 @@ const BusinessUserTransaction = () => {
     }));
   };
 
-  if (isLoading) {
-    return (
-      <BusinessUserLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </BusinessUserLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <BusinessUserLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </BusinessUserLayout>
+  //   );
+  // }
 
   return (
     <BusinessUserLayout>
@@ -602,7 +617,7 @@ const BusinessUserTransaction = () => {
         )}
 
         {/* Statistics Cards – now using API dashboard data */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -612,9 +627,9 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboardStats.totalTransactions}
+                {dashboardStats.totalTransactions || 0}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -627,7 +642,7 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {dashboardStats.completedTransactions}
+                {dashboardStats.completedTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {dashboardStats.totalTransactions > 0
@@ -646,7 +661,7 @@ const BusinessUserTransaction = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-500">
-                {dashboardStats.pendingTransactions}
+                {dashboardStats.pendingTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting approval</p>
             </CardContent>
@@ -657,11 +672,11 @@ const BusinessUserTransaction = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Amount
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {dashboardStats.totalAmount.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -675,29 +690,60 @@ const BusinessUserTransaction = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by ID, beneficiary, or reference..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    disabled={error !== null}
+            <div className="flex flex-col sm:flex-row gap-4 item-center flex-wrap">
+              <div className="flex-1 flex gap-2 items-center ">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, beneficiary, or reference..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                      // disabled={error !== null}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("ALL")}
                 >
                   All Status
                 </Button>
-                <Button variant="outline">This Month</Button>
+                {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("COMPLETED")}
@@ -724,7 +770,16 @@ const BusinessUserTransaction = () => {
         {/* Transactions List */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle>Transaction History</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="Transaction"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -735,7 +790,16 @@ const BusinessUserTransaction = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
+              </div>
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -743,19 +807,18 @@ const BusinessUserTransaction = () => {
                     ? "No transactions found"
                     : "No matching transactions"}
                 </h3>
-                <p className="text-muted-foreground">
+                {/* <p className="text-muted-foreground">
                   {searchTerm
                     ? "Try adjusting your search criteria"
                     : "No transactions available in the system"}
-                </p>
+                </p> */}
               </div>
             ) : (
               <div>
                 <div className="space-y-4">
-                  {filteredTransactions.map((transaction) => {
+                  {transactions?.map((transaction) => {
                     const status = getStatusBadge(transaction?.status);
-                    const StatusIcon = status.icon;
-
+                    const StatusIcon = status?.icon;
                     return (
                       <Card
                         key={transaction.id}
@@ -763,7 +826,7 @@ const BusinessUserTransaction = () => {
                       >
                         <CardContent className="p-6">
                           <div className="space-y-4">
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between flex-wrap gap-2">
                               <div className="space-y-2">
                                 {transaction?.businessName && (
                                   <div className="flex items-center gap-3">
@@ -778,7 +841,7 @@ const BusinessUserTransaction = () => {
                                     )}
                                   </div>
                                 )}
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
                                   <h3 className="font-semibold text-foreground">
                                     {transaction?.singleBeneficiary?.type ==
                                     "INDIVIDUAL"
@@ -1223,7 +1286,7 @@ const BusinessUserTransaction = () => {
                                     transaction={{
                                       id: transaction.id,
                                       beneficiary: transaction.beneficiary,
-                                      amount: transaction.amount,
+                                      amount: transaction.totalDebit,
                                       currency: transaction.currency,
                                       localAmount: transaction.localAmount,
                                       localCurrency: transaction.localCurrency,
@@ -1258,32 +1321,12 @@ const BusinessUserTransaction = () => {
                   })}
                 </div>
 
-                {totalTransactionsData > 10 && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionsData}{" "}
-                      transactions
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 10 >= totalTransactionsData}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={page}
+                  totalPages={totalPage}
+                  onPageChange={(page) => setPage(page)}
+                />
               </div>
             )}
           </CardContent>

@@ -1284,13 +1284,14 @@ const BeneficiaryRegistrationForm = ({
                 Expected Monthly Volume ({currencyCode})
               </Label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                {/* <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /> */}
                 <Input
                   id="expectedMonthlyVolume"
+                  onWheel={(e) => e.currentTarget.blur()}
                   type="number"
                   value={formData.expectedMonthlyVolume}
                   onChange={handleInputChange}
-                  className="pl-9"
+                  // className="pl-9"
                   placeholder="0.00"
                 />
               </div>
@@ -1307,7 +1308,7 @@ const BeneficiaryRegistrationForm = ({
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border z-50">
-                  {["weekly", "monthly", "quarterly", "annually"].map((f) => (
+                  {["weekly", "monthly", "quarterly"].map((f) => (
                     <SelectItem key={f} value={f}>
                       {f.charAt(0).toUpperCase() + f.slice(1)}
                     </SelectItem>

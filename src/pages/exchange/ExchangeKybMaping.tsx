@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,14 @@ import {
   RefreshCw,
   Layers,
   Pencil,
+  Delete,
+  Trash2,
 } from "lucide-react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -102,8 +107,37 @@ const ExchangeKybMapping = () => {
   const [mappings, setMappings] = useState<MappingItem[]>([]);
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [kybTypes, setKybTypes] = useState<KybType[]>([]);
+  const [businessTypesDropDownData, setBusinessTypeDropDownData] = useState<
+    BusinessType[]
+  >([]);
+  const [kybTypesDropDownData, setKybTypesDropDownData] = useState<KybType[]>(
+    [],
+  );
+  const [businessTypesDropdownLoading, setBusinessTypesDropdownLoading] =
+    useState<boolean>(false);
+  const [kybTypesDropDownLoading, setkybTypesDropDownLoading] =
+    useState<boolean>(false);
+  const [hasMoreBusinessType, setHasMoreBusinessType] = useState<boolean>(true);
+  const [hasMoreKybTypes, setHasMoreKybTypes] = useState<boolean>(true);
+  const [businessTypePage, setBusinessTypePage] = useState<number>(0);
+  const [kybTypePage, setKybTypePage] = useState<number>(0);
+
   const [loadingMappings, setLoadingMappings] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
+  const [businessTypePagination, setBusinessTypePagination] = useState({
+    pageSize: 10,
+    totalElements: 0,
+    totalPages: 1,
+    currentPage: 0,
+  });
+  const [KYBTypePagination, setKYBTypePagination] = useState({
+    pageSize: 10,
+    totalElements: 0,
+    totalPages: 1,
+    currentPage: 0,
+  });
+  const businessTyeListRef = useRef<HTMLDivElement | null>(null);
+  const kybTypeListRef = useRef<HTMLDivElement | null>(null);
 
   // ── Stats from API ───────────────────────────────────────────────────────────
   const [stats, setStats] = useState({
@@ -128,7 +162,7 @@ const ExchangeKybMapping = () => {
   // ── Pagination state (Spring 0-indexed) ─────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
   // ── Dialog visibility ────────────────────────────────────────────────────────
@@ -136,7 +170,20 @@ const ExchangeKybMapping = () => {
   const [showCreateKYB, setShowCreateKYB] = useState(false);
   const [showCreateMapping, setShowCreateMapping] = useState(false);
   const [showEditMapping, setShowEditMapping] = useState(false); // ← NEW
-
+  const [editableBusinessTypeId, setEditableBusinessTypeId] = useState<
+    number | null
+  >(null);
+  const [editableKYBTypesId, setEditableKYBTypesId] = useState<number | null>(
+    null,
+  );
+  const [
+    showDeleteBusinessTypeConfirmation,
+    setShowDeleteBusinessTypeConfirmation,
+  ] = useState<boolean>(false);
+  const [showDeleteKYBTypeConfirmation, setShowDeleteKYBTypeConfirmation] =
+    useState<boolean>(false);
+  const [businessTypeName, setBusinessTypeName] = useState("");
+  const [kybTypeName, setKybTypeName] = useState("");
   // ── Form: Business Type ──────────────────────────────────────────────────────
   const [btForm, setBtForm] = useState({ code: "", name: "", active: true });
   const [btLoading, setBtLoading] = useState(false);
@@ -165,6 +212,74 @@ const ExchangeKybMapping = () => {
     description: "",
   });
   const [editLoading, setEditLoading] = useState(false);
+  const [kybMappingErrors, setKybMappingError] = useState({
+    businessTypeId: "",
+    kybTypeId: "",
+  });
+
+  const [kybTypeError, setKybTypeError] = useState({
+    code: "",
+    name: "",
+  });
+
+  const [businessTypeErrors, setBusinessTypeError] = useState({
+    code: "",
+    name: "",
+  });
+
+  const handleKYBMappingValidationForm = () => {
+    const error = {
+      businessTypeId: "",
+      kybTypeId: "",
+    };
+    let isValid = true;
+    if (!mapForm?.businessTypeId) {
+      error.businessTypeId = "Business Type is required";
+      isValid = false;
+    }
+    if (!mapForm?.kybTypeId) {
+      error.kybTypeId = "KYB Type is required";
+      isValid = false;
+    }
+    setKybMappingError(error);
+    return isValid;
+  };
+
+  const handleKybTypeValidationForm = () => {
+    const error = {
+      code: "",
+      name: "",
+    };
+    let isValid = true;
+    if (!kybForm?.code) {
+      error.code = "Code is required";
+      isValid = false;
+    }
+    if (!kybForm?.name) {
+      error.name = "Name is required";
+      isValid = false;
+    }
+    setKybTypeError(error);
+    return isValid;
+  };
+
+  const handleBusinessTypeValidationForm = () => {
+    const error = {
+      code: "",
+      name: "",
+    };
+    let isValid = true;
+    if (!btForm?.code) {
+      error.code = "Code is required";
+      isValid = false;
+    }
+    if (!btForm?.name) {
+      error.name = "Name is required";
+      isValid = false;
+    }
+    setBusinessTypeError(error);
+    return isValid;
+  };
 
   // ── Auth headers ─────────────────────────────────────────────────────────────
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
@@ -181,8 +296,9 @@ const ExchangeKybMapping = () => {
       const responseData = res.data?.data;
       const pageData = responseData?.mappings ?? responseData;
       setMappings(pageData?.content ?? []);
-      setTotalPages(pageData?.totalPages ?? 1);
+      setTotalPages(pageData?.totalPages ?? 0);
       setTotalElements(pageData?.totalElements ?? 0);
+      setCurrentPage(pageData?.pageable?.pageNumber);
       if (responseData?.stats) {
         setStats(responseData.stats);
       }
@@ -198,40 +314,314 @@ const ExchangeKybMapping = () => {
     }
   };
 
-  // ── Fetch: Dropdowns ─────────────────────────────────────────────────────────
-  const fetchDropdowns = async () => {
-    if (!token) return;
-    setLoadingDropdowns(true);
+  const fetchBusinessTypeDropDown = async () => {
+    if (businessTypesDropdownLoading || !hasMoreBusinessType) return;
     try {
-      const [btRes, kybRes] = await Promise.all([
-        axios.get(`${BASE_URL}/api/v3/admin/kyb/master/business-types`, {
+      setBusinessTypesDropdownLoading(true);
+      const currentPage = businessTypePage;
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${currentPage}&pageSize=10`,
+        {
           headers: getHeaders(),
-        }),
-        axios.get(`${BASE_URL}/api/v3/admin/kyb/master/kyb-types`, {
-          headers: getHeaders(),
-        }),
-      ]);
-      setBusinessTypes(btRes.data?.data ?? []);
-      setKybTypes(kybRes.data?.data ?? []);
-    } catch (err: any) {
+        },
+      );
+      if (res?.data?.status) {
+        const newData = res?.data?.data || [];
+        // No more data
+        if (newData.length < 10) {
+          setHasMoreBusinessType(false);
+        }
+
+        // Prevent duplicate data
+        setBusinessTypeDropDownData((prev) => {
+          const merged = [...prev, ...newData];
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setBusinessTypePage((prev) => prev + 1);
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description:
-          err?.response?.data?.message ?? "Failed to load dropdown data.",
+        description: error?.responsive?.data?.message || "Something went wrong",
         variant: "destructive",
       });
     } finally {
-      setLoadingDropdowns(false);
+      setBusinessTypesDropdownLoading(false);
     }
   };
+
+  const handleBusinessTypeScroll = () => {
+    if (!businessTyeListRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } =
+      businessTyeListRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !businessTypesDropdownLoading && hasMoreBusinessType) {
+      fetchBusinessTypeDropDown();
+    }
+  };
+
+  const fetchKybTypeDropDown = async () => {
+    if (kybTypesDropDownLoading || !hasMoreKybTypes) return;
+    try {
+      setkybTypesDropDownLoading(true);
+      const currentPage = kybTypePage;
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${currentPage}&pageSize=10`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        const newData = res?.data?.data || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMoreKybTypes(false);
+        }
+
+        // Prevent duplicate data
+        setKybTypesDropDownData((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.id === item.id),
+          );
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setKybTypePage((prev) => prev + 1);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setkybTypesDropDownLoading(false);
+    }
+  };
+
+  const handleKybTypesScroll = () => {
+    if (!kybTypeListRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = kybTypeListRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !kybTypesDropDownLoading && hasMoreKybTypes) {
+      fetchKybTypeDropDown();
+    }
+  };
+
+  //   const getExchangeAdminList = async () => {
+  //     // IMPORTANT
+  //     if (exchangeAdminLoading || !hasMore) return;
+
+  //     try {
+  //       setExchangeAdminLoading(true);
+
+  //       const currentPage = page;
+
+  //       const res = await axios.get(
+  //         `${BASE_URL}/api/v3/super/exchange-admins?page=${currentPage}&pageSize=10`,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         },
+  //       );
+
+  //       if (res?.data?.status) {
+  //         const newData = res?.data?.data?.exchangeAdminResponse || [];
+
+  //         // No more data
+  //         if (newData.length < 10) {
+  //           setHasMore(false);
+  //         }
+
+  //         // Prevent duplicate data
+  //         setExchangeAdminData((prev) => {
+  //           const merged = [...prev, ...newData];
+
+  //           const uniqueData = merged.filter(
+  //             (item, index, self) =>
+  //               index === self.findIndex((x) => x.id === item.id),
+  //           );
+
+  //           return uniqueData;
+  //         });
+
+  //         // NEXT PAGE
+  //         setPage((prev) => prev + 1);
+  //       }
+  //     } catch (error: any) {
+  //       toast({
+  //         variant: "destructive",
+  //         title: "Error",
+  //         description: error?.response?.data?.message || "Something went wrong",
+  //       });
+  //     } finally {
+  //       setExchangeAdminLoading(false);
+  //     }
+  //   };
+
+  //    const handleScroll = () => {
+  //   if (!listRef.current) return;
+
+  //   const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+  //   const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+  //   if (isBottom && !exchangeAdminLoading && hasMore) {
+  //     getExchangeAdminList();
+  //   }
+  // };
+
+  // ── Fetch: Dropdowns ─────────────────────────────────────────────────────────
+
+  const fetchBusinessType = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${businessTypePagination?.currentPage}&pageSize=${businessTypePagination?.pageSize}`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        setBusinessTypes(res?.data?.data ?? []);
+        setBusinessTypePagination({
+          pageSize: res?.data?.pageSize || 10,
+          totalPages: res?.data?.totalPages ?? 0,
+          currentPage: res?.data?.currentPage || 0,
+          totalElements: res?.data?.totalElements || 0,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message ?? "Failed to load .",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message ?? "Failed to load .",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchKYBTypes = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${KYBTypePagination?.currentPage}&pageSize=${KYBTypePagination?.pageSize}`,
+        {
+          headers: getHeaders(),
+        },
+      );
+      if (res?.data?.status) {
+        setKybTypes(res?.data?.data ?? []);
+        setKYBTypePagination({
+          pageSize: res?.data?.pageSize || 10,
+          totalPages: res?.data?.totalPages ?? 0,
+          currentPage: res?.data?.currentPage || 0,
+          totalElements: res?.data?.totalElements || 0,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message ?? "Failed to load .",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message ?? "Failed to load .",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // const fetchTypeData = async () => {
+  //   if (!token) return;
+  //   setLoadingDropdowns(true);
+  //   try {
+  //     const [btRes, kybRes] = await Promise.all([
+  //       axios.get(
+  //         `${BASE_URL}/api/v3/admin/kyb/master/business-types?page=${businessTypePagination?.currentPage}&pageSize=${businessTypePagination?.pageSize}`,
+  //         {
+  //           headers: getHeaders(),
+  //         },
+  //       ),
+  //       axios.get(
+  //         `${BASE_URL}/api/v3/admin/kyb/master/kyb-types?page=${KYBTypePagination?.currentPage}&pageSize=${KYBTypePagination?.pageSize}`,
+  //         {
+  //           headers: getHeaders(),
+  //         },
+  //       ),
+  //     ]);
+  //     setBusinessTypes(btRes.data?.data ?? []);
+  //     console.log("btPage", btRes?.data?.totalPages);
+  //     setBusinessTypePagination({
+  //       pageSize: btRes?.data?.pageSize || 10,
+  //       totalPages: btRes?.data?.totalPages ?? 0,
+  //       currentPage: btRes?.data?.currentPage || 0,
+  //       totalElements: btRes?.data?.totalElements || 0,
+  //     });
+  //     setKybTypes(kybRes.data?.data ?? []);
+  //     setKYBTypePagination({
+  //       pageSize: kybRes?.data?.pageSize || 10,
+  //       totalPages: kybRes?.data?.totalPages ?? 0,
+  //       currentPage: kybRes?.data?.currentPage || 0,
+  //       totalElements: kybRes?.data?.totalElements || 0,
+  //     });
+  //   } catch (err: any) {
+  //     toast({
+  //       title: "Error",
+  //       description:
+  //         err?.response?.data?.message ?? "Failed to load dropdown data.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoadingDropdowns(false);
+  //   }
+  // };
 
   // ── Effects ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (token) {
       fetchMappings(0, "");
-      fetchDropdowns();
+      fetchBusinessType();
+      fetchKYBTypes();
     }
-  }, [token]);
+  }, [
+    token,
+    businessTypePagination?.currentPage,
+    KYBTypePagination?.currentPage,
+  ]);
+
+  const businessTypeList = businessTypes?.map((item, index) => ({
+    sn: index + 1,
+    ...item,
+  }));
+
+  const KYBTypeList = kybTypes?.map((item, index) => ({
+    sn: index + 1,
+    ...item,
+  }));
 
   // Re-fetch when page or debounced search changes
   useEffect(() => {
@@ -256,14 +646,7 @@ const ExchangeKybMapping = () => {
 
   // ── Submit: Create Business Type ─────────────────────────────────────────────
   const handleCreateBT = async () => {
-    if (!btForm.code.trim() || !btForm.name.trim()) {
-      toast({
-        title: "Validation",
-        description: "Code and Name are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!handleBusinessTypeValidationForm()) return;
     setBtLoading(true);
     try {
       const res = await axios.post(
@@ -281,7 +664,7 @@ const ExchangeKybMapping = () => {
       });
       setBtForm({ code: "", name: "", active: true });
       setShowCreateBT(false);
-      fetchDropdowns();
+      fetchBusinessType();
     } catch (err: any) {
       toast({
         title: "Error",
@@ -294,8 +677,73 @@ const ExchangeKybMapping = () => {
     }
   };
 
-  // ── Submit: Create KYB Type ──────────────────────────────────────────────────
-  const handleCreateKYB = async () => {
+  const handleEditOpenBusinessType = (m) => {
+    setEditableBusinessTypeId(m?.id);
+    setBtForm({ code: m?.code, name: m?.name, active: true });
+    setShowCreateBT(true);
+  };
+
+  const handleEditOpenKYBType = (m) => {
+    setEditableKYBTypesId(m?.id);
+    setKybForm({ code: m?.code, name: m?.name, active: true });
+    setShowCreateKYB(true);
+  };
+
+  const handleEditBusinessType = async () => {
+    if (!btForm.code.trim() || !btForm.name.trim()) {
+      toast({
+        title: "Validation",
+        description: "Code and Name are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setBtLoading(true);
+    const payload = {
+      name: btForm?.name,
+      code: btForm?.code,
+    };
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types/${editableBusinessTypeId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            res?.data?.message || "Update Business Type Successfully",
+        });
+        setBtForm({ name: "", code: "", active: true });
+        setEditableBusinessTypeId(null);
+        setShowCreateBT(false);
+        fetchBusinessType();
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating Business type",
+        variant: "destructive",
+      });
+    } finally {
+      setBtLoading(false);
+    }
+  };
+
+  const handleEditKYBType = async () => {
     if (!kybForm.code.trim() || !kybForm.name.trim()) {
       toast({
         title: "Validation",
@@ -304,6 +752,58 @@ const ExchangeKybMapping = () => {
       });
       return;
     }
+    setKybLoading(true);
+    const payload = {
+      name: kybForm?.name,
+      code: kybForm?.code,
+    };
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types/${editableKYBTypesId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setEditableKYBTypesId(null);
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Update KYB Type Successfully",
+        });
+        setKybForm({
+          code: "",
+          name: "",
+          active: true,
+        });
+        setShowCreateKYB(false);
+        fetchKYBTypes();
+      } else {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message ||
+            "Something went wrong while updating KYB Types",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating KYB Type",
+        variant: "destructive",
+      });
+    } finally {
+      setKybLoading(false);
+    }
+  };
+  // ── Submit: Create KYB Type ──────────────────────────────────────────────────
+  const handleCreateKYB = async () => {
+    if (!handleKybTypeValidationForm()) return;
     setKybLoading(true);
     try {
       const res = await axios.post(
@@ -321,7 +821,7 @@ const ExchangeKybMapping = () => {
       });
       setKybForm({ code: "", name: "", active: true });
       setShowCreateKYB(false);
-      fetchDropdowns();
+      fetchKYBTypes();
     } catch (err: any) {
       toast({
         title: "Error",
@@ -336,14 +836,7 @@ const ExchangeKybMapping = () => {
 
   // ── Submit: Create Mapping ───────────────────────────────────────────────────
   const handleCreateMapping = async () => {
-    if (!mapForm.businessTypeId || !mapForm.kybTypeId) {
-      toast({
-        title: "Validation",
-        description: "Business Type and KYB Type are required.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!handleKYBMappingValidationForm()) return;
     setMapLoading(true);
     try {
       const payload = {
@@ -435,17 +928,105 @@ const ExchangeKybMapping = () => {
 
   // ── Open mapping dialog ──────────────────────────────────────────────────────
   const handleOpenMappingDialog = () => {
-    fetchDropdowns();
+    // fetchTypeData();
     setShowCreateMapping(true);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!showCreateMapping) return;
+    fetchBusinessTypeDropDown();
+    fetchKybTypeDropDown();
+  }, [showCreateMapping]);
+
+  const handleConfirmDeleteBusinessType = async () => {
+    setBtLoading(true);
+    try {
+      const res = await axios.delete(
+        `${BASE_URL}/api/v3/admin/kyb/master/business-types/${editableBusinessTypeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            res?.data?.message || "Update Business Type Successfully",
+        });
+        setBtForm({ name: "", code: "", active: true });
+        setEditableBusinessTypeId(null);
+        setShowDeleteBusinessTypeConfirmation(false);
+        setBusinessTypeName("");
+        fetchBusinessType();
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating Business type",
+        variant: "destructive",
+      });
+    } finally {
+      setBtLoading(false);
+    }
+  };
+
+  const handleConfirmDeleteKYBType = async () => {
+    setKybLoading(true);
+    try {
+      const res = await axios.delete(
+        `${BASE_URL}/api/v3/admin/kyb/master/kyb-types/${editableKYBTypesId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setEditableKYBTypesId(null);
+        toast({
+          title: "Success",
+          description: res?.data?.message || "Update KYB Type Successfully",
+        });
+        setKybTypeName("");
+        setShowDeleteKYBTypeConfirmation(false);
+        fetchKYBTypes();
+      } else {
+        toast({
+          title: "Error",
+          description:
+            res?.data?.message ||
+            "Something went wrong while updating KYB Types",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while updating KYB Type",
+        variant: "destructive",
+      });
+    } finally {
+      setKybLoading(false);
+    }
+  };
 
   return (
     <ExchangeLayout>
       <div className="space-y-8">
         {/* ── Header ── */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               KYB Mapping Management
@@ -454,7 +1035,7 @@ const ExchangeKybMapping = () => {
               Manage business type to KYB type mappings
             </p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex gap-2 flex-wrap">
             <PermissionGate permission="BTN_CREATE_BUSINESS_TYPE">
               <Button
                 variant="outline"
@@ -482,7 +1063,7 @@ const ExchangeKybMapping = () => {
         </div>
 
         {/* ── Stats ── */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -511,7 +1092,7 @@ const ExchangeKybMapping = () => {
               <p className="text-xs text-muted-foreground">Across all pages</p>
             </CardContent>
           </Card>
-          <Card className="shadow-card">
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 High Risk
@@ -524,8 +1105,8 @@ const ExchangeKybMapping = () => {
               </div>
               <p className="text-xs text-muted-foreground">Elevated scrutiny</p>
             </CardContent>
-          </Card>
-          <Card className="shadow-card">
+          </Card> */}
+          {/* <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Default Fallback
@@ -538,14 +1119,14 @@ const ExchangeKybMapping = () => {
               </div>
               <p className="text-xs text-muted-foreground">Fallback rules</p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* ── Search & Refresh ── */}
         <Card className="shadow-card">
           <CardContent className="p-4">
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
+            <div className="flex gap-3 items-end flex-wrap">
+              <div className="md:flex-1">
                 <Label htmlFor="search" className="mb-1 block">
                   Search Mappings
                 </Label>
@@ -556,7 +1137,10 @@ const ExchangeKybMapping = () => {
                     placeholder="Search by business type or KYB type..."
                     className="pl-9"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(0);
+                    }}
                   />
                 </div>
               </div>
@@ -576,8 +1160,17 @@ const ExchangeKybMapping = () => {
 
         {/* ── Mappings Table ── */}
         <Card className="shadow-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>KYB Type Mappings List</CardTitle>
+          <CardHeader className="">
+            <div className="flex justify-between gap-2 flex-wrap items-center">
+              <CardTitle>KYB Type Mappings List</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={10}
+                currentPage={currentPage}
+                itemCount={mappings?.length}
+                itemLabel="KYB Type Mapping"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {loadingMappings ? (
@@ -602,7 +1195,7 @@ const ExchangeKybMapping = () => {
                         <th className="pb-3 pr-4 font-medium">Description</th>
                         <th className="pb-3 pr-4 font-medium">Status</th>
                         {/*<th className="pb-3 pr-4 font-medium">Default</th>*/}
-                        <th className="pb-3 font-medium">Actions</th>
+                        <th className="pb-3 pr-4 font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -642,6 +1235,7 @@ const ExchangeKybMapping = () => {
                               {m.active ? "Active" : "Inactive"}
                             </Badge>
                           </td>
+
                           {/*<td className="py-3 pr-4">
                             {m.default ? (
                               <Badge
@@ -675,66 +1269,274 @@ const ExchangeKybMapping = () => {
                 </div>
 
                 {/* ── Pagination ── */}
-                {totalPages > 1 && (
-                  <div className="mt-6">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
+                {/* <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }}
+                          className={
+                            currentPage === 0
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                      {getPageNumbers().map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
                             href="#"
+                            isActive={page === currentPage}
                             onClick={(e) => {
                               e.preventDefault();
-                              handlePageChange(currentPage - 1);
+                              handlePageChange(page);
                             }}
-                            className={
-                              currentPage === 0
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
+                          >
+                            {page + 1}
+                          </PaginationLink>
                         </PaginationItem>
-                        {getPageNumbers().map((page) => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              href="#"
-                              isActive={page === currentPage}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(page);
-                              }}
-                            >
-                              {page + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handlePageChange(currentPage + 1);
-                            }}
-                            className={
-                              currentPage >= totalPages - 1
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }}
+                          className={
+                            currentPage >= totalPages - 1
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div> */}
+                <PaginationControl
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
               </>
             )}
           </CardContent>
         </Card>
+        <div className="grid grid-cols-1  lg:grid-cols-2 gap-8">
+          <Card className="shadow-card p-4">
+            <CardHeader>
+              <div className="flex justify-between gap-2 flex-wrap">
+                <CardTitle>Business Type</CardTitle>
+                <PaginationSummary
+                  totalElements={businessTypePagination?.totalElements}
+                  pageSize={businessTypePagination?.pageSize}
+                  currentPage={businessTypePagination?.currentPage}
+                  itemCount={businessTypeList?.length || 0}
+                  itemLabel="Business Type"
+                />
+              </div>
+            </CardHeader>
+            {businessTypeList?.length > 0 ? (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground text-left">
+                        <th className="pb-3 pr-4 font-medium">SN</th>
+                        <th className="pb-3 pr-4 font-medium">Name</th>
+                        <th className="pb-3 pr-4 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {businessTypeList?.map((m) => (
+                        <tr
+                          key={m.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 pr-4 font-medium">{m?.sn}</td>
+                          <td className="py-3 pr-4 font-medium">{m?.name}</td>
+                          <td className="flex gap-3 items-center">
+                            {/* <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              // onClick={() => handleOpenEdit(m)}
+                              onClick={() => handleEditOpenBusinessType(m)}
+                              title="Edit Business Type"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button> */}
+                            <PermissionGate permission="BTN_DELETE_BUSINESS_TYPE">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  setShowDeleteBusinessTypeConfirmation(true);
+                                  setEditableBusinessTypeId(m?.id);
+                                  setBusinessTypeName(m?.name);
+                                }}
+                                title="Delete BusinessType"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-5">
+                  <PaginationControl
+                    currentPage={businessTypePagination?.currentPage}
+                    totalPages={businessTypePagination?.totalPages}
+                    onPageChange={(page) =>
+                      setBusinessTypePagination((prev) => ({
+                        ...prev,
+                        currentPage: page,
+                      }))
+                    }
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-center pb-3 text-muted-foreground">
+                No Business Type Available
+              </p>
+            )}
+          </Card>
+          <Card className="shadow-card p-4">
+            <CardHeader>
+              <div className="flex gap-2 items-center justify-between flex-wrap">
+                <CardTitle>KYB Type</CardTitle>
+                <PaginationSummary
+                  totalElements={KYBTypePagination?.totalElements}
+                  pageSize={KYBTypePagination?.pageSize}
+                  currentPage={KYBTypePagination?.currentPage}
+                  itemCount={KYBTypeList?.length || 0}
+                  itemLabel="KYB Type"
+                />
+              </div>
+            </CardHeader>
+            {KYBTypeList?.length > 0 ? (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground text-left">
+                        <th className="pb-3 pr-4 font-medium">SN</th>
+                        <th className="pb-3 pr-4 font-medium">Name</th>
+                        <th className="pb-3 pr-4 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {KYBTypeList?.map((m) => (
+                        <tr
+                          key={m.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 pr-4 font-medium">{m?.sn}</td>
+                          <td className="py-3 pr-4 font-medium">{m?.name}</td>
+                          <div className="flex gap-3 items-center">
+                            {/* <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              // onClick={() => handleOpenEdit(m)}
+                              onClick={() => handleEditOpenKYBType(m)}
+                              title="Edit KYB Type"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button> */}
+                            <PermissionGate permission="BTN_DELETE_KYB_TYPE">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  setEditableKYBTypesId(m?.id);
+                                  setShowDeleteKYBTypeConfirmation(true);
+                                  setKybTypeName(m?.name);
+                                }}
+                                title="Delete KYB Type"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
+                          </div>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-6">
+                  <PaginationControl
+                    currentPage={KYBTypePagination?.currentPage}
+                    totalPages={KYBTypePagination?.totalPages}
+                    onPageChange={(page) =>
+                      setKYBTypePagination((prev) => ({
+                        ...prev,
+                        currentPage: page,
+                      }))
+                    }
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-center pb-3 text-muted-foreground">
+                No KYB Type Available
+              </p>
+            )}
+          </Card>
+        </div>
       </div>
+
+      {/* Confirm Delete business Type modal*/}
+      <ConfirmationDialog
+        isConfirming={btLoading}
+        open={showDeleteBusinessTypeConfirmation}
+        onOpenChange={setShowDeleteBusinessTypeConfirmation}
+        onConfirm={() => handleConfirmDeleteBusinessType()}
+        title="Delete Business Type"
+        description={`Are you sure you want to delete "${businessTypeName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+      />
+
+      <ConfirmationDialog
+        isConfirming={kybLoading}
+        open={showDeleteKYBTypeConfirmation}
+        onOpenChange={setShowDeleteKYBTypeConfirmation}
+        onConfirm={() => handleConfirmDeleteKYBType()}
+        title="Delete KYB Type"
+        description={`Are you sure you want to delete "${kybTypeName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+      />
 
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create Business Type
       ══════════════════════════════════════════════════════════ */}
-      <Dialog open={showCreateBT} onOpenChange={setShowCreateBT}>
+      <Dialog
+        open={showCreateBT}
+        onOpenChange={(open) => {
+          setShowCreateBT(open);
+          if (!open) {
+            setShowCreateBT(false);
+            setEditableBusinessTypeId(null);
+            setBtForm({ code: "", name: "", active: true });
+            setBusinessTypeError({
+              code: "",
+              name: "",
+            });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create Business Type</DialogTitle>
@@ -748,10 +1550,19 @@ const ExchangeKybMapping = () => {
                 id="bt-code"
                 placeholder="e.g. IT"
                 value={btForm.code}
-                onChange={(e) =>
-                  setBtForm({ ...btForm, code: e.target.value.toUpperCase() })
-                }
+                onChange={(e) => {
+                  setBtForm({ ...btForm, code: e.target.value.toUpperCase() });
+                  setBusinessTypeError((prev) => ({
+                    ...prev,
+                    code: "",
+                  }));
+                }}
               />
+              {businessTypeErrors.code && (
+                <p className="text-sm text-red-500 mt-1">
+                  {businessTypeErrors.code}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="bt-name">
@@ -761,9 +1572,20 @@ const ExchangeKybMapping = () => {
                 id="bt-name"
                 placeholder="e.g. Information Technology"
                 value={btForm.name}
-                onChange={(e) => setBtForm({ ...btForm, name: e.target.value })}
+                onChange={(e) => {
+                  setBtForm({ ...btForm, name: e.target.value });
+                  setBusinessTypeError((prev) => ({
+                    ...prev,
+                    name: "",
+                  }));
+                }}
               />
             </div>
+            {businessTypeErrors.name && (
+              <p className="text-sm text-red-500 mt-1">
+                {businessTypeErrors.name}
+              </p>
+            )}
             {/*<div className="flex items-center justify-between">
               <Label htmlFor="bt-active">Active</Label>
               <Switch
@@ -774,11 +1596,27 @@ const ExchangeKybMapping = () => {
             </div>*/}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateBT(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateBT(false);
+                setEditableBusinessTypeId(null);
+                setBtForm({ code: "", name: "", active: true });
+                setBusinessTypeError({
+                  code: "",
+                  name: "",
+                });
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreateBT} disabled={btLoading}>
-              {btLoading ? "Creating…" : "Create"}
+            <Button
+              onClick={() => {
+                handleCreateBT();
+              }}
+              disabled={btLoading}
+            >
+              {btLoading ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -787,7 +1625,21 @@ const ExchangeKybMapping = () => {
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create KYB Type
       ══════════════════════════════════════════════════════════ */}
-      <Dialog open={showCreateKYB} onOpenChange={setShowCreateKYB}>
+      <Dialog
+        open={showCreateKYB}
+        onOpenChange={(open) => {
+          setShowCreateKYB(open);
+          if (!open) {
+            setShowCreateKYB(false);
+            setEditableKYBTypesId(null);
+            setKybForm({ code: "", name: "", active: true });
+            setKybTypeError({
+              code: "",
+              name: "",
+            });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create KYB Type</DialogTitle>
@@ -801,10 +1653,20 @@ const ExchangeKybMapping = () => {
                 id="kyb-code"
                 placeholder="e.g. CODING"
                 value={kybForm.code}
-                onChange={(e) =>
-                  setKybForm({ ...kybForm, code: e.target.value.toUpperCase() })
-                }
+                onChange={(e) => {
+                  setKybTypeError((prev) => ({
+                    ...prev,
+                    code: "",
+                  }));
+                  setKybForm({
+                    ...kybForm,
+                    code: e.target.value.toUpperCase(),
+                  });
+                }}
               />
+              {kybTypeError.code && (
+                <p className="text-sm text-red-500 mt-1">{kybTypeError.code}</p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="kyb-name">
@@ -814,10 +1676,17 @@ const ExchangeKybMapping = () => {
                 id="kyb-name"
                 placeholder="e.g. Coding KYB"
                 value={kybForm.name}
-                onChange={(e) =>
-                  setKybForm({ ...kybForm, name: e.target.value })
-                }
+                onChange={(e) => {
+                  setKybForm({ ...kybForm, name: e.target.value });
+                  setKybTypeError((prev) => ({
+                    ...prev,
+                    name: "",
+                  }));
+                }}
               />
+              {kybTypeError.name && (
+                <p className="text-sm text-red-500 mt-1">{kybTypeError.name}</p>
+              )}
             </div>
             {/*<div className="flex items-center justify-between">
               <Label htmlFor="kyb-active">Active</Label>
@@ -831,10 +1700,21 @@ const ExchangeKybMapping = () => {
             </div>*/}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateKYB(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateKYB(false);
+                setEditableKYBTypesId(null);
+                setKybForm({ code: "", name: "", active: true });
+                setKybTypeError({
+                  name: "",
+                  code: "",
+                });
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreateKYB} disabled={kybLoading}>
+            <Button onClick={() => handleCreateKYB()} disabled={kybLoading}>
               {kybLoading ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
@@ -844,7 +1724,18 @@ const ExchangeKybMapping = () => {
       {/* ══════════════════════════════════════════════════════════
           Dialog: Create Mapping
       ══════════════════════════════════════════════════════════ */}
-      <Dialog open={showCreateMapping} onOpenChange={setShowCreateMapping}>
+      <Dialog
+        open={showCreateMapping}
+        onOpenChange={(open) => {
+          setShowCreateMapping(open);
+          if (!open) {
+            setKybMappingError({
+              businessTypeId: "",
+              kybTypeId: "",
+            });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create KYB Mapping</DialogTitle>
@@ -856,20 +1747,48 @@ const ExchangeKybMapping = () => {
               </Label>
               <Select
                 value={mapForm.businessTypeId}
-                onValueChange={(val) =>
-                  setMapForm({ ...mapForm, businessTypeId: val })
-                }
+                onValueChange={(val) => {
+                  setMapForm({ ...mapForm, businessTypeId: val });
+                  setKybMappingError((prev) => ({
+                    ...prev,
+                    businessTypeId: "",
+                  }));
+                }}
                 disabled={loadingDropdowns}
               >
                 <SelectTrigger>
                   <SelectValue
-                    placeholder={
-                      loadingDropdowns ? "Loading…" : "Select business type"
-                    }
+                    // placeholder={
+                    //   loadingDropdowns ? "Loading…" : "Select business type"
+                    // }
+                    placeholder="Select business type"
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {businessTypes.length === 0 && !loadingDropdowns ? (
+                  <div
+                    ref={businessTyeListRef}
+                    onScroll={handleBusinessTypeScroll}
+                    className="max-h-60 overflow-y-auto"
+                  >
+                    {businessTypesDropDownData?.map((c, index) => (
+                      <SelectItem key={index} value={String(c?.id)}>
+                        {c?.name}
+                      </SelectItem>
+                    ))}
+                    {/* OBSERVER TARGET */}
+                    {businessTypesDropdownLoading && (
+                      <div className="py-2 text-center text-sm text-gray-500">
+                        Loading...
+                      </div>
+                    )}
+                    {/* {!hasMore && (
+                                                <div className="py-2 text-center text-sm text-gray-400">
+                                                  No More Data
+                                                </div>
+                                              )} */}
+                  </div>
+
+                  {/* {businessTypes.length === 0 && !loadingDropdowns ? (
                     <SelectItem value="__none__" disabled>
                       No business types found
                     </SelectItem>
@@ -879,9 +1798,14 @@ const ExchangeKybMapping = () => {
                         {bt.name}
                       </SelectItem>
                     ))
-                  )}
+                  )} */}
                 </SelectContent>
               </Select>
+              {kybMappingErrors.businessTypeId && (
+                <p className="text-sm text-red-500 mt-1">
+                  {kybMappingErrors.businessTypeId}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label>
@@ -889,9 +1813,13 @@ const ExchangeKybMapping = () => {
               </Label>
               <Select
                 value={mapForm.kybTypeId}
-                onValueChange={(val) =>
-                  setMapForm({ ...mapForm, kybTypeId: val })
-                }
+                onValueChange={(val) => {
+                  setMapForm({ ...mapForm, kybTypeId: val });
+                  setKybMappingError((prev) => ({
+                    ...prev,
+                    kybTypeId: "",
+                  }));
+                }}
                 disabled={loadingDropdowns}
               >
                 <SelectTrigger>
@@ -902,7 +1830,29 @@ const ExchangeKybMapping = () => {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {kybTypes.length === 0 && !loadingDropdowns ? (
+                  <div
+                    ref={kybTypeListRef}
+                    onScroll={handleKybTypesScroll}
+                    className="max-h-60 overflow-y-auto"
+                  >
+                    {kybTypesDropDownData?.map((c, index) => (
+                      <SelectItem key={index} value={String(c?.id)}>
+                        {c?.name}
+                      </SelectItem>
+                    ))}
+                    {/* OBSERVER TARGET */}
+                    {businessTypesDropdownLoading && (
+                      <div className="py-2 text-center text-sm text-gray-500">
+                        Loading...
+                      </div>
+                    )}
+                    {/* {!hasMore && (
+                                                <div className="py-2 text-center text-sm text-gray-400">
+                                                  No More Data
+                                                </div>
+                                              )} */}
+                  </div>
+                  {/* {kybTypes.length === 0 && !loadingDropdowns ? (
                     <SelectItem value="__none__" disabled>
                       No KYB types found
                     </SelectItem>
@@ -912,9 +1862,14 @@ const ExchangeKybMapping = () => {
                         {kt.name}
                       </SelectItem>
                     ))
-                  )}
+                  )} */}
                 </SelectContent>
               </Select>
+              {kybMappingErrors.kybTypeId && (
+                <p className="text-sm text-red-500 mt-1">
+                  {kybMappingErrors.kybTypeId}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="map-desc">Description</Label>
@@ -949,10 +1904,17 @@ const ExchangeKybMapping = () => {
               />
             </div>*/}
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateMapping(false)}
+              onClick={() => {
+                setKybMappingError({
+                  businessTypeId: "",
+                  kybTypeId: "",
+                });
+                setShowCreateMapping(false);
+              }}
             >
               Cancel
             </Button>

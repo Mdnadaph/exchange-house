@@ -36,6 +36,8 @@ import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import { formateDateTime } from "@/utils/formateDateTime";
 import ComplianceStatus from "@/components/transactions/ComplianceStatus";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -96,6 +98,8 @@ interface ApiResponse {
     transactions: ApiTransaction[];
     pagination: {
       totalItems: number;
+      totalPages: number;
+      page: number;
     };
   };
 }
@@ -221,6 +225,7 @@ const ExchangeAdminComplianceReview = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [complianceStatus, setComplianceStatus] = useState<string>("");
   const [cookies] = useCookies([
@@ -232,6 +237,9 @@ const ExchangeAdminComplianceReview = () => {
     "currencyCode",
   ]);
   const [page, setPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 10;
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [transitionDashboardData, setTransationDashboardData] = useState(null);
 
@@ -268,13 +276,16 @@ const ExchangeAdminComplianceReview = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&status=COMPLIANCE_REVIEW&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&search=${debounceValue}&status=COMPLIANCE_REVIEW&page=${page}&pageSize=10`,
         config,
       );
 
       const data = response?.data;
       setTransationDashboardData(data?.data);
       setTotalTransactionData(data?.data?.pagination?.totalItems);
+      setTotalElements(data?.data?.pagination?.totalItems || 0);
+      setTotalPages(data?.data?.pagination?.totalPages || 0);
+      setPage(data?.data?.pagination?.page);
       if (data.status && data.data) {
         // Transform API data to match UI structure
         const transformedTransactions: Transaction[] =
@@ -415,23 +426,32 @@ const ExchangeAdminComplianceReview = () => {
   };
 
   useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
     fetchTransactions();
-  }, [transactionType, page]);
+  }, [transactionType, page, debounceValue]);
   // console.log("transitionData", transactions);
   // Filter transactions based on search
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -559,18 +579,18 @@ const ExchangeAdminComplianceReview = () => {
 
   const statistics = calculateStatistics();
 
-  if (isLoading) {
-    return (
-      <ExchangeLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </ExchangeLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <ExchangeLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </ExchangeLayout>
+  //   );
+  // }
 
   return (
     <ExchangeLayout>
@@ -610,7 +630,7 @@ const ExchangeAdminComplianceReview = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -621,9 +641,9 @@ const ExchangeAdminComplianceReview = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {/* {statistics.totalTransactions} */}
-                {transitionDashboardData?.dashboard?.totalTransactions}
+                {transitionDashboardData?.dashboard?.totalTransactions || 0}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -636,7 +656,7 @@ const ExchangeAdminComplianceReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {transitionDashboardData?.dashboard?.completedTransactions}
+                {transitionDashboardData?.dashboard?.completedTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {transitionDashboardData?.dashboard?.totalTransactions > 0
@@ -655,7 +675,7 @@ const ExchangeAdminComplianceReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {transitionDashboardData?.dashboard?.pendingTransactions}
+                {transitionDashboardData?.dashboard?.pendingTransactions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting processing
@@ -668,14 +688,14 @@ const ExchangeAdminComplianceReview = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Volume
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {transitionDashboardData?.dashboard?.totalAmount?.toLocaleString(
                   "en-US",
-                )}
+                ) || 0}
               </div>
               <p className="text-xs text-muted-foreground">This year</p>
             </CardContent>
@@ -685,8 +705,8 @@ const ExchangeAdminComplianceReview = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 items-center flex-wrap">
+              <div className="w-full md:flex-1">
                 <Label htmlFor="search">Search Transactions</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -695,15 +715,21 @@ const ExchangeAdminComplianceReview = () => {
                     placeholder="Search by ID, business, beneficiary, or reference..."
                     className="pl-9"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPage(0);
+                    }}
                     disabled={error !== null}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5 flex-wrap">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("ALL")}
+                  onClick={() => {
+                    setTransactionType("ALL");
+                    setPage(0);
+                  }}
                 >
                   All Status
                 </Button>
@@ -711,13 +737,19 @@ const ExchangeAdminComplianceReview = () => {
                 {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setTransactionType("SINGLE");
+                    setPage(0);
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setTransactionType("BULK");
+                    setPage(0);
+                  }}
                 >
                   Bulk
                 </Button>
@@ -730,6 +762,15 @@ const ExchangeAdminComplianceReview = () => {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
+            <div className="flex justify-end">
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="Compliance Review"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -740,23 +781,32 @@ const ExchangeAdminComplianceReview = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading compliance review...
+                  </p>
+                </div>
+              </div>
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
                   {transactions.length === 0
-                    ? "No transactions found"
-                    : "No matching transactions"}
+                    ? "No compliance review found"
+                    : "No matching compliance review found"}
                 </h3>
                 <p className="text-muted-foreground">
                   {searchTerm
                     ? "Try adjusting your search criteria"
-                    : "No transactions available in the system"}
+                    : "No compliance review available in the system"}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
+                {transactions?.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
                   const StatusIcon = status.icon;
                   return (
@@ -1225,34 +1275,11 @@ const ExchangeAdminComplianceReview = () => {
                 })}
               </div>
             )}
-
-            {/* Pagination */}
-            {totalTransactionData > 10 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Showing {transactions?.length} of {totalTransactionData}{" "}
-                  transactions
-                </p>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={(page + 1) * 10 >= totalTransactionData}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            <PaginationControl
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(page) => setPage(page)}
+            />
           </CardContent>
         </Card>
       </div>

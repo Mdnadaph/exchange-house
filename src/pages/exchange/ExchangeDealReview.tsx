@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ExchangeLayout from "@/components/layout/ExchangeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,16 @@ import BASE_URL from "@/config/config";
 import { formateDateTime } from "@/utils/formateDateTime";
 import { useToast } from "@/hooks/use-toast";
 import UserLayout from "@/components/layout/UserLayout";
+import axios from "axios";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 type NegotiationHistoryItem = {
   id: number;
   actionType: string;
@@ -44,26 +54,111 @@ const ExchangeDealReview = () => {
   const { toast } = useToast();
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
   const [expandedDeal, setExpandedDeal] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [rateDealsData, setRateDealsData] = useState(null);
   const [searchValue, setSearchValue] = useState<string>("");
   const [page, setPage] = useState<number>(0);
+  const [branchPage, setBranchPage] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [debounceValue, setDebounceValue] = useState("");
+  const [branchListLoading, setBranchListLoading] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [branchListData, setBranchListData] = useState([]);
+  const [branchId, setBranchId] = useState<string>("");
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const pageSize = 10;
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [status, setStatus] = useState("");
+  const getBranchList = async () => {
+    try {
+      setBranchListLoading(true);
+      const currentPage = branchPage;
+
+      const res = await axios.get(
+        `${BASE_URL}/api/v3/branch/all-branches?page=${currentPage}&pageSize=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res?.data?.status) {
+        const newData = res?.data?.data || [];
+
+        // No more data
+        if (newData.length < 10) {
+          setHasMore(false);
+        }
+
+        // Prevent duplicate data
+        setBranchListData((prev) => {
+          const merged = [...prev, ...newData];
+
+          const uniqueData = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((x) => x.branchId === item.branchId),
+          );
+
+          return uniqueData;
+        });
+
+        // NEXT PAGE
+        setBranchPage((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Something went wrong",
+      });
+    } finally {
+      setBranchListLoading(false);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+    if (isBottom && !branchListLoading && hasMore) {
+      getBranchList();
+    }
+  };
+  useEffect(() => {
+    getBranchList();
+  }, []);
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchValue);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchValue]);
   const getRateDeals = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/rate-deals?query=${searchValue}&page=${page}&size=10`,
+        `${BASE_URL}/api/v1/rate-deals?query=${debounceValue}&page=${page}&size=10&fromDate=${fromDate}&toDate=${toDate}&branchId=${branchId}&status=${status}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const json = await res.json();
       if (json?.status !== true || !json.data) {
         throw new Error("Unexpected response format");
       }
       setRateDealsData(json?.data);
+      setTotalPages(json?.data?.rateDeals?.totalPages || 0);
+      setTotalElements(json?.data?.rateDeals?.totalElements || 0);
+      setPage(json?.data?.rateDeals?.pageable?.pageNumber || 0);
     } catch (error) {
       const msg = error.message || "Failed to load rate-deals";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -73,7 +168,7 @@ const ExchangeDealReview = () => {
   };
   useEffect(() => {
     getRateDeals();
-  }, [searchValue, page]);
+  }, [debounceValue, page, fromDate, toDate, branchId, status]);
   const exchangeAdminStats = rateDealsData?.exchangeAdminStats;
   const dealsData = rateDealsData?.rateDeals?.content;
   const totalDealsRateDataList = rateDealsData?.rateDeals?.totalElements;
@@ -155,6 +250,20 @@ const ExchangeDealReview = () => {
             Counter Proposal
           </Badge>
         );
+      case "COUNTER_PROPOSAL_DECLINED":
+        return (
+          <Badge variant="destructive">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Counter Proposal Declinded
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_ACCEPTED":
+        return (
+          <Badge variant="destructive" className="bg-green-100 text-green-800">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Counter Proposal Accepted
+          </Badge>
+        );
       case "REJECTED":
         return (
           <Badge variant="destructive">
@@ -186,18 +295,24 @@ const ExchangeDealReview = () => {
     return count >= 2;
   };
 
-  if (loading) {
-    return (
-      <ExchangeLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </ExchangeLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <ExchangeLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading Rate Deals...</p>
+  //         </div>
+  //       </div>
+  //     </ExchangeLayout>
+  //   );
+  // }
+  const approvalRate = exchangeAdminStats?.totalRequests
+    ? (
+        (exchangeAdminStats?.approved / exchangeAdminStats?.totalRequests) *
+        100
+      ).toFixed(2)
+    : 0;
   return (
     <ExchangeLayout>
       <div className="space-y-8">
@@ -214,7 +329,7 @@ const ExchangeDealReview = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -224,7 +339,7 @@ const ExchangeDealReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">
-                {exchangeAdminStats?.pendingReview}
+                {exchangeAdminStats?.pendingReview || 0}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting decision</p>
             </CardContent>
@@ -239,7 +354,7 @@ const ExchangeDealReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {exchangeAdminStats?.totalRequests}
+                {exchangeAdminStats?.totalRequests || 0}
               </div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
@@ -254,9 +369,25 @@ const ExchangeDealReview = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {exchangeAdminStats?.approved}
+                {exchangeAdminStats?.approved || 0}
               </div>
-              <p className="text-xs text-muted-foreground">75% approval rate</p>
+              <p className="text-xs text-muted-foreground">
+                {approvalRate}% approval rate
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Rejected
+              </CardTitle>
+              <CheckCircle className="h-5 w-5 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {exchangeAdminStats?.rejected || 0}
+              </div>
             </CardContent>
           </Card>
 
@@ -265,7 +396,7 @@ const ExchangeDealReview = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Active Deals
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-accent" />
+              {/* <DollarSign className="h-5 w-5 text-accent" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -279,23 +410,107 @@ const ExchangeDealReview = () => {
         {/* Search & Filter */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Deals</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by business name, ID, or currency..."
-                    className="pl-9"
-                    value={searchValue}
-                    onChange={(e: any) => setSearchValue(e.target.value)}
+            <div className="flex gap-4 flex-wrap justify-between">
+              <div className="flex gap-2 items-center flex-wrap">
+                <div className="w-full md:flex-1">
+                  <Label htmlFor="search">Search Deals</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by business name, ID, or currency..."
+                      className="pl-9"
+                      value={searchValue}
+                      onChange={(e: any) => {
+                        setSearchValue(e.target.value);
+                        setPage(0);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="space-y-1 w-[200px]">
+                  <h2 className="text-base font-normal text-gray-700">
+                    Filter by branch
+                  </h2>
+                  <Select
+                    value={branchId}
+                    onValueChange={(val) => {
+                      setBranchId(val == "all" ? "" : val);
+                      setPage(0);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        ref={listRef}
+                        onScroll={handleScroll}
+                        className="max-h-60 overflow-y-auto"
+                      >
+                        {branchListData?.length > 0 && (
+                          <SelectItem value="all">All</SelectItem>
+                        )}
+                        {branchListData?.map((c, index) => (
+                          <SelectItem key={index} value={c?.branchId}>
+                            {c?.name}
+                          </SelectItem>
+                        ))}
+                        {/* OBSERVER TARGET */}
+                        {branchListLoading && (
+                          <div className="py-2 text-center text-sm text-gray-500">
+                            Loading...
+                          </div>
+                        )}
+                        {/* {!hasMore && (
+                          <div className="py-2 text-center text-sm text-gray-400">
+                            No More Data
+                          </div>
+                        )} */}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex gap-2 items-end">
-                <Button variant="outline">Pending</Button>
-                <Button variant="outline">All Branches</Button>
+              <div className="flex gap-2 items-end flex-wrap">
+                <Button variant="outline" onClick={() => setStatus("")}>
+                  All
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setStatus("PENDING_REVIEW")}
+                >
+                  Pending
+                </Button>
+                <Button variant="outline" onClick={() => setBranchId("")}>
+                  All Branches
+                </Button>
                 <Button variant="outline">This Week</Button>
               </div>
             </div>
@@ -304,215 +519,212 @@ const ExchangeDealReview = () => {
 
         {/* Deals List */}
         <div className="space-y-4">
-          {dealsData?.length > 0 ? (
-            dealsData?.map((deal: any) => {
-              return (
-                <Card key={deal?.id} className="shadow-card">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      {/* Deal Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <Building2 className="h-4 w-4 text-primary" />
-                            <h3 className="font-semibold">
-                              {deal?.companyName}
-                            </h3>
-                            <span className="text-sm text-muted-foreground">
-                              ({deal?.id})
-                            </span>
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading Rate Deals...</p>
+              </div>
+            </div>
+          ) : dealsData?.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <PaginationSummary
+                  totalElements={totalElements}
+                  pageSize={pageSize}
+                  currentPage={page}
+                  itemCount={dealsData?.length}
+                  itemLabel="Rate Deals"
+                />
+              </div>
+              {dealsData?.map((deal: any) => {
+                return (
+                  <Card key={deal?.id} className="shadow-card">
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {/* Deal Header */}
+                        <div className="flex items-start justify-between flex-wrap">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <Building2 className="h-4 w-4 text-primary" />
+                              <h3 className="font-semibold">
+                                {deal?.companyName}
+                              </h3>
+                              <span className="text-sm text-muted-foreground">
+                                ({deal?.id})
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">
+                                {deal?.dealCode}
+                              </span>
+                              {getStatusBadge(deal?.dealStatus)}
+                              <Badge variant="outline" className="text-xs">
+                                {deal?.registeredBranchName}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {deal?.transactionPurpose}
+                            </p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              {deal?.dealCode}
-                            </span>
-                            {getStatusBadge(deal?.dealStatus)}
-                            <Badge variant="outline" className="text-xs">
-                              {deal?.registeredBranchName}
-                            </Badge>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold">
+                              {deal?.sendingCurrency} {deal?.amount}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              to {deal?.payoutCurrency}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {deal?.transactionPurpose}
-                          </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">
-                            {deal?.sendingCurrency} {deal?.amount}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            to {deal?.payoutCurrency}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Deal Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground">
-                            Requested Rate:
-                          </span>
-                          <p className="font-semibold text-lg">
-                            {deal?.proposedRate}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {deal?.payoutCurrency}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground">
-                            Market Rate:
-                          </span>
-                          <p className="font-medium">
-                            {deal?.currentMarketRate}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {deal?.payoutCurrency}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground">
-                            Difference:
-                          </span>
-                          <p
-                            className={`font-medium ${parseFloat(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) > 0 ? "text-warning" : "text-success"}`}
-                          >
-                            +
-                            {calculateRateDifference(
-                              deal?.proposedRate,
-                              deal?.currentMarketRate,
-                            )}
-                            %
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            vs market
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Submitted:
-                          </span>
-                          <p className="font-medium">
-                            {formateDateTime(deal?.submittedAt)}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground">
-                            Estimated Payout:
-                          </span>
-                          <p className="font-medium">
-                            {/* {deal.payoutCurrency}{" "}
+                        {/* Deal Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">
+                              Requested Rate:
+                            </span>
+                            <p className="font-semibold text-lg">
+                              {deal?.proposedRate}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {deal?.payoutCurrency}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">
+                              Market Rate:
+                            </span>
+                            <p className="font-medium">
+                              {deal?.currentMarketRate}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {deal?.payoutCurrency}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">
+                              Difference:
+                            </span>
+                            <p
+                              className={`font-medium ${parseFloat(calculateRateDifference(deal?.proposedRate, deal?.currentMarketRate)) > 0 ? "text-warning" : "text-success"}`}
+                            >
+                              +
+                              {calculateRateDifference(
+                                deal?.proposedRate,
+                                deal?.currentMarketRate,
+                              )}
+                              %
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              vs market
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Submitted:
+                            </span>
+                            <p className="font-medium">
+                              {formateDateTime(deal?.submittedAt)}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">
+                              Estimated Payout:
+                            </span>
+                            <p className="font-medium">
+                              {/* {deal.payoutCurrency}{" "}
                         {(
                           parseFloat(deal.sendingAmount.replace(/,/g, "")) *
                           parseFloat(deal.requestedRate)
                         ).toLocaleString()} */}
-                            {deal?.proposedRate * deal?.amount}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Notes */}
-                      {deal?.notes && (
-                        <Card className="bg-muted/20">
-                          <CardContent className="p-3">
-                            <p className="text-sm">
-                              <span className="font-medium">
-                                Business Notes:
-                              </span>{" "}
-                              {deal?.notes}
+                              {deal?.proposedRate * deal?.amount}
                             </p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setExpandedDeal(
-                              expandedDeal === deal?.id ? null : deal?.id,
-                            )
-                          }
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          {expandedDeal === deal?.id ? (
-                            <ChevronUp className="h-4 w-4 ml-1" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 ml-1" />
-                          )}
-                        </Button>
-                      </div>
-
-                      {/* Expanded View */}
-                      {expandedDeal === deal?.id && (
-                        <div className="pt-4 border-t space-y-4">
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <DealNegotiationTimeline
-                              events={deal?.negotiationHistory}
-                              currentRate={deal?.proposedRate}
-                              currency={deal?.payoutCurrency}
-                            />
-                            {(deal?.dealStatus === "PENDING_REVIEW" ||
-                              hasMultipleCounterProposals(
-                                deal?.negotiationHistory,
-                              )) && (
-                              <DealResponseForm
-                                counterProposalStatus={deal?.dealStatus}
-                                refetch={getRateDeals}
-                                dealId={deal?.id}
-                                businessName={deal?.companyName}
-                                requestedRate={
-                                  deal?.negotiationHistory[
-                                    deal?.negotiationHistory?.length - 1
-                                  ]?.rate
-                                }
-                                currency={deal?.payoutCurrency}
-                                hasMultipleCounterProposals={hasMultipleCounterProposals(
-                                  deal?.negotiationHistory,
-                                )}
-                              />
-                            )}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
+
+                        {/* Notes */}
+                        {deal?.notes && (
+                          <Card className="bg-muted/20">
+                            <CardContent className="p-3">
+                              <p className="text-sm">
+                                <span className="font-medium">
+                                  Business Notes:
+                                </span>{" "}
+                                {deal?.notes}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-2 border-t flex-wrap">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setExpandedDeal(
+                                expandedDeal === deal?.id ? null : deal?.id,
+                              )
+                            }
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            {expandedDeal === deal?.id ? (
+                              <ChevronUp className="h-4 w-4 ml-1" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Expanded View */}
+                        {expandedDeal === deal?.id && (
+                          <div className="pt-4 border-t space-y-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              <DealNegotiationTimeline
+                                events={deal?.negotiationHistory}
+                                currentRate={deal?.proposedRate}
+                                currency={deal?.payoutCurrency}
+                              />
+                              {(deal?.dealStatus === "PENDING_REVIEW" ||
+                                hasMultipleCounterProposals(
+                                  deal?.negotiationHistory,
+                                )) && (
+                                <DealResponseForm
+                                  counterProposalStatus={deal?.dealStatus}
+                                  refetch={getRateDeals}
+                                  dealId={deal?.id}
+                                  businessName={deal?.companyName}
+                                  requestedRate={
+                                    deal?.negotiationHistory[
+                                      deal?.negotiationHistory?.length - 1
+                                    ]?.rate
+                                  }
+                                  currency={deal?.payoutCurrency}
+                                  hasMultipleCounterProposals={hasMultipleCounterProposals(
+                                    deal?.negotiationHistory,
+                                  )}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           ) : (
             <p className="font-semibold text-sm text-center text-gray-400">
               No Data Found
             </p>
           )}
-          {totalDealsRateDataList > 10 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} beneficiaries
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <PaginationControl
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(page) => setPage(page)}
+          />
         </div>
       </div>
     </ExchangeLayout>

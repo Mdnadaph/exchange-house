@@ -1339,6 +1339,7 @@ interface BusinessTypeOption {
   code: string;
   name: string;
   id: number;
+  mapped: boolean;
 }
 
 interface DocumentTypeOption {
@@ -1486,7 +1487,7 @@ const Step1: React.FC<Step1Props> = ({
             htmlFor="businessType"
             className="font-semibold text-slate-900"
           >
-            Business Type <span className="text-red-500">*</span>
+            KYB Type <span className="text-red-500">*</span>
           </Label>
           <Select
             value={values.businessTypeId}
@@ -1500,11 +1501,9 @@ const Step1: React.FC<Step1Props> = ({
               className="h-11 border-slate-200 bg-white"
             >
               {businessTypes.length > 0 ? (
-                <SelectValue placeholder="Select business type" />
+                <SelectValue placeholder="Select KYB type" />
               ) : (
-                <span className="text-slate-400">
-                  No business types available
-                </span>
+                <span className="text-slate-400">No KYB types available</span>
               )}
             </SelectTrigger>
             <SelectContent>
@@ -2202,7 +2201,6 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
     }
     return initialValues;
   };
-  console.log("businessTypes", businessTypes);
   const handleSubmit = async (values: KYBRuleFormValues) => {
     try {
       setIsSubmitting(true);
@@ -2322,6 +2320,8 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
     }).format(value);
   };
 
+  const onlyMappedKYBTypes = businessTypes?.filter((b) => b?.mapped === true);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
@@ -2421,7 +2421,7 @@ const CreateKybRule: React.FC<CreateKybRuleProps> = ({
                   errors={errors}
                   touched={touched}
                   setFieldValue={setFieldValue}
-                  businessTypes={businessTypes}
+                  businessTypes={onlyMappedKYBTypes}
                 />
               ) : (
                 <Step2

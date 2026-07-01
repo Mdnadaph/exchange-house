@@ -37,6 +37,9 @@ import TransactionDetailModal, {
 import DocumentUploadModal from "@/components/transactions/DocumentUpload";
 import BranchSingleTransaction from "@/components/transactions/BranchSingleTransaction";
 import BranchBulkTransactionForm from "@/components/transactions/BranchBulkTransactionForm";
+import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface TransactionDocument {
   id: number;
@@ -190,6 +193,9 @@ const BranchTransactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebouncedValue] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [cookies] = useCookies([
     "token",
@@ -200,6 +206,8 @@ const BranchTransactions = () => {
     "currencyCode",
   ]);
   const [page, setPage] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const token = cookies.token;
   const fullname = cookies.fullName;
@@ -211,6 +219,22 @@ const BranchTransactions = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadTransaction, setUploadTransaction] =
     useState<Transaction | null>(null);
+  const pageSize = 10;
+  const clearFilterData = () => {
+    setSearchTerm("");
+    setFromDate("");
+    setToDate("");
+    setPage(0);
+  };
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebouncedValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
 
   const fetchTransactions = async () => {
     try {
@@ -230,7 +254,7 @@ const BranchTransactions = () => {
       };
 
       const response = await axios.get<ApiResponse>(
-        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10`,
+        `${BASE_URL}/api/v1/transactions?type=${transactionType}&page=${page}&pageSize=10&search=${debounceValue}&fromDate=${fromDate}&toDate=${toDate}`,
         config,
       );
 
@@ -242,7 +266,9 @@ const BranchTransactions = () => {
 
         // Save pagination total
         setTotalTransactionData(data?.data?.pagination?.totalItems);
-
+        setTotalElements(data?.data?.pagination?.totalItems || 0);
+        setTotalPages(data?.data?.pagination?.totalPages || 0);
+        setPage(data?.data?.pagination?.page || 0);
         // Transform transactions (unchanged)
         const transformedTransactions: Transaction[] =
           data?.data?.transactions?.map((apiTx: any) => {
@@ -387,20 +413,20 @@ const BranchTransactions = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page]);
-  const filteredTransactions = transactions.filter((transaction) => {
-    return (
-      searchTerm === "" ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.beneficiary
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.referenceNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  }, [token, transactionType, page, debounceValue, fromDate, toDate]);
+  // const filteredTransactions = transactions.filter((transaction) => {
+  //   return (
+  //     searchTerm === "" ||
+  //     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     transaction.beneficiary
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     transaction.referenceNumber
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase())
+  //   );
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -425,7 +451,7 @@ const BranchTransactions = () => {
         icon: Clock,
       },
       PAYMENT_VERIFICATION_PENDING: {
-        variant: "destructive" as const,
+        variant: "secondary" as const,
         label: "Payment Verification Pending",
         icon: Clock,
       },
@@ -465,7 +491,7 @@ const BranchTransactions = () => {
         icon: Clock,
       },
       PROCESSING: {
-        variant: "destructive" as const,
+        variant: "secondary" as const,
         label: "Proof of Payment Sent",
         icon: Clock,
       },
@@ -501,24 +527,24 @@ const BranchTransactions = () => {
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
-  if (isLoading) {
-    return (
-      <BranchLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </BranchLayout>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <BranchLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </BranchLayout>
+  //   );
+  // }
 
   return (
     <BranchLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Branch Transactions
@@ -533,12 +559,15 @@ const BranchTransactions = () => {
               Export Branch Data
             </Button>
           </div> */}
-          <div className="flex gap-5">
-            <BranchBulkTransactionForm refetch={fetchTransactions} />
-            <BranchSingleTransaction refetch={fetchTransactions} />
+          <div className="flex gap-5 flex-wrap">
+            <PermissionGate permission="BTN_BRANCH_CREATE_BULK_TRANSACTION">
+              <BranchBulkTransactionForm refetch={fetchTransactions} />
+            </PermissionGate>
+            <PermissionGate permission="BTN_BRANCH_CREATE_SINGLE_TRANSACTION">
+              <BranchSingleTransaction refetch={fetchTransactions} />
+            </PermissionGate>
           </div>
         </div>
-
         {error && (
           <Card className="border-red-200 bg-red-50 shadow-card">
             <CardContent className="p-4">
@@ -554,7 +583,7 @@ const BranchTransactions = () => {
         )}
 
         {/* Statistics Cards – now using API dashboard data */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -566,7 +595,7 @@ const BranchTransactions = () => {
               <div className="text-2xl font-bold">
                 {dashboardStats.totalTransactions}
               </div>
-              <p className="text-xs text-muted-foreground">+0 this month</p>
+              {/* <p className="text-xs text-muted-foreground">+0 this month</p> */}
             </CardContent>
           </Card>
 
@@ -609,11 +638,11 @@ const BranchTransactions = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Amount
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {dashboardStats.totalAmount.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -627,44 +656,88 @@ const BranchTransactions = () => {
         {/* Search and Filters – unchanged */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by ID, beneficiary, or reference..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    disabled={error !== null}
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex-1 flex flex-wrap gap-2 items-center">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by ID, beneficiary, or reference..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                      disabled={error !== null}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1 mt-2">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    type="date"
+                    placeholder="Select Date"
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5 flex-wrap">
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("ALL")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("ALL");
+                  }}
                 >
                   All Status
                 </Button>
                 {/* <Button variant="outline">This Month</Button> */}
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("COMPLETED")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("COMPLETED");
+                  }}
                 >
                   Completed
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("SINGLE")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("SINGLE");
+                  }}
                 >
                   Single
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setTransactionType("BULK")}
+                  onClick={() => {
+                    setPage(0);
+                    setTransactionType("BULK");
+                  }}
                 >
                   Bulk
                 </Button>
@@ -676,7 +749,16 @@ const BranchTransactions = () => {
         {/* Transactions List – completely unchanged */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <div className="flex justify-between items-center gap-2 flex-wrap">
+              <CardTitle>Transaction History</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="Transaction"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -687,7 +769,16 @@ const BranchTransactions = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
+              </div>
+            ) : transactions?.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -703,10 +794,9 @@ const BranchTransactions = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => {
+                {transactions?.map((transaction) => {
                   const status = getStatusBadge(transaction.status);
-                  const StatusIcon = status.icon;
-
+                  const StatusIcon = status?.icon;
                   return (
                     <Card
                       key={transaction.id}
@@ -714,7 +804,7 @@ const BranchTransactions = () => {
                     >
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
                             <div className="space-y-2">
                               {transaction.businessName && (
                                 <div className="flex items-center gap-3">
@@ -729,7 +819,7 @@ const BranchTransactions = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction?.singleBeneficiary?.type ==
                                   "INDIVIDUAL"
@@ -987,32 +1077,37 @@ const BranchTransactions = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setSelectedTransaction(transaction)
-                                }
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View Details
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleDownloadReceipt(
-                                    transaction,
-                                    operatorName,
-                                    currencyCode,
-                                  )
-                                }
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Receipt
-                              </Button>
+                          <div className="flex items-center justify-between pt-2 ">
+                            <div className="flex gap-2 flex-wrap">
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_VIEW">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setSelectedTransaction(transaction)
+                                  }
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Details
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_DOWNLOAD_RECEIPT">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownloadReceipt(
+                                      transaction,
+                                      operatorName,
+                                      currencyCode,
+                                    )
+                                  }
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Receipt
+                                </Button>
+                              </PermissionGate>
+
                               {/* {transaction?.documents &&
                                 transaction?.documents?.length > 0 && (
                                   <Button variant="outline" size="sm">
@@ -1020,36 +1115,41 @@ const BranchTransactions = () => {
                                     Documents
                                   </Button>
                                 )} */}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setUploadModalOpen(true);
-                                  setUploadTransaction(transaction);
-                                }}
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                Upload Documents
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setExpandedTransaction(
-                                    expandedTransaction === transaction.id
-                                      ? null
-                                      : transaction.id,
-                                  )
-                                }
-                              >
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                Comments
-                                {expandedTransaction === transaction.id ? (
-                                  <ChevronUp className="h-4 w-4 ml-1" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 ml-1" />
-                                )}
-                              </Button>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_UPLOAD_DOCUMENTS">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setUploadModalOpen(true);
+                                    setUploadTransaction(transaction);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-1" />
+                                  Upload Documents
+                                </Button>
+                              </PermissionGate>
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_COMMENTS">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setExpandedTransaction(
+                                      expandedTransaction === transaction.id
+                                        ? null
+                                        : transaction.id,
+                                    )
+                                  }
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Comments
+                                  {expandedTransaction === transaction.id ? (
+                                    <ChevronUp className="h-4 w-4 ml-1" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                  )}
+                                </Button>
+                              </PermissionGate>
+
                               {transaction.status === "failed" && (
                                 <Button variant="default" size="sm">
                                   Retry Payment
@@ -1070,29 +1170,33 @@ const BranchTransactions = () => {
                               )} */}
                               {transaction.canExecutePayment &&
                                 transaction.status === "PAYMENT_PENDING" && (
-                                  <PaymentExecutionForm
-                                    transaction={{
-                                      id: transaction.id,
-                                      beneficiary:
-                                        transaction.singleBeneficiary?.name,
-                                      email:
-                                        transaction.singleBeneficiary?.email,
-                                      address:
-                                        transaction?.singleBeneficiary?.address,
-                                      discount: transaction?.discountAmount,
-                                      vatAmount: transaction?.vatAmount,
-                                      payoutMechanismType:
-                                        transaction?.payoutMechanismType,
-                                      amount: transaction.amount,
-                                      currency: transaction.currency,
-                                      localAmount: transaction.localAmount,
-                                      localCurrency: transaction.localCurrency,
-                                      purpose: transaction.purpose,
-                                      destinationCurrency:
-                                        transaction?.destinationCurrency,
-                                    }}
-                                    fetchTransactions={fetchTransactions}
-                                  />
+                                  <PermissionGate permission="BTN_BRANCH_TRANSACTION_EXECUTE_PAYMENT">
+                                    <PaymentExecutionForm
+                                      transaction={{
+                                        id: transaction.id,
+                                        beneficiary:
+                                          transaction.singleBeneficiary?.name,
+                                        email:
+                                          transaction.singleBeneficiary?.email,
+                                        address:
+                                          transaction?.singleBeneficiary
+                                            ?.address,
+                                        discount: transaction?.discountAmount,
+                                        vatAmount: transaction?.vatAmount,
+                                        payoutMechanismType:
+                                          transaction?.payoutMechanismType,
+                                        amount: transaction.totalDebit,
+                                        currency: transaction.currency,
+                                        localAmount: transaction.localAmount,
+                                        localCurrency:
+                                          transaction.localCurrency,
+                                        purpose: transaction.purpose,
+                                        destinationCurrency:
+                                          transaction?.destinationCurrency,
+                                      }}
+                                      fetchTransactions={fetchTransactions}
+                                    />
+                                  </PermissionGate>
                                 )}
                             </div>
                           </div>
@@ -1104,12 +1208,15 @@ const BranchTransactions = () => {
                                 userRole={token}
                                 userName={fullname}
                               />*/}
-                              <ProofOfPaymentUpload
-                                transactionId={transaction.id}
-                                userRole="Branch"
-                                userName={fullname}
-                                initialDocuments={transaction.documents}
-                              />
+                              <PermissionGate permission="BTN_BRANCH_TRANSACTION_UPLOAD_PROOF_OF_PAYMENT">
+                                <ProofOfPaymentUpload
+                                  transactionId={transaction.id}
+                                  userRole="Branch"
+                                  userName={fullname}
+                                  initialDocuments={transaction.documents}
+                                />
+                              </PermissionGate>
+
                               <TransactionComments
                                 transactionId={transaction.id}
                                 userRole="Branch"
@@ -1128,33 +1235,12 @@ const BranchTransactions = () => {
                     </Card>
                   );
                 })}
-
-                {totalTransactionData > 10 && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionData}{" "}
-                      beneficiaries
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 10 >= totalTransactionData}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setPage(page)}
+                />
               </div>
             )}
           </CardContent>

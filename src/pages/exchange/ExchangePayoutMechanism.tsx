@@ -49,7 +49,9 @@ import {
   ChevronsUpDown,
   Currency,
   Edit,
+  FileText,
   Globe,
+  Loader2,
   MapPin,
   Plus,
   Search,
@@ -58,6 +60,8 @@ import {
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { PermissionGate } from "@/contexts/PermissionGate";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 export default function ExchangePayoutMechanism() {
   const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
@@ -84,6 +88,7 @@ export default function ExchangePayoutMechanism() {
   const token = cookies?.token;
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const pageSize = 10;
@@ -159,6 +164,9 @@ export default function ExchangePayoutMechanism() {
         },
       );
       setAllPayoutMechanism(res?.data?.data?.content);
+      setTotalElements(res?.data?.data?.totalElements ?? 0);
+      setCurrentPage(res?.data?.data?.pageable?.pageNumber ?? 0);
+      setTotalPages(res?.data?.data?.totalPages ?? 0);
     } catch (error) {
       const msg = error?.response?.data?.message;
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -338,7 +346,7 @@ export default function ExchangePayoutMechanism() {
   return (
     <ExchangeLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Payout Mechanism
@@ -356,89 +364,117 @@ export default function ExchangePayoutMechanism() {
           </PermissionGate>
         </div>
       </div>
-      <div className="relative w-64 my-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by country or currency…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      <Card className="shadow-card my-4">
+        <CardContent className="p-6 space-y-2">
+          <Label htmlFor="search" className="mb-1 block">
+            Search Currency or Country
+          </Label>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by country or currency…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="space-y-3">
         {loading ? (
-          <p className="text-xl text-gray-500 font-medium text-center">
-            Loading...
-          </p>
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">
+                Loading payout mechanisms...
+              </p>
+            </div>
+          </div>
         ) : allPayoutMechanism?.length == 0 ? (
-          <p className="text-center text-gray-500 font-medium ">
-            No Data Found
-          </p>
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              No Payout Mechanism found
+            </h3>
+          </div>
         ) : (
-          <div className="space-y-5">
-            {allPayoutMechanism?.map((payout) => (
-              <Card
-                key={payout?.countryId}
-                className="border-l-4 border-l-primary"
-              >
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-4">
-                    <div className="space-y-4 flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                          <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-foreground">
-                            {payout?.country?.name}
-                          </h4>
-                          <div className="text-sm text-muted-foreground">
-                            <div>
-                              {payout?.mechanisms?.map((pm) => (
-                                <div className="space-y-3 mb-4" key={pm?.id}>
-                                  <div className="flex gap-2">
-                                    <h4>Payout:</h4>
-                                    <p>{pm?.payoutType?.name}</p>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <h4>Currencies:</h4>
-                                    <div className="flex gap-2 items-center">
-                                      {pm?.supportedCurrencies?.map((c) => (
-                                        <div
-                                          className="px-2 py-1 bg-blue-900 rounded-md"
-                                          key={c?.id}
-                                        >
-                                          <span className="text-white">
-                                            {c?.code}
-                                          </span>
-                                        </div>
-                                      ))}
+          <Card className="shadow-card p-6">
+            <CardTitle className="mb-4">
+              <div className="flex justify-end ">
+                <PaginationSummary
+                  totalElements={totalElements}
+                  pageSize={pageSize}
+                  currentPage={currentPage}
+                  itemCount={allPayoutMechanism?.length}
+                  itemLabel="Payout Mechanism"
+                />
+              </div>
+            </CardTitle>
+            <div className="space-y-5">
+              {allPayoutMechanism?.map((payout) => (
+                <Card
+                  key={payout?.countryId}
+                  className="border-l-4 border-l-primary"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex flex-col gap-4">
+                      <div className="space-y-4 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                            <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-foreground">
+                              {payout?.country?.name}
+                            </h4>
+                            <div className="text-sm text-muted-foreground">
+                              <div>
+                                {payout?.mechanisms?.map((pm) => (
+                                  <div className="space-y-3 mb-4" key={pm?.id}>
+                                    <div className="flex gap-2">
+                                      <h4>Payout:</h4>
+                                      <p>{pm?.payoutType?.name}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <h4>Currencies:</h4>
+                                      <div className="flex gap-2 items-center">
+                                        {pm?.supportedCurrencies?.map((c) => (
+                                          <div
+                                            className="px-2 py-1 bg-blue-900 rounded-md"
+                                            key={c?.id}
+                                          >
+                                            <span className="text-white">
+                                              {c?.code}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-2 justify-end">
-                      <PermissionGate permission="BTN_EDIT_PAYOUT_MECHANISM">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditOpen(true);
-                            setEditablePayoutMechanism(payout);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 sm:mr-1" />
-                          <span className="hidden sm:inline">Edit</span>
-                        </Button>
-                      </PermissionGate>
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        <PermissionGate permission="BTN_EDIT_PAYOUT_MECHANISM">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsEditOpen(true);
+                              setEditablePayoutMechanism(payout);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </Button>
+                        </PermissionGate>
 
-                      {/* <Button
+                        {/* <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
@@ -448,62 +484,21 @@ export default function ExchangePayoutMechanism() {
                         <Trash2 className="h-4 w-4" />
                         Delete
                       </Button> */}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage > 0) setCurrentPage(currentPage - 1);
-                      }}
-                      aria-disabled={currentPage <= 0}
-                      className={
-                        currentPage <= 0 ? "pointer-events-none opacity-50" : ""
-                      }
-                    />
-                  </PaginationItem>
-                  {[...Array(totalPages)].map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(i);
-                        }}
-                        isActive={currentPage === i}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage < totalPages - 1)
-                          setCurrentPage(currentPage + 1);
-                      }}
-                      aria-disabled={currentPage >= totalPages - 1}
-                      className={
-                        currentPage >= totalPages - 1
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {/* Pagination */}
+
+              <PaginationControl
+                className="mt-4"
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          </Card>
         )}
       </div>
 
@@ -529,7 +524,9 @@ export default function ExchangePayoutMechanism() {
           <div className="w-full">
             {/* COUNTRY */}
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>
+                Country <span className="text-red-500">*</span>
+              </Label>
 
               <Popover>
                 <PopoverTrigger asChild>
@@ -581,7 +578,9 @@ export default function ExchangePayoutMechanism() {
 
             {/* MECHANISMS */}
             <div className="mt-6">
-              <Label>Payout Mechanisms *</Label>
+              <Label>
+                Payout Mechanisms <span className="text-red-500">*</span>
+              </Label>
 
               <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
                 {payoutList?.map((m) => (
@@ -770,7 +769,9 @@ export default function ExchangePayoutMechanism() {
           <div className="w-full">
             {/* COUNTRY */}
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>
+                Country <span className="text-red-500">*</span>
+              </Label>
 
               <Popover>
                 <PopoverTrigger asChild>
@@ -826,7 +827,9 @@ export default function ExchangePayoutMechanism() {
             </div>
             {/* MECHANISMS */}
             <div className="mt-6">
-              <Label>Payout Mechanisms *</Label>
+              <Label>
+                Payout Mechanisms <span className="text-red-500">*</span>
+              </Label>
               <div className="grid grid-cols-2 gap-2 border rounded-lg p-4 mt-2">
                 {payoutList?.map((m) => (
                   <div key={m?.id}>

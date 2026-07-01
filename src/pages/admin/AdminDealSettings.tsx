@@ -8,16 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Settings, 
-  TrendingUp, 
+import {
+  Settings,
+  TrendingUp,
   Save,
   Plus,
   Edit,
   Trash2,
   Calendar,
   Building2,
-  Info
+  Info,
 } from "lucide-react";
 
 const AdminDealSettings = () => {
@@ -29,7 +29,7 @@ const AdminDealSettings = () => {
     defaultValidityDays: 7,
     maxRateDifferencePercent: 5,
     requireApprovalAbovePercent: 2,
-    autoExpireDeals: true
+    autoExpireDeals: true,
   });
 
   const [businessSettings, setBusinessSettings] = useState([
@@ -39,7 +39,7 @@ const AdminDealSettings = () => {
       validityDays: 7,
       maxRateDifference: 5,
       autoApprove: false,
-      kybStatus: "approved"
+      kybStatus: "approved",
     },
     {
       id: "BIZ-002",
@@ -47,7 +47,7 @@ const AdminDealSettings = () => {
       validityDays: 10,
       maxRateDifference: 3,
       autoApprove: false,
-      kybStatus: "approved"
+      kybStatus: "approved",
     },
     {
       id: "BIZ-003",
@@ -55,8 +55,8 @@ const AdminDealSettings = () => {
       validityDays: 14,
       maxRateDifference: 7,
       autoApprove: false,
-      kybStatus: "approved"
-    }
+      kybStatus: "approved",
+    },
   ]);
 
   const handleSaveSettings = () => {
@@ -72,10 +72,17 @@ const AdminDealSettings = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Deal Negotiation Settings</h1>
-            <p className="text-muted-foreground">Configure deal validity periods and approval rules</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Deal Negotiation Settings
+            </h1>
+            <p className="text-muted-foreground">
+              Configure deal validity periods and approval rules
+            </p>
           </div>
-          <Button variant="business" onClick={() => setShowSaveConfirmation(true)}>
+          <Button
+            variant="business"
+            onClick={() => setShowSaveConfirmation(true)}
+          >
             <Save className="h-4 w-4 mr-2" />
             Save All Changes
           </Button>
@@ -93,23 +100,37 @@ const AdminDealSettings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="dealEnabled">Enable Deal Negotiation</Label>
-                <p className="text-sm text-muted-foreground">Allow businesses to request custom exchange rates</p>
+                <p className="text-sm text-muted-foreground">
+                  Allow businesses to request custom exchange rates
+                </p>
               </div>
-              <Switch 
-                id="dealEnabled" 
+              <Switch
+                id="dealEnabled"
                 checked={globalSettings.dealNegotiationEnabled}
-                onCheckedChange={(checked) => setGlobalSettings({...globalSettings, dealNegotiationEnabled: checked})}
+                onCheckedChange={(checked) =>
+                  setGlobalSettings({
+                    ...globalSettings,
+                    dealNegotiationEnabled: checked,
+                  })
+                }
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="defaultValidity">Default Deal Validity (Days)</Label>
+                <Label htmlFor="defaultValidity">
+                  Default Deal Validity (Days)
+                </Label>
                 <Input
                   id="defaultValidity"
                   type="number"
                   value={globalSettings.defaultValidityDays}
-                  onChange={(e) => setGlobalSettings({...globalSettings, defaultValidityDays: parseInt(e.target.value)})}
+                  onChange={(e) =>
+                    setGlobalSettings({
+                      ...globalSettings,
+                      defaultValidityDays: parseInt(e.target.value),
+                    })
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
                   How long approved deals remain valid for transactions
@@ -117,12 +138,19 @@ const AdminDealSettings = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="maxDifference">Maximum Rate Difference (%)</Label>
+                <Label htmlFor="maxDifference">
+                  Maximum Rate Difference (%)
+                </Label>
                 <Input
                   id="maxDifference"
                   type="number"
                   value={globalSettings.maxRateDifferencePercent}
-                  onChange={(e) => setGlobalSettings({...globalSettings, maxRateDifferencePercent: parseInt(e.target.value)})}
+                  onChange={(e) =>
+                    setGlobalSettings({
+                      ...globalSettings,
+                      maxRateDifferencePercent: parseInt(e.target.value),
+                    })
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
                   Maximum allowed deviation from market rate
@@ -130,12 +158,19 @@ const AdminDealSettings = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="approvalThreshold">Require Approval Above (%)</Label>
+                <Label htmlFor="approvalThreshold">
+                  Require Approval Above (%)
+                </Label>
                 <Input
                   id="approvalThreshold"
                   type="number"
                   value={globalSettings.requireApprovalAbovePercent}
-                  onChange={(e) => setGlobalSettings({...globalSettings, requireApprovalAbovePercent: parseInt(e.target.value)})}
+                  onChange={(e) =>
+                    setGlobalSettings({
+                      ...globalSettings,
+                      requireApprovalAbovePercent: parseInt(e.target.value),
+                    })
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
                   Deals above this % difference require Exchange approval
@@ -146,12 +181,19 @@ const AdminDealSettings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="autoExpire">Auto-Expire Deals</Label>
-                <p className="text-sm text-muted-foreground">Automatically expire deals after validity period</p>
+                <p className="text-sm text-muted-foreground">
+                  Automatically expire deals after validity period
+                </p>
               </div>
-              <Switch 
-                id="autoExpire" 
+              <Switch
+                id="autoExpire"
                 checked={globalSettings.autoExpireDeals}
-                onCheckedChange={(checked) => setGlobalSettings({...globalSettings, autoExpireDeals: checked})}
+                onCheckedChange={(checked) =>
+                  setGlobalSettings({
+                    ...globalSettings,
+                    autoExpireDeals: checked,
+                  })
+                }
               />
             </div>
           </CardContent>
@@ -173,35 +215,52 @@ const AdminDealSettings = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {businessSettings.map((business) => (
+              {businessSettings?.map((business) => (
                 <Card key={business.id} className="border-l-4 border-l-primary">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="space-y-3 flex-1">
                         <div className="flex items-center gap-3">
-                          <h4 className="font-semibold">{business.businessName}</h4>
+                          <h4 className="font-semibold">
+                            {business.businessName}
+                          </h4>
                           <Badge variant="outline">{business.id}</Badge>
-                          <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                          <Badge
+                            variant="default"
+                            className="bg-green-100 text-green-800 text-xs"
+                          >
                             KYB: {business.kybStatus}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Deal Validity:</span>
-                            <p className="font-medium">{business.validityDays} days</p>
+                            <span className="text-muted-foreground">
+                              Deal Validity:
+                            </span>
+                            <p className="font-medium">
+                              {business.validityDays} days
+                            </p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Max Rate Difference:</span>
-                            <p className="font-medium">{business.maxRateDifference}%</p>
+                            <span className="text-muted-foreground">
+                              Max Rate Difference:
+                            </span>
+                            <p className="font-medium">
+                              {business.maxRateDifference}%
+                            </p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Auto-Approve:</span>
-                            <p className="font-medium">{business.autoApprove ? "Enabled" : "Disabled"}</p>
+                            <span className="text-muted-foreground">
+                              Auto-Approve:
+                            </span>
+                            <p className="font-medium">
+                              {business.autoApprove ? "Enabled" : "Disabled"}
+                            </p>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">
                           <Edit className="h-4 w-4 mr-1" />
@@ -225,9 +284,14 @@ const AdminDealSettings = () => {
             <div className="flex items-start gap-3">
               <Info className="h-5 w-5 text-accent mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium text-foreground">Deal Validity Configuration</p>
+                <p className="font-medium text-foreground">
+                  Deal Validity Configuration
+                </p>
                 <p className="text-muted-foreground">
-                  Business-specific settings override global defaults. Approved deals remain locked at the agreed rate for the configured validity period. After expiration, businesses must request a new deal.
+                  Business-specific settings override global defaults. Approved
+                  deals remain locked at the agreed rate for the configured
+                  validity period. After expiration, businesses must request a
+                  new deal.
                 </p>
               </div>
             </div>

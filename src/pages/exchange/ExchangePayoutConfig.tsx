@@ -40,6 +40,8 @@ import {
   X,
   Check,
   Minus,
+  Loader2,
+  Search,
 } from "lucide-react";
 import BASE_URL from "@/config/config";
 import { useCookies } from "react-cookie";
@@ -59,6 +61,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 
 interface PayoutDestination {
   id: string;
@@ -100,13 +104,16 @@ type DestinationForm = {
 
 const ExchangePayoutConfig = () => {
   const { toast } = useToast();
-  const [cookies] = useCookies(["token"]);
+  const [cookies] = useCookies(["token", "currencyCode"]);
   const token = cookies?.token;
-
+  const currencyCode = cookies?.currencyCode;
   const [countries, setCountries] = useState([]);
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
+  const [mechanismErrors, setMechanismErrors] = useState({});
   const [page, setPage] = useState<number>(0);
+  const [searchValue, setSearchValue] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
   const [errors, setErrors] = useState<any>({});
@@ -119,6 +126,8 @@ const ExchangePayoutConfig = () => {
   const [mechanismIdToNameMap, setMechanismIdToNameMap] = useState<
     Record<string, string>
   >({});
+  const [fetchingPayoutConfig, setFecthingPayoutConfig] =
+    useState<boolean>(false);
   const [supportedCurrencies, setSupportedCurrencies] = useState<
     Record<string, string[]>
   >({});
@@ -160,10 +169,20 @@ const ExchangePayoutConfig = () => {
     getCountriesData();
   }, []);
 
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchValue);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchValue]);
+
   const getPayOutConfig = async () => {
+    setFecthingPayoutConfig(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/api/v1/payout/config?page=${page}&size=10`,
+        `${BASE_URL}/api/v1/payout/config?page=${page}&size=10&search=${debounceValue}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -190,12 +209,14 @@ const ExchangePayoutConfig = () => {
     } catch (error) {
       const msg = error.message || "Failed to load payout config";
       toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setFecthingPayoutConfig(false);
     }
   };
 
   useEffect(() => {
     getPayOutConfig();
-  }, [page]);
+  }, [page, debounceValue]);
 
   const getMechanismList = async (countryId: number) => {
     try {
@@ -352,6 +373,11 @@ const ExchangePayoutConfig = () => {
       updated[index] = value;
       return { ...prev, [mechanism]: updated };
     });
+    setMechanismErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[`list-${mechanism}-${index}`];
+      return updated;
+    });
   };
 
   const addToInformation = (mechanism: string) => {
@@ -378,6 +404,11 @@ const ExchangePayoutConfig = () => {
       const updated = [...current];
       updated[index] = value;
       return { ...prev, [mechanism]: updated };
+    });
+    setMechanismErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[`info-${mechanism}-${index}`];
+      return updated;
     });
   };
 
@@ -498,16 +529,29 @@ const ExchangePayoutConfig = () => {
     };
   };
 
+  const validateMechanisms = () => {
+    const errors = {};
+
+    destinationForm?.mechanisms?.forEach((m) => {
+      (mechanismLists[m] || []).forEach((item, idx) => {
+        if (!item?.trim()) {
+          errors[`list-${m}-${idx}`] = "This field is required";
+        }
+      });
+
+      (mechanismInformation[m] || []).forEach((item, idx) => {
+        if (!item?.trim()) {
+          errors[`info-${m}-${idx}`] = "This field is required";
+        }
+      });
+    });
+
+    setMechanismErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
   const handleAddDestination = async () => {
-    // if (!destinationForm.country || destinationForm.mechanisms.length === 0) {
-    //   toast({
-    //     title: t("validationError") || "Validation Error",
-    //     description:
-    //       t("fillRequiredFields") || "Please fill in all required fields.",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
     let newErrors: any = {};
     if (!destinationForm?.country) newErrors.country = "Country is required";
     if (!destinationForm.mechanisms || destinationForm.mechanisms.length === 0)
@@ -515,6 +559,10 @@ const ExchangePayoutConfig = () => {
 
     setErrors(newErrors);
 
+    const mechanismValid = validateMechanisms();
+
+    const hasMainErrors = Object.keys(newErrors).length > 0;
+    if (!mechanismValid || hasMainErrors) return;
     // Stop if any errors
     if (Object.keys(newErrors).length > 0) return;
     const payload = buildPayload();
@@ -594,6 +642,19 @@ const ExchangePayoutConfig = () => {
     // );
 
     // setDestinations(updatedDestinations);
+    let newErrors: any = {};
+    if (!destinationForm?.country) newErrors.country = "Country is required";
+    if (!destinationForm.mechanisms || destinationForm.mechanisms.length === 0)
+      newErrors.mechanisms = "Select at least one mechanism.";
+
+    setErrors(newErrors);
+
+    const mechanismValid = validateMechanisms();
+
+    const hasMainErrors = Object.keys(newErrors).length > 0;
+    if (!mechanismValid || hasMainErrors) return;
+    // Stop if any errors
+    if (Object.keys(newErrors).length > 0) return;
     const payload = buildPayload();
     try {
       const res = await fetch(
@@ -813,6 +874,15 @@ const ExchangePayoutConfig = () => {
         },
       };
     });
+    setMechanismLists((prev) => ({
+      ...prev,
+      [mechanism]: [""],
+    }));
+
+    setMechanismInformation((prev) => ({
+      ...prev,
+      [mechanism]: [""],
+    }));
   };
 
   return (
@@ -853,7 +923,7 @@ const ExchangePayoutConfig = () => {
                 }}
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">
+                <span className="inline">
                   {t("addDestination") || "Add Destination"}
                 </span>
               </Button>
@@ -862,7 +932,7 @@ const ExchangePayoutConfig = () => {
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2  md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -872,7 +942,7 @@ const ExchangePayoutConfig = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {summaryData?.activeCountries}
+                {summaryData?.activeCountries || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("configurableDestinations") || "Configurable destinations"}
@@ -890,7 +960,7 @@ const ExchangePayoutConfig = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {/* {destinations.reduce((sum, d) => sum + d.partners, 0)} */}
-                {summaryData?.totalPartners}
+                {summaryData?.totalPartners || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("banksAndInstitutions") || "Banks & financial institutions"}
@@ -906,10 +976,10 @@ const ExchangePayoutConfig = () => {
               <Banknote className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{`$ ${summaryData?.totalMonthlyVolumeUsd} M`}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">{`${currencyCode} ${summaryData?.totalMonthlyVolumeUsd || 0}`}</div>
+              {/* <p className="text-xs text-muted-foreground">
                 +18% {t("fromLastMonth") || "from last month"}
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 
@@ -936,7 +1006,7 @@ const ExchangePayoutConfig = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {summaryData?.maintenanceCountries}
+                {summaryData?.maintenanceCountries || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("allDestinations") || "All destinations"}
@@ -946,16 +1016,58 @@ const ExchangePayoutConfig = () => {
         </div>
 
         {/* Payout Destinations */}
+
+        <Card className="shadow-card">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Label htmlFor="search">Search Payout Config</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by ID, business, beneficiary, or reference..."
+                    className="pl-9"
+                    value={searchValue}
+                    onChange={(e) => {
+                      setSearchValue(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              {t("payoutDestinations") || "Payout Destinations"}
+            <CardTitle className="flex gap-2 items-center justify-between flex-wrap">
+              <div className="flex gap-2 items-center">
+                <Globe className="h-5 w-5 text-primary" />
+                {t("payoutDestinations") || "Payout Destinations"}
+              </div>
+              <PaginationSummary
+                totalElements={payoutData?.totalElements}
+                pageSize={payoutData?.pageSize || 10}
+                currentPage={page}
+                itemCount={payoutData?.countries?.length}
+                itemLabel="Payout Config"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-10">
-              {payoutData?.countries?.length > 0 ? (
+              {fetchingPayoutConfig ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">
+                      Loading Payout Config...
+                    </p>
+                  </div>
+                </div>
+              ) : payoutData?.countries?.length > 0 ? (
                 payoutData?.countries?.map((destination: any) => {
                   const status = getStatusBadge(destination?.status);
                   const StatusIcon = status.icon;
@@ -1062,7 +1174,6 @@ const ExchangePayoutConfig = () => {
                                         ))}
                                       </div>
                                     </div>
-
                                     <div className="grid grid-cols-1 gap-2 text-sm">
                                       <div className="text-muted-foreground">
                                         {"List fields"}:{" "}
@@ -1118,41 +1229,53 @@ const ExchangePayoutConfig = () => {
                 </p>
               )}
             </div>
-            {payoutData?.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Showing {payoutData.countries.length} of{" "}
-                  {payoutData.totalElements} beneficiaries
-                </p>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={
-                      (page + 1) * payoutData.pageSize >=
-                      payoutData.totalElements
-                    }
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+            {/* <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {payoutData.countries.length} of{" "}
+                {payoutData.totalElements} payout destination
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    (page + 1) * payoutData.pageSize >= payoutData.totalElements
+                  }
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
               </div>
-            )}
+            </div> */}
+            <PaginationControl
+              className="mt-6"
+              currentPage={page}
+              totalPages={payoutData?.totalPages}
+              onPageChange={(page) => setPage(page)}
+            />
           </CardContent>
         </Card>
 
         {/* Add Destination Dialog */}
 
-        <Dialog open={addDestinationOpen} onOpenChange={setAddDestinationOpen}>
+        <Dialog
+          open={addDestinationOpen}
+          onOpenChange={(open) => {
+            setAddDestinationOpen(open);
+            if (!open) {
+              setMechanismErrors({});
+              setErrors({});
+            }
+          }}
+        >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -1165,9 +1288,12 @@ const ExchangePayoutConfig = () => {
             </DialogHeader>
 
             <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t("country") || "Country"} *</Label>
+                  <Label>
+                    {t("country") || "Country"}{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={destinationForm.country}
                     onValueChange={handleCountryChange}
@@ -1306,7 +1432,7 @@ const ExchangePayoutConfig = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("partnerCount") || "Partner Count"}</Label>
                   <Input
@@ -1337,7 +1463,9 @@ const ExchangePayoutConfig = () => {
               </div>
               {/* MECHANISMS */}
               <div className="mt-6">
-                <Label>Available Mechanisms *</Label>
+                <Label>
+                  Available Mechanisms <span className="text-red-500">*</span>
+                </Label>
                 <div className="border rounded-lg p-4 mt-2">
                   {avaliable_machanisms.length === 0 ? (
                     <p className="text-muted-foreground text-sm text-center py-4">
@@ -1388,17 +1516,27 @@ const ExchangePayoutConfig = () => {
                     </h4>
                     {/* NEW DYNAMIC FIELDS SECTION */}
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">List</p>
+                      <p className="font-serif">
+                        List <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismLists[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateListField(m, idx, e.target.value)
-                            }
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateListField(m, idx, e.target.value)
+                              }
+                            />
+                            {mechanismErrors[`list-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`list-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1421,17 +1559,28 @@ const ExchangePayoutConfig = () => {
                       ))}
                     </div>
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">Customer Information</p>
+                      <p className="font-serif">
+                        Customer Information{" "}
+                        <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismInformation[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateInformation(m, idx, e.target.value)
-                            }
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateInformation(m, idx, e.target.value)
+                              }
+                            />
+                            {mechanismErrors[`info-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`info-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1498,7 +1647,11 @@ const ExchangePayoutConfig = () => {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setAddDestinationOpen(false)}
+                onClick={() => {
+                  setAddDestinationOpen(false);
+                  setErrors({});
+                  setMechanismErrors({});
+                }}
               >
                 {t("cancel") || "Cancel"}
               </Button>
@@ -1516,7 +1669,12 @@ const ExchangePayoutConfig = () => {
         {/* Edit Destination Dialog */}
         <Dialog
           open={editDestinationOpen}
-          onOpenChange={setEditDestinationOpen}
+          onOpenChange={(open) => {
+            setEditDestinationOpen(open);
+            if (!open) {
+              setErrors({});
+            }
+          }}
         >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1549,6 +1707,9 @@ const ExchangePayoutConfig = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.country && (
+                    <p className="text-red-500 text-xs">{errors.country}</p>
+                  )}
                 </div>
 
                 {/*<div className="space-y-2">
@@ -1737,6 +1898,9 @@ const ExchangePayoutConfig = () => {
                     </div>
                   ))}
                 </div>
+                {errors?.mechanisms && (
+                  <p className="text-red-500 text-xs">{errors?.mechanisms}</p>
+                )}
               </div>
 
               {/* <div className="grid grid-cols-2 gap-4">
@@ -1808,21 +1972,30 @@ const ExchangePayoutConfig = () => {
                     <h4 className="font-semibold">
                       {formatEnumText(m)} Configuration
                     </h4>
-
                     {/* List Section */}
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">List</p>
+                      <p className="font-serif">
+                        List <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismLists[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateListField(m, idx, e.target.value)
-                            }
-                            className="w-56"
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateListField(m, idx, e.target.value)
+                              }
+                              // className="w-56"
+                            />
+                            {mechanismErrors[`list-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`list-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1847,18 +2020,29 @@ const ExchangePayoutConfig = () => {
 
                     {/* Customer Information Section */}
                     <div className="mt-6 border-t pt-4">
-                      <p className="font-serif">Customer Information</p>
+                      <p className="font-serif">
+                        Customer Information{" "}
+                        <span className="text-red-500">*</span>
+                      </p>
                       {(mechanismInformation[m] || [""]).map((field, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-2">
-                          <Input
-                            type="text"
-                            placeholder={`Field ${idx + 1}`}
-                            value={field}
-                            onChange={(e) =>
-                              updateInformation(m, idx, e.target.value)
-                            }
-                            className="w-56"
-                          />
+                          <div className="space-y-2 w-full">
+                            <Input
+                              type="text"
+                              placeholder={`Field ${idx + 1}`}
+                              value={field}
+                              onChange={(e) =>
+                                updateInformation(m, idx, e.target.value)
+                              }
+                              // className="w-56"
+                            />
+                            {mechanismErrors[`info-${m}-${idx}`] && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {mechanismErrors[`info-${m}-${idx}`]}
+                              </p>
+                            )}
+                          </div>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -1911,11 +2095,13 @@ const ExchangePayoutConfig = () => {
                 </div>
               </div>
             </div>
-
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setEditDestinationOpen(false)}
+                onClick={() => {
+                  setEditDestinationOpen(false);
+                  setErrors({});
+                }}
               >
                 {t("cancel") || "Cancel"}
               </Button>

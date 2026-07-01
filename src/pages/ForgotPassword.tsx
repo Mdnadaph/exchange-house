@@ -71,7 +71,6 @@ export default function ForgotPassword() {
                         className="text-red-500 text-sm mt-1"
                       />
                     </div>
-
                     <Button
                       type="submit"
                       className="w-full"
@@ -80,6 +79,13 @@ export default function ForgotPassword() {
                       {isSubmitting
                         ? "Loading...."
                         : "Send Reset Password Link"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() => navigate("/login")}
+                    >
+                      Back to login
                     </Button>
                   </CardContent>
                 </Form>

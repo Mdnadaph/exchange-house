@@ -109,12 +109,12 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
           icon: FileBarChart,
           code: "NAV_REPORTS",
         },
-        {
-          name: "Transaction Report",
-          href: "/exchange/transaction-report",
-          icon: BookOpen,
-          code: "NAV_TRANSACTION_REPORT",
-        },
+        // {
+        //   name: "Transaction Report",
+        //   href: "/exchange/transaction-report",
+        //   icon: BookOpen,
+        //   code: "NAV_TRANSACTION_REPORT",
+        // },
         {
           name: "Documents",
           href: "/exchange/documents",
@@ -194,17 +194,17 @@ const ExchangeLayout = ({ children }: ExchangeLayoutProps) => {
           code: "NAV_KYB_REVIEW",
         },
         {
-          name: "Staff Management",
-          href: "/exchange/staff",
+          name: "Member",
+          href: "/exchange/member",
           icon: Users,
-          code: "NAV_STAFF_MANAGEMENT",
+          code: "NAV_MEMBERS",
         },
-        {
-          name: "Exchange Members",
-          href: "/exchange/user",
-          icon: Users,
-          code: "NAV_EXCHANGE_ADMIN_USER",
-        },
+        // {
+        //   name: "Exchange Members",
+        //   href: "/exchange/user",
+        //   icon: Users,
+        //   code: "NAV_EXCHANGE_ADMIN_USER",
+        // },
       ],
     },
 

@@ -41,6 +41,9 @@ import ComplianceStatus from "@/components/transactions/ComplianceStatus";
 import ProofOfPaymentUploadInBusinessAdmin from "@/components/transactions/ProofOfPaymentUploadInBusinessAdmin";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
+import { Pagination } from "@/components/ui/pagination";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 interface TransactionDocument {
   id: number;
   fileName: string;
@@ -100,7 +103,7 @@ interface ApiResponse {
       amountPeriod: string | null;
     };
     transactions: ApiTransaction[];
-    pagination: { totalItems: number };
+    pagination: { totalItems: number; totalPages: number; page: number };
   };
 }
 
@@ -232,6 +235,9 @@ const UserTransactions = () => {
   ]);
   const [transactionType, setTransactionType] = useState<string>("ALL");
   const [page, setPage] = useState<number>(0);
+  const pageSize = 10;
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalTransactionData, setTotalTransactionData] = useState<number>(0);
   const [expandedDealTxId, setExpandedDealTxId] = useState<string | null>(null);
   //document upload state
@@ -248,6 +254,8 @@ const UserTransactions = () => {
   const lastName = cookies.lastName;
   const operatorName = firstName + lastName;
   const currencyCode = cookies.currencyCode;
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const { toast } = useToast();
 
   const fetchTransactions = async () => {
@@ -267,12 +275,13 @@ const UserTransactions = () => {
         timeout: 10000,
       };
 
-      let url = `${BASE_URL}/api/v1/transactions?search=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10`;
-
+      let url = `${BASE_URL}/api/v1/transactions?search=${encodeURIComponent(debouncedSearch)}&type=${transactionType}&page=${page}&size=10&fromDate=${fromDate}&toDate=${toDate}`;
       const response = await axios.get<ApiResponse>(url, config);
       const data = response.data;
       setTotalTransactionData(data?.data?.pagination?.totalItems);
-
+      setTotalElements(data?.data?.pagination?.totalItems || 0);
+      setTotalPages(data?.data?.pagination?.totalPages || 0);
+      setPage(data?.data?.pagination?.page);
       if (data?.data?.dashboard) {
         setDashboardData(data?.data?.dashboard);
       }
@@ -375,7 +384,6 @@ const UserTransactions = () => {
               rateDeal: apiTx.rateDeal,
             };
           });
-
         setTransactions(transformedTransactions);
       } else {
         throw new Error(data.message || "Failed to fetch transactions");
@@ -424,7 +432,8 @@ const UserTransactions = () => {
   }, [searchTerm]);
   useEffect(() => {
     fetchTransactions();
-  }, [token, transactionType, page, debouncedSearch]);
+  }, [token, transactionType, page, debouncedSearch, fromDate, toDate]);
+
   //const getStatusBadge = (status: string) => {
   //  const statusMap = {
   //    COMPLETED: {
@@ -574,6 +583,16 @@ const UserTransactions = () => {
         label: "Compliance Review",
         icon: AlertCircle,
       },
+      CANCELLED_WITH_REFUND: {
+        variant: "destructive",
+        label: "Cancelled With Refund",
+        icon: AlertCircle,
+      },
+      CANCELLED: {
+        variant: "destructive",
+        label: "Cancelled",
+        icon: AlertCircle,
+      },
     };
 
     return (
@@ -617,7 +636,7 @@ const UserTransactions = () => {
     <UserLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
             <p className="text-muted-foreground">
@@ -646,7 +665,7 @@ const UserTransactions = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -695,11 +714,11 @@ const UserTransactions = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Amount
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              {/* <DollarSign className="h-5 w-5 text-blue-500" /> */}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
+                {currencyCode}{" "}
                 {dashboardData?.totalAmount?.toLocaleString("en-US") ??
                   statistics.totalVolume.toLocaleString("en-US")}
               </div>
@@ -710,24 +729,55 @@ const UserTransactions = () => {
         {/* Search and Filters */}
         <Card className="shadow-card">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Transactions</Label>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search by ID, beneficiary, or reference..."
-                      className="pl-9"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      disabled={error !== null}
-                    />
+            <div className="flex flex-col sm:flex-row gap-4 items-center flex-wrap">
+              <div className="flex-1 flex gap-2 items-center flex-wrap">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Transactions</Label>
+                  <div className="relative flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="search"
+                        placeholder="Search by ID, beneficiary, or reference..."
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setPage(0);
+                        }}
+                        disabled={error !== null}
+                      />
+                    </div>
                   </div>
                 </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="fromDate">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="From Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="toDate">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="To Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e?.target?.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-5">
                 <Button
                   variant="outline"
                   onClick={() => setTransactionType("ALL")}
@@ -769,7 +819,16 @@ const UserTransactions = () => {
         {/* Transactions List */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle>Transaction History</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={transactions?.length}
+                itemLabel="Transactions"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -812,7 +871,7 @@ const UserTransactions = () => {
                       <CardContent className="p-6">
                         <div className="space-y-4">
                           {/* Transaction Header */}
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
                             <div className="space-y-2">
                               {transaction?.businessName && (
                                 <div className="flex items-center gap-3">
@@ -827,7 +886,7 @@ const UserTransactions = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <h3 className="font-semibold text-foreground">
                                   {transaction?.singleBeneficiary?.type ==
                                   "INDIVIDUAL"
@@ -969,7 +1028,6 @@ const UserTransactions = () => {
                                     {transaction?.baseProcessingFee}
                                   </p>
                                 )}
-
                                 {transaction.feeResponsibility && (
                                   <p className="text-xs text-muted-foreground">
                                     Paid by: {transaction.feeResponsibility}
@@ -1086,8 +1144,8 @@ const UserTransactions = () => {
                           </div>
 
                           {/* Actions */}
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex space-x-2">
+                          <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
+                            <div className="flex gap-2 items-center flex-wrap">
                               {/* ── View Details → opens modal ── */}
                               <Button
                                 variant="outline"
@@ -1125,7 +1183,7 @@ const UserTransactions = () => {
                                 <FileText className="h-4 w-4 mr-1" />
                                 Upload Documents
                               </Button>
-                              {transaction.rateDeal && (
+                              {/* {transaction.rateDeal && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1145,7 +1203,7 @@ const UserTransactions = () => {
                                     <ChevronDown className="h-4 w-4 ml-1" />
                                   )}
                                 </Button>
-                              )}
+                              )} */}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1197,7 +1255,7 @@ const UserTransactions = () => {
                                       vatAmount: transaction?.vatAmount,
                                       payoutMechanismType:
                                         transaction?.payoutMechanismType,
-                                      amount: transaction.amount,
+                                      amount: transaction.totalDebit,
                                       currency: transaction.currency,
                                       localAmount: transaction.localAmount,
                                       localCurrency: transaction.localCurrency,
@@ -1228,7 +1286,7 @@ const UserTransactions = () => {
                             />
                           )} */}
                           {/* Expanded Deal Content */}
-                          {expandedDealTxId === transaction.id &&
+                          {/* {expandedDealTxId === transaction.id &&
                             transaction.rateDeal && (
                               <div className="pt-4 border-t space-y-4">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1259,7 +1317,7 @@ const UserTransactions = () => {
                                   )}
                                 </div>
                               </div>
-                            )}
+                            )} */}
                           {/* Comments Section */}
                           {expandedTransaction === transaction.id && (
                             <div className="mt-4 pt-4 border-t space-y-4">
@@ -1290,33 +1348,12 @@ const UserTransactions = () => {
                     </Card>
                   );
                 })}
-
-                {totalTransactionData > 10 && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {transactions?.length} of {totalTransactionData}{" "}
-                      transation
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 10 >= totalTransactionData}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <PaginationControl
+                  className="mt-6"
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setPage(page)}
+                />
               </div>
             )}
           </CardContent>

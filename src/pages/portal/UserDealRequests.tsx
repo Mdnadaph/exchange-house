@@ -28,6 +28,8 @@ import { useCookies } from "react-cookie";
 import { formateDateTime } from "@/utils/formateDateTime";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealCounterResponseForm from "@/components/deals/DealCounterResponseForm";
+import PaginationSummary from "@/components/PaginationSummary";
+import PaginationControl from "@/components/PaginationControl";
 type NegotiationHistoryItem = {
   id: number;
   actionType: string;
@@ -44,6 +46,7 @@ const UserDealRequests = () => {
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debounceValue, setDebounceValue] = useState("");
   // const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
@@ -56,6 +59,11 @@ const UserDealRequests = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [page, setPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const pageSize = 10;
 
   const getRateDeals = async (options?: {
     page?: number;
@@ -65,7 +73,7 @@ const UserDealRequests = () => {
   }) => {
     const {
       page: targetPage = page,
-      search = searchValue,
+      search = debounceValue,
       status = statusFilter,
       reset = false,
     } = options || {};
@@ -82,6 +90,8 @@ const UserDealRequests = () => {
       if (status) params.append("status", status);
       params.append("page", effectivePage.toString());
       params.append("size", "10");
+      params.append("fromDate", fromDate);
+      params.append("toDate", toDate);
 
       const res = await fetch(
         `${BASE_URL}/api/v1/rate-deals?${params.toString()}`,
@@ -95,6 +105,9 @@ const UserDealRequests = () => {
       if (json?.status !== true || !json.data) {
         throw new Error("Unexpected response format");
       }
+      setTotalPages(json?.data?.rateDeals?.totalPages || 0);
+      setTotalElements(json?.data?.rateDeals?.totalElements || 0);
+      setPage(json?.data?.rateDeals?.pageable?.pageNumber || 0);
       setRateDealsData(json?.data);
     } catch (error) {
       const msg = error.message || "Failed to load rate-deals";
@@ -103,10 +116,17 @@ const UserDealRequests = () => {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setDebounceValue(searchTerm);
+    }, 500);
+    return () => {
+      clearTimeout(debounce);
+    };
+  }, [searchTerm]);
   useEffect(() => {
     getRateDeals();
-  }, []);
+  }, [debounceValue, statusFilter, fromDate, toDate, page]);
 
   // Search debounce effect
   useEffect(() => {
@@ -166,11 +186,32 @@ const UserDealRequests = () => {
             Rejected
           </Badge>
         );
-      case "expired":
+      case "EXPIRED":
+        return (
+          <Badge variant="destructive">
+            <Clock className="h-3 w-3 mr-1" />
+            Expired
+          </Badge>
+        );
+      case "USED":
+        return (
+          <Badge variant="default">
+            <Clock className="h-3 w-3 mr-1" />
+            Used
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_DECLINED":
         return (
           <Badge variant="outline">
             <Clock className="h-3 w-3 mr-1" />
-            Expired
+            Counter Proposal Declined
+          </Badge>
+        );
+      case "COUNTER_PROPOSAL_ACCEPTED":
+        return (
+          <Badge variant="default">
+            <Clock className="h-3 w-3 mr-1" />
+            Counter Proposal Accepted
           </Badge>
         );
       default:
@@ -282,24 +323,24 @@ const UserDealRequests = () => {
     return count >= 2;
   };
 
-  if (loading) {
-    return (
-      <UserLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading transactions...</p>
-          </div>
-        </div>
-      </UserLayout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <UserLayout>
+  //       <div className="flex items-center justify-center h-64">
+  //         <div className="flex flex-col items-center space-y-4">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //           <p className="text-muted-foreground">Loading transactions...</p>
+  //         </div>
+  //       </div>
+  //     </UserLayout>
+  //   );
+  // }
 
   return (
     <UserLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Exchange Rate Deals
@@ -312,7 +353,7 @@ const UserDealRequests = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -361,6 +402,21 @@ const UserDealRequests = () => {
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
+                Reject
+              </CardTitle>
+              <XCircle className="h-5 w-5 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {businessAdminstates?.rejected}
+              </div>
+              <p className="text-xs text-muted-foreground">Reject deals</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Awaiting Response
               </CardTitle>
               <MessageSquare className="h-5 w-5 text-accent" />
@@ -375,12 +431,13 @@ const UserDealRequests = () => {
         </div>
 
         {/* Search and Filter */}
-        <Card className="shadow-card">
+        <Card className="shadow-card ">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search Deals</Label>
-                {/* <div className="relative mt-1.5">
+            <div className="flex  gap-4 flex-wrap items-center">
+              <div className="flex-1 flex flex-col md:flex-row gap-3 md:items-center  ">
+                <div className="flex-1">
+                  <Label htmlFor="search">Search Deals</Label>
+                  {/* <div className="relative mt-1.5">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search"
@@ -390,21 +447,54 @@ const UserDealRequests = () => {
                     onChange={(e) => setSearchValue(e.target.value)}
                   />
                 </div> */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by name, email, or role..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by name, email, or role..."
+                      className="pl-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(0);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label htmlFor="search">From Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="Select Date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </div>
+                <div className="flex gap-1 flex-col">
+                  <Label htmlFor="search">To Date</Label>
+                  <input
+                    className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
+                    type="date"
+                    placeholder="Select Date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      setPage(0);
+                    }}
                   />
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
                 <Button
                   variant={statusFilter === "" ? "default" : "outline"}
-                  onClick={() => handleStatusFilter("")}
+                  onClick={() => {
+                    handleStatusFilter("");
+                    setPage(0);
+                  }}
                 >
                   All Status
                 </Button>
@@ -412,19 +502,28 @@ const UserDealRequests = () => {
                   variant={
                     statusFilter === "PENDING_REVIEW" ? "default" : "outline"
                   }
-                  onClick={() => handleStatusFilter("PENDING_REVIEW")}
+                  onClick={() => {
+                    handleStatusFilter("PENDING_REVIEW");
+                    setPage(0);
+                  }}
                 >
                   Pending
                 </Button>
                 <Button
                   variant={statusFilter === "APPROVED" ? "default" : "outline"}
-                  onClick={() => handleStatusFilter("APPROVED")}
+                  onClick={() => {
+                    handleStatusFilter("APPROVED");
+                    setPage(0);
+                  }}
                 >
                   Approved
                 </Button>
                 <Button
                   variant={statusFilter === "REJECTED" ? "default" : "outline"}
-                  onClick={() => handleStatusFilter("REJECTED")}
+                  onClick={() => {
+                    handleStatusFilter("REJECTED");
+                    setPage(0);
+                  }}
                 >
                   Rejected
                 </Button>
@@ -434,127 +533,151 @@ const UserDealRequests = () => {
         </Card>
 
         {/* Deals List */}
-        <div className="space-y-4">
-          {rateDealsData?.rateDeals?.content?.length > 0 ? (
-            rateDealsData?.rateDeals?.content.map((deal: any) => (
-              <Card
-                key={deal?.id}
-                className="shadow-card hover:shadow-md transition-smooth"
-              >
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {/* Deal Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-lg">
-                            {deal?.dealCode}
-                          </h3>
-                          {getStatusBadge(deal?.dealStatus)}
-                          <Badge variant="outline" className="text-xs">
-                            {deal?.registeredBranchName}
-                          </Badge>
+        <Card className="shadow-card p-2">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle>Rate Deals</CardTitle>
+              <PaginationSummary
+                totalElements={totalElements}
+                pageSize={pageSize}
+                currentPage={page}
+                itemCount={rateDealsData?.rateDeals?.content?.length}
+                itemLabel="Rate Deal"
+              />
+            </div>
+          </CardHeader>
+          <div className="space-y-4">
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">
+                    Loading transactions...
+                  </p>
+                </div>
+              </div>
+            ) : rateDealsData?.rateDeals?.content?.length > 0 ? (
+              rateDealsData?.rateDeals?.content.map((deal: any) => (
+                <Card
+                  key={deal?.id}
+                  className="shadow-card hover:shadow-md transition-smooth"
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      {/* Deal Header */}
+                      <div className="flex items-start justify-between flex-wrap gap-2">
+                        <div className="space-y-2">
+                          <div className="flex md:items-center gap-3 flex-wrap">
+                            <h3 className="font-semibold text-lg">
+                              {deal?.dealCode}
+                            </h3>
+                            {getStatusBadge(deal?.dealStatus)}
+                            <Badge variant="outline" className="text-xs">
+                              {deal?.registeredBranchName}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {deal?.transactionPurpose}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {deal?.transactionPurpose}
-                        </p>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">
+                            {deal?.sendingCurrency} {deal?.amount}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            to {deal?.payoutCurrency}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">
-                          {deal?.sendingCurrency} {deal?.amount}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          to {deal?.payoutCurrency}
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Deal Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
-                      <div className="space-y-1">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          Requested Rate:
-                        </span>
-                        <p className="font-semibold">
-                          {deal.proposedRate} {deal.payoutCurrency}
-                        </p>
+                      {/* Deal Details */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg text-sm">
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            Requested Rate:
+                          </span>
+                          <p className="font-semibold">
+                            {deal.proposedRate} {deal.payoutCurrency}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground">
+                            Market Rate:
+                          </span>
+                          <p className="font-medium">
+                            {deal.currentMarketRate} {deal.payoutCurrency}
+                          </p>
+                        </div>
+                        {[
+                          "COUNTER_PROPOSAL",
+                          "COUNTER_PROPOSAL_ACCEPTED",
+                        ].includes(deal?.dealStatus) && (
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3" />
+                              Counter Rate:
+                            </span>
+                            <p className="font-semibold text-accent">
+                              {getCounterRate(deal?.negotiationHistory)}{" "}
+                              {deal.payoutCurrency}
+                            </p>
+                          </div>
+                        )}
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Approved Date:
+                          </span>
+                          <p className="font-medium">{deal?.approvedAt}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Expire Date:
+                          </span>
+                          <p className="font-medium">{deal?.expiryDate}</p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-muted-foreground">
-                          Market Rate:
-                        </span>
-                        <p className="font-medium">
-                          {deal.currentMarketRate} {deal.payoutCurrency}
-                        </p>
-                      </div>
+                      {/* Counter Proposal Message */}
                       {[
                         "COUNTER_PROPOSAL",
                         "COUNTER_PROPOSAL_ACCEPTED",
                       ].includes(deal?.dealStatus) && (
-                        <div className="space-y-1">
-                          <span className="text-muted-foreground flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            Counter Rate:
-                          </span>
-                          <p className="font-semibold text-accent">
-                            {getCounterRate(deal?.negotiationHistory)}{" "}
-                            {deal.payoutCurrency}
-                          </p>
-                        </div>
-                      )}
-                      <div className="space-y-1">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Approved Date:
-                        </span>
-                        <p className="font-medium">{deal?.approvedAt}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Expire Date:
-                        </span>
-                        <p className="font-medium">{deal?.expiryDate}</p>
-                      </div>
-                    </div>
-                    {/* Counter Proposal Message */}
-                    {["COUNTER_PROPOSAL", "COUNTER_PROPOSAL_ACCEPTED"].includes(
-                      deal?.dealStatus,
-                    ) && (
-                      <Card className="bg-accent-muted/20 border-accent">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <MessageSquare className="h-5 w-5 text-accent mt-0.5" />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm mb-1">
-                                Counter Proposal Message
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {getCounterComments(deal?.negotiationHistory)}
-                              </p>
+                        <Card className="bg-accent-muted/20 border-accent">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <MessageSquare className="h-5 w-5 text-accent mt-0.5" />
+                              <div className="flex-1">
+                                <p className="font-medium text-sm mb-1">
+                                  Counter Proposal Message
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {getCounterComments(deal?.negotiationHistory)}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {/* Actions */}
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setSelectedDeal(
-                              selectedDeal === deal.id ? null : deal.id,
-                            )
-                          }
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          {selectedDeal === deal.id ? "Hide" : "View"} Timeline
-                        </Button>
-                      </div>
-                      {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
+                          </CardContent>
+                        </Card>
+                      )}
+                      {/* Actions */}
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setSelectedDeal(
+                                selectedDeal === deal.id ? null : deal.id,
+                              )
+                            }
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            {selectedDeal === deal.id ? "Hide" : "View"}{" "}
+                            Timeline
+                          </Button>
+                        </div>
+                        {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
                         <div className="flex gap-2">
                           <Button
                             variant="default"
@@ -574,26 +697,26 @@ const UserDealRequests = () => {
                           </Button>
                         </div>
                       )} */}
-                      {deal?.dealStatus === "APPROVED" && (
-                        <Badge
-                          variant="default"
-                          className="bg-success/10 text-success"
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Ready to Use in Transactions
-                        </Badge>
-                      )}
-                    </div>
-                    {/* Timeline */}
-                    {selectedDeal === deal?.id && (
-                      <div className="pt-4 border-t">
-                        <div className="grid grid-cols-2 gap-6">
-                          <DealNegotiationTimeline
-                            events={deal?.negotiationHistory}
-                            currentRate={deal?.proposedRate}
-                            currency={deal?.payoutCurrency}
-                          />
-                          {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
+                        {deal?.dealStatus === "APPROVED" && (
+                          <Badge
+                            variant="default"
+                            className="bg-success/10 text-success"
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Ready to Use in Transactions
+                          </Badge>
+                        )}
+                      </div>
+                      {/* Timeline */}
+                      {selectedDeal === deal?.id && (
+                        <div className="pt-4 border-t">
+                          <div className="grid grid-cols-2 gap-6">
+                            <DealNegotiationTimeline
+                              events={deal?.negotiationHistory}
+                              currentRate={deal?.proposedRate}
+                              currency={deal?.payoutCurrency}
+                            />
+                            {/* {deal?.dealStatus === "COUNTER_PROPOSAL" && (
                             <DealResponseForm
                               refetch={getRateDeals}
                               dealId={deal?.id}
@@ -602,64 +725,43 @@ const UserDealRequests = () => {
                               currency={deal?.payoutCurrency}
                             />
                           )} */}
-                          {deal?.dealStatus === "COUNTER_PROPOSAL" &&
-                            (hasMultipleCounterProposals(
-                              deal?.negotiationHistory,
-                            ) ? (
-                              <div></div>
-                            ) : (
-                              <DealCounterResponseForm
-                                refetch={getRateDeals}
-                                dealId={deal?.id}
-                                businessName={deal?.companyName}
-                                requestedRate={
-                                  deal?.negotiationHistory[
-                                    deal?.negotiationHistory?.length - 1
-                                  ]?.rate
-                                }
-                                currency={deal?.payoutCurrency}
-                              />
-                            ))}
+                            {deal?.dealStatus === "COUNTER_PROPOSAL" &&
+                              (hasMultipleCounterProposals(
+                                deal?.negotiationHistory,
+                              ) ? (
+                                <div></div>
+                              ) : (
+                                <DealCounterResponseForm
+                                  refetch={getRateDeals}
+                                  dealId={deal?.id}
+                                  businessName={deal?.companyName}
+                                  requestedRate={
+                                    deal?.negotiationHistory[
+                                      deal?.negotiationHistory?.length - 1
+                                    ]?.rate
+                                  }
+                                  currency={deal?.payoutCurrency}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-center font-semibold text-sm text-gray-500">
-              No Data Found
-            </p>
-          )}
-
-          {totalDealsRateDataList > 10 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {rateDealsData?.rateDeals?.content.length} of{" "}
-                {totalDealsRateDataList} deals
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-center font-semibold text-sm text-gray-500">
+                No Data Found
               </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={goToPrevPage}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={(page + 1) * 10 >= totalDealsRateDataList}
-                  onClick={goToNextPage}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+            <PaginationControl
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(page) => setPage(page)}
+            />
+          </div>
+        </Card>
       </div>
 
       <ConfirmationDialog
