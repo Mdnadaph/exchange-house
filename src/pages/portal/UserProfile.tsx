@@ -696,7 +696,7 @@ const UserProfile = () => {
   }
 
   return (
-    <UserLayout>
+    <UserLayout kybStatus={businessProfile?.kybStatus}>
       <div className="space-y-8">
         {(businessProfile?.kybStatus == "PENDING" ||
           businessProfile?.kybStatus == "NOT_STARTED") && (

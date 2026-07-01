@@ -22,9 +22,10 @@ import { useCookies } from "react-cookie";
 
 interface UserLayoutProps {
   children: React.ReactNode;
+  kybStatus?: string;
 }
 
-const UserLayout = ({ children }: UserLayoutProps) => {
+const UserLayout = ({ children, kybStatus }: UserLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -176,6 +177,25 @@ const UserLayout = ({ children }: UserLayoutProps) => {
     },
   ];
 
+  //for unclickable side bar if status is NOT_STARTED OR PENDING
+  const kybRequiredPaths = [
+    "/portal/reports",
+    `/portal/documents/${id}`,
+    "/portal/governance",
+    "/portal/users",
+    "/portal/beneficiaries",
+    "/portal/transactions",
+    "/portal/deals",
+  ];
+
+  // to check if a path should be locked
+  const isKybLocked = (path: string) => {
+    return (
+      (kybStatus === "NOT_STARTED" || kybStatus === "PENDING") &&
+      kybRequiredPaths.includes(path)
+    );
+  };
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -246,14 +266,31 @@ const UserLayout = ({ children }: UserLayoutProps) => {
                     const Icon = item.icon;
 
                     return (
+                      //<Link
+                      //  key={item.name}
+                      //  to={item.href}
+                      //  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
+                      //    isActive(item.href)
+                      //      ? "bg-primary text-primary-foreground"
+                      //      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      //  }`}
+                      //>
+                      //  <Icon className="h-5 w-5" />
+                      //  <span className="font-medium">{item.name}</span>
+                      //</Link>
                       <Link
                         key={item.name}
-                        to={item.href}
+                        to={isKybLocked(item.href) ? "#" : item.href}
                         className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-smooth ${
-                          isActive(item.href)
+                          isActive(item.href) && !isKybLocked(item.href)
                             ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            : isKybLocked(item.href)
+                              ? "opacity-50 pointer-events-none cursor-not-allowed text-muted-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
+                        onClick={(e) =>
+                          isKybLocked(item.href) && e.preventDefault()
+                        }
                       >
                         <Icon className="h-5 w-5" />
                         <span className="font-medium">{item.name}</span>

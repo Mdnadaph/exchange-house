@@ -307,7 +307,7 @@ const UserDashboard = () => {
   }
 
   return (
-    <UserLayout>
+    <UserLayout kybStatus={kybStatus}>
       <div className="space-y-8">
         {/* KYB Verification Status Banner */}
         {kybStatus === "verified" && (
