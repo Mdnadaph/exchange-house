@@ -18,10 +18,10 @@ import BASE_URL from "@/config/config";
 
 /* ================= VALIDATION ================= */
 
-const loginSchema = Yup.object({
-  email: Yup.string().email("Invalid email").required("Email required"),
-  password: Yup.string().min(6).required("Password required"),
-});
+//const loginSchema = Yup.object({
+//  email: Yup.string().email("Invalid email").required("Email required"),
+//  password: Yup.string().min(6).required("Password required"),
+//});
 
 /* ================= CONSTANTS ================= */
 
@@ -52,7 +52,7 @@ const Auth: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
+  const [isSignUp, setIsSignUp] = useState(false);
   const from = location.state?.from?.pathname;
 
   useEffect(() => {
@@ -72,12 +72,206 @@ const Auth: React.FC = () => {
     }
   }, [cookies.token, cookies.role, navigate]);
 
-  const handleLogin = async (
-    values: { email: string; password: string },
+  const getValidationSchema = () => {
+    if (isSignUp) {
+      return Yup.object({
+        fullName: Yup.string().required("Full name is required"),
+        email: Yup.string().email("Invalid email").required("Email required"),
+        password: Yup.string()
+          .min(6, "At least 6 characters")
+          .required("Password required"),
+        confirmPassword: Yup.string()
+          .oneOf([Yup.ref("password")], "Passwords must match")
+          .required("Confirm password required"),
+      });
+    }
+    return Yup.object({
+      email: Yup.string().email("Invalid email").required("Email required"),
+      password: Yup.string().min(6).required("Password required"),
+    });
+  };
+
+  //const handleLogin = async (
+  //  values: { email: string; password: string },
+  //  { setSubmitting }: any,
+  //) => {
+  //  setErrorMessage("");
+  //  try {
+  //    const res = await axios.post(
+  //      `${BASE_URL}/api/v3/unified/login`,
+  //      {
+  //        email: values.email,
+  //        password: values.password,
+  //      },
+  //      {
+  //        headers: { "Content-Type": "application/json" },
+  //        withCredentials: true,
+  //      },
+  //    );
+
+  //    if (!res.data?.status) {
+  //      setErrorMessage(res.data.message || "Login failed");
+  //      return;
+  //    }
+
+  //    const data = res.data.data;
+
+  //    // ─── 2FA required ─────────────────────────────────
+  //    if (data.requiresTwoFactor && data.tempToken) {
+  //      const payload = JSON.parse(atob(data.tempToken.split(".")[1]));
+  //      const maxAge = payload.exp - Math.floor(Date.now() / 1000);
+
+  //      setCookie("tempToken", data.tempToken, { path: "/", maxAge });
+  //      setCookie("twoFactorMethod", data.twoFactorMethod, {
+  //        path: "/",
+  //        maxAge,
+  //      });
+
+  //      switch (data.userType) {
+  //        case "SUPER_USER":
+  //          navigate("/verify-2fa-super");
+  //          break;
+  //        case "EXCHANGE_ADMIN":
+  //        case "EXCHANGE_USER":
+  //          navigate("/exchange/2fa-login");
+  //          break;
+  //        case "BUSINESS_ADMIN":
+  //          navigate("/business/2fa/login");
+  //          break;
+  //        case "BUSINESS_USER":
+  //          navigate("/business-user-2fa-login");
+  //          break;
+  //        default:
+  //          navigate("/verify-2fa-login");
+  //      }
+  //      return;
+  //    }
+
+  //    // ─── Normal successful login ────────
+  //    if (data.accessToken) {
+  //      const jwtPayload = JSON.parse(atob(data.accessToken.split(".")[1]));
+  //      const role = jwtPayload.roles?.[0] || "";
+  //      const maxAge = jwtPayload.exp - Math.floor(Date.now() / 1000);
+
+  //      setCookie("token", data.accessToken, { path: "/", maxAge });
+  //      setCookie("role", role, { path: "/", maxAge });
+
+  //      if (data.refreshToken) {
+  //        setCookie("refreshToken", data.refreshToken, { path: "/" });
+  //      }
+  //      if (data?.exchangeAdmin?.currencyCode) {
+  //        setCookie("currencyCode", data?.exchangeAdmin?.currencyCode);
+  //      }
+
+  //      if (data.fullName) {
+  //        setCookie("fullName", data.fullName, { path: "/", maxAge });
+  //      }
+
+  //      if (data.legalBusinessName) {
+  //        setCookie("legalBusinessName", data.legalBusinessName, {
+  //          path: "/",
+  //          maxAge,
+  //        });
+  //      }
+
+  //      const userInfo =
+  //        data.exchangeAdmin ||
+  //        data.exchangeUser ||
+  //        data.businessAdmin ||
+  //        data.businessUser ||
+  //        data.staff ||
+  //        null;
+
+  //      if (userInfo?.fullName) {
+  //        setCookie("fullName", userInfo.fullName, { path: "/", maxAge });
+  //      }
+
+  //      if (userInfo?.legalBusinessName) {
+  //        setCookie("legalBusinessName", userInfo.legalBusinessName, {
+  //          path: "/",
+  //          maxAge,
+  //        });
+  //      }
+
+  //      toast.success("Login successful");
+
+  //      if (from) {
+  //        navigate(from, { replace: true });
+  //        return;
+  //      }
+
+  //      // Role-based redirect
+  //      if (role === "ROLE_SUPER_USER") {
+  //        navigate("/admin");
+  //      } else if (
+  //        ["ROLE_EXCHANGE_ADMIN", "ROLE_EXCHANGE_USER"].includes(role)
+  //      ) {
+  //        navigate("/exchange");
+  //      } else if (BRANCH_ROLES.includes(role)) {
+  //        navigate("/branch");
+  //      } else if (role === "ROLE_BUSINESS_ADMIN") {
+  //        navigate("/portal");
+  //      } else if (["ROLE_BUSINESS_USER", "ROLE_USER"].includes(role)) {
+  //        navigate("/user");
+  //      } else {
+  //        toast.error("Unrecognized role — please contact support");
+  //        navigate("/login");
+  //      }
+  //    }
+  //  } catch (err: any) {
+  //    const statusCode = err?.response?.status;
+  //    const uuid = err?.response?.data?.data?.uuid;
+  //    const userType = err?.response?.data?.data?.userType;
+  //    if (statusCode === 428 && uuid && userType) {
+  //      navigate(`/change-password?uuid=${uuid}`, { state: { userType } });
+  //      return;
+  //    }
+
+  //    // Default error message
+  //    setErrorMessage(
+  //      err?.response?.data?.message || "Invalid email or password",
+  //    );
+  //  } finally {
+  //    setSubmitting(false);
+  //  }
+  //};
+
+  const handleSubmit = async (
+    values: { email: string; password: string; fullName?: string },
     { setSubmitting }: any,
   ) => {
     setErrorMessage("");
     try {
+      // ========== SIGN UP ==========
+      //if (isSignUp) {
+      //  const res = await axios.post(
+      //    `${BASE_URL}/api/v3/unified/register`,
+      //    {
+      //      fullName: values.fullName,
+      //      email: values.email,
+      //      password: values.password,
+      //      // Add extra fields if needed, e.g.:
+      //      // userType: "BUSINESS_USER",  // or "EXCHANGE_USER", etc.
+      //      // role: "ROLE_USER",
+      //    },
+      //    {
+      //      headers: { "Content-Type": "application/json" },
+      //      withCredentials: true,
+      //    },
+      //  );
+
+      //  if (!res.data?.status) {
+      //    setErrorMessage(res.data.message || "Registration failed");
+      //    return;
+      //  }
+
+      //  toast.success("Registration successful! Please sign in.");
+      //  setIsSignUp(false); // switch back to login tab
+      //  // Optionally auto‑login by calling the login flow here (see below)
+      //  return;
+      //}
+
+      // ========== SIGN IN (your original logic) ==========
       const res = await axios.post(
         `${BASE_URL}/api/v3/unified/login`,
         {
@@ -128,7 +322,7 @@ const Auth: React.FC = () => {
         return;
       }
 
-      // ─── Normal successful login ────────
+      // ─── Normal successful login ─────────────────────
       if (data.accessToken) {
         const jwtPayload = JSON.parse(atob(data.accessToken.split(".")[1]));
         const role = jwtPayload.roles?.[0] || "";
@@ -141,7 +335,7 @@ const Auth: React.FC = () => {
           setCookie("refreshToken", data.refreshToken, { path: "/" });
         }
         if (data?.exchangeAdmin?.currencyCode) {
-          setCookie("currencyCode", data?.exchangeAdmin?.currencyCode);
+          setCookie("currencyCode", data.exchangeAdmin.currencyCode);
         }
 
         if (data.fullName) {
@@ -166,7 +360,6 @@ const Auth: React.FC = () => {
         if (userInfo?.fullName) {
           setCookie("fullName", userInfo.fullName, { path: "/", maxAge });
         }
-
         if (userInfo?.legalBusinessName) {
           setCookie("legalBusinessName", userInfo.legalBusinessName, {
             path: "/",
@@ -176,12 +369,12 @@ const Auth: React.FC = () => {
 
         toast.success("Login successful");
 
+        // Redirect based on previous location or role
         if (from) {
           navigate(from, { replace: true });
           return;
         }
 
-        // Role-based redirect
         if (role === "ROLE_SUPER_USER") {
           navigate("/admin");
         } else if (
@@ -200,6 +393,7 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
+      // ─── Special case: 428 (password change required) ───
       const statusCode = err?.response?.status;
       const uuid = err?.response?.data?.data?.uuid;
       const userType = err?.response?.data?.data?.userType;
@@ -245,13 +439,37 @@ const Auth: React.FC = () => {
 
           <Card className="shadow-xl">
             <div className="pt-6 pb-2 text-center">
-              <h1 className="text-xl font-bold">Sign In</h1>
+              {/*<h1 className="text-xl font-bold">Sign In</h1>*/}
+              <div className="flex justify-center gap-10 pt-4 pb-2">
+                <Button
+                  variant={!isSignUp ? "default" : "ghost"}
+                  size="lg"
+                  onClick={() => setIsSignUp(false)}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant={isSignUp ? "default" : "ghost"}
+                  size="lg"
+                  onClick={() => setIsSignUp(true)}
+                >
+                  Sign Up
+                </Button>
+              </div>
             </div>
 
             <Formik
-              initialValues={{ email: "", password: "" }}
-              validationSchema={loginSchema}
-              onSubmit={handleLogin}
+              //initialValues={{ email: "", password: "" }}
+              initialValues={{
+                fullName: "",
+                email: "",
+                password: "",
+                confirmPassword: "",
+              }}
+              //validationSchema={loginSchema}
+              //onSubmit={handleLogin}
+              validationSchema={getValidationSchema()}
+              onSubmit={handleSubmit}
             >
               {({ isSubmitting }) => (
                 <Form>
@@ -272,7 +490,19 @@ const Auth: React.FC = () => {
                         className="text-red-500 text-sm mt-1"
                       />
                     </div>
-
+                    {isSignUp && (
+                      <div>
+                        <Label>
+                          Full Name <span className="text-red-600">*</span>
+                        </Label>
+                        <Field as={Input} name="fullName" type="text" />
+                        <ErrorMessage
+                          name="fullName"
+                          component="div"
+                          className="text-red-500 text-sm mt-1"
+                        />
+                      </div>
+                    )}
                     <div>
                       <Label>
                         Password <span className="text-red-600">*</span>
@@ -300,7 +530,24 @@ const Auth: React.FC = () => {
                         className="text-red-500 text-sm mt-0"
                       />
                     </div>
-
+                    {isSignUp && (
+                      <div>
+                        <Label>
+                          Confirm Password{" "}
+                          <span className="text-red-600">*</span>
+                        </Label>
+                        <Field
+                          as={Input}
+                          name="confirmPassword"
+                          type={showPassword ? "text" : "password"}
+                        />
+                        <ErrorMessage
+                          name="confirmPassword"
+                          component="div"
+                          className="text-red-500 text-sm mt-1"
+                        />
+                      </div>
+                    )}
                     {errorMessage && (
                       <div className="text-red-500 text-sm text-center pt-2">
                         {errorMessage}

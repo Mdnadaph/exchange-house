@@ -24,6 +24,7 @@ import { formateDate } from "@/utils/formateDateTime";
 import dayjs from "dayjs";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const UserDashboard = () => {
   const { toast } = useToast();
@@ -422,7 +423,14 @@ const UserDashboard = () => {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/*<div className="flex items-center justify-between gap-2 flex-wrap">*/}
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2 flex-wrap",
+            (kybStatus === "NOT_STARTED" || kybStatus === "PENDING") &&
+              "opacity-50 pointer-events-none select-none",
+          )}
+        >
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">
@@ -443,7 +451,14 @@ const UserDashboard = () => {
         {/* /portal/transactions */}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">*/}
+        <div
+          className={cn(
+            "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+            (kybStatus === "NOT_STARTED" || kybStatus === "PENDING") &&
+              "opacity-50 pointer-events-none select-none",
+          )}
+        >
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -473,7 +488,14 @@ const UserDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/*<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">*/}
+        <div
+          className={cn(
+            "grid grid-cols-1 lg:grid-cols-3 gap-8",
+            (kybStatus === "NOT_STARTED" || kybStatus === "PENDING") &&
+              "opacity-50 pointer-events-none select-none",
+          )}
+        >
           {/* Recent Transactions */}
           <div className="lg:col-span-2">
             <Card className="shadow-card">
@@ -628,7 +650,14 @@ const UserDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="shadow-card">
+        {/*<Card className="shadow-card">*/}
+        <Card
+          className={cn(
+            "shadow-card",
+            (kybStatus === "NOT_STARTED" || kybStatus === "PENDING") &&
+              "opacity-50 pointer-events-none select-none",
+          )}
+        >
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
@@ -672,7 +701,14 @@ const UserDashboard = () => {
         </Card>
 
         {/* Transaction Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/*<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">*/}
+        <div
+          className={cn(
+            "grid grid-cols-1 lg:grid-cols-2 gap-8",
+            (kybStatus === "NOT_STARTED" || kybStatus === "PENDING") &&
+              "opacity-50 pointer-events-none select-none",
+          )}
+        >
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
