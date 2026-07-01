@@ -1072,7 +1072,7 @@ const AdminExchangeHouses = () => {
             >
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {/* {t("suspendedHouses")} */}
-                Suspended Excahnge House
+                Suspended Exchange House
               </CardTitle>
               <XCircle className="h-5 w-5 text-red-600" />
             </CardHeader>

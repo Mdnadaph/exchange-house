@@ -89,29 +89,29 @@ const StaffOnboardingForm = ({
   const [businessTypeData, setBusinessTypeData] = useState([]);
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(false);
-  const [uboData, setUboData] = useState([
-    {
-      uboType: "",
-      ownershipPercentage: "",
-      fullName: "",
-      dateOfBirth: "",
-      contactNumber: "",
-      address: "",
-      email: "",
-      organizationName: "",
-      phoneNumber: "",
-      registrationNumber: "",
-      documentData: [
-        {
-          id: "",
-          idType: "",
-          expireDate: "",
-          issuedCountry: "",
-          docs: null,
-        },
-      ],
-    },
-  ]);
+  //const [uboData, setUboData] = useState([
+  //  {
+  //    uboType: "",
+  //    ownershipPercentage: "",
+  //    fullName: "",
+  //    dateOfBirth: "",
+  //    contactNumber: "",
+  //    address: "",
+  //    email: "",
+  //    organizationName: "",
+  //    phoneNumber: "",
+  //    registrationNumber: "",
+  //    documentData: [
+  //      {
+  //        id: "",
+  //        idType: "",
+  //        expireDate: "",
+  //        issuedCountry: "",
+  //        docs: null,
+  //      },
+  //    ],
+  //  },
+  //]);
 
   // Countries state
   const [countries, setCountries] = useState<string[]>([]);
@@ -224,29 +224,29 @@ const StaffOnboardingForm = ({
     if (open) {
       setErrors({});
       setSelectedCurrencies(["AED"]);
-      setUboData([
-        {
-          uboType: "",
-          ownershipPercentage: "",
-          fullName: "",
-          dateOfBirth: "",
-          contactNumber: "",
-          address: "",
-          email: "",
-          organizationName: "",
-          phoneNumber: "",
-          registrationNumber: "",
-          documentData: [
-            {
-              id: "",
-              idType: "",
-              expireDate: "",
-              issuedCountry: "",
-              docs: null,
-            },
-          ],
-        },
-      ]);
+      //setUboData([
+      //  {
+      //    uboType: "",
+      //    ownershipPercentage: "",
+      //    fullName: "",
+      //    dateOfBirth: "",
+      //    contactNumber: "",
+      //    address: "",
+      //    email: "",
+      //    organizationName: "",
+      //    phoneNumber: "",
+      //    registrationNumber: "",
+      //    documentData: [
+      //      {
+      //        id: "",
+      //        idType: "",
+      //        expireDate: "",
+      //        issuedCountry: "",
+      //        docs: null,
+      //      },
+      //    ],
+      //  },
+      //]);
       setFormData({
         companyName: "",
         tradeLicense: "",
@@ -320,19 +320,19 @@ const StaffOnboardingForm = ({
         designation: formData.adminDesignation,
       };
 
-      const uboPayload = uboData?.map((uboItem) => {
-        const { documentData, ...rest } = uboItem;
-        return {
-          ...rest,
-          documents: documentData?.map((doc) => ({
-            fileKey: doc?.docs?.name,
-            documentType: doc?.idType,
-            documentNumber: doc?.id,
-            issuedCountry: doc?.issuedCountry,
-            expiryDate: doc?.expireDate,
-          })),
-        };
-      });
+      //const uboPayload = uboData?.map((uboItem) => {
+      //  const { documentData, ...rest } = uboItem;
+      //  return {
+      //    ...rest,
+      //    documents: documentData?.map((doc) => ({
+      //      fileKey: doc?.docs?.name,
+      //      documentType: doc?.idType,
+      //      documentNumber: doc?.id,
+      //      issuedCountry: doc?.issuedCountry,
+      //      expiryDate: doc?.expireDate,
+      //    })),
+      //  };
+      //});
 
       const apiFormData = new FormData();
       apiFormData.append(
@@ -348,17 +348,17 @@ const StaffOnboardingForm = ({
         }),
       );
 
-      apiFormData.append(
-        "ubos",
-        new Blob([JSON.stringify(uboPayload)], { type: "application/json" }),
-      );
-      uboData?.forEach((uboItem, uboIndex) => {
-        uboItem?.documentData?.forEach((doc, docIndex) => {
-          if (doc?.docs instanceof File) {
-            apiFormData.append("documents", doc?.docs);
-          }
-        });
-      });
+      //apiFormData.append(
+      //  "ubos",
+      //  new Blob([JSON.stringify(uboPayload)], { type: "application/json" }),
+      //);
+      //uboData?.forEach((uboItem, uboIndex) => {
+      //  uboItem?.documentData?.forEach((doc, docIndex) => {
+      //    if (doc?.docs instanceof File) {
+      //      apiFormData.append("documents", doc?.docs);
+      //    }
+      //  });
+      //});
 
       const response = await axios.post(
         `${BASE_URL}/api/v3/business/create`,
@@ -384,29 +384,29 @@ const StaffOnboardingForm = ({
         setSelectedCurrencies(["AED"]);
         refetch();
         clearFilterData?.();
-        setUboData([
-          {
-            uboType: "",
-            ownershipPercentage: "",
-            fullName: "",
-            dateOfBirth: "",
-            contactNumber: "",
-            address: "",
-            email: "",
-            organizationName: "",
-            phoneNumber: "",
-            registrationNumber: "",
-            documentData: [
-              {
-                id: "",
-                idType: "",
-                expireDate: "",
-                issuedCountry: "",
-                docs: null,
-              },
-            ],
-          },
-        ]);
+        //setUboData([
+        //  {
+        //    uboType: "",
+        //    ownershipPercentage: "",
+        //    fullName: "",
+        //    dateOfBirth: "",
+        //    contactNumber: "",
+        //    address: "",
+        //    email: "",
+        //    organizationName: "",
+        //    phoneNumber: "",
+        //    registrationNumber: "",
+        //    documentData: [
+        //      {
+        //        id: "",
+        //        idType: "",
+        //        expireDate: "",
+        //        issuedCountry: "",
+        //        docs: null,
+        //      },
+        //    ],
+        //  },
+        //]);
         setFormData({
           companyName: "",
           tradeLicense: "",
@@ -518,95 +518,95 @@ const StaffOnboardingForm = ({
   const validateStep3 = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    uboData.forEach((ubo, uboIndex) => {
-      // ================= COMMON =================
-      if (!ubo.uboType) {
-        newErrors[`ubo_${uboIndex}_uboType`] = "UBO Type is required";
-      }
+    //uboData.forEach((ubo, uboIndex) => {
+    //  // ================= COMMON =================
+    //  if (!ubo.uboType) {
+    //    newErrors[`ubo_${uboIndex}_uboType`] = "UBO Type is required";
+    //  }
 
-      if (!ubo.ownershipPercentage) {
-        newErrors[`ubo_${uboIndex}_ownershipPercentage`] =
-          "Ownership % is required";
-      } else if (
-        +ubo.ownershipPercentage <= 0 ||
-        +ubo.ownershipPercentage > 100
-      ) {
-        newErrors[`ubo_${uboIndex}_ownershipPercentage`] =
-          "Must be between 1 and 100";
-      }
+    //  if (!ubo.ownershipPercentage) {
+    //    newErrors[`ubo_${uboIndex}_ownershipPercentage`] =
+    //      "Ownership % is required";
+    //  } else if (
+    //    +ubo.ownershipPercentage <= 0 ||
+    //    +ubo.ownershipPercentage > 100
+    //  ) {
+    //    newErrors[`ubo_${uboIndex}_ownershipPercentage`] =
+    //      "Must be between 1 and 100";
+    //  }
 
-      if (!ubo.address) {
-        newErrors[`ubo_${uboIndex}_address`] = "Address is required";
-      }
+    //  if (!ubo.address) {
+    //    newErrors[`ubo_${uboIndex}_address`] = "Address is required";
+    //  }
 
-      // ================= INDIVIDUAL =================
-      if (ubo.uboType === "INDIVIDUAL") {
-        if (!ubo.fullName) {
-          newErrors[`ubo_${uboIndex}_fullName`] = "Full Name is required";
-        }
+    //  // ================= INDIVIDUAL =================
+    //  if (ubo.uboType === "INDIVIDUAL") {
+    //    if (!ubo.fullName) {
+    //      newErrors[`ubo_${uboIndex}_fullName`] = "Full Name is required";
+    //    }
 
-        if (!ubo.dateOfBirth) {
-          newErrors[`ubo_${uboIndex}_dateOfBirth`] =
-            "Date of Birth is required";
-        }
+    //    if (!ubo.dateOfBirth) {
+    //      newErrors[`ubo_${uboIndex}_dateOfBirth`] =
+    //        "Date of Birth is required";
+    //    }
 
-        if (!ubo.contactNumber) {
-          newErrors[`ubo_${uboIndex}_contactNumber`] =
-            "Contact Number is required";
-        }
+    //    if (!ubo.contactNumber) {
+    //      newErrors[`ubo_${uboIndex}_contactNumber`] =
+    //        "Contact Number is required";
+    //    }
 
-        if (!ubo.email) {
-          newErrors[`ubo_${uboIndex}_email`] = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(ubo.email)) {
-          newErrors[`ubo_${uboIndex}_email`] = "Invalid email format";
-        }
-      }
+    //    if (!ubo.email) {
+    //      newErrors[`ubo_${uboIndex}_email`] = "Email is required";
+    //    } else if (!/\S+@\S+\.\S+/.test(ubo.email)) {
+    //      newErrors[`ubo_${uboIndex}_email`] = "Invalid email format";
+    //    }
+    //  }
 
-      // ================= ORGANIZATION =================
-      if (ubo.uboType === "ORGANIZATION") {
-        if (!ubo.organizationName) {
-          newErrors[`ubo_${uboIndex}_organizationName`] =
-            "Organization Name is required";
-        }
+    //  // ================= ORGANIZATION =================
+    //  if (ubo.uboType === "ORGANIZATION") {
+    //    if (!ubo.organizationName) {
+    //      newErrors[`ubo_${uboIndex}_organizationName`] =
+    //        "Organization Name is required";
+    //    }
 
-        if (!ubo.phoneNumber) {
-          newErrors[`ubo_${uboIndex}_phoneNumber`] = "Phone Number is required";
-        }
+    //    if (!ubo.phoneNumber) {
+    //      newErrors[`ubo_${uboIndex}_phoneNumber`] = "Phone Number is required";
+    //    }
 
-        if (!ubo.registrationNumber) {
-          newErrors[`ubo_${uboIndex}_registrationNumber`] =
-            "Registration Number is required";
-        }
-      }
+    //    if (!ubo.registrationNumber) {
+    //      newErrors[`ubo_${uboIndex}_registrationNumber`] =
+    //        "Registration Number is required";
+    //    }
+    //  }
 
-      // ================= DOCUMENT VALIDATION =================
-      ubo.documentData.forEach((doc, docIndex) => {
-        if (!doc.id) {
-          newErrors[`ubo_${uboIndex}_doc_${docIndex}_id`] =
-            "Document ID is required";
-        }
+    //  // ================= DOCUMENT VALIDATION =================
+    //  ubo.documentData.forEach((doc, docIndex) => {
+    //    if (!doc.id) {
+    //      newErrors[`ubo_${uboIndex}_doc_${docIndex}_id`] =
+    //        "Document ID is required";
+    //    }
 
-        if (!doc.idType) {
-          newErrors[`ubo_${uboIndex}_doc_${docIndex}_idType`] =
-            "ID Type is required";
-        }
+    //    if (!doc.idType) {
+    //      newErrors[`ubo_${uboIndex}_doc_${docIndex}_idType`] =
+    //        "ID Type is required";
+    //    }
 
-        if (!doc.expireDate) {
-          newErrors[`ubo_${uboIndex}_doc_${docIndex}_expireDate`] =
-            "Expire Date is required";
-        }
+    //    if (!doc.expireDate) {
+    //      newErrors[`ubo_${uboIndex}_doc_${docIndex}_expireDate`] =
+    //        "Expire Date is required";
+    //    }
 
-        if (!doc.issuedCountry) {
-          newErrors[`ubo_${uboIndex}_doc_${docIndex}_issuedCountry`] =
-            "Issued Country is required";
-        }
+    //    if (!doc.issuedCountry) {
+    //      newErrors[`ubo_${uboIndex}_doc_${docIndex}_issuedCountry`] =
+    //        "Issued Country is required";
+    //    }
 
-        if (!doc.docs) {
-          newErrors[`ubo_${uboIndex}_doc_${docIndex}_docs`] =
-            "Document file is required";
-        }
-      });
-    });
+    //    if (!doc.docs) {
+    //      newErrors[`ubo_${uboIndex}_doc_${docIndex}_docs`] =
+    //        "Document file is required";
+    //    }
+    //  });
+    //});
 
     setErrors(newErrors);
 
@@ -646,7 +646,8 @@ const StaffOnboardingForm = ({
 
   const renderStepIndicator = () => (
     <div className="flex items-center space-x-4 mb-6">
-      {[1, 2, 3, 4].map((step) => (
+      {/*{[1, 2, 3, 4].map((step) => (*/}
+      {[1, 2, 3].map((step) => (
         <div key={step} className="flex items-center">
           <div
             className={`
@@ -673,100 +674,100 @@ const StaffOnboardingForm = ({
     </div>
   );
 
-  const handleUboChange = (index, field, value) => {
-    const updated = structuredClone(uboData);
-    updated[index][field] = value;
-    setUboData(updated);
-    clearError(`ubo_${index}_${field}`);
-  };
+  //const handleUboChange = (index, field, value) => {
+  //  const updated = structuredClone(uboData);
+  //  updated[index][field] = value;
+  //  setUboData(updated);
+  //  clearError(`ubo_${index}_${field}`);
+  //};
 
-  const handleTypeChange = (index, value) => {
-    const updated = structuredClone(uboData);
-    clearError(`ubo_${index}_uboType`);
-    updated[index] = {
-      ...updated[index],
-      uboType: value,
-      fullName: "",
-      dateOfBirth: "",
-      contactNumber: "",
-      email: "",
-      organizationName: "",
-      phoneNumber: "",
-      registrationNumber: "",
-      documentData: [
-        {
-          id: "",
-          idType: "",
-          expireDate: "",
-          issuedCountry: "",
-          docs: null,
-        },
-      ],
-    };
+  //const handleTypeChange = (index, value) => {
+  //  const updated = structuredClone(uboData);
+  //  clearError(`ubo_${index}_uboType`);
+  //  updated[index] = {
+  //    ...updated[index],
+  //    uboType: value,
+  //    fullName: "",
+  //    dateOfBirth: "",
+  //    contactNumber: "",
+  //    email: "",
+  //    organizationName: "",
+  //    phoneNumber: "",
+  //    registrationNumber: "",
+  //    documentData: [
+  //      {
+  //        id: "",
+  //        idType: "",
+  //        expireDate: "",
+  //        issuedCountry: "",
+  //        docs: null,
+  //      },
+  //    ],
+  //  };
 
-    setUboData(updated);
-  };
+  //  setUboData(updated);
+  //};
 
-  const addUbo = () => {
-    setUboData((prev) => [
-      ...prev,
-      {
-        uboType: "",
-        ownershipPercentage: "",
-        fullName: "",
-        dateOfBirth: "",
-        contactNumber: "",
-        address: "",
-        email: "",
-        organizationName: "",
-        phoneNumber: "",
-        registrationNumber: "",
-        documentData: [
-          {
-            id: "",
-            idType: "",
-            expireDate: "",
-            issuedCountry: "",
-            docs: null,
-          },
-        ],
-      },
-    ]);
-  };
+  //const addUbo = () => {
+  //  setUboData((prev) => [
+  //    ...prev,
+  //    {
+  //      uboType: "",
+  //      ownershipPercentage: "",
+  //      fullName: "",
+  //      dateOfBirth: "",
+  //      contactNumber: "",
+  //      address: "",
+  //      email: "",
+  //      organizationName: "",
+  //      phoneNumber: "",
+  //      registrationNumber: "",
+  //      documentData: [
+  //        {
+  //          id: "",
+  //          idType: "",
+  //          expireDate: "",
+  //          issuedCountry: "",
+  //          docs: null,
+  //        },
+  //      ],
+  //    },
+  //  ]);
+  //};
 
-  const removeUbo = (index) => {
-    const updated = [...uboData];
-    updated.splice(index, 1);
-    setUboData(updated);
-  };
+  //const removeUbo = (index) => {
+  //  const updated = [...uboData];
+  //  updated.splice(index, 1);
+  //  setUboData(updated);
+  //};
 
   // ================= DOCUMENT HANDLERS =================
 
-  const handleDocumentChange = (uboIndex, docIndex, field, value) => {
-    const updated = structuredClone(uboData);
-    updated[uboIndex].documentData[docIndex][field] = value;
-    setUboData(updated);
-    clearError(`ubo_${uboIndex}_doc_${docIndex}_${field}`);
-  };
+  //const handleDocumentChange = (uboIndex, docIndex, field, value) => {
+  //  const updated = structuredClone(uboData);
+  //  updated[uboIndex].documentData[docIndex][field] = value;
+  //  setUboData(updated);
+  //  clearError(`ubo_${uboIndex}_doc_${docIndex}_${field}`);
+  //};
 
-  const addDocument = (uboIndex) => {
-    const updated = structuredClone(uboData);
+  //const addDocument = (uboIndex) => {
+  //  const updated = structuredClone(uboData);
 
-    updated[uboIndex].documentData.push({
-      id: "",
-      idType: "",
-      expireDate: "",
-      issuedCountry: "",
-      docs: null,
-    });
-    setUboData(updated);
-  };
+  //  updated[uboIndex].documentData.push({
+  //    id: "",
+  //    idType: "",
+  //    expireDate: "",
+  //    issuedCountry: "",
+  //    docs: null,
+  //  });
+  //  setUboData(updated);
+  //};
 
-  const removeDocument = (uboIndex, docIndex) => {
-    const updated = structuredClone(uboData);
-    updated[uboIndex].documentData.splice(docIndex, 1);
-    setUboData(updated);
-  };
+  //const removeDocument = (uboIndex, docIndex) => {
+  //  const updated = structuredClone(uboData);
+  //  updated[uboIndex].documentData.splice(docIndex, 1);
+  //  setUboData(updated);
+  //};
 
   const renderStep1 = () => (
     <div className="space-y-6">
@@ -1349,429 +1350,429 @@ const StaffOnboardingForm = ({
     </div>
   );
 
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      {uboData.map((item, index) => (
-        <div key={index} className="border p-5 rounded-xl space-y-4 shadow-sm">
-          {/* UBO TYPE */}
-          <div className="space-y-1">
-            <Label htmlFor="uboType">
-              Ubo Type <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={item.uboType}
-              onValueChange={(val) => handleTypeChange(index, val)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="INDIVIDUAL">Individual</SelectItem>
-                <SelectItem value="ORGANIZATION">Organization</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors[`ubo_${index}_uboType`] && (
-              <p className="text-red-500 text-xs">
-                {errors[`ubo_${index}_uboType`]}
-              </p>
-            )}
-          </div>
+  //const renderStep3 = () => (
+  //  <div className="space-y-6">
+  //    {uboData.map((item, index) => (
+  //      <div key={index} className="border p-5 rounded-xl space-y-4 shadow-sm">
+  //        {/* UBO TYPE */}
+  //        <div className="space-y-1">
+  //          <Label htmlFor="uboType">
+  //            Ubo Type <span className="text-red-500">*</span>
+  //          </Label>
+  //          <Select
+  //            value={item.uboType}
+  //            onValueChange={(val) => handleTypeChange(index, val)}
+  //          >
+  //            <SelectTrigger>
+  //              <SelectValue placeholder="Select Type" />
+  //            </SelectTrigger>
+  //            <SelectContent>
+  //              <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+  //              <SelectItem value="ORGANIZATION">Organization</SelectItem>
+  //            </SelectContent>
+  //          </Select>
+  //          {errors[`ubo_${index}_uboType`] && (
+  //            <p className="text-red-500 text-xs">
+  //              {errors[`ubo_${index}_uboType`]}
+  //            </p>
+  //          )}
+  //        </div>
 
-          {/* COMMON */}
-          <div className="space-y-1">
-            <Label htmlFor="ownershipPercentage">
-              Ownership Percentage <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              onWheel={(e) => e.currentTarget.blur()}
-              id="ownershipPercentage"
-              placeholder="Ownership Percentage"
-              type="number"
-              value={item.ownershipPercentage}
-              onChange={(e) =>
-                handleUboChange(index, "ownershipPercentage", e.target.value)
-              }
-            />
-            {errors[`ubo_${index}_ownershipPercentage`] && (
-              <p className="text-red-500 text-xs">
-                {errors[`ubo_${index}_ownershipPercentage`]}
-              </p>
-            )}
-          </div>
+  //        {/* COMMON */}
+  //        <div className="space-y-1">
+  //          <Label htmlFor="ownershipPercentage">
+  //            Ownership Percentage <span className="text-red-500">*</span>
+  //          </Label>
+  //          <Input
+  //            onWheel={(e) => e.currentTarget.blur()}
+  //            id="ownershipPercentage"
+  //            placeholder="Ownership Percentage"
+  //            type="number"
+  //            value={item.ownershipPercentage}
+  //            onChange={(e) =>
+  //              handleUboChange(index, "ownershipPercentage", e.target.value)
+  //            }
+  //          />
+  //          {errors[`ubo_${index}_ownershipPercentage`] && (
+  //            <p className="text-red-500 text-xs">
+  //              {errors[`ubo_${index}_ownershipPercentage`]}
+  //            </p>
+  //          )}
+  //        </div>
 
-          {/* INDIVIDUAL */}
-          {item.uboType === "INDIVIDUAL" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="fullName">
-                  Full Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="fullName"
-                  placeholder="Full Name"
-                  value={item.fullName}
-                  onChange={(e) =>
-                    handleUboChange(index, "fullName", e.target.value)
-                  }
-                />
-                {errors[`ubo_${index}_fullName`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_fullName`]}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="dateOfBirth">
-                  Date Of Birth <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={item.dateOfBirth}
-                  onChange={(e) =>
-                    handleUboChange(index, "dateOfBirth", e.target.value)
-                  }
-                />
+  //        {/* INDIVIDUAL */}
+  //        {item.uboType === "INDIVIDUAL" && (
+  //          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+  //            <div className="space-y-1">
+  //              <Label htmlFor="fullName">
+  //                Full Name <span className="text-red-500">*</span>
+  //              </Label>
+  //              <Input
+  //                id="fullName"
+  //                placeholder="Full Name"
+  //                value={item.fullName}
+  //                onChange={(e) =>
+  //                  handleUboChange(index, "fullName", e.target.value)
+  //                }
+  //              />
+  //              {errors[`ubo_${index}_fullName`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_fullName`]}
+  //                </p>
+  //              )}
+  //            </div>
+  //            <div className="space-y-1">
+  //              <Label htmlFor="dateOfBirth">
+  //                Date Of Birth <span className="text-red-500">*</span>
+  //              </Label>
+  //              <Input
+  //                id="dateOfBirth"
+  //                type="date"
+  //                value={item.dateOfBirth}
+  //                onChange={(e) =>
+  //                  handleUboChange(index, "dateOfBirth", e.target.value)
+  //                }
+  //              />
 
-                {errors[`ubo_${index}_dateOfBirth`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_dateOfBirth`]}
-                  </p>
-                )}
-              </div>
+  //              {errors[`ubo_${index}_dateOfBirth`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_dateOfBirth`]}
+  //                </p>
+  //              )}
+  //            </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="contactNumber">
-                  Contact Number <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <PhoneInput
-                    country={"us"}
-                    value={item.contactNumber}
-                    onChange={(value) => {
-                      handleUboChange(index, "contactNumber", value);
-                      clearError("adminPhone");
-                      setApiErrors((prev: any) => ({
-                        ...prev,
-                        adminPhone: "",
-                      }));
-                      // Optionally store country data if needed later
-                    }}
-                    inputProps={{
-                      name: "contactNumber",
-                      id: "contactNumber",
-                      required: true,
-                    }}
-                    containerClass="phone-input-container" // optional custom class
-                    //inputClass="!pl-12" // adjust padding for the flag button
-                    buttonClass="phone-flag-button"
-                    enableSearch={true}
-                    searchPlaceholder="Search country"
-                    //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
-                    preferredCountries={["ae", "in"]} // show these at top
-                  />
-                </div>
-                {errors[`ubo_${index}_contactNumber`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_contactNumber`]}
-                  </p>
-                )}
-              </div>
+  //            <div className="space-y-1">
+  //              <Label htmlFor="contactNumber">
+  //                Contact Number <span className="text-red-500">*</span>
+  //              </Label>
+  //              <div className="relative">
+  //                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+  //                <PhoneInput
+  //                  country={"us"}
+  //                  value={item.contactNumber}
+  //                  onChange={(value) => {
+  //                    handleUboChange(index, "contactNumber", value);
+  //                    clearError("adminPhone");
+  //                    setApiErrors((prev: any) => ({
+  //                      ...prev,
+  //                      adminPhone: "",
+  //                    }));
+  //                    // Optionally store country data if needed later
+  //                  }}
+  //                  inputProps={{
+  //                    name: "contactNumber",
+  //                    id: "contactNumber",
+  //                    required: true,
+  //                  }}
+  //                  containerClass="phone-input-container" // optional custom class
+  //                  //inputClass="!pl-12" // adjust padding for the flag button
+  //                  buttonClass="phone-flag-button"
+  //                  enableSearch={true}
+  //                  searchPlaceholder="Search country"
+  //                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+  //                  preferredCountries={["ae", "in"]} // show these at top
+  //                />
+  //              </div>
+  //              {errors[`ubo_${index}_contactNumber`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_contactNumber`]}
+  //                </p>
+  //              )}
+  //            </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="email">
-                  Email <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  placeholder="Email"
-                  value={item.email}
-                  onChange={(e) =>
-                    handleUboChange(index, "email", e.target.value)
-                  }
-                />
-                {errors[`ubo_${index}_email`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_email`]}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+  //            <div className="space-y-1">
+  //              <Label htmlFor="email">
+  //                Email <span className="text-red-500">*</span>
+  //              </Label>
+  //              <Input
+  //                id="email"
+  //                placeholder="Email"
+  //                value={item.email}
+  //                onChange={(e) =>
+  //                  handleUboChange(index, "email", e.target.value)
+  //                }
+  //              />
+  //              {errors[`ubo_${index}_email`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_email`]}
+  //                </p>
+  //              )}
+  //            </div>
+  //          </div>
+  //        )}
 
-          {/* ORGANIZATION */}
-          {item.uboType === "ORGANIZATION" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="organizationName">
-                  Organization Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="organizationName"
-                  placeholder="Organization Name"
-                  value={item.organizationName}
-                  onChange={(e) =>
-                    handleUboChange(index, "organizationName", e.target.value)
-                  }
-                />
-                {errors[`ubo_${index}_organizationName`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_organizationName`]}
-                  </p>
-                )}
-              </div>
+  //        {/* ORGANIZATION */}
+  //        {item.uboType === "ORGANIZATION" && (
+  //          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+  //            <div className="space-y-1">
+  //              <Label htmlFor="organizationName">
+  //                Organization Name <span className="text-red-500">*</span>
+  //              </Label>
+  //              <Input
+  //                id="organizationName"
+  //                placeholder="Organization Name"
+  //                value={item.organizationName}
+  //                onChange={(e) =>
+  //                  handleUboChange(index, "organizationName", e.target.value)
+  //                }
+  //              />
+  //              {errors[`ubo_${index}_organizationName`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_organizationName`]}
+  //                </p>
+  //              )}
+  //            </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="phoneNumber">
-                  Phone Number <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <PhoneInput
-                    country={"us"}
-                    value={item.phoneNumber}
-                    onChange={(value) => {
-                      handleUboChange(index, "phoneNumber", value);
-                      // Optionally store country data if needed later
-                    }}
-                    inputProps={{
-                      name: "phoneNumber",
-                      id: "phoneNumber",
-                      required: true,
-                    }}
-                    containerClass="phone-input-container" // optional custom class
-                    //inputClass="!pl-12" // adjust padding for the flag button
-                    buttonClass="phone-flag-button"
-                    enableSearch={true}
-                    searchPlaceholder="Search country"
-                    //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
-                    preferredCountries={["ae", "in"]} // show these at top
-                  />
-                </div>
+  //            <div className="space-y-1">
+  //              <Label htmlFor="phoneNumber">
+  //                Phone Number <span className="text-red-500">*</span>
+  //              </Label>
+  //              <div className="relative">
+  //                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+  //                <PhoneInput
+  //                  country={"us"}
+  //                  value={item.phoneNumber}
+  //                  onChange={(value) => {
+  //                    handleUboChange(index, "phoneNumber", value);
+  //                    // Optionally store country data if needed later
+  //                  }}
+  //                  inputProps={{
+  //                    name: "phoneNumber",
+  //                    id: "phoneNumber",
+  //                    required: true,
+  //                  }}
+  //                  containerClass="phone-input-container" // optional custom class
+  //                  //inputClass="!pl-12" // adjust padding for the flag button
+  //                  buttonClass="phone-flag-button"
+  //                  enableSearch={true}
+  //                  searchPlaceholder="Search country"
+  //                  //onlyCountries={['ae', 'in', 'us', 'gb', ...]}  // restrict to your allowed countries
+  //                  preferredCountries={["ae", "in"]} // show these at top
+  //                />
+  //              </div>
 
-                {errors[`ubo_${index}_phoneNumber`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_phoneNumber`]}
-                  </p>
-                )}
-              </div>
+  //              {errors[`ubo_${index}_phoneNumber`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_phoneNumber`]}
+  //                </p>
+  //              )}
+  //            </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="registrationNumber">
-                  Registration Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="registrationNumber"
-                  placeholder="Registration Number"
-                  value={item.registrationNumber}
-                  onChange={(e) =>
-                    handleUboChange(index, "registrationNumber", e.target.value)
-                  }
-                />
-                {errors[`ubo_${index}_registrationNumber`] && (
-                  <p className="text-red-500 text-xs">
-                    {errors[`ubo_${index}_registrationNumber`]}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+  //            <div className="space-y-1">
+  //              <Label htmlFor="registrationNumber">
+  //                Registration Name <span className="text-red-500">*</span>
+  //              </Label>
+  //              <Input
+  //                id="registrationNumber"
+  //                placeholder="Registration Number"
+  //                value={item.registrationNumber}
+  //                onChange={(e) =>
+  //                  handleUboChange(index, "registrationNumber", e.target.value)
+  //                }
+  //              />
+  //              {errors[`ubo_${index}_registrationNumber`] && (
+  //                <p className="text-red-500 text-xs">
+  //                  {errors[`ubo_${index}_registrationNumber`]}
+  //                </p>
+  //              )}
+  //            </div>
+  //          </div>
+  //        )}
 
-          {/* ADDRESS */}
-          <div className="space-y-1">
-            <Label htmlFor="address">
-              Address <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="address"
-              placeholder="Address"
-              value={item.address}
-              onChange={(e) =>
-                handleUboChange(index, "address", e.target.value)
-              }
-            />
-            {errors[`ubo_${index}_address`] && (
-              <p className="text-red-500 text-xs">
-                {errors[`ubo_${index}_address`]}
-              </p>
-            )}
-          </div>
+  //        {/* ADDRESS */}
+  //        <div className="space-y-1">
+  //          <Label htmlFor="address">
+  //            Address <span className="text-red-500">*</span>
+  //          </Label>
+  //          <Input
+  //            id="address"
+  //            placeholder="Address"
+  //            value={item.address}
+  //            onChange={(e) =>
+  //              handleUboChange(index, "address", e.target.value)
+  //            }
+  //          />
+  //          {errors[`ubo_${index}_address`] && (
+  //            <p className="text-red-500 text-xs">
+  //              {errors[`ubo_${index}_address`]}
+  //            </p>
+  //          )}
+  //        </div>
 
-          {/* ================= DOCUMENT SECTION ================= */}
-          <div>
-            <Label className="text-base font-semibold">Documents</Label>
+  //        {/* ================= DOCUMENT SECTION ================= */}
+  //        <div>
+  //          <Label className="text-base font-semibold">Documents</Label>
 
-            {item.documentData.map((doc, docIndex) => (
-              <div
-                key={docIndex}
-                className="border p-3 rounded-md mt-2 grid grid-cols-1 md:grid-cols-2 gap-3"
-              >
-                <div className="space-y-1">
-                  <Label htmlFor="id">
-                    Document Id <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="id"
-                    placeholder="Document ID"
-                    value={doc.id}
-                    onChange={(e) =>
-                      handleDocumentChange(
-                        index,
-                        docIndex,
-                        "id",
-                        e.target.value,
-                      )
-                    }
-                  />
-                  {errors[`ubo_${index}_doc_${docIndex}_id`] && (
-                    <p className="text-red-500 text-xs">
-                      {errors[`ubo_${index}_doc_${docIndex}_id`]}
-                    </p>
-                  )}
-                </div>
+  //          {item.documentData.map((doc, docIndex) => (
+  //            <div
+  //              key={docIndex}
+  //              className="border p-3 rounded-md mt-2 grid grid-cols-1 md:grid-cols-2 gap-3"
+  //            >
+  //              <div className="space-y-1">
+  //                <Label htmlFor="id">
+  //                  Document Id <span className="text-red-500">*</span>
+  //                </Label>
+  //                <Input
+  //                  id="id"
+  //                  placeholder="Document ID"
+  //                  value={doc.id}
+  //                  onChange={(e) =>
+  //                    handleDocumentChange(
+  //                      index,
+  //                      docIndex,
+  //                      "id",
+  //                      e.target.value,
+  //                    )
+  //                  }
+  //                />
+  //                {errors[`ubo_${index}_doc_${docIndex}_id`] && (
+  //                  <p className="text-red-500 text-xs">
+  //                    {errors[`ubo_${index}_doc_${docIndex}_id`]}
+  //                  </p>
+  //                )}
+  //              </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="idType">
-                    Document Type <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={doc.idType}
-                    onValueChange={(value) =>
-                      handleDocumentChange(index, docIndex, "idType", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select ID Type" />
-                    </SelectTrigger>
+  //              <div className="space-y-1">
+  //                <Label htmlFor="idType">
+  //                  Document Type <span className="text-red-500">*</span>
+  //                </Label>
+  //                <Select
+  //                  value={doc.idType}
+  //                  onValueChange={(value) =>
+  //                    handleDocumentChange(index, docIndex, "idType", value)
+  //                  }
+  //                >
+  //                  <SelectTrigger>
+  //                    <SelectValue placeholder="Select ID Type" />
+  //                  </SelectTrigger>
 
-                    <SelectContent>
-                      <SelectItem value="ID_COPY">Id Copy</SelectItem>
-                      <SelectItem value=" ADDRESS_PROOF">
-                        Address Proof
-                      </SelectItem>
-                      <SelectItem value="SOURCE_OF_FUNDS">
-                        Source Of Funds
-                      </SelectItem>
-                      <SelectItem value=" TRADE_LICENSE">
-                        Trade License
-                      </SelectItem>
-                      <SelectItem value="COMPANY_REGISTRATION">
-                        Company Registration
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors[`ubo_${index}_doc_${docIndex}_idType`] && (
-                    <p className="text-red-500 text-xs">
-                      {errors[`ubo_${index}_doc_${docIndex}_idType`]}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="expireDate">
-                    Expire Date <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="expireDate"
-                    type="date"
-                    value={doc.expireDate}
-                    onChange={(e) =>
-                      handleDocumentChange(
-                        index,
-                        docIndex,
-                        "expireDate",
-                        e.target.value,
-                      )
-                    }
-                  />
-                  {errors[`ubo_${index}_doc_${docIndex}_expireDate`] && (
-                    <p className="text-red-500 text-xs">
-                      {errors[`ubo_${index}_doc_${docIndex}_expireDate`]}
-                    </p>
-                  )}
-                </div>
+  //                  <SelectContent>
+  //                    <SelectItem value="ID_COPY">Id Copy</SelectItem>
+  //                    <SelectItem value=" ADDRESS_PROOF">
+  //                      Address Proof
+  //                    </SelectItem>
+  //                    <SelectItem value="SOURCE_OF_FUNDS">
+  //                      Source Of Funds
+  //                    </SelectItem>
+  //                    <SelectItem value=" TRADE_LICENSE">
+  //                      Trade License
+  //                    </SelectItem>
+  //                    <SelectItem value="COMPANY_REGISTRATION">
+  //                      Company Registration
+  //                    </SelectItem>
+  //                  </SelectContent>
+  //                </Select>
+  //                {errors[`ubo_${index}_doc_${docIndex}_idType`] && (
+  //                  <p className="text-red-500 text-xs">
+  //                    {errors[`ubo_${index}_doc_${docIndex}_idType`]}
+  //                  </p>
+  //                )}
+  //              </div>
+  //              <div className="space-y-1">
+  //                <Label htmlFor="expireDate">
+  //                  Expire Date <span className="text-red-500">*</span>
+  //                </Label>
+  //                <Input
+  //                  id="expireDate"
+  //                  type="date"
+  //                  value={doc.expireDate}
+  //                  onChange={(e) =>
+  //                    handleDocumentChange(
+  //                      index,
+  //                      docIndex,
+  //                      "expireDate",
+  //                      e.target.value,
+  //                    )
+  //                  }
+  //                />
+  //                {errors[`ubo_${index}_doc_${docIndex}_expireDate`] && (
+  //                  <p className="text-red-500 text-xs">
+  //                    {errors[`ubo_${index}_doc_${docIndex}_expireDate`]}
+  //                  </p>
+  //                )}
+  //              </div>
 
-                <div>
-                  <Label htmlFor="issuedCountry">
-                    Issued Country <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="issuedCountry"
-                    placeholder="Issued Country"
-                    value={doc.issuedCountry}
-                    onChange={(e) =>
-                      handleDocumentChange(
-                        index,
-                        docIndex,
-                        "issuedCountry",
-                        e.target.value,
-                      )
-                    }
-                  />
-                  {errors[`ubo_${index}_doc_${docIndex}_issuedCountry`] && (
-                    <p className="text-red-500 text-xs">
-                      {errors[`ubo_${index}_doc_${docIndex}_issuedCountry`]}
-                    </p>
-                  )}
-                </div>
+  //              <div>
+  //                <Label htmlFor="issuedCountry">
+  //                  Issued Country <span className="text-red-500">*</span>
+  //                </Label>
+  //                <Input
+  //                  id="issuedCountry"
+  //                  placeholder="Issued Country"
+  //                  value={doc.issuedCountry}
+  //                  onChange={(e) =>
+  //                    handleDocumentChange(
+  //                      index,
+  //                      docIndex,
+  //                      "issuedCountry",
+  //                      e.target.value,
+  //                    )
+  //                  }
+  //                />
+  //                {errors[`ubo_${index}_doc_${docIndex}_issuedCountry`] && (
+  //                  <p className="text-red-500 text-xs">
+  //                    {errors[`ubo_${index}_doc_${docIndex}_issuedCountry`]}
+  //                  </p>
+  //                )}
+  //              </div>
 
-                <div>
-                  <Label htmlFor="docs">
-                    Upload Documents <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="docs"
-                    type="file"
-                    onChange={(e) =>
-                      handleDocumentChange(
-                        index,
-                        docIndex,
-                        "docs",
-                        e.target.files?.[0],
-                      )
-                    }
-                  />
-                  {errors[`ubo_${index}_doc_${docIndex}_docs`] && (
-                    <p className="text-red-500 text-xs">
-                      {errors[`ubo_${index}_doc_${docIndex}_docs`]}
-                    </p>
-                  )}
-                </div>
+  //              <div>
+  //                <Label htmlFor="docs">
+  //                  Upload Documents <span className="text-red-500">*</span>
+  //                </Label>
+  //                <Input
+  //                  id="docs"
+  //                  type="file"
+  //                  onChange={(e) =>
+  //                    handleDocumentChange(
+  //                      index,
+  //                      docIndex,
+  //                      "docs",
+  //                      e.target.files?.[0],
+  //                    )
+  //                  }
+  //                />
+  //                {errors[`ubo_${index}_doc_${docIndex}_docs`] && (
+  //                  <p className="text-red-500 text-xs">
+  //                    {errors[`ubo_${index}_doc_${docIndex}_docs`]}
+  //                  </p>
+  //                )}
+  //              </div>
 
-                {item.documentData.length > 1 && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => removeDocument(index, docIndex)}
-                  >
-                    Remove Doc
-                  </Button>
-                )}
-              </div>
-            ))}
+  //              {item.documentData.length > 1 && (
+  //                <Button
+  //                  variant="destructive"
+  //                  onClick={() => removeDocument(index, docIndex)}
+  //                >
+  //                  Remove Doc
+  //                </Button>
+  //              )}
+  //            </div>
+  //          ))}
 
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-2"
-              onClick={() => addDocument(index)}
-            >
-              + Add Document
-            </Button>
-          </div>
+  //          <Button
+  //            type="button"
+  //            variant="outline"
+  //            className="mt-2"
+  //            onClick={() => addDocument(index)}
+  //          >
+  //            + Add Document
+  //          </Button>
+  //        </div>
 
-          {/* REMOVE UBO */}
-          {uboData.length > 1 && (
-            <Button variant="destructive" onClick={() => removeUbo(index)}>
-              Remove UBO
-            </Button>
-          )}
-        </div>
-      ))}
+  //        {/* REMOVE UBO */}
+  //        {uboData.length > 1 && (
+  //          <Button variant="destructive" onClick={() => removeUbo(index)}>
+  //            Remove UBO
+  //          </Button>
+  //        )}
+  //      </div>
+  //    ))}
 
-      {/* ADD UBO */}
-      <Button onClick={addUbo}>+ Add UBO</Button>
-    </div>
-  );
+  //    {/* ADD UBO */}
+  //    <Button onClick={addUbo}>+ Add UBO</Button>
+  //  </div>
+  //);
 
   const renderStep4 = () => (
     <div className="space-y-6">
@@ -1994,9 +1995,9 @@ const StaffOnboardingForm = ({
 
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
-          {currentStep === 4 && renderStep4()}
-
+          {/*{currentStep === 3 && renderStep3()}*/}
+          {/*{currentStep === 4 && renderStep4()}*/}
+          {currentStep === 3 && renderStep4()}
           <div className="flex justify-between pt-4">
             <Button
               variant="outline"
@@ -2005,13 +2006,14 @@ const StaffOnboardingForm = ({
             >
               Previous
             </Button>
-            {currentStep < 4 ? (
+            {/*{currentStep < 4 ? (*/}
+            {currentStep < 3 ? (
               <Button
                 onClick={() => {
                   let isValid = false;
                   if (currentStep === 1) isValid = validateStep1();
                   else if (currentStep === 2) isValid = validateStep2();
-                  else if (currentStep === 3) isValid = validateStep3();
+                  //else if (currentStep === 3) isValid = validateStep3();
                   else if (currentStep === 4) isValid = validateStep4();
 
                   if (isValid) {
@@ -2023,20 +2025,36 @@ const StaffOnboardingForm = ({
                 Next
               </Button>
             ) : (
+              //<Button
+              //  onClick={() => {
+              //    const step1Valid = validateStep1();
+              //    const step2Valid = validateStep2();
+              //    const step3Valid = validateStep3();
+              //    const step4Valid = validateStep4();
+
+              //    if (step1Valid && step2Valid && step3Valid && step4Valid) {
+              //      handleSubmit();
+              //    } else {
+              //      if (!step1Valid) setCurrentStep(1);
+              //      else if (!step2Valid) setCurrentStep(2);
+              //      else if (!step3Valid) setCurrentStep(3);
+              //      else if (!step4Valid) setCurrentStep(4);
+              //    }
+              //  }}
+              //  disabled={loading}
+              //>
+              //  {loading ? "Creating" : "Create Business Account"}
+              //</Button>
               <Button
                 onClick={() => {
                   const step1Valid = validateStep1();
                   const step2Valid = validateStep2();
-                  const step3Valid = validateStep3();
-                  const step4Valid = validateStep4();
-
-                  if (step1Valid && step2Valid && step3Valid && step4Valid) {
-                    handleSubmit();
-                  } else {
+                  const step3Valid = validateStep4();
+                  if (step1Valid && step2Valid && step3Valid) handleSubmit();
+                  else {
                     if (!step1Valid) setCurrentStep(1);
                     else if (!step2Valid) setCurrentStep(2);
                     else if (!step3Valid) setCurrentStep(3);
-                    else if (!step4Valid) setCurrentStep(4);
                   }
                 }}
                 disabled={loading}

@@ -448,13 +448,13 @@ const Auth: React.FC = () => {
                 >
                   Sign In
                 </Button>
-                <Button
+                {/*<Button
                   variant={isSignUp ? "default" : "ghost"}
                   size="lg"
                   onClick={() => setIsSignUp(true)}
                 >
                   Sign Up
-                </Button>
+                </Button>*/}
               </div>
             </div>
 
@@ -556,14 +556,24 @@ const Auth: React.FC = () => {
                   </CardContent>
 
                   <div className="text-center mt-0">
-                    <Button
+                    {/*<Button
                       variant="link"
                       type="button"
                       className="text-sm"
                       onClick={() => navigate("/forgot-password")}
                     >
                       Forgot Password ?
-                    </Button>
+                    </Button>*/}
+                    {!isSignUp && (
+                      <Button
+                        variant="link"
+                        type="button"
+                        className="text-sm"
+                        onClick={() => navigate("/forgot-password")}
+                      >
+                        Forgot Password ?
+                      </Button>
+                    )}
                   </div>
 
                   <CardFooter className="flex-col gap-4 pt-2">
@@ -572,7 +582,14 @@ const Auth: React.FC = () => {
                       className="w-full"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Logging in..." : "Sign In"}
+                      {/*{isSubmitting ? "Logging in..." : "Sign In"}*/}
+                      {isSubmitting
+                        ? isSignUp
+                          ? "Creating Account..."
+                          : "Logging in..."
+                        : isSignUp
+                          ? "Sign Up"
+                          : "Sign In"}
                     </Button>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">

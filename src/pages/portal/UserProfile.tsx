@@ -25,6 +25,7 @@ import {
   X,
   AlertCircle,
   ShieldCheck,
+  Plus,
 } from "lucide-react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ import KYBInitiationForm from "@/components/kyb/KYBInitiationForm";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import UBOForm from "./UBOForm";
 
 interface BusinessProfile {
   id: number;
@@ -141,6 +143,7 @@ const UserProfile = () => {
   const [expiryDate, setExpireDate] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [documentsData, setDocumentsData] = useState([]);
+  const [uboDialogOpen, setUboDialogOpen] = useState(false);
   const [cookie] = useCookies(["token"]);
   const token = cookie.token;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1029,8 +1032,19 @@ const UserProfile = () => {
           </div>
         </div>
         <Card className="">
-          <CardHeader>
+          {/*<CardHeader>
             <CardTitle>UBO</CardTitle>
+          </CardHeader>*/}
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>UBO</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setUboDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add UBO
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             {businessProfile?.ubos?.map((uboItem: any) => (
@@ -1378,6 +1392,13 @@ const UserProfile = () => {
         title="Confirm Document Upload"
         description="Upload this document for review?"
         confirmText="Upload Now"
+      />
+      <UBOForm
+        open={uboDialogOpen}
+        onOpenChange={setUboDialogOpen}
+        onSuccess={() => {
+          fetchBusinessProfile(); // refresh the UBO list
+        }}
       />
     </UserLayout>
   );
