@@ -298,7 +298,7 @@ const UBOForm = ({ open, onOpenChange, onSuccess }: UBOFormDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Ultimate Beneficial Owner (UBO)</DialogTitle>
+          <DialogTitle>Add UBO</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

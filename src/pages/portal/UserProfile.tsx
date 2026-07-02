@@ -110,6 +110,7 @@ const UserProfile = () => {
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [kybContext, setKybContext] = useState<KYBContext | null>(null);
+  const [kybError, setKybError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const uploadSectionRef = useRef<HTMLDivElement>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>({
@@ -315,10 +316,14 @@ const UserProfile = () => {
 
           await loadDocumentsFromServer();
         }
-      } catch (error) {
+        setKybError(null);
+      } catch (error: any) {
+        const message =
+          error?.response?.data?.message || "Failed to load KYB context";
+        setKybError(message);
         toast({
-          title: "Error",
-          description: "Failed to load KYB context",
+          title: "KYB Error",
+          description: message,
           variant: "destructive",
         });
       }
