@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BASE_URL from "@/config/config";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Building2,
   Mail,
   Phone,
@@ -57,6 +63,9 @@ interface BusinessProfile {
   profileImage: File;
   logoUrl: string;
   ubos: [];
+  requestInfo?: string;
+  requestInfoRequestedBy?: string;
+  requestInfoRequestedAt?: string;
 }
 
 interface Document {
@@ -111,6 +120,10 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [kybContext, setKybContext] = useState<KYBContext | null>(null);
   const [kybError, setKybError] = useState<string | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const uploadSectionRef = useRef<HTMLDivElement>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>({
@@ -280,6 +293,9 @@ const UserProfile = () => {
         createdBy: data?.createdBy || "",
         profileImage: data?.profileUrl || "",
         ubos: data?.ubos || [],
+        requestInfo: data?.requestInfo,
+        requestInfoRequestedBy: data?.requestInfoRequestedBy,
+        requestInfoRequestedAt: data?.requestInfoRequestedAt,
       });
     } catch (error) {
       toast({
@@ -333,30 +349,57 @@ const UserProfile = () => {
       fetchKYBContext();
     }
   }, [id, token]);
+  const getFileUrl = (fileUrl: string) => {
+    if (!fileUrl) return "";
+    if (fileUrl.startsWith("http")) return fileUrl; // already absolute
+    // Remove leading slash if present to avoid double slashes
+    const clean = fileUrl.replace(/^\/+/, "");
+    return `${BASE_URL}/uploads/${clean}`;
+  };
+  const getErrorMessage = async (error: any): Promise<string> => {
+    // If the error response is a Blob (because of responseType: 'blob'), read it as text
+    if (error.response && error.response.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text();
+        const json = JSON.parse(text);
+        // Extract the message from the backend response
+        return json.message || json.error || "Unknown error";
+      } catch {
+        return "Failed to parse error response";
+      }
+    }
+    // Fallback for other error shapes
+    return (
+      error.message || error.response?.data?.message || "An error occurred"
+    );
+  };
 
-  const handleView = async (viewUrl?: string) => {
+  const handleView = async (viewUrl?: string, fileName?: string) => {
     if (!viewUrl) return;
     try {
-      const response = await axios.get(viewUrl, {
+      const fullUrl = getFileUrl(viewUrl);
+      const response = await axios.get(fullUrl, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: "blob",
       });
       const blob = response.data;
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-    } catch (error) {
+      const blobUrl = URL.createObjectURL(blob);
+      setViewingDoc({ url: blobUrl, name: fileName || "Document" });
+    } catch (error: any) {
+      const errorMessage = await getErrorMessage(error);
       toast({
-        title: "Failed",
-        description: "Could not open document",
+        title: "Failed to View Document",
+        description: errorMessage,
         variant: "destructive",
       });
+      // The dialog will NOT open because viewingDoc remains null
     }
   };
-
   const handleDownload = async (viewUrl?: string, fileName?: string) => {
     if (!viewUrl || !fileName) return;
     try {
-      const response = await axios.get(viewUrl, {
+      const fullUrl = getFileUrl(viewUrl);
+      const response = await axios.get(fullUrl, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: "blob",
       });
@@ -369,10 +412,11 @@ const UserProfile = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = await getErrorMessage(error);
       toast({
-        title: "Failed",
-        description: "Could not download document",
+        title: "Failed to Download Document",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -1053,8 +1097,8 @@ const UserProfile = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {businessProfile?.ubos?.map((uboItem: any) => (
-              <div className="w-full" key={uboItem?.uuid}>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+              <div className="w-full shadow-lg PB-4" key={uboItem?.uuid}>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 pb-4">
                   <Card>
                     <CardContent className="p-4 flex gap-2 items-start ">
                       <p className="text-muted-foreground shrink-0">
@@ -1079,7 +1123,7 @@ const UserProfile = () => {
                       </CardContent>
                     </Card>
                   )}
-                  {uboItem?.uboType == "INDIVIDUAL" && (
+                  {/*{uboItem?.uboType == "INDIVIDUAL" && (
                     <Card>
                       <CardContent className="p-4 flex gap-2 items-start">
                         <p className="text-muted-foreground shrink-0">Email:</p>
@@ -1088,7 +1132,15 @@ const UserProfile = () => {
                         </p>
                       </CardContent>
                     </Card>
-                  )}
+                  )}*/}
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start">
+                      <p className="text-muted-foreground shrink-0">Email:</p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.email}
+                      </p>
+                    </CardContent>
+                  </Card>
                   <Card>
                     <CardContent className="p-4 flex gap-2 items-start">
                       <p className="text-muted-foreground shrink-0">
@@ -1096,6 +1148,14 @@ const UserProfile = () => {
                       </p>
                       <p className="font-medium break-all min-w-0">
                         {uboItem?.ownershipPercentage}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex gap-2 items-start">
+                      <p className="text-muted-foreground shrink-0">Address:</p>
+                      <p className="font-medium break-all min-w-0">
+                        {uboItem?.address}
                       </p>
                     </CardContent>
                   </Card>
@@ -1158,10 +1218,119 @@ const UserProfile = () => {
                     </Card>
                   )}
                 </div>
+                <div className="pl-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground">
+                    Documents
+                    {/*({uboItem?.documents?.length || 0})*/}
+                  </h4>
+                  {uboItem?.documents?.length > 0 ? (
+                    <div className="space-y-3">
+                      {uboItem.documents.map((doc: any) => (
+                        <div
+                          key={doc.uuid}
+                          className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/30 rounded-lg"
+                        >
+                          <div className="flex flex-wrap items-center gap-3 text-sm">
+                            <span className="font-medium">
+                              {doc.originalFileName}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {doc.fileSize &&
+                                ` • ${(doc.fileSize / 1024).toFixed(1)} KB`}
+                            </span>
+                            {/*<span className="text-muted-foreground">
+                              #{doc.documentNumber}
+                            </span>*/}
+                            {/*{doc.expiryDate && (
+                              <span className="text-xs text-muted-foreground">
+                                Expires: {doc.expiryDate}
+                              </span>
+                            )}*/}
+                            {/*<Badge
+                              variant={doc.verified ? "default" : "secondary"}
+                              className={
+                                doc.verified
+                                  ? "bg-green-100 text-green-800"
+                                  : ""
+                              }
+                            >
+                              {doc.verified ? "Verified" : "Pending"}
+                            </Badge>*/}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {doc.fileUrl && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleView(doc.fileUrl)}
+                                >
+                                  <Eye className="h-4 w-4 mr-1.5" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownload(
+                                      doc.fileUrl,
+                                      doc.originalFileName ||
+                                        `${doc.documentType}.pdf`,
+                                    )
+                                  }
+                                >
+                                  <Download className="h-4 w-4 mr-1.5" />
+                                  Download
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No documents attached.
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
+
+        {/* Request Info Section */}
+        {businessProfile.requestInfo && (
+          <Card className="border-red-300 bg-red-50">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <h3 className="font-semibold text-red-900">
+                    Request for Information
+                  </h3>
+                  <p className="text-sm text-red-800">
+                    {businessProfile.requestInfo}
+                  </p>
+                  <div className="text-xs text-red-700 flex flex-wrap gap-x-4 gap-y-1">
+                    <span>
+                      <span className="font-medium">Requested by:</span>{" "}
+                      {businessProfile.requestInfoRequestedBy || "Unknown"}
+                    </span>
+                    {businessProfile.requestInfoRequestedAt && (
+                      <span>
+                        <span className="font-medium">Requested at:</span>{" "}
+                        {new Date(
+                          businessProfile.requestInfoRequestedAt,
+                        ).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <div ref={uploadSectionRef}>
           <Card className="shadow-card">
             <CardHeader>
@@ -1380,6 +1549,31 @@ const UserProfile = () => {
           </CardContent>
         </Card>
       </div>
+      {/* Document Viewer Dialog */}
+      <Dialog
+        open={!!viewingDoc}
+        onOpenChange={(open) => {
+          if (!open && viewingDoc) {
+            URL.revokeObjectURL(viewingDoc.url); // cleanup
+            setViewingDoc(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>{viewingDoc?.name || "Document"}</DialogTitle>
+          </DialogHeader>
+          <div className="w-full h-[80vh] overflow-auto">
+            {viewingDoc && (
+              <iframe
+                src={viewingDoc.url}
+                className="w-full h-full"
+                title="Document Viewer"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmationDialog
         open={showSaveConfirmation}

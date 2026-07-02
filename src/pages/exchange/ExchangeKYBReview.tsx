@@ -118,7 +118,11 @@ const ExchangeKYBReview = () => {
   // PDF preview state
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
-
+  //request info
+  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
+  const [requestInfoMessage, setRequestInfoMessage] = useState("");
+  const [selectedAppId, setSelectedAppId] = useState<number | null>(null);
+  const [requestInfoLoading, setRequestInfoLoading] = useState(false);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -264,6 +268,56 @@ const ExchangeKYBReview = () => {
     };
   }, [imageBlobUrl, pdfBlobUrl]);
 
+  const handleRequestInfoSubmit = async () => {
+    if (!selectedAppId || !requestInfoMessage.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a message.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setRequestInfoLoading(true);
+      const response = await axios.post(
+        `${BASE_URL}/api/v3/admin/kyb/${selectedAppId}/request-info`,
+        { requestInfo: requestInfoMessage.trim() },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.data?.status) {
+        toast({
+          title: "Success",
+          description: "Request info sent successfully.",
+        });
+        // Close dialog and refresh list
+        setRequestInfoOpen(false);
+        setRequestInfoMessage("");
+        await fetchKYBApplications(currentPage);
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to send request.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      console.error("Error sending request info:", err);
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "An error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setRequestInfoLoading(false);
+    }
+  };
   // Helper function to format date
   const formatDate = (dateString: string): string => {
     if (!dateString) return "";
@@ -1366,6 +1420,23 @@ const ExchangeKYBReview = () => {
                                   >
                                     Reject
                                   </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline" // or "secondary" with custom class for white background
+                                    className="w-full bg-white hover:bg-gray-50"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSelectedAppId(
+                                        application.originalData.id,
+                                      );
+                                      setRequestInfoMessage(""); // reset message
+                                      setRequestInfoOpen(true);
+                                    }}
+                                  >
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Request Info
+                                  </Button>
                                 </div>
                               </div>
                             )}
@@ -1967,6 +2038,55 @@ const ExchangeKYBReview = () => {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Request Info Dialog */}
+          <Dialog open={requestInfoOpen} onOpenChange={setRequestInfoOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Request Additional Information</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="request-info-message">Message</Label>
+                  <Textarea
+                    id="request-info-message"
+                    placeholder="Enter your request for more information..."
+                    rows={4}
+                    value={requestInfoMessage}
+                    onChange={(e) => setRequestInfoMessage(e.target.value)}
+                    disabled={requestInfoLoading}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setRequestInfoOpen(false);
+                    setRequestInfoMessage("");
+                  }}
+                  disabled={requestInfoLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleRequestInfoSubmit}
+                  disabled={requestInfoLoading || !requestInfoMessage.trim()}
+                >
+                  {requestInfoLoading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Request"
+                  )}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
