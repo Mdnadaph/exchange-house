@@ -231,20 +231,23 @@ const UBOForm = ({ open, onOpenChange, onSuccess }: UBOFormDialogProps) => {
 
       // Build UBO payload without documents
       const { documentData, ...uboPayload } = formData;
-      const uboWithDocuments = {
-        ...uboPayload,
-        documents: documentData.map((doc) => ({
-          documentType: doc.idType,
-          documentNumber: doc.id,
-          issuedCountry: doc.issuedCountry,
-          expiryDate: doc.expireDate,
-        })),
-      };
+      const uboWithDocuments = [
+        {
+          ...uboPayload,
+          documents: documentData.map((doc) => ({
+            fileKey: doc.docs?.name,
+            documentType: doc.idType,
+            documentNumber: doc.id,
+            issuedCountry: doc.issuedCountry,
+            expiryDate: doc.expireDate,
+          })),
+        },
+      ];
 
       apiFormData.append(
         "ubos",
         new Blob([JSON.stringify(uboWithDocuments)], {
-          type: "multipart/form-data",
+          type: "application/json",
         }),
       );
 
