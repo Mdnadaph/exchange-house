@@ -13,7 +13,18 @@ import {
   Search,
   Loader2,
   FileText,
+  X,
+  CalendarIcon,
 } from "lucide-react";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { usePermission } from "@/hooks/usePermission";
 import BASE_URL from "@/config/config";
 import axios from "axios";
@@ -69,6 +80,17 @@ const ExchangeBusinessOnboarding = () => {
     totalElements: 0,
   });
 
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: fromDate ? new Date(fromDate) : undefined,
+    to: toDate ? new Date(toDate) : undefined,
+  });
+
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setFromDate(range?.from ? format(range.from, "yyyy-MM-dd") : "");
+    setToDate(range?.to ? format(range.to, "yyyy-MM-dd") : "");
+    setPagination((prev) => ({ ...prev, pageNumber: 0 })); // reset pagination
+  };
   const fetchBusinesses = async (
     page = 0,
     size = 10,
@@ -405,7 +427,7 @@ const ExchangeBusinessOnboarding = () => {
                   />
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
+              {/*<div className="flex flex-col gap-1">
                 <label className="text-base font-medium text-gray-800">
                   From Date
                 </label>
@@ -434,6 +456,72 @@ const ExchangeBusinessOnboarding = () => {
                     pagination.pageNumber = 0;
                   }}
                 />
+              </div>*/}
+              <div className="flex flex-col gap-1">
+                <label className="text-base font-medium text-gray-800">
+                  Date Range
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="relative w-[240px]">
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateRange && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                          dateRange.to ? (
+                            <>
+                              {format(dateRange.from, "LLL dd, y")} -{" "}
+                              {format(dateRange.to, "LLL dd, y")}
+                            </>
+                          ) : (
+                            format(dateRange.from, "LLL dd, y")
+                          )
+                        ) : (
+                          <span>Pick a date range</span>
+                        )}
+                      </Button>
+                      {dateRange?.from && (
+                        <X
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDateRange(undefined);
+                            setFromDate("");
+                            setToDate("");
+                            setPagination((prev) => ({
+                              ...prev,
+                              pageNumber: 0,
+                            }));
+                          }}
+                        />
+                      )}
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={(range) => {
+                        setDateRange(range);
+                        setFromDate(
+                          range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                        );
+                        setToDate(
+                          range?.to ? format(range.to, "yyyy-MM-dd") : "",
+                        );
+                        setPagination((prev) => ({ ...prev, pageNumber: 0 }));
+                      }}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </CardContent>

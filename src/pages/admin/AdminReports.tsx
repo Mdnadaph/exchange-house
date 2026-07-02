@@ -23,6 +23,17 @@ import {
   AreaChart,
   Area,
 } from "recharts";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import BASE_URL from "@/config/config";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
@@ -106,6 +117,16 @@ export default function AdminReports() {
   const listRef = useRef<HTMLDivElement | null>(null);
   const pageSize = 10;
   const [exchangeAdminLoading, setExchangeAdminLoading] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: fromDate ? new Date(fromDate) : undefined,
+    to: toDate ? new Date(toDate) : undefined,
+  });
+
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setFromDate(range?.from ? format(range.from, "yyyy-MM-dd") : "");
+    setToDate(range?.to ? format(range.to, "yyyy-MM-dd") : "");
+  };
   const buildAnalyticsUrl = () => {
     const params = new URLSearchParams();
 
@@ -559,7 +580,7 @@ export default function AdminReports() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          {/*<div className="space-y-1">
             <h2 className="text-base font-normal text-gray-700">From Date</h2>
             <Input
               type="date"
@@ -575,6 +596,63 @@ export default function AdminReports() {
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
             />
+          </div>*/}
+          <div className="space-y-1">
+            <h2 className="text-base font-normal text-gray-700">Date Range</h2>
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="relative w-[260px]">
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateRange && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "LLL dd, y")} -{" "}
+                          {format(dateRange.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                  {dateRange?.from && (
+                    <X
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDateRange(undefined);
+                        setFromDate("");
+                        setToDate("");
+                      }}
+                    />
+                  )}
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={(range) => {
+                    setDateRange(range);
+                    setFromDate(
+                      range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                    );
+                    setToDate(range?.to ? format(range.to, "yyyy-MM-dd") : "");
+                  }}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-1">
             <h2 className="text-base font-normal text-gray-700">

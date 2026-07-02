@@ -2087,7 +2087,7 @@ const ExchangeKYBReview = () => {
                   {requestInfoLoading ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Sending...
+                      Sending.....
                     </>
                   ) : (
                     "Send Request"

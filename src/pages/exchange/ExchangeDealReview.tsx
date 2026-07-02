@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import DealResponseForm from "@/components/deals/DealResponseForm";
 import DealNegotiationTimeline from "@/components/deals/DealNegotiationTimeline";
 import {
@@ -14,13 +23,15 @@ import {
   CheckCircle,
   XCircle,
   Building2,
-  Calendar,
+  //Calendar,
   DollarSign,
   Eye,
   ChevronDown,
   ChevronUp,
   MessageSquare,
   Loader2,
+  CalendarIcon,
+  X,
 } from "lucide-react";
 import { useCookies } from "react-cookie";
 import BASE_URL from "@/config/config";
@@ -71,6 +82,17 @@ const ExchangeDealReview = () => {
   const [totalElements, setTotalElements] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [status, setStatus] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: fromDate ? new Date(fromDate) : undefined,
+    to: toDate ? new Date(toDate) : undefined,
+  });
+
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setFromDate(range?.from ? format(range.from, "yyyy-MM-dd") : "");
+    setToDate(range?.to ? format(range.to, "yyyy-MM-dd") : "");
+    setPage(0); // reset pagination when filtering
+  };
   const getBranchList = async () => {
     try {
       setBranchListLoading(true);
@@ -428,7 +450,7 @@ const ExchangeDealReview = () => {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-1 mt-1">
+                {/*<div className="flex flex-col gap-1 mt-1">
                   <Label htmlFor="fromDate">From Date</Label>
                   <input
                     className="border border-gray-300 rounded-md p-1 text-gray-500 font-normal text-base h-[40px]"
@@ -453,6 +475,68 @@ const ExchangeDealReview = () => {
                       setPage(0);
                     }}
                   />
+                </div>*/}
+
+                <div className="flex flex-col gap-1 mt-1">
+                  <Label>Date Range</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="relative w-[240px]">
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !dateRange && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dateRange?.from ? (
+                            dateRange.to ? (
+                              <>
+                                {format(dateRange.from, "LLL dd, y")} -{" "}
+                                {format(dateRange.to, "LLL dd, y")}
+                              </>
+                            ) : (
+                              format(dateRange.from, "LLL dd, y")
+                            )
+                          ) : (
+                            <span>Pick a date range</span>
+                          )}
+                        </Button>
+                        {dateRange?.from && (
+                          <X
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation(); // optional, but safe
+                              setDateRange(undefined);
+                              setFromDate("");
+                              setToDate("");
+                              setPage(0);
+                            }}
+                          />
+                        )}
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={(range) => {
+                          setDateRange(range);
+                          setFromDate(
+                            range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                          );
+                          setToDate(
+                            range?.to ? format(range.to, "yyyy-MM-dd") : "",
+                          );
+                          setPage(0);
+                        }}
+                        numberOfMonths={2}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-1 w-[200px]">
                   <h2 className="text-base font-normal text-gray-700">
@@ -621,7 +705,7 @@ const ExchangeDealReview = () => {
                           </div>
                           <div className="space-y-1">
                             <span className="text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
+                              <CalendarIcon className="h-3 w-3" />
                               Submitted:
                             </span>
                             <p className="font-medium">
