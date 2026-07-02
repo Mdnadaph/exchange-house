@@ -1042,14 +1042,14 @@ const UserProfile = () => {
           </CardHeader>*/}
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>UBO</CardTitle>
-            {/*<Button
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setUboDialogOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add UBO
-            </Button>*/}
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             {businessProfile?.ubos?.map((uboItem: any) => (
