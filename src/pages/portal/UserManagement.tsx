@@ -28,6 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import UserEditForm from "@/components/governance/UserEdit";
 import PaginationSummary from "@/components/PaginationSummary";
 import PaginationControl from "@/components/PaginationControl";
+import axios from "axios";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const UserManagement = () => {
   const [cookies] = useCookies(["token"]);
@@ -45,6 +47,9 @@ const UserManagement = () => {
   const searchTimeoutRef = useRef<any>();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [uuid, setUuid] = useState<string>("");
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [resendEmailLoading, setResendEmailLoading] = useState<boolean>(false);
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const fetchData = async () => {
@@ -137,6 +142,45 @@ const UserManagement = () => {
   const handleUserCreated = () => {
     setRefreshKey((prev) => prev + 1); // triggers useEffect
     setCurrentPage(0); // reset to first page after creation
+  };
+
+  const handleSubmit = async () => {
+    setResendEmailLoading(true);
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/business-users/${uuid}/resend-invitation`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setShowConfirmation(false);
+        setUuid("");
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while resend email",
+      });
+    } finally {
+      setResendEmailLoading(false);
+    }
   };
 
   return (
@@ -425,6 +469,17 @@ const UserManagement = () => {
                               setRefreshKey((prev) => prev + 1)
                             }
                           />
+                          {user?.canResendInvitation && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowConfirmation(true);
+                                setUuid(user?.uuid);
+                              }}
+                            >
+                              Resend Invitation
+                            </Button>
+                          )}
                           {/*<Button variant="outline" size="sm">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>*/}
@@ -447,6 +502,15 @@ const UserManagement = () => {
           </CardContent>
         </Card>
       </div>
+      <ConfirmationDialog
+        isConfirming={resendEmailLoading}
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleSubmit}
+        title="Confirm Resend Email"
+        description={`Are you sure you want to resend this email?`}
+        confirmText="Submit Request"
+      />
     </UserLayout>
   );
 };

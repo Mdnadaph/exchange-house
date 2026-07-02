@@ -1425,7 +1425,6 @@ const ExchangeStaffManagement = () => {
       if (res?.data?.status) {
         setShowConfirmation(false);
         setStaffEmail(null);
-        fetchBranchWithStaff();
         toast({
           title: "Success",
           description: res?.data?.message,
@@ -2968,7 +2967,7 @@ const ExchangeStaffManagement = () => {
                                                 setStaffEmail(staff?.email);
                                               }}
                                             >
-                                              Resend Invitation
+                                              Resend Onboard Email
                                             </Button>
                                           )}
 

@@ -196,7 +196,6 @@ const ExchangeBusinessOnboarding = () => {
       if (res?.data?.status) {
         setShowConfirmation(false);
         setBusinessAdminEmail(null);
-        fetchBusinesses();
         toast({
           title: "Success",
           description: res?.data?.message,
@@ -563,7 +562,7 @@ const ExchangeBusinessOnboarding = () => {
                               );
                             }}
                           >
-                            Resend Invitation
+                            Resend Onboard Email
                           </Button>
                         )}
                       </div>

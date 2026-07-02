@@ -263,7 +263,6 @@ const AdminExchangeHouses = () => {
       if (res?.data?.status) {
         setShowConfirmation(false);
         setId(null);
-        fetchExchangeAdmins();
         toast({
           title: "Success",
           description: res?.data?.message,
@@ -1265,7 +1264,7 @@ const AdminExchangeHouses = () => {
                                   setId(admin?.id);
                                 }}
                               >
-                                Resend Invitation
+                                Resend Onboard Email
                               </Button>
                             )}
                             <Button

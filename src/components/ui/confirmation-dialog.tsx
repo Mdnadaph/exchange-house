@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "./button";
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -41,7 +42,7 @@ export function ConfirmationDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction
+          <Button
             onClick={onConfirm}
             disabled={isConfirming}
             className={
@@ -51,7 +52,7 @@ export function ConfirmationDialog({
             }
           >
             {confirmText}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

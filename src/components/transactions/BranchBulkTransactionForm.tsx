@@ -88,7 +88,12 @@ const BranchBulkTransactionForm = ({
 
   const [payoutErrors, setPayoutErrors] = useState<Record<string, boolean>>({});
   const [amountErrors, setAmountErrors] = useState<Record<string, boolean>>({});
-  const [fileName, setFileName] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const [downloadTempleteCSVLoading, setDownloadTempleteCSVLoading] =
+    useState<boolean>(false);
+  const [csvUploading, setCsvUploading] = useState<boolean>(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState("");
   // Mock sources (replace with real fetch if needed)
   const transactionSources = [
     {
@@ -223,101 +228,100 @@ const BranchBulkTransactionForm = ({
   };
 
   const disableButtonForDocd = requiredDocForPorpose ? !document : false;
-  const handleSubmit = async () => {
-    setLoading(true);
+  // const handleSubmit = async () => {
+  //   setLoading(true);
+  //   const group = getSelectedGroup();
+  //   if (!group) {
+  //     toast({ variant: "destructive", title: "No group selected" });
+  //     setLoading(false);
+  //     return;
+  //   }
 
-    const group = getSelectedGroup();
-    if (!group) {
-      toast({ variant: "destructive", title: "No group selected" });
-      setLoading(false);
-      return;
-    }
+  //   const validBeneficiaries = group.beneficiaries
+  //     .map((ben: any) => {
+  //       const amountStr = beneficiaryAmounts[ben.id];
+  //       const amount = amountStr ? Number(amountStr) : NaN;
+  //       const beneficiaryPayoutDetailId = selectedPayouts[ben.id];
+  //       if (!amountStr || isNaN(amount) || amount <= 0) return null;
+  //       return {
+  //         beneficiaryId: Number(ben.id),
+  //         amount,
+  //         discountCode: beneficiaryDiscounts[ben.id] || "",
+  //         beneficiaryPayoutDetailId,
+  //       };
+  //     })
+  //     .filter((item): item is NonNullable<typeof item> => !!item);
 
-    const validBeneficiaries = group.beneficiaries
-      .map((ben: any) => {
-        const amountStr = beneficiaryAmounts[ben.id];
-        const amount = amountStr ? Number(amountStr) : NaN;
-        const beneficiaryPayoutDetailId = selectedPayouts[ben.id];
-        if (!amountStr || isNaN(amount) || amount <= 0) return null;
-        return {
-          beneficiaryId: Number(ben.id),
-          amount,
-          discountCode: beneficiaryDiscounts[ben.id] || "",
-          beneficiaryPayoutDetailId,
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => !!item);
+  //   // if (validBeneficiaries.length === 0) {
+  //   //   toast({
+  //   //     variant: "destructive",
+  //   //     title: "Validation Error",
+  //   //     description: "Enter valid amount for at least one beneficiary",
+  //   //   });
+  //   //   setLoading(false);
+  //   //   return;
+  //   // }
 
-    if (validBeneficiaries.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Enter valid amount for at least one beneficiary",
-      });
-      setLoading(false);
-      return;
-    }
+  //   const payload = {
+  //     groupId: Number(selectedGroup),
+  //     purposeCode: transactionPurpose,
+  //     // currencyId: Number(currency),
+  //     sourceAccountId: Number(selectedSource),
+  //     // beneficiaries: validBeneficiaries,
+  //     feeResponsibility: "BUSINESS",
+  //     // discountCode: "", // global one – can be removed or kept
+  //   };
 
-    const payload = {
-      groupId: Number(selectedGroup),
-      purposeCode: transactionPurpose,
-      // currencyId: Number(currency),
-      sourceAccountId: Number(selectedSource),
-      beneficiaries: validBeneficiaries,
-      feeResponsibility: "BUSINESS",
-      // discountCode: "", // global one – can be removed or kept
-    };
+  //   const formData = new FormData();
+  //   formData.append(
+  //     "data",
+  //     new Blob([JSON.stringify(payload)], { type: "application/json" }),
+  //   );
+  //   if (document) formData.append("documents", document);
 
-    const formData = new FormData();
-    formData.append(
-      "data",
-      new Blob([JSON.stringify(payload)], { type: "application/json" }),
-    );
-    if (document) formData.append("documents", document);
+  //   try {
+  //     const res = await fetch(`${BASE_URL}/api/v1/bulk-transactions`, {
+  //       method: "POST",
+  //       headers: { Authorization: `Bearer ${token}` },
+  //       body: formData,
+  //     });
 
-    try {
-      const res = await fetch(`${BASE_URL}/api/v1/bulk-transactions`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+  //     const data = await res.json().catch(() => ({}));
+  //     if (!res.ok || data?.status === false) {
+  //       toast({
+  //         variant: "destructive",
+  //         title: "Submission Failed",
+  //         description: data?.message || "Please try again",
+  //       });
+  //       return;
+  //     }
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data?.status === false) {
-        toast({
-          variant: "destructive",
-          title: "Submission Failed",
-          description: data?.message || "Please try again",
-        });
-        return;
-      }
+  //     toast({
+  //       title: "Success",
+  //       description:
+  //         data?.message ||
+  //         `Submitted ${validBeneficiaries.length} payments for approval`,
+  //     });
 
-      toast({
-        title: "Success",
-        description:
-          data?.message ||
-          `Submitted ${validBeneficiaries.length} payments for approval`,
-      });
+  //     setOpen(false);
+  //     refetch?.();
 
-      setOpen(false);
-      refetch?.();
-
-      // Reset form
-      setSelectedSource("");
-      setTransactionPurpose("");
-      setSelectedPayouts({});
-      setCurrency("");
-      setSelectedGroup("");
-      setBeneficiaryAmounts({});
-      setBeneficiaryDiscounts({});
-      setDocument(null);
-      setCurrentStep(1);
-    } catch (err) {
-      toast({ variant: "destructive", title: "Network error" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     // Reset form
+  //     setSelectedSource("");
+  //     setTransactionPurpose("");
+  //     setSelectedPayouts({});
+  //     setCurrency("");
+  //     setSelectedGroup("");
+  //     setBeneficiaryAmounts({});
+  //     setBeneficiaryDiscounts({});
+  //     setDocument(null);
+  //     setCurrentStep(1);
+  //   } catch (err) {
+  //     toast({ variant: "destructive", title: "Network error" });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const isPayloadReady = () => {
     const group = getSelectedGroup();
@@ -518,15 +522,134 @@ const BranchBulkTransactionForm = ({
       ))}
     </div>
   );
+  const handleDownloadTemplate = async () => {
+    setDownloadTempleteCSVLoading(true);
 
-  const handleDownloadTemplate = () => {
-    // Wire this up to your actual template file download
-    console.log("Download template");
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/v1/bulk-transactions/generate-csv/${Number(selectedGroup)}`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const url = window.URL.createObjectURL(res.data);
+
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.download = `BeneficiaryGroupData.csv`;
+
+      window.document.body.appendChild(link);
+      link.click();
+
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while downloading the CSV.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadTempleteCSVLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    const formData = new FormData();
+    if (selectedGroup) {
+      formData.append("groupId", selectedGroup);
+    }
+    if (transactionPurpose) {
+      formData.append("purposeCode", transactionPurpose);
+    }
+
+    if (selectedSource) {
+      formData.append("sourceAccountId", selectedSource);
+    }
+    formData.append("feeResponsibility", "BUSINESS");
+    if (csvFile) formData.append("file", csvFile);
+    if (document) formData.append("documents", document);
+
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v1/bulk-transactions/csv-bulk-transactions`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        toast({
+          title: "Success",
+          description:
+            res?.data?.message || "Bulk Transaction Upload Successfully ",
+        });
+        setFileName("");
+        setCsvFile(null);
+        setOpen(false);
+        refetch?.();
+        setShowConfirmation(false);
+
+        // Reset form
+        setSelectedSource("");
+        setTransactionPurpose("");
+        setSelectedPayouts({});
+        setCurrency("");
+        setSelectedGroup("");
+        setBeneficiaryAmounts({});
+        setBeneficiaryDiscounts({});
+        setDocument(null);
+        setCurrentStep(1);
+        setFileName("");
+        setFileError("");
+        setCsvFile(null);
+      } else {
+        toast({
+          title: "Error",
+          variant: "destructive",
+          description:
+            res?.data?.message ||
+            "Something went wrong while creating bulk transaction",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          error?.response?.data?.message ||
+          "Something when wrong while creating bulk transaction",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
-    if (file) setFileName(file.name);
+
+    if (file) {
+      setFileName(file.name);
+      setCsvFile(file);
+      setFileError("");
+    }
+  };
+
+  const validateFile = () => {
+    let isValid = true;
+    if (!csvFile) {
+      setFileError("This fields is required");
+      isValid = false;
+    }
+    return isValid;
   };
 
   const renderStep1 = () => (
@@ -687,82 +810,89 @@ const BranchBulkTransactionForm = ({
                 ))}
               </SelectContent>
             </Select>
-
-            {/* <Card className="p-6 ">
-              <div className="max-w-3xl mx-auto p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Upload size={18} className="text-gray-900" />
-                  <h2 className="text-base font-semibold text-gray-900">
-                    Upload Beneficiary Data
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  
-                  <div className="rounded-xl border-2 border-dashed border-[#1B2A6B] bg-[#EEF0FA] px-6 py-8 flex flex-col items-center text-center">
-                    <button
-                      onClick={handleDownloadTemplate}
-                      className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 transition-colors"
-                    >
-                      <Download size={16} />
-                      Download Template
-                    </button>
-                    <p className="mt-4 text-sm font-semibold text-gray-900">
-                      Step 1: Download Template
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Get the Vendor Payment template
-                    </p>
+            {selectedGroup && (
+              <Card className="p-6 ">
+                <div className="max-w-3xl mx-auto p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Upload size={18} className="text-gray-900" />
+                    <h2 className="text-base font-semibold text-gray-900">
+                      Upload Beneficiary Data
+                    </h2>
                   </div>
-                  <label
-                    htmlFor="beneficiary-upload"
-                    className="rounded-xl border-2 border-dashed border-gray-300 px-6 py-8 flex flex-col items-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
-                  >
-                    <input
-                      id="beneficiary-upload"
-                      type="file"
-                      accept=".xlsx,.csv"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
-                    <Upload size={22} className="text-gray-400" />
-                    <p className="mt-4 text-sm font-semibold text-gray-900">
-                      Step 2: Upload Filled Template
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {fileName ? fileName : "Excel (.xlsx) or CSV files"}
-                    </p>
-                  </label>
-                </div>
 
-                <div className="mt-4 rounded-xl bg-[#FBF8F1] px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <Info size={16} className="text-amber-500" />
-                    <span className="text-sm font-semibold text-gray-900">
-                      Required Information
-                    </span>
-                  </div>
-                  <ul className="mt-2 space-y-1.5 pl-1">
-                    {[
-                      "Beneficiary Name and Account Details",
-                      "Individual Transaction Amounts",
-                      "Purpose/Description for each payment",
-                      "Employee ID (for salary payments)",
-                    ].map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-start gap-2 text-sm text-gray-500"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="rounded-xl border-2 border-dashed border-[#1B2A6B] bg-[#EEF0FA] px-6 py-8 flex flex-col items-center text-center">
+                      <button
+                        disabled={downloadTempleteCSVLoading}
+                        onClick={() => handleDownloadTemplate()}
+                        className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 transition-colors"
                       >
-                        <span className="mt-1.5 h-1 w-1 rounded-full bg-gray-400 shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </Card> */}
+                        <Download size={16} />
+                        Download Template
+                      </button>
+                      <p className="mt-4 text-sm font-semibold text-gray-900">
+                        Step 1: Download Template
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Get the Vendor Payment template
+                      </p>
+                    </div>
+                    <label
+                      htmlFor="beneficiary-upload"
+                      className="rounded-xl border-2 border-dashed border-gray-300 px-6 py-8 flex flex-col items-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                    >
+                      <input
+                        id="beneficiary-upload"
+                        type="file"
+                        accept=".xlsx,.csv"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                        disabled={csvUploading}
+                      />
+                      <Upload size={22} className="text-gray-400" />
+                      <p className="mt-4 text-sm font-semibold text-gray-900">
+                        Step 2: Upload Filled Template
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {fileName ? fileName : "Excel (.xlsx) or CSV files"}
+                      </p>
+                      {fileError && (
+                        <p className="text-red-500 text-sm font-normal">
+                          {fileError}
+                        </p>
+                      )}
+                    </label>
+                  </div>
 
-            {selectedGroup &&
+                  <div className="mt-4 rounded-xl bg-[#FBF8F1] px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <Info size={16} className="text-amber-500" />
+                      <span className="text-sm font-semibold text-gray-900">
+                        Required Information
+                      </span>
+                    </div>
+                    <ul className="mt-2 space-y-1.5 pl-1">
+                      {[
+                        "Beneficiary Name and Account Details",
+                        "Individual Transaction Amounts",
+                        "Purpose/Description for each payment",
+                        "Employee ID (for salary payments)",
+                      ].map((item) => (
+                        <li
+                          key={item}
+                          className="flex items-start gap-2 text-sm text-gray-500"
+                        >
+                          <span className="mt-1.5 h-1 w-1 rounded-full bg-gray-400 shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* {selectedGroup &&
               selectedGroup !== "none" &&
               getSelectedGroup() && (
                 <Card className="border-l-4 border-l-primary bg-primary/5">
@@ -901,7 +1031,7 @@ const BranchBulkTransactionForm = ({
                     </Table>
                   </CardContent>
                 </Card>
-              )}
+              )} */}
           </CardContent>
         </Card>
       )}
@@ -1038,6 +1168,9 @@ const BranchBulkTransactionForm = ({
             setApplicableRate([]);
             setPayoutErrors({});
             setAmountErrors({});
+            setFileName("");
+            setFileError("");
+            setCsvFile(null);
           }
         }}
       >
@@ -1075,7 +1208,7 @@ const BranchBulkTransactionForm = ({
               {currentStep === 1 ? (
                 <Button
                   onClick={() => {
-                    if (validateStep1Beneficiaries()) {
+                    if (validateFile()) {
                       setCurrentStep(2);
                     }
                   }}
@@ -1110,7 +1243,9 @@ const BranchBulkTransactionForm = ({
         isConfirming={loading}
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
-        onConfirm={handleSubmit}
+        onConfirm={() => {
+          handleSubmit();
+        }}
         title="Confirm Bulk Transaction"
         description="This will submit the payments for approval. Continue?"
         confirmText="Yes, Submit"

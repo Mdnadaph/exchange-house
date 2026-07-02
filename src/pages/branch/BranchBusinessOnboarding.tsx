@@ -30,10 +30,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import PaginationSummary from "@/components/PaginationSummary";
 import PaginationControl from "@/components/PaginationControl";
+import { useToast } from "@/hooks/use-toast";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Button } from "@/components/ui/button";
 
 const BranchBusinessOnboarding = () => {
   const [cookies] = useCookies(["token", "branchId", "role"]); // Added "role"
   const token = cookies.token;
+  const { toast } = useToast();
   const branchId = cookies.branchId;
   const userRole = cookies.role;
 
@@ -64,6 +68,10 @@ const BranchBusinessOnboarding = () => {
     setSearchTerm("");
     setDebounceValue("");
   };
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [businessAdminEmail, setBusinessAdminEmail] = useState<string>("");
+  const [resentEmailLoading, setResendEmailLoading] = useState<boolean>(false);
+
   useEffect(() => {
     const debounce = setTimeout(() => {
       setDebounceValue(searchTearm);
@@ -125,7 +133,44 @@ const BranchBusinessOnboarding = () => {
       setLoading(false);
     }
   };
-
+  const handleSubmit = async () => {
+    setResendEmailLoading(true);
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/v3/business-auth/resend-invitation?email=${businessAdminEmail}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res?.data?.status) {
+        setShowConfirmation(false);
+        setBusinessAdminEmail(null);
+        toast({
+          title: "Success",
+          description: res?.data?.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: res?.data?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          err?.response?.data?.message ||
+          "Something went wrong while resend email",
+      });
+    } finally {
+      setResendEmailLoading(false);
+    }
+  };
   const fetchStats = async () => {
     try {
       const response = await axios.get(
@@ -169,11 +214,18 @@ const BranchBusinessOnboarding = () => {
             Pending Review
           </Badge>
         );
+      case "VERIFIED":
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Verified
+          </Badge>
+        );
       case "APPROVED":
         return (
-          <Badge variant="default">
+          <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
-            Approved
+            Verified
           </Badge>
         );
       case "PENDING":
@@ -389,12 +441,26 @@ const BranchBusinessOnboarding = () => {
                             <Building2 className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <h3 className="font-semibold text-foreground">
                                 {business.companyName}
                               </h3>
                               {/* {getStatusBadge(business.status)} */}
                               {getKYBStatusBadge(business.status)}
+                              {business?.businessAdminEmail && (
+                                <Button
+                                  variant="outline"
+                                  type="button"
+                                  onClick={() => {
+                                    setShowConfirmation(true);
+                                    setBusinessAdminEmail(
+                                      business?.businessAdminEmail,
+                                    );
+                                  }}
+                                >
+                                  Resend Onboard Email
+                                </Button>
+                              )}
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                               <div>
@@ -482,6 +548,15 @@ const BranchBusinessOnboarding = () => {
           </CardContent>
         </Card>
       </div>
+      <ConfirmationDialog
+        isConfirming={resentEmailLoading}
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        onConfirm={handleSubmit}
+        title="Confirm Resend Email"
+        description={`Are you sure you want to resend this email?`}
+        confirmText="Submit Request"
+      />
     </BranchLayout>
   );
 };

@@ -351,7 +351,6 @@ const ExchangeAdminUser = () => {
       if (res?.data?.status) {
         setShowConfirmation(false);
         setExchangeMemberUuid(null);
-        fetchUsers();
         toast({
           title: "Success",
           description: res?.data?.message,
@@ -1222,7 +1221,7 @@ const ExchangeAdminUser = () => {
                                 }}
                                 variant="outline"
                               >
-                                Resend Invitation
+                                Resend Onboard Email
                               </Button>
                               <Button
                                 variant="outline"
